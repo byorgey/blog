@@ -8,6 +8,16 @@ config =
     { destinationDirectory = "docs"
     }
 
+feedConfig :: FeedConfiguration
+feedConfig =
+  FeedConfiguration
+    { feedTitle = "blog :: Brent -> [String]"
+    , feedDescription = "Brent Yorgey's academic blog"
+    , feedAuthorName = "Brent Yorgey"
+    , feedAuthorEmail = "byorgey@gmail.com"
+    , feedRoot = "http://byorgey.github.io/blog"
+    }
+
 main :: IO ()
 main = hakyllWith config $ do
   match "images/*" $ do
@@ -30,6 +40,7 @@ main = hakyllWith config $ do
     compile $
       pandocCompiler
         >>= loadAndApplyTemplate "templates/post.html" postCtx
+        >>= saveSnapshot "postContent"
         >>= loadAndApplyTemplate "templates/default.html" postCtx
         >>= relativizeUrls
 
@@ -60,6 +71,15 @@ main = hakyllWith config $ do
         >>= applyAsTemplate indexCtx
         >>= loadAndApplyTemplate "templates/default.html" indexCtx
         >>= relativizeUrls
+
+  create ["rss.xml"] $ do
+    route idRoute
+    compile $ do
+      let feedCtx = postCtx `mappend` bodyField "description"
+      posts <-
+        fmap (take 10) . recentFirst
+          =<< loadAllSnapshots "posts/*" "postContent"
+      renderRss feedConfig feedCtx posts
 
   match "templates/*" $ compile templateCompiler
 

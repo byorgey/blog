@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>blog :: Brent -> [String]</title>
+        <link>http://byorgey.github.io/blog</link>
+        <description><![CDATA[Brent Yorgey's academic blog]]></description>
+        <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
+                   type="application/rss+xml" />
+        <lastBuildDate>Sun, 23 Aug 2015 00:00:00 UT</lastBuildDate>
+        <item>
+    <title>example post</title>
+    <link>http://byorgey.github.io/blog/posts/2015-08-23-example.html</link>
+    <description><![CDATA[<div class="info">
+    Posted on August 23, 2015
+    
+</div>
+
+<p>Mauris in lorem nisl. Maecenas tempus facilisis ante, eget viverra nisl
+tincidunt et. Donec turpis lectus, mattis ac malesuada a, accumsan eu libero.
+Morbi condimentum, tortor et tincidunt ullamcorper, sem quam pretium nulla, id
+convallis lectus libero nec turpis. Proin dapibus nisi id est sodales nec
+ultrices tortor pellentesque.</p>
+<p>Vivamus vel nisi ac lacus sollicitudin vulputate
+ac ut ligula. Nullam feugiat risus eget eros gravida in molestie sapien euismod.
+Nunc sed hendrerit orci. Nulla mollis consequat lorem ac blandit. Ut et turpis
+mauris. Nulla est odio, posuere id ullamcorper sit amet, tincidunt vel justo.
+Curabitur placerat tincidunt varius. Nulla vulputate, ipsum eu consectetur
+mollis, dui nibh aliquam neque, at ultricies leo ligula et arcu.</p>
+]]></description>
+    <pubDate>Sun, 23 Aug 2015 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2015-08-23-example.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+
+    </channel>
+</rss>
