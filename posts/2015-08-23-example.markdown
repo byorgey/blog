@@ -1,5 +1,6 @@
 ---
 title: example post
+katex: true
 ---
 
 Mauris in lorem nisl. Maecenas tempus facilisis ante, eget viverra nisl
@@ -15,7 +16,9 @@ mauris. Nulla est odio, posuere id ullamcorper sit amet, tincidunt vel justo.
 Curabitur placerat tincidunt varius. Nulla vulputate, ipsum eu consectetur
 mollis, dui nibh aliquam neque, at ultricies leo ligula et arcu.
 
-The result is $x^2 - 9/\sqrt{\pi}$.
+The result is $x^2 - 9/\sqrt{\pi}$.  Here is a formula:
+
+$$\sum_{n \geq 0} F(n) \frac{x^n}{n!}$$
 
 Here is some verbatim text:
 ```
@@ -26,7 +29,7 @@ baz
 
 And here is some Haskell code:
 
-```haskell
+```{.haskell .numberLines}
 data Const :: Type -> Type where
   CInt :: Int -> Const Int
   CIf :: Const (Bool -> α -> α -> α)
@@ -52,6 +55,6 @@ checkOrd _ _ = Nothing
 
 And here is a diagram:
 
-```diagram
+```{.diagram width=200 height=200}
 dia = circle 3 # fc yellow # lw veryThick
 ```

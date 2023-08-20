@@ -1,10 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Hakyll
-import Text.Pandoc (Block, Pandoc, bottomUpM)
+import Text.Pandoc (Block, HTMLMathMethod (MathJax), Pandoc, bottomUpM)
 import Text.Pandoc.Diagrams
 import Text.Pandoc.Highlighting (Style, styleToCss, tango)
 import Text.Pandoc.Options (WriterOptions (..))
+
+------------------------------------------------------------
+-- Configuration
+------------------------------------------------------------
 
 config :: Configuration
 config =
@@ -27,14 +31,9 @@ feedConfig =
 pandocCodeStyle :: Style
 pandocCodeStyle = tango
 
-myPandocCompiler :: Compiler (Item String)
-myPandocCompiler =
-  pandocCompilerWithTransformM
-    defaultHakyllReaderOptions
-    defaultHakyllWriterOptions
-      { writerHighlightStyle = Just pandocCodeStyle
-      }
-    compileDiagrams
+------------------------------------------------------------
+-- Diagrams rendering
+------------------------------------------------------------
 
 insertDiagrams' :: Opts -> [Block] -> IO [Block]
 insertDiagrams' opts bs = concat <$> mapM (insertDiagrams opts) bs
@@ -52,13 +51,38 @@ diagramOpts =
     , _outFormat = ""
     }
 
+------------------------------------------------------------
+-- Custom pandoc compiler
+------------------------------------------------------------
+
+myPandocCompiler :: Compiler (Item String)
+myPandocCompiler =
+  pandocCompilerWithTransformM
+    defaultHakyllReaderOptions
+    defaultHakyllWriterOptions
+      { writerHighlightStyle = Just pandocCodeStyle
+      , writerHTMLMathMethod = MathJax ""
+      }
+    compileDiagrams
+
+------------------------------------------------------------
+-- Custom contexts
+------------------------------------------------------------
+
+postCtx :: Context String
+postCtx =
+  dateField "date" "%B %e, %Y"
+    `mappend` defaultContext
+
+------------------------------------------------------------
+-- Rules
+------------------------------------------------------------
+
 main :: IO ()
 main = hakyllWith config $ do
-  match "images/*" $ do
-    route idRoute
-    compile copyFileCompiler
+  match "templates/*" $ compile templateCompiler
 
-  match "diagrams/*" $ do
+  match ("images/*" .||. "diagrams/*") $ do
     route idRoute
     compile copyFileCompiler
 
@@ -122,11 +146,3 @@ main = hakyllWith config $ do
         fmap (take 10) . recentFirst
           =<< loadAllSnapshots "posts/*" "postContent"
       renderRss feedConfig feedCtx posts
-
-  match "templates/*" $ compile templateCompiler
-
---------------------------------------------------------------------------------
-postCtx :: Context String
-postCtx =
-  dateField "date" "%B %e, %Y"
-    `mappend` defaultContext
