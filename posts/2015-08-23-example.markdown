@@ -49,3 +49,9 @@ checkOrd TTyInt r = Just r
 checkOrd TTyBool r = Just r
 checkOrd _ _ = Nothing
 ```
+
+And here is a diagram:
+
+```diagram
+dia = circle 3 # fc yellow # lw veryThick
+```

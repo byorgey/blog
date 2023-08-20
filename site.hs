@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Hakyll
+import Text.Pandoc (Block, Pandoc, bottomUpM)
+import Text.Pandoc.Diagrams
 import Text.Pandoc.Highlighting (Style, styleToCss, tango)
 import Text.Pandoc.Options (WriterOptions (..))
 
@@ -27,15 +29,36 @@ pandocCodeStyle = tango
 
 myPandocCompiler :: Compiler (Item String)
 myPandocCompiler =
-  pandocCompilerWith
+  pandocCompilerWithTransformM
     defaultHakyllReaderOptions
     defaultHakyllWriterOptions
       { writerHighlightStyle = Just pandocCodeStyle
       }
+    compileDiagrams
+
+insertDiagrams' :: Opts -> [Block] -> IO [Block]
+insertDiagrams' opts bs = concat <$> mapM (insertDiagrams opts) bs
+
+compileDiagrams :: Pandoc -> Compiler Pandoc
+compileDiagrams = unsafeCompiler . bottomUpM (insertDiagrams' diagramOpts)
+
+diagramOpts :: Opts
+diagramOpts =
+  Opts
+    { _backend = SVG
+    , _absolutePath = True
+    , _expression = "dia"
+    , _outDir = "diagrams"
+    , _outFormat = ""
+    }
 
 main :: IO ()
 main = hakyllWith config $ do
   match "images/*" $ do
+    route idRoute
+    compile copyFileCompiler
+
+  match "diagrams/*" $ do
     route idRoute
     compile copyFileCompiler
 
