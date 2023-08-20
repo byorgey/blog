@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Hakyll
+import Text.Pandoc.Highlighting (Style, styleToCss, tango)
+import Text.Pandoc.Options (WriterOptions (..))
 
 config :: Configuration
 config =
@@ -18,6 +20,19 @@ feedConfig =
     , feedRoot = "http://byorgey.github.io/blog"
     }
 
+-- Learned how to do Haskell syntax highlighting from
+-- https://rebeccaskinner.net/posts/2021-01-31-hakyll-syntax-highlighting.html
+pandocCodeStyle :: Style
+pandocCodeStyle = tango
+
+myPandocCompiler :: Compiler (Item String)
+myPandocCompiler =
+  pandocCompilerWith
+    defaultHakyllReaderOptions
+    defaultHakyllWriterOptions
+      { writerHighlightStyle = Just pandocCodeStyle
+      }
+
 main :: IO ()
 main = hakyllWith config $ do
   match "images/*" $ do
@@ -28,17 +43,21 @@ main = hakyllWith config $ do
     route idRoute
     compile compressCssCompiler
 
+  create ["css/syntax.css"] $ do
+    route idRoute
+    compile $ makeItem $ styleToCss pandocCodeStyle
+
   match (fromList ["about.md", "contact.md"]) $ do
     route $ setExtension "html"
     compile $
-      pandocCompiler
+      myPandocCompiler
         >>= loadAndApplyTemplate "templates/default.html" defaultContext
         >>= relativizeUrls
 
   match "posts/*" $ do
     route $ setExtension "html"
     compile $
-      pandocCompiler
+      myPandocCompiler
         >>= loadAndApplyTemplate "templates/post.html" postCtx
         >>= saveSnapshot "postContent"
         >>= loadAndApplyTemplate "templates/default.html" postCtx

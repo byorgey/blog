@@ -14,3 +14,38 @@ Nunc sed hendrerit orci. Nulla mollis consequat lorem ac blandit. Ut et turpis
 mauris. Nulla est odio, posuere id ullamcorper sit amet, tincidunt vel justo.
 Curabitur placerat tincidunt varius. Nulla vulputate, ipsum eu consectetur
 mollis, dui nibh aliquam neque, at ultricies leo ligula et arcu.
+
+The result is $x^2 - 9/\sqrt{\pi}$.
+
+Here is some verbatim text:
+```
+foo bar
+baz
+  quux
+```
+
+And here is some Haskell code:
+
+```haskell
+data Const :: Type -> Type where
+  CInt :: Int -> Const Int
+  CIf :: Const (Bool -> α -> α -> α)
+  CAdd :: Const (Int -> Int -> Int)
+  CGt :: Ord α => Const (α -> α -> Bool)
+  I :: Const (α -> α)
+  K :: Const (α -> b -> α)
+  S :: Const ((α -> b -> c) -> (α -> b) -> α -> c)
+  B :: Const ((     b -> c) -> (α -> b) -> α -> c)
+  C :: Const ((α -> b -> c) ->       b  -> α -> c)
+
+deriving instance Show (Const α)
+
+infixl 1 $$
+class Applicable t where
+  ($$) :: t (α -> β) -> t α -> t β
+
+checkOrd :: TTy α -> (Ord α => r) -> Maybe r
+checkOrd TTyInt r = Just r
+checkOrd TTyBool r = Just r
+checkOrd _ _ = Nothing
+```
