@@ -1,6 +1,7 @@
 ---
 title: example post
 katex: true
+tags: example, math
 ---
 
 Mauris in lorem nisl. Maecenas tempus facilisis ante, eget viverra nisl

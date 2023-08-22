@@ -7,13 +7,37 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sun, 23 Aug 2015 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Tue, 22 Aug 2023 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Another post</title>
+    <link>http://byorgey.github.io/blog/posts/2023-08-22-another-post.html</link>
+    <description><![CDATA[<div class="info">
+    Posted on August 22, 2023
+    
+</div>
+<div class="info">
+  
+  Tagged <a title="All pages tagged &#39;example&#39;." href="/tag/example.html" rel="tag">example</a>, <a title="All pages tagged &#39;cheese&#39;." href="/tag/cheese.html" rel="tag">cheese</a>, <a title="All pages tagged &#39;two words&#39;." href="/tag/two%20words.html" rel="tag">two words</a>
+  
+</div>
+
+<p>This is another blog post, so that we have more than one.</p>
+]]></description>
+    <pubDate>Tue, 22 Aug 2023 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2023-08-22-another-post.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>example post</title>
     <link>http://byorgey.github.io/blog/posts/2015-08-23-example.html</link>
     <description><![CDATA[<div class="info">
     Posted on August 23, 2015
     
+</div>
+<div class="info">
+  
+  Tagged <a title="All pages tagged &#39;example&#39;." href="/tag/example.html" rel="tag">example</a>, <a title="All pages tagged &#39;math&#39;." href="/tag/math.html" rel="tag">math</a>
+  
 </div>
 
 <p>Mauris in lorem nisl. Maecenas tempus facilisis ante, eget viverra nisl

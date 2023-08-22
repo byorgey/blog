@@ -69,6 +69,9 @@ myPandocCompiler =
 -- Custom contexts
 ------------------------------------------------------------
 
+tagCtx :: Tags -> Context String
+tagCtx = tagsField "tags"
+
 postCtx :: Context String
 postCtx =
   dateField "date" "%B %e, %Y"
@@ -80,7 +83,15 @@ postCtx =
 
 main :: IO ()
 main = hakyllWith config $ do
+  --------------------------------------------------
+  -- Templates
+  --------------------------------------------------
+
   match "templates/*" $ compile templateCompiler
+
+  --------------------------------------------------
+  -- Static files
+  --------------------------------------------------
 
   match ("images/*" .||. "diagrams/*") $ do
     route idRoute
@@ -94,6 +105,10 @@ main = hakyllWith config $ do
     route idRoute
     compile $ makeItem $ styleToCss pandocCodeStyle
 
+  --------------------------------------------------
+  -- Static pages
+  --------------------------------------------------
+
   match (fromList ["about.md", "contact.md"]) $ do
     route $ setExtension "html"
     compile $
@@ -101,14 +116,58 @@ main = hakyllWith config $ do
         >>= loadAndApplyTemplate "templates/default.html" defaultContext
         >>= relativizeUrls
 
+  --------------------------------------------------
+  -- Tags
+  --------------------------------------------------
+
+  -- https://javran.github.io/posts/2014-03-01-add-tags-to-your-hakyll-blog.html
+
+  tags <- buildTags "posts/*" (fromCapture "tag/*.html")
+
+  tagsRules tags $ \tag pat -> do
+    let title = "Posts tagged \"" ++ tag ++ "\""
+    route idRoute
+    compile $ do
+      posts <- recentFirst =<< loadAll pat
+      let ctx =
+            constField "title" title
+              <> listField "posts" (tagCtx tags <> postCtx) (return posts)
+              <> defaultContext
+
+      makeItem ""
+        >>= loadAndApplyTemplate "templates/tag.html" ctx
+        >>= loadAndApplyTemplate "templates/default.html" ctx
+        >>= relativizeUrls
+
+  --------------------------------------------------
+  -- Posts
+  --------------------------------------------------
+
   match "posts/*" $ do
     route $ setExtension "html"
     compile $
       myPandocCompiler
-        >>= loadAndApplyTemplate "templates/post.html" postCtx
+        >>= loadAndApplyTemplate "templates/post.html" (tagCtx tags <> postCtx)
         >>= saveSnapshot "postContent"
-        >>= loadAndApplyTemplate "templates/default.html" postCtx
+        >>= loadAndApplyTemplate "templates/default.html" (tagCtx tags <> postCtx)
         >>= relativizeUrls
+
+  --------------------------------------------------
+  -- RSS feed
+  --------------------------------------------------
+
+  create ["rss.xml"] $ do
+    route idRoute
+    compile $ do
+      let feedCtx = postCtx `mappend` bodyField "description"
+      posts <-
+        fmap (take 10) . recentFirst
+          =<< loadAllSnapshots "posts/*" "postContent"
+      renderRss feedConfig feedCtx posts
+
+  --------------------------------------------------
+  -- Archive
+  --------------------------------------------------
 
   create ["archive.html"] $ do
     route idRoute
@@ -124,6 +183,10 @@ main = hakyllWith config $ do
         >>= loadAndApplyTemplate "templates/default.html" archiveCtx
         >>= relativizeUrls
 
+  --------------------------------------------------
+  -- Index
+  --------------------------------------------------
+
   match "index.html" $ do
     route idRoute
     compile $ do
@@ -137,12 +200,3 @@ main = hakyllWith config $ do
         >>= applyAsTemplate indexCtx
         >>= loadAndApplyTemplate "templates/default.html" indexCtx
         >>= relativizeUrls
-
-  create ["rss.xml"] $ do
-    route idRoute
-    compile $ do
-      let feedCtx = postCtx `mappend` bodyField "description"
-      posts <-
-        fmap (take 10) . recentFirst
-          =<< loadAllSnapshots "posts/*" "postContent"
-      renderRss feedConfig feedCtx posts
