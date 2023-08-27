@@ -66,6 +66,13 @@ myPandocCompiler =
     compileDiagrams
 
 ------------------------------------------------------------
+-- Pagination
+------------------------------------------------------------
+
+makePageId :: PageNumber -> Identifier
+makePageId pageNum = fromFilePath $ "page/" ++ show pageNum ++ "/index.html"
+
+------------------------------------------------------------
 -- Custom contexts
 ------------------------------------------------------------
 
@@ -137,6 +144,28 @@ main = hakyllWith config $ do
       makeItem ""
         >>= loadAndApplyTemplate "templates/tag.html" ctx
         >>= loadAndApplyTemplate "templates/default.html" ctx
+        >>= relativizeUrls
+
+  --------------------------------------------------
+  -- Pagination
+  --------------------------------------------------
+
+  -- https://dannysu.com/2015/10/29/hakyll-pagination/
+
+  pag <- buildPaginateWith (fmap (paginateEvery 10) . sortRecentFirst) "posts/*" makePageId
+
+  paginateRules pag $ \pageNum pat -> do
+    route idRoute
+    compile $ do
+      posts <- recentFirst =<< loadAll pat
+      let paginateCtx = paginateContext pag pageNum
+          ctx =
+            constField "title" ("Blog Archive - Page " ++ show pageNum)
+              <> listField "posts" postCtx (return posts)
+              <> paginateCtx
+              <> defaultContext
+      makeItem ""
+        >>= loadAndApplyTemplate "templates/page.html" ctx
         >>= relativizeUrls
 
   --------------------------------------------------
