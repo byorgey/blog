@@ -1,6 +1,9 @@
 ---
 title: About me
 ---
+
+![](images/brent.jpg)
+
 I'm Brent Yorgey. I am an associate professor in the [department of
 mathematics and computer science](http://ozark.hendrix.edu/) at
 [Hendrix College](http://www.hendrix.edu/) in Conway, Arkansas,
