@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+import Data.Maybe (isJust)
 import Hakyll
 import Text.Pandoc (Block, HTMLMathMethod (MathJax), Pandoc, bottomUpM)
 import Text.Pandoc.Diagrams
@@ -69,8 +70,15 @@ myPandocCompiler =
 -- Pagination
 ------------------------------------------------------------
 
-makePageId :: PageNumber -> Identifier
-makePageId pageNum = fromFilePath $ "page/" ++ show pageNum ++ "/index.html"
+postsPageId :: PageNumber -> Identifier
+postsPageId pageNum =
+  fromFilePath $
+    if pageNum == 1
+      then "index.html"
+      else "page/" ++ show pageNum ++ "/index.html"
+
+postsGrouper :: (MonadMetadata m, MonadFail m) => [Identifier] -> m [[Identifier]]
+postsGrouper = fmap (paginateEvery 10) . sortRecentFirst
 
 ------------------------------------------------------------
 -- Custom contexts
@@ -151,21 +159,29 @@ main = hakyllWith config $ do
   --------------------------------------------------
 
   -- https://dannysu.com/2015/10/29/hakyll-pagination/
+  -- http://limansky.me/posts/2016-12-28-pagination-with-hakyll.html
 
-  pag <- buildPaginateWith (fmap (paginateEvery 10) . sortRecentFirst) "posts/*" makePageId
+  pag <- buildPaginateWith postsGrouper "posts/*" postsPageId
 
   paginateRules pag $ \pageNum pat -> do
     route idRoute
     compile $ do
-      posts <- recentFirst =<< loadAll pat
+      posts <- recentFirst =<< loadAllSnapshots pat "postContent"
+
+      -- do any of the posts use katex?
+      useKatex <-
+        any isJust
+          <$> mapM (\item -> getMetadataField (itemIdentifier item) "katex") posts
       let paginateCtx = paginateContext pag pageNum
-          ctx =
+          indexCtx =
             constField "title" ("Blog Archive - Page " ++ show pageNum)
               <> listField "posts" postCtx (return posts)
               <> paginateCtx
+              <> (if useKatex then constField "katex" "true" else mempty)
               <> defaultContext
       makeItem ""
-        >>= loadAndApplyTemplate "templates/page.html" ctx
+        >>= loadAndApplyTemplate "templates/page.html" indexCtx
+        >>= loadAndApplyTemplate "templates/default.html" indexCtx
         >>= relativizeUrls
 
   --------------------------------------------------
@@ -212,20 +228,20 @@ main = hakyllWith config $ do
         >>= loadAndApplyTemplate "templates/default.html" archiveCtx
         >>= relativizeUrls
 
-  --------------------------------------------------
-  -- Index
-  --------------------------------------------------
+--------------------------------------------------
+-- Index
+--------------------------------------------------
 
-  match "index.html" $ do
-    route idRoute
-    compile $ do
-      posts <- recentFirst =<< loadAll "posts/*"
-      let indexCtx =
-            listField "posts" postCtx (return posts)
-              <> constField "title" "Home"
-              <> defaultContext
+-- match "index.html" $ do
+--   route idRoute
+--   compile $ do
+--     posts <- recentFirst =<< loadAll "posts/*"
+--     let indexCtx =
+--           listField "posts" postCtx (return posts)
+--             <> constField "title" "Home"
+--             <> defaultContext
 
-      getResourceBody
-        >>= applyAsTemplate indexCtx
-        >>= loadAndApplyTemplate "templates/default.html" indexCtx
-        >>= relativizeUrls
+--     getResourceBody
+--       >>= applyAsTemplate indexCtx
+--       >>= loadAndApplyTemplate "templates/default.html" indexCtx
+--       >>= relativizeUrls
