@@ -30,7 +30,7 @@ baz
 
 And here is some Haskell code:
 
-```{.haskell .numberLines}
+```{.haskell}
 data Const :: Type -> Type where
   CInt :: Int -> Const Int
   CIf :: Const (Bool -> α -> α -> α)

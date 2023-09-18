@@ -11,17 +11,21 @@
         <item>
     <title>Another post</title>
     <link>http://byorgey.github.io/blog/posts/2023-08-22-another-post.html</link>
-    <description><![CDATA[<div class="info">
+    <description><![CDATA[<article>
+  <div class="info">
     Posted on August 22, 2023
     
-</div>
-<div class="info">
-  
-  Tagged <a title="All pages tagged &#39;example&#39;." href="/tag/example.html" rel="tag">example</a>, <a title="All pages tagged &#39;cheese&#39;." href="/tag/cheese.html" rel="tag">cheese</a>, <a title="All pages tagged &#39;two words&#39;." href="/tag/two%20words.html" rel="tag">two words</a>
-  
-</div>
+  </div>
+  <div class="info">
+    
+    Tagged <a title="All pages tagged &#39;example&#39;." href="/tag/example.html" rel="tag">example</a>, <a title="All pages tagged &#39;cheese&#39;." href="/tag/cheese.html" rel="tag">cheese</a>, <a title="All pages tagged &#39;two words&#39;." href="/tag/two%20words.html" rel="tag">two words</a>
+    
+  </div>
 
-<p>This is another blog post, so that we have more than one.</p>
+  <section>
+    <p>This is another blog post, so that we have more than one.</p>
+  </section>
+</article>
 ]]></description>
     <pubDate>Tue, 22 Aug 2023 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023-08-22-another-post.html</guid>
@@ -30,17 +34,19 @@
 <item>
     <title>example post</title>
     <link>http://byorgey.github.io/blog/posts/2015-08-23-example.html</link>
-    <description><![CDATA[<div class="info">
+    <description><![CDATA[<article>
+  <div class="info">
     Posted on August 23, 2015
     
-</div>
-<div class="info">
-  
-  Tagged <a title="All pages tagged &#39;example&#39;." href="/tag/example.html" rel="tag">example</a>, <a title="All pages tagged &#39;math&#39;." href="/tag/math.html" rel="tag">math</a>
-  
-</div>
+  </div>
+  <div class="info">
+    
+    Tagged <a title="All pages tagged &#39;example&#39;." href="/tag/example.html" rel="tag">example</a>, <a title="All pages tagged &#39;math&#39;." href="/tag/math.html" rel="tag">math</a>
+    
+  </div>
 
-<p>Mauris in lorem nisl. Maecenas tempus facilisis ante, eget viverra nisl
+  <section>
+    <p>Mauris in lorem nisl. Maecenas tempus facilisis ante, eget viverra nisl
 tincidunt et. Donec turpis lectus, mattis ac malesuada a, accumsan eu libero.
 Morbi condimentum, tortor et tincidunt ullamcorper, sem quam pretium nulla, id
 convallis lectus libero nec turpis. Proin dapibus nisi id est sodales nec
@@ -58,29 +64,31 @@ mollis, dui nibh aliquam neque, at ultricies leo ligula et arcu.</p>
 baz
   quux</code></pre>
 <p>And here is some Haskell code:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource haskell numberLines"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">data</span> <span class="dt">Const</span><span class="ot"> ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span> <span class="kw">where</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a>  <span class="dt">CInt</span><span class="ot"> ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Const</span> <span class="dt">Int</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a>  <span class="dt">CIf</span><span class="ot"> ::</span> <span class="dt">Const</span> (<span class="dt">Bool</span> <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> α)</span>
-<span id="cb2-4"><a href="#cb2-4"></a>  <span class="dt">CAdd</span><span class="ot"> ::</span> <span class="dt">Const</span> (<span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>)</span>
-<span id="cb2-5"><a href="#cb2-5"></a>  <span class="dt">CGt</span><span class="ot"> ::</span> <span class="dt">Ord</span> α <span class="ot">=&gt;</span> <span class="dt">Const</span> (α <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> <span class="dt">Bool</span>)</span>
-<span id="cb2-6"><a href="#cb2-6"></a>  <span class="dt">I</span><span class="ot"> ::</span> <span class="dt">Const</span> (α <span class="ot">-&gt;</span> α)</span>
-<span id="cb2-7"><a href="#cb2-7"></a>  <span class="dt">K</span><span class="ot"> ::</span> <span class="dt">Const</span> (α <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> α)</span>
-<span id="cb2-8"><a href="#cb2-8"></a>  <span class="dt">S</span><span class="ot"> ::</span> <span class="dt">Const</span> ((α <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> (α <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> c)</span>
-<span id="cb2-9"><a href="#cb2-9"></a>  <span class="dt">B</span><span class="ot"> ::</span> <span class="dt">Const</span> ((     b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> (α <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> c)</span>
-<span id="cb2-10"><a href="#cb2-10"></a>  <span class="dt">C</span><span class="ot"> ::</span> <span class="dt">Const</span> ((α <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span>       b  <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> c)</span>
-<span id="cb2-11"><a href="#cb2-11"></a></span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="kw">deriving</span> <span class="kw">instance</span> <span class="dt">Show</span> (<span class="dt">Const</span> α)</span>
-<span id="cb2-13"><a href="#cb2-13"></a></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="kw">infixl</span> <span class="dv">1</span> <span class="op">$$</span></span>
-<span id="cb2-15"><a href="#cb2-15"></a><span class="kw">class</span> <span class="dt">Applicable</span> t <span class="kw">where</span></span>
-<span id="cb2-16"><a href="#cb2-16"></a><span class="ot">  ($$) ::</span> t (α <span class="ot">-&gt;</span> β) <span class="ot">-&gt;</span> t α <span class="ot">-&gt;</span> t β</span>
-<span id="cb2-17"><a href="#cb2-17"></a></span>
-<span id="cb2-18"><a href="#cb2-18"></a><span class="ot">checkOrd ::</span> <span class="dt">TTy</span> α <span class="ot">-&gt;</span> (<span class="dt">Ord</span> α <span class="ot">=&gt;</span> r) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> r</span>
-<span id="cb2-19"><a href="#cb2-19"></a>checkOrd <span class="dt">TTyInt</span> r <span class="ot">=</span> <span class="dt">Just</span> r</span>
-<span id="cb2-20"><a href="#cb2-20"></a>checkOrd <span class="dt">TTyBool</span> r <span class="ot">=</span> <span class="dt">Just</span> r</span>
-<span id="cb2-21"><a href="#cb2-21"></a>checkOrd _ _ <span class="ot">=</span> <span class="dt">Nothing</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Const</span><span class="ot"> ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span> <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">CInt</span><span class="ot"> ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Const</span> <span class="dt">Int</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">CIf</span><span class="ot"> ::</span> <span class="dt">Const</span> (<span class="dt">Bool</span> <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> α)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">CAdd</span><span class="ot"> ::</span> <span class="dt">Const</span> (<span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">CGt</span><span class="ot"> ::</span> <span class="dt">Ord</span> α <span class="ot">=&gt;</span> <span class="dt">Const</span> (α <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> <span class="dt">Bool</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">I</span><span class="ot"> ::</span> <span class="dt">Const</span> (α <span class="ot">-&gt;</span> α)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">K</span><span class="ot"> ::</span> <span class="dt">Const</span> (α <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> α)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">S</span><span class="ot"> ::</span> <span class="dt">Const</span> ((α <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> (α <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> c)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">B</span><span class="ot"> ::</span> <span class="dt">Const</span> ((     b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> (α <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> c)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">C</span><span class="ot"> ::</span> <span class="dt">Const</span> ((α <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span>       b  <span class="ot">-&gt;</span> α <span class="ot">-&gt;</span> c)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">deriving</span> <span class="kw">instance</span> <span class="dt">Show</span> (<span class="dt">Const</span> α)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">infixl</span> <span class="dv">1</span> <span class="op">$$</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Applicable</span> t <span class="kw">where</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="ot">  ($$) ::</span> t (α <span class="ot">-&gt;</span> β) <span class="ot">-&gt;</span> t α <span class="ot">-&gt;</span> t β</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="ot">checkOrd ::</span> <span class="dt">TTy</span> α <span class="ot">-&gt;</span> (<span class="dt">Ord</span> α <span class="ot">=&gt;</span> r) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> r</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>checkOrd <span class="dt">TTyInt</span> r <span class="ot">=</span> <span class="dt">Just</span> r</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>checkOrd <span class="dt">TTyBool</span> r <span class="ot">=</span> <span class="dt">Just</span> r</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>checkOrd _ _ <span class="ot">=</span> <span class="dt">Nothing</span></span></code></pre></div>
 <p>And here is a diagram:</p>
 <p><img src="/diagrams/6f26d950fe5bf508.svg" /></p>
+  </section>
+</article>
 ]]></description>
     <pubDate>Sun, 23 Aug 2015 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2015-08-23-example.html</guid>

@@ -1,13 +1,17 @@
-<div class="info">
+<article>
+  <div class="info">
     Posted on $date$
     $if(author)$
         by $author$
     $endif$
-</div>
-<div class="info">
-  $if(tags)$
-  Tagged $tags$
-  $endif$
-</div>
+  </div>
+  <div class="info">
+    $if(tags)$
+    Tagged $tags$
+    $endif$
+  </div>
 
-$body$
+  <section>
+    $body$
+  </section>
+</article>

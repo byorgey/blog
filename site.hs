@@ -108,7 +108,7 @@ main = hakyllWith config $ do
   -- Static files
   --------------------------------------------------
 
-  match ("images/*" .||. "diagrams/*") $ do
+  match ("images/*" .||. "diagrams/*" .||. "et-book/**") $ do
     route idRoute
     compile copyFileCompiler
 
