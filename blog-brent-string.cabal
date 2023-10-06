@@ -21,7 +21,8 @@ executable blog-brent-string
                        hakyll,
                        pandoc,
                        SVGFonts,
-                       diagrams-pandoc >= 0.3 && < 0.4
+                       diagrams-pandoc >= 0.3 && < 0.4,
+                       pandoc-sidenote >= 0.23 && < 0.24
   ghc-options:         -Wall
                        -Wcompat
                        -Widentities

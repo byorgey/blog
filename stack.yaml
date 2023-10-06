@@ -44,6 +44,7 @@ extra-deps:
   - diagrams-pandoc-0.3.1.1
   - diagrams-builder-0.8.0.6
   - diagrams-cairo-1.4.2.1
+  - pandoc-sidenote-0.23.0.0
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
