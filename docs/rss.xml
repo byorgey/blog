@@ -11,7 +11,15 @@
         <item>
     <title>Another post</title>
     <link>http://byorgey.github.io/blog/posts/2023-08-22-another-post.html</link>
-    <description><![CDATA[<h1>Another post</h1>
+    <description><![CDATA[
+<a href="/posts/2015-08-23-example.html">« Previous</a>
+
+
+
+<a href="">» Next</a>
+
+
+<h1>Another post</h1>
 
 <div class="info">
   Posted on August 22, 2023
@@ -33,7 +41,15 @@
 <item>
     <title>Example post</title>
     <link>http://byorgey.github.io/blog/posts/2015-08-23-example.html</link>
-    <description><![CDATA[<h1>Example post</h1>
+    <description><![CDATA[
+<a href="">« Previous</a>
+
+
+
+<a href="/posts/2023-08-22-another-post.html">» Next</a>
+
+
+<h1>Example post</h1>
 
 <div class="info">
   Posted on August 23, 2015

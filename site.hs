@@ -1,12 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
-import Control.Monad ((>=>))
+import Control.Monad ((<=<), (>=>))
+import Data.List (findIndex)
 import Hakyll
 import Text.Pandoc (Block, HTMLMathMethod (MathJax), Pandoc, bottomUpM)
 import Text.Pandoc.Diagrams
 import Text.Pandoc.Highlighting (Style, styleToCss, tango)
 import Text.Pandoc.Options (WriterOptions (..))
 import Text.Pandoc.SideNote (usingSideNotes)
+import Text.Read (Lexeme (String))
 
 ------------------------------------------------------------
 -- Configuration
@@ -81,6 +84,29 @@ postCtx =
     `mappend` defaultContext
 
 ------------------------------------------------------------
+-- Prev & next posts
+------------------------------------------------------------
+
+-- Adapted from https://hrothen.github.io/posts/switching-from-jekyll-bootstrap-to-hakyll.html
+
+lookupWithOffset :: Int -> [a] -> (a -> Bool) -> Maybe a
+lookupWithOffset off as p = findIndex p as >>= (as !?) . (+ off)
+
+-- This exists in base-4.19 Data.List
+(!?) :: [a] -> Int -> Maybe a
+xs !? n
+  | n < 0 = Nothing
+  | otherwise =
+      foldr
+        ( \x r k -> case k of
+            0 -> Just x
+            _ -> r (k - 1)
+        )
+        (const Nothing)
+        xs
+        n
+
+------------------------------------------------------------
 -- Rules
 ------------------------------------------------------------
 
@@ -114,11 +140,11 @@ main = hakyllWith config $ do
 
   match (fromList ["about.md", "contact.md"]) $ do
     route $ setExtension "html"
-    compile
-      $ myPandocCompiler
-      >>= loadAndApplyTemplate "templates/standalone.html" defaultContext
-      >>= loadAndApplyTemplate "templates/default.html" defaultContext
-      >>= relativizeUrls
+    compile $
+      myPandocCompiler
+        >>= loadAndApplyTemplate "templates/standalone.html" defaultContext
+        >>= loadAndApplyTemplate "templates/default.html" defaultContext
+        >>= relativizeUrls
 
   --------------------------------------------------
   -- Tags
@@ -148,14 +174,33 @@ main = hakyllWith config $ do
   -- Posts
   --------------------------------------------------
 
+  postList <- sortRecentFirst =<< getMatches "posts/*"
+
   match "posts/*" $ do
     route $ setExtension "html"
-    compile
-      $ myPandocCompiler
-      >>= loadAndApplyTemplate "templates/post.html" (tagCtx tags <> postCtx)
-      >>= saveSnapshot "postContent"
-      >>= loadAndApplyTemplate "templates/default.html" (tagCtx tags <> postCtx)
-      >>= relativizeUrls
+    compile $ do
+      let prevPostID = lookupWithOffset (-1) postList . (==) . itemIdentifier
+          nextPostID = lookupWithOffset 1 postList . (==) . itemIdentifier
+          idToURL :: Identifier -> Compiler String
+          idToURL = fmap toUrl . maybeNoResult <=< getRoute
+          idToTitle :: Identifier -> Compiler String
+          idToTitle = _
+          maybeNoResult :: Maybe a -> Compiler a
+          maybeNoResult = maybe (noResult "no such post") pure
+          postLocationContext =
+            mconcat
+              [ field "prevurl" (idToURL <=< (maybeNoResult . prevPostID))
+              , field "nexturl" (idToURL <=< (maybeNoResult . nextPostID))
+              , field "prevtitle" _
+              , field "nexttitle" _
+              ]
+          finalPostCtx = postLocationContext <> tagCtx tags <> postCtx
+
+      myPandocCompiler
+        >>= loadAndApplyTemplate "templates/post.html" finalPostCtx
+        >>= saveSnapshot "postContent"
+        >>= loadAndApplyTemplate "templates/default.html" finalPostCtx
+        >>= relativizeUrls
 
   --------------------------------------------------
   -- RSS feed
