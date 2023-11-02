@@ -1,14 +1,4 @@
 
--- Next + prev links should be part of an outer template, so they
--- don't get included in RSS feed content
-$if(prevurl)$
-<a href="$prevurl$">« Previous</a>
-$endif$
-
-$if(nexturl)$
-<a href="$nexturl$">» Next</a>
-$endif$
-
 <h1>$title$</h1>
 
 <div class="info">

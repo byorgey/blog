@@ -9,7 +9,6 @@ import Text.Pandoc.Diagrams
 import Text.Pandoc.Highlighting (Style, styleToCss, tango)
 import Text.Pandoc.Options (WriterOptions (..))
 import Text.Pandoc.SideNote (usingSideNotes)
-import Text.Read (Lexeme (String))
 
 ------------------------------------------------------------
 -- Configuration
@@ -184,21 +183,22 @@ main = hakyllWith config $ do
           idToURL :: Identifier -> Compiler String
           idToURL = fmap toUrl . maybeNoResult <=< getRoute
           idToTitle :: Identifier -> Compiler String
-          idToTitle = _
+          idToTitle i = getMetadataField i "title" >>= maybeNoResult
           maybeNoResult :: Maybe a -> Compiler a
           maybeNoResult = maybe (noResult "no such post") pure
           postLocationContext =
             mconcat
               [ field "prevurl" (idToURL <=< (maybeNoResult . prevPostID))
               , field "nexturl" (idToURL <=< (maybeNoResult . nextPostID))
-              , field "prevtitle" _
-              , field "nexttitle" _
+              , field "prevtitle" (idToTitle <=< (maybeNoResult . prevPostID))
+              , field "nexttitle" (idToTitle <=< (maybeNoResult . nextPostID))
               ]
           finalPostCtx = postLocationContext <> tagCtx tags <> postCtx
 
       myPandocCompiler
         >>= loadAndApplyTemplate "templates/post.html" finalPostCtx
         >>= saveSnapshot "postContent"
+        >>= loadAndApplyTemplate "templates/nextprev.html" finalPostCtx
         >>= loadAndApplyTemplate "templates/default.html" finalPostCtx
         >>= relativizeUrls
 
