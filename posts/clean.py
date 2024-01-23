@@ -11,9 +11,10 @@ for root, dirs, files in os.walk(os.path.curdir):
                     rewritten = False
                     if line == "---\n":
                         meta = not meta
-                    fields = line.split(':')
-                    if meta and fields[0] == 'title' and len(fields) > 1:
-                        md.write(f'{fields[0]}: \'{fields[1].strip()}\'\n')
+                    colonidx = line.find(':')
+                    if meta and colonidx != -1 and line[:colonidx] == 'title':
+                        content = line[colonidx+1:].strip()
+                        md.write(f'title: \'{content}\'\n')
                         rewritten = True
 
                     if not rewritten:
