@@ -1,0 +1,102 @@
+---
+title: Automatically updated, cached views with lens
+published: 2021-09-17T15:44:02Z
+categories: haskell
+tags: cache,lens,record,view
+---
+
+<p>Recently I discovered a nice way to deal with records where certain fields of the record cache some expensive function of other fields, using the <a href="https://hackage.haskell.org/package/lens"><code>lens</code> library</a>. I very highly doubt I am the first person to ever think of this, but I don’t think I’ve seen it written down anywhere. I’d be very happy to be learn of similar approaches elsewhere.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Suppose we have some kind of record data structure, and an expensive-to-calculate function which computes some kind of “view”, or summary value, for the record. Like this:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>Record</span> <span style="color:red;">=</span> <span>Record</span>
+  <span style="color:red;">{</span> <span>field1</span> <span style="color:red;">::</span> <span>A</span><span style="color:red;">,</span> <span>field2</span> <span style="color:red;">::</span> <span>B</span><span style="color:red;">,</span> <span>field3</span> <span style="color:red;">::</span> <span>C</span> <span style="color:red;">}</span>
+
+<span>expensiveView</span> <span style="color:red;">::</span> <span>A</span> <span style="color:red;">-&gt;</span> <span>B</span> <span style="color:red;">-&gt;</span> <span>C</span> <span style="color:red;">-&gt;</span> <span>D</span>
+<span>expensiveView</span> <span style="color:red;">=</span> <span>...</span></code></pre>
+<p>(Incidentally, I went back and forth on whether to put real code or only pseudocode in this post; in the end, I decided on pseudocode. Hopefully it should be easy to apply in real situations.)</p>
+<p>If we need to refer to the summary value often, we might like to cache the result of the expensive function in the record:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>Record</span> <span style="color:red;">=</span> <span>Record</span>
+  <span style="color:red;">{</span> <span>field1</span> <span style="color:red;">::</span> <span>A</span><span style="color:red;">,</span> <span>field2</span> <span style="color:red;">::</span> <span>B</span><span style="color:red;">,</span> <span>field3</span> <span style="color:red;">::</span> <span>C</span><span style="color:red;">,</span> <span>cachedView</span> <span style="color:red;">::</span> <span>D</span> <span style="color:red;">}</span>
+
+<span>expensiveView</span> <span style="color:red;">::</span> <span>A</span> <span style="color:red;">-&gt;</span> <span>B</span> <span style="color:red;">-&gt;</span> <span>C</span> <span style="color:red;">-&gt;</span> <span>D</span>
+<span>expensiveView</span> <span style="color:red;">=</span> <span>...</span></code></pre>
+<p>However, this has several drawbacks:</p>
+<ol type="1">
+<li><p>Every time we produce a new <code>Record</code> value by updating one or more fields, we have to remember to also update the cached view. This is easy to miss, especially in a large codebase, and will most likely result in bugs that are very difficult to track down.</p></li>
+<li><p>Actually, it gets worse: what if we <em>already</em> have a large codebase that is creating updated <code>Record</code> values in various places? We now have to comb through the codebase looking for such places and modifying them to update the <code>cachedExpensive</code> field too. Then we cross our fingers and hope we didn’t miss any.</p></li>
+<li><p>Finally, there is nothing besides comments and naming conventions to prevent us from accidentally modifying the <code>cachedExpensive</code> field directly.</p></li>
+</ol>
+<p>The point is that our <code>Record</code> type now has an associated invariant, and <strong>invariants which are not automatically enforced by the API and/or type system are Bad (tm)</strong>.</p>
+<h2 id="lens-to-the-rescue">Lens to the rescue</h2>
+<p>If you don’t want to use <code>lens</code>, you can stop reading now. (Honestly, given the title, I’m not even sure why you read this far.) In my case, I was already using it heavily, and I had a lightbulb moment when I realized how I could leverage it to add a <em>safe</em> cached view to a data type <em>without modifying</em> the rest of my codebase at all!</p>
+<p>The basic idea is this:</p>
+<ol type="1">
+<li>Add a field to hold the cached value as before.</li>
+<li><em>Don’t</em> use <code>lens</code>’s TemplateHaskell utilites to automatically derive lenses for all the fields. Instead, declare them manually, such that they automatically update the cached field on every <code>set</code> operation.</li>
+<li>For the field with the cached value itself, declare a <code>Getter</code>, not a <code>Lens</code>.</li>
+<li>Do not export the constructor or field projections for your data type; export only the type and the lenses.</li>
+</ol>
+<p>In pseudocode, it looks something like this:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">module</span> <span>Data.Record</span>
+  <span style="color:red;">(</span><span>Record</span><span style="color:red;">,</span> <span>field1</span><span style="color:red;">,</span> <span>field2</span><span style="color:red;">,</span> <span>field3</span><span style="color:red;">,</span> <span>cachedView</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+
+<span style="color:blue;font-weight:bold;">import</span> <span>Control.Lens</span>
+
+<span style="color:blue;font-weight:bold;">data</span> <span>Record</span> <span style="color:red;">=</span> <span>Record</span>
+  <span style="color:red;">{</span> <span class="hs-sel">_field1</span> <span style="color:red;">::</span> <span>A</span><span style="color:red;">,</span> <span class="hs-sel">_field2</span> <span style="color:red;">::</span> <span>B</span><span style="color:red;">,</span> <span class="hs-sel">_field3</span> <span style="color:red;">::</span> <span>C</span><span style="color:red;">,</span> <span class="hs-sel">_cachedView</span> <span style="color:red;">::</span> <span>D</span> <span style="color:red;">}</span>
+
+<span>expensiveView</span> <span style="color:red;">::</span> <span>A</span> <span style="color:red;">-&gt;</span> <span>B</span> <span style="color:red;">-&gt;</span> <span>C</span> <span style="color:red;">-&gt;</span> <span>D</span>
+<span>expensiveView</span> <span style="color:red;">=</span> <span>...</span>
+
+<span>recache</span> <span style="color:red;">::</span> <span>Record</span> <span style="color:red;">-&gt;</span> <span>Record</span>
+<span>recache</span> <span>r</span> <span style="color:red;">=</span> <span>r</span> <span style="color:red;">{</span> <span class="hs-sel">_cachedView</span> <span style="color:red;">=</span> <span>expensiveView</span> <span style="color:red;">(</span><span class="hs-sel">_field1</span> <span>r</span><span style="color:red;">)</span> <span style="color:red;">(</span><span class="hs-sel">_field2</span> <span>r</span><span style="color:red;">)</span> <span style="color:red;">(</span><span class="hs-sel">_field3</span> <span>r</span><span style="color:red;">)</span> <span style="color:red;">}</span>
+
+<span>cachingLens</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Record</span> <span style="color:red;">-&gt;</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>Record</span> <span style="color:red;">-&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Record</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>Lens'</span> <span>Record</span> <span>a</span>
+<span>cachingLens</span> <span>get</span> <span>set</span> <span style="color:red;">=</span> <span>lens</span> <span>get</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>r</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>recache</span> <span>$</span> <span>set</span> <span>r</span> <span>a</span><span style="color:red;">)</span>
+
+<span>field1</span> <span style="color:red;">::</span> <span>Lens'</span> <span>Record</span> <span>A</span>
+<span>field1</span> <span style="color:red;">=</span> <span>cachingLens</span> <span class="hs-sel">_field1</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>r</span> <span>x</span> <span style="color:red;">-&gt;</span> <span>r</span> <span style="color:red;">{</span> <span class="hs-sel">_field1</span> <span style="color:red;">=</span> <span>x</span> <span style="color:red;">}</span><span style="color:red;">)</span>
+
+<span>field2</span> <span style="color:red;">::</span> <span>Lens'</span> <span>Record</span> <span>B</span>
+<span>field2</span> <span style="color:red;">=</span> <span>cachingLens</span> <span class="hs-sel">_field2</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>r</span> <span>x</span> <span style="color:red;">-&gt;</span> <span>r</span> <span style="color:red;">{</span> <span class="hs-sel">_field2</span> <span style="color:red;">=</span> <span>x</span> <span style="color:red;">}</span><span style="color:red;">)</span>
+
+<span>field3</span> <span style="color:red;">::</span> <span>Lens'</span> <span>Record</span> <span>C</span>
+<span>field3</span> <span style="color:red;">=</span> <span>cachingLens</span> <span class="hs-sel">_field3</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>r</span> <span>x</span> <span style="color:red;">-&gt;</span> <span>r</span> <span style="color:red;">{</span> <span class="hs-sel">_field3</span> <span style="color:red;">=</span> <span>x</span> <span style="color:red;">}</span><span style="color:red;">)</span>
+
+<span>cachedView</span> <span style="color:red;">::</span> <span>Getter</span> <span>Record</span> <span>D</span>
+<span>cachedView</span> <span style="color:red;">=</span> <span>to</span> <span class="hs-sel">_cachedView</span></code></pre>
+<p>This solves all the problems! (1) We never have to remember to update the cached field; using a lens to modify the value of another field will automatically cause the cached view to be recomputed as well. (3) We can’t accidentally set the cached field, since it only has a <code>Getter</code>, not a <code>Lens</code>. In fact, this even solves (2), the problem of having to update the rest of our codebase: if we are already using <code>lens</code> to access fields in the record (as I was), then the rest of the codebase doesn’t have to change at all! And if we aren’t using <code>lens</code> already, then the typechecker will infallibly guide us to all the places we have to fix; once our code typechecks again, we know we have caught every single access to the record in the codebase.</p>
+<h2 id="variant-for-only-a-few-fields">Variant for only a few fields</h2>
+<p>What if we have a large record, and the cached summary value only depends on a few of the fields? In that case, we can save a bit of work for ourselves by getting <code>lens</code> to auto-generate lenses for the other fields, and only handcraft lenses for the fields that are actually involved. Like this:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">{-# LANGUAGE TemplateHaskell #-}</span>
+
+<span style="color:blue;font-weight:bold;">data</span> <span>Record</span> <span style="color:red;">=</span> <span>Record</span>
+  <span style="color:red;">{</span> <span class="hs-sel">_field1</span> <span style="color:red;">::</span> <span>A</span><span style="color:red;">,</span> <span class="hs-sel">_field2</span> <span style="color:red;">::</span> <span>B</span><span style="color:red;">,</span> <span class="hs-sel">_cachedView</span> <span style="color:red;">::</span> <span>C</span><span style="color:red;">,</span> <span>...</span> <span style="color:red;">}</span>
+
+<span>expensiveView</span> <span style="color:red;">::</span> <span>A</span> <span style="color:red;">-&gt;</span> <span>B</span> <span style="color:red;">-&gt;</span> <span>C</span>
+<span>expensiveView</span> <span style="color:red;">=</span> <span>...</span>
+
+<span style="color:blue;font-weight:bold;">let</span> <span>exclude</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span style="color:teal;">'</span><span class="hs-sel">_field1</span><span style="color:red;">,</span> <span style="color:teal;">'</span><span class="hs-sel">_field2</span><span style="color:red;">,</span> <span style="color:teal;">'</span><span class="hs-sel">_cachedView</span><span style="color:red;">]</span> <span style="color:blue;font-weight:bold;">in</span>
+  <span>makeLensesWith</span>
+    <span style="color:red;">(</span><span>lensRules</span> <span>&amp;</span> <span>lensField</span> <span>.</span> <span>mapped</span> <span>.</span> <span>mapped</span> <span>%~</span> <span style="color:red;">\</span><span>fn</span> <span>n</span> <span style="color:red;">-&gt;</span>
+      <span style="color:blue;font-weight:bold;">if</span> <span>n</span> <span>`elem`</span> <span>exclude</span> <span style="color:blue;font-weight:bold;">then</span> <span>[]</span> <span style="color:blue;font-weight:bold;">else</span> <span>fn</span> <span>n</span><span style="color:red;">)</span>
+  <span style="color:teal;">'</span><span style="color:teal;">'</span><span>Record</span>
+
+<span>field1</span> <span style="color:red;">::</span> <span>Lens'</span> <span>Record</span> <span>A</span>
+<span>field1</span> <span style="color:red;">=</span> <span>...</span> <span>similar</span> <span>to</span> <span>before</span> <span>...</span>
+
+<span>field2</span> <span style="color:red;">::</span> <span>Lens'</span> <span>Record</span> <span>B</span>
+<span>field2</span> <span style="color:red;">=</span> <span>...</span>
+
+<span>cachedView</span> <span style="color:red;">::</span> <span>Getter</span> <span>Record</span> <span>C</span>
+<span>cachedView</span> <span style="color:red;">=</span> <span>to</span> <span class="hs-sel">_cachedView</span></code></pre>
+<h2 id="but-what-about-the-lens-laws">But what about the lens laws?</h2>
+<p>You might worry that having a lens for one field automatically update the value of another field might break <a href="https://hackage.haskell.org/package/lens-5.0.1/docs/Control-Lens-Combinators.html#t:Lens">the lens laws</a> somehow, but it’s perfectly legal, as we can check.</p>
+<ol type="1">
+<li><code>view l (set l v s) ≡ v</code> clearly holds: setting the <code>cachedView</code> on the side doesn’t change the fact that we get back out whatever we put into, say, <code>field1</code>.</li>
+<li><code>set l v' (set l v s) ≡ set l v' s</code> also clearly holds. On the left-hand side, the cached summary value will simply get overwritten in the same way that the other field does.</li>
+<li><code>set l (view l s) s ≡ s</code> is actually a bit more subtle. If we view the value of <code>field1</code>, then <code>set</code> it with the same value again, how do we know the value of the overall record <code>s</code> doesn’t change? In particular, could we end up with a different <code>cachedView</code> even though <code>field1</code> is the same? But in fact, in this specific scenario (putting the same value back into a field that we just read), the value of the <code>cachedView</code> won’t change. This depends on two facts: first, that the <code>expensiveView</code> is a deterministic function which always returns the same summary value for the same input record. Of course this is guaranteed by the fact that it’s a pure function. Second, we must maintain the invariant that the <code>cachedView</code> is always up-to-date, so that recomputing the summary value after setting a field to the same value it already had will simply produce the same summary value again, because we know the summary value was correct to begin with. And of course, maintaining this invariant is the whole point; it’s guaranteed by the way we only export the lenses (and only a <code>Getter</code> for the <code>cachedView</code>) and not the record constructor.</li>
+</ol>
+<p>And that’s it! I’ve been using this approach very successfully in a current project (the <a href="https://byorgey.wordpress.com/2021/09/08/implementing-hindley-milner-with-the-unification-fd-library/">same project that got me to implement Hindley-Milner with <code>unification-fd</code></a>—watch this space for an announcement soon!). If you know of similar approaches that have been written about elsewhere, or if you end up using this technique in your own project, I’d love to hear about it.</p>
+

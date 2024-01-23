@@ -1,0 +1,39 @@
+---
+title: Binary search over floating point representations
+published: 2023-01-02T13:44:33Z
+categories: haskell
+tags: binary,floating point,search
+---
+
+<p>I got some good feedback on <a href="https://byorgey.wordpress.com/2023/01/01/competitive-programming-in-haskell-better-binary-search/">my last post about binary search</a>, and thought it was worth a follow-up post.</p>
+<h2 id="an-important-fix">An important fix</h2>
+<p>First things first: commenter Globules <a href="https://byorgey.wordpress.com/2023/01/01/competitive-programming-in-haskell-better-binary-search/#comment-40870">pointed out</a> that doing <code>(l+r) `div` 2</code> can overflow; my initial, glib answer was “sure, you have to be careful when doing arithmetic with fixed-sized integers”, but then I realized that it was easily fixable in this case! So I replaced that formula with <code>l + (r-l) `div` 2</code> which won’t overflow, even when searching for values near the top of the range of a fixed-sized integer type.</p>
+<h2 id="an-entirely-frivolous-distraction-that-i-spent-way-too-much-time-on">An entirely frivolous distraction that I spent way too much time on</h2>
+<p>With that out of the way, let’s get to the more interesting discussion. Several commenters took issue with my use of <code>unsafeCoerce</code> to convert <code>Double</code> into <code>Word64</code> and do binary search over bit representations for floating-point numbers, and they raised some good points:</p>
+<ol type="1">
+<li>Even if, in the context of competitive programming, we’re not particularly concerned with maintainability or safety, there’s no guarantee that <code>unsafeCoerce</code> will behave the same on our local machine as on the judging machine! For example, the endianness might be different.</li>
+<li>Worse, it <strong>just plain doesn’t work</strong>: my worry about the bit representation of negative numbers looking <em>bigger</em> than that of positive numbers, because of the sign bit, was actually a very valid worry. It just so happens to work when searching for positive numbers, but when searching for negative numbers it goes into an infinite loop!</li>
+</ol>
+<p>In my defense, I got this idea from Jules Jacobs’s original article… but looking at it again, there is a key footnote that I hadn’t noticed before:</p>
+<p><em>I’m assuming that <code>f2b</code> respects ordering, that is, comparing <code>f2b(x) &lt; f2b(y)</code> gives the same result as comparing the floats <code>x &lt; y</code>. Depending on the bit representation of floats, one would have to shuffle the mantissa and exponent and sign bits around to ensure this.</em></p>
+<p>Oops, of course! It turns out there are a lot of things about the IEEE-754 standard which make this work nicely for positive numbers: the exponent is stored first, with a bias so we don’t have to deal with signed exponents, and the mantissa is always understood to have a leading 1 bit which is not stored. For positive floating-point numbers $latex x$ and $latex y$, it’s already the case that $latex x &lt; y$ if and only if their IEEE-754 representations, considered as unsigned integers, are in the same order! This is very clever, and it seems it was done this way on purpose, so that hardware comparison of floating-point numbers can be fast. And this is what made my example in the previous post work at all.</p>
+<p>However, for negative numbers this doesn’t quite work. First of all, the high-order bit is the sign bit, so negative numbers all appear larger when interpreted as unsigned integers. Interpreting them as signed integers doesn’t work either, because they are just stored as a sign bit and a magnitude, as opposed to signed integers which are typically stored using 2’s complement, so negative floating point numbers are “backwards” compared to the interpretation of their bit pattern as (signed or unsigned) integers. But this is not hard to fix; commenter babel <a href="https://byorgey.wordpress.com/2023/01/01/competitive-programming-in-haskell-better-binary-search/#comment-40882">linked to a reference</a> explaining exactly how to do the required bit-twiddling. Essentially, we always flip the sign bit, and flip all the other bits too if the sign bit was set.</p>
+<p>So I could have just done this bit-twiddling on the result of <code>unsafeCoerce</code>. However, goaded by some other commenters, I wanted to try using <code>encodeFloat</code>/<code>decodeFloat</code> instead of <code>unsafeCoerce</code> to make it a little more platform-independent. I ended up spending <strong>many hours</strong> on this. I fixed about 17 gazillion bugs and gave up several times in frustration, only to realize another bug later and come back to it. In the end, though, I got it to work! You can <a href="https://github.com/byorgey/comprog-hs/blob/eeeda59ca0cf30fe458fe5cbaba72a9be0bf451d/BinarySearch.hs#L86">see my <code>f2b :: Double -&gt; Word64</code> and <code>b2f :: Word64 -&gt; Double</code> functions here</a>. I do make some assumptions about the size of <code>Double</code> values, so it’s not <em>completely</em> platform-independent, but at least it should be independent of the endianness.</p>
+<p>How do I know it’s correct? Well, I can’t be 100% sure, but I verified each of the following properties by running QuickCheck on a million random inputs (and I used these properties to find lots of bugs!):</p>
+<ul>
+<li><code>f2b</code> is monotonic: for all <code>x :: Double</code>, <code>x &lt; y</code> if and only if <code>f2b x &lt; f2b y</code>.</li>
+<li><code>b2f</code> is left inverse to <code>f2b</code>: for all <code>x :: Double</code>, <code>b2f (f2b x) == x</code>.</li>
+<li><code>b2f</code> is <em>almost</em> a right inverse to <code>f2b</code>; this direction is made more complicated by the fact that some <code>Word64</code> values correspond to <code>Infinity</code> or <code>NaN</code>. Also, there are some <code>Word64</code> values that correspond to really tiny floating-point values on the very edge of what is representable, where <code>f2b (b2f w)</code> is one more or less than the original <code>w</code>.</li>
+<li>It’s actually not enough that <code>x &lt; y</code> implies <code>f2b x &lt; f2b y</code>; we also need the fact that the midpoint between <code>f2b x</code> and <code>f2b y</code> will correspond to a floating-point number between <code>x</code> and <code>y</code>. I was worried about this for a while, until I finally understood the fact that the mantissa is always assumed to have a leading <code>1</code> which is <em>not stored</em>. That makes everything work out nicely, and I checked this property with QuickCheck as well.</li>
+</ul>
+<p>So, let’s see it in action! We can search for negative values now, or values that don’t exist, etc.</p>
+<pre><code>λ&gt; search floating (&gt; (-3.2934)) (-100) 100
+(-3.2934,-3.2933999999999997)
+λ&gt; search floating (\x -&gt; x**7 &gt;= 1e34) (-1e100) (1e100)
+(71968.56730011519,71968.5673001152)
+λ&gt; search floating (\x -&gt; x**2 &gt;= 150) 0 100
+(12.247448713915889,12.24744871391589)
+λ&gt; search floating (\x -&gt; x**2 &gt;= (-150)) (-1e308) (1e308)
+(-1.0e308,-9.999999999999998e307)</code></pre>
+<p>So, was it worth it? From a competitive programming point of view, probably not! I can think of one or two times I’ve really struggled with precision issues where this <em>might</em> have helped. But 99.9% of the time you can just use a normal binary search on floating-point values until you get within the required tolerance. Overall, though, despite the extreme frustration, this was a fun detour through some things I didn’t understand very well before. I now know a <em>lot</em> more about IEEE-754 encoding and Haskell’s support for floating-point values!</p>
+

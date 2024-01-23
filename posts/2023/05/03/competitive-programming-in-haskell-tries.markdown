@@ -1,0 +1,105 @@
+---
+title: Competitive programming in Haskell: tries
+published: 2023-05-03T19:57:58Z
+categories: competitive programming,haskell
+tags: challenge,Kattis,trie
+---
+
+<p>In <a href="https://byorgey.wordpress.com/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness/">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/alienmath">Alien Math</a>, which is about reading numbers in some base $latex B$, but with a twist. We are given a list of $latex B$ strings representing the <em>names</em> of the digits $latex 0$ through $latex B-1$, and a single string describing a number, consisting of <em>concatenated</em> digit names. For example, if $latex B = 3$ and the names of the digits are <code>zero</code>, <code>one</code>, <code>two</code>, then we might be given a string like <code>twotwozerotwoone</code>, which we should interpret as $latex 22021_3 = 223_{10}$. Crucially, we are also told that the digit names are <em>prefix-free</em>, that is, no digit name is a prefix of any other. But other than that, the digit names could be really weird: they could be very different lengths, some digit names could occur as substrings (just not prefixes) of others, digit names could share common prefixes, and so on. So this is really more of a <em>parsing</em> problem than a math problem; once we have parsed the string as a list of digits, converting from base $latex B$ is the easy part.</p>
+<p>One simple way we can do this is to define a map from digit names to digits, and simply look up each prefix of the given string until we find a hit, then chop off that prefix and start looking at successive prefixes of the remainder. This takes something like $latex O(n^2 \lg n)$ time in the worst case (I think)—but this is actually fine since $latex n$ is at most 300. This solution is accepted and runs in 0.00 seconds for me.</p>
+<h2 id="tries">Tries</h2>
+<p>However, I want to talk about a more sophisticated solution that has better asymptotic time complexity and generalizes nicely to other problems. Reading a sequence of strings from a prefix-free set should make you think of <a href="https://en.wikipedia.org/wiki/Huffman_coding">Huffman coding</a>, if you’ve ever seen that before. In general, the idea is to define a <a href="https://en.wikipedia.org/wiki/Trie">trie</a> containing all the digit names, with each leaf storing the corresponding digit. We can then scan through the input one character at a time, keeping track of our current position in trie, and emit a digit (and restart at the root) every time we reach a leaf. This should run in $latex O(n)$ time.</p>
+<p>Let’s see some generic Haskell code for tries (this code can also be found at <a href="https://github.com/byorgey/comprog-hs/blob/master/Trie.hs">byorgey/comprog-hs/Trie.hs</a> on GitHub). First, some imports, a data type definition, and <code>emptyTrie</code> and <code>foldTrie</code> for convenience:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">module</span> <span>Trie</span> <span style="color: blue;font-weight: bold">where</span>
+
+<span style="color: blue;font-weight: bold">import</span>           <span>Control.Monad</span>              <span style="color: red">(</span><span style="color: red">(</span><span>&gt;=&gt;</span><span style="color: red">)</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span> <span style="color: blue;font-weight: bold">qualified</span> <span>Data.ByteString.Lazy.Char8</span> <span style="color: blue;font-weight: bold">as</span> <span>C</span>
+<span style="color: blue;font-weight: bold">import</span>           <span>Data.List</span>                  <span style="color: red">(</span><span>foldl'</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span>           <span>Data.Map</span>                   <span style="color: red">(</span><span>Map</span><span style="color: red">,</span> <span style="color: red">(</span><span>!</span><span style="color: red">)</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span> <span style="color: blue;font-weight: bold">qualified</span> <span>Data.Map</span>                   <span style="color: blue;font-weight: bold">as</span> <span>M</span>
+<span style="color: blue;font-weight: bold">import</span>           <span>Data.Maybe</span>                 <span style="color: red">(</span><span>fromMaybe</span><span style="color: red">)</span>
+
+<span style="color: blue;font-weight: bold">data</span> <span>Trie</span> <span>a</span> <span style="color: red">=</span> <span>Trie</span>
+  <span style="color: red">{</span> <span>trieSize</span> <span style="color: red">::</span> <span>!</span><span>Int</span>
+  <span style="color: red">,</span> <span>value</span>    <span style="color: red">::</span> <span>!</span><span style="color: red">(</span><span>Maybe</span> <span>a</span><span style="color: red">)</span>
+  <span style="color: red">,</span> <span>children</span> <span style="color: red">::</span> <span>!</span><span style="color: red">(</span><span>Map</span> <span>Char</span> <span style="color: red">(</span><span>Trie</span> <span>a</span><span style="color: red">)</span><span style="color: red">)</span>
+  <span style="color: red">}</span>
+  <span style="color: blue;font-weight: bold">deriving</span> <span>Show</span>
+
+<span>emptyTrie</span> <span style="color: red">::</span> <span>Trie</span> <span>a</span>
+<span>emptyTrie</span> <span style="color: red">=</span> <span>Trie</span> <span class="hs-num">0</span> <span>Nothing</span> <span>M.empty</span>
+
+<span style="color: green">-- | Fold a trie into a summary value.</span>
+<span>foldTrie</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Int</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span>a</span> <span style="color: red">-&gt;</span> <span>Map</span> <span>Char</span> <span>r</span> <span style="color: red">-&gt;</span> <span>r</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Trie</span> <span>a</span> <span style="color: red">-&gt;</span> <span>r</span>
+<span>foldTrie</span> <span>f</span> <span style="color: red">(</span><span>Trie</span> <span>n</span> <span>b</span> <span>m</span><span style="color: red">)</span> <span style="color: red">=</span> <span>f</span> <span>n</span> <span>b</span> <span style="color: red">(</span><span>M.map</span> <span style="color: red">(</span><span>foldTrie</span> <span>f</span><span style="color: red">)</span> <span>m</span><span style="color: red">)</span></code></pre>
+<p>A trie has a cached size (we could easily generalize this to store any sort of monoidal annotation), a possible value (<em>i.e.</em> the value associated with the empty string key, if any), and a map from characters to child tries. The cached size is not needed for this problem, but is included since I needed it for some other problems.</p>
+<p>Now for inserting a key/value pair into a <code>Trie</code>. This code honestly took me a while to get right! We fold over the given string key, producing for each key suffix a <em>function</em> which will insert that key suffix into a trie. We have to be careful to correctly update the size, which depends on whether the key being inserted already exists—so the recursive <code>go</code> function actually returns a pair of a new <code>Trie</code> and an <code>Int</code> representing the change in size.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: green">-- | Insert a new key/value pair into a trie, updating the size</span>
+<span style="color: green">--   appropriately.</span>
+<span>insert</span> <span style="color: red">::</span> <span>C.ByteString</span> <span style="color: red">-&gt;</span> <span>a</span> <span style="color: red">-&gt;</span> <span>Trie</span> <span>a</span> <span style="color: red">-&gt;</span> <span>Trie</span> <span>a</span>
+<span>insert</span> <span>w</span> <span>a</span> <span>t</span> <span style="color: red">=</span> <span>fst</span> <span style="color: red">(</span><span>go</span> <span>w</span> <span>t</span><span style="color: red">)</span>
+  <span style="color: blue;font-weight: bold">where</span>
+    <span>go</span> <span style="color: red">=</span> <span>C.foldr</span>
+      <span style="color: red">(</span><span style="color: red">\</span><span>c</span> <span>insSuffix</span> <span style="color: red">(</span><span>Trie</span> <span>n</span> <span>v</span> <span>m</span><span style="color: red">)</span> <span style="color: red">-&gt;</span>
+         <span style="color: blue;font-weight: bold">let</span> <span style="color: red">(</span><span>t'</span><span style="color: red">,</span> <span>ds</span><span style="color: red">)</span> <span style="color: red">=</span> <span>insSuffix</span> <span style="color: red">(</span><span>fromMaybe</span> <span>emptyTrie</span> <span style="color: red">(</span><span>M.lookup</span> <span>c</span> <span>m</span><span style="color: red">)</span><span style="color: red">)</span>
+         <span style="color: blue;font-weight: bold">in</span>  <span style="color: red">(</span><span>Trie</span> <span style="color: red">(</span><span>n</span><span>+</span><span>ds</span><span style="color: red">)</span> <span>v</span> <span style="color: red">(</span><span>M.insert</span> <span>c</span> <span>t'</span> <span>m</span><span style="color: red">)</span><span style="color: red">,</span> <span>ds</span><span style="color: red">)</span>
+      <span style="color: red">)</span>
+      <span style="color: red">(</span><span style="color: red">\</span><span style="color: red">(</span><span>Trie</span> <span>n</span> <span>v</span> <span>m</span><span style="color: red">)</span> <span style="color: red">-&gt;</span>
+         <span style="color: blue;font-weight: bold">let</span> <span>ds</span> <span style="color: red">=</span> <span style="color: blue;font-weight: bold">if</span> <span>isJust</span> <span>v</span> <span style="color: blue;font-weight: bold">then</span> <span class="hs-num">0</span> <span style="color: blue;font-weight: bold">else</span> <span class="hs-num">1</span>
+         <span style="color: blue;font-weight: bold">in</span>  <span style="color: red">(</span><span>Trie</span> <span style="color: red">(</span><span>n</span><span>+</span><span>ds</span><span style="color: red">)</span> <span style="color: red">(</span><span>Just</span> <span>a</span><span style="color: red">)</span> <span>m</span><span style="color: red">,</span> <span>ds</span><span style="color: red">)</span>
+      <span style="color: red">)</span></code></pre>
+<p>Now we can create an entire <code>Trie</code> in one go by folding over a list of key/value pairs with <code>insert</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: green">-- | Create an initial trie from a list of key/value pairs.  If there</span>
+<span style="color: green">--   are multiple pairs with the same key, later pairs override</span>
+<span style="color: green">--   earlier ones.</span>
+<span>mkTrie</span> <span style="color: red">::</span> <span style="color: red">[</span><span style="color: red">(</span><span>C.ByteString</span><span style="color: red">,</span> <span>a</span><span style="color: red">)</span><span style="color: red">]</span> <span style="color: red">-&gt;</span> <span>Trie</span> <span>a</span>
+<span>mkTrie</span> <span style="color: red">=</span> <span>foldl'</span> <span style="color: red">(</span><span>flip</span> <span style="color: red">(</span><span>uncurry</span> <span>insert</span><span style="color: red">)</span><span style="color: red">)</span> <span>emptyTrie</span></code></pre>
+<p>A few lookup functions: one to look up a single character and return the corresponding child trie, and then on top of that we can build one to look up the value associated to an entire string key.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: green">-- | Look up a single character in a trie, returning the corresponding</span>
+<span style="color: green">--   child trie (if any).</span>
+<span>lookup1</span> <span style="color: red">::</span> <span>Char</span> <span style="color: red">-&gt;</span> <span>Trie</span> <span>a</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span style="color: red">(</span><span>Trie</span> <span>a</span><span style="color: red">)</span>
+<span>lookup1</span> <span>c</span> <span style="color: red">=</span> <span>M.lookup</span> <span>c</span> <span>.</span> <span>children</span>
+
+<span style="color: green">-- | Look up a string key in a trie, returning the corresponding value</span>
+<span style="color: green">--   (if any).</span>
+<span>lookup</span> <span style="color: red">::</span> <span>C.ByteString</span> <span style="color: red">-&gt;</span> <span>Trie</span> <span>a</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span>a</span>
+<span>lookup</span> <span style="color: red">=</span> <span>C.foldr</span> <span style="color: red">(</span><span style="color: red">(</span><span>&gt;=&gt;</span><span style="color: red">)</span> <span>.</span> <span>lookup1</span><span style="color: red">)</span> <span>value</span></code></pre>
+<p>Finally, a function that often comes in handy for using a trie to decode a prefix-free code. It takes an input string and looks it up character by character; every time it encounters a key which exists in the trie, it emits the corresponding value and then starts over at the root of the trie.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>decode</span> <span style="color: red">::</span> <span>Trie</span> <span>a</span> <span style="color: red">-&gt;</span> <span>C.ByteString</span> <span style="color: red">-&gt;</span> <span style="color: red">[</span><span>a</span><span style="color: red">]</span>
+<span>decode</span> <span>t</span> <span style="color: red">=</span> <span>reverse</span> <span>.</span> <span>snd</span> <span>.</span> <span>C.foldl'</span> <span>step</span> <span style="color: red">(</span><span>t</span><span style="color: red">,</span> <span>[]</span><span style="color: red">)</span>
+  <span style="color: blue;font-weight: bold">where</span>
+    <span>step</span> <span style="color: red">(</span><span>s</span><span style="color: red">,</span> <span style="color: blue;font-weight: bold">as</span><span style="color: red">)</span> <span>c</span> <span style="color: red">=</span>
+      <span style="color: blue;font-weight: bold">let</span> <span>Just</span> <span>s'</span> <span style="color: red">=</span> <span>lookup1</span> <span>c</span> <span>s</span>
+      <span style="color: blue;font-weight: bold">in</span>  <span>maybe</span> <span style="color: red">(</span><span>s'</span><span style="color: red">,</span> <span style="color: blue;font-weight: bold">as</span><span style="color: red">)</span> <span style="color: red">(</span><span style="color: red">\</span><span>a</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>t</span><span style="color: red">,</span> <span>a</span><span>:</span><span style="color: blue;font-weight: bold">as</span><span style="color: red">)</span><span style="color: red">)</span> <span style="color: red">(</span><span>value</span> <span>s'</span><span style="color: red">)</span></code></pre>
+<p>These tries are limited to string keys, since that is most useful in a competitive programming context, but it is of course possible to make much more general sorts of tries — see <a href="https://www.cs.ox.ac.uk/ralf.hinze/publications/GGTries/index.html">Hinze, <em>Generalizing Generalized Tries</em></a>.</p>
+<h2 id="solution">Solution</h2>
+<p>Finally, we can use our generic tries to solve the problem: read the input, build a trie mapping digit names to values, use the <code>decode</code> function to read the given number, and finally interpret the resulting list of digits in the given base.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">import</span> <span>Control.Arrow</span> <span style="color: red">(</span><span style="color: red">(</span><span>&gt;&gt;&gt;</span><span style="color: red">)</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span> <span>ScannerBS</span>
+<span style="color: blue;font-weight: bold">import</span> <span>Trie</span>
+
+<span>main</span> <span style="color: red">=</span> <span>C.interact</span> <span>$</span> <span>runScanner</span> <span>tc</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>showB</span>
+
+<span style="color: blue;font-weight: bold">data</span> <span>TC</span> <span style="color: red">=</span> <span>TC</span> <span style="color: red">{</span> <span>base</span> <span style="color: red">::</span> <span>Integer</span><span style="color: red">,</span> <span>digits</span> <span style="color: red">::</span> <span style="color: red">[</span><span>C.ByteString</span><span style="color: red">]</span><span style="color: red">,</span> <span>number</span> <span style="color: red">::</span> <span>C.ByteString</span> <span style="color: red">}</span>
+  <span style="color: blue;font-weight: bold">deriving</span> <span style="color: red">(</span><span>Eq</span><span style="color: red">,</span> <span>Show</span><span style="color: red">)</span>
+
+<span>tc</span> <span style="color: red">::</span> <span>Scanner</span> <span>TC</span>
+<span>tc</span> <span style="color: red">=</span> <span style="color: blue;font-weight: bold">do</span>
+  <span>base</span> <span style="color: red">&lt;-</span> <span>integer</span>
+  <span>TC</span> <span>base</span> <span>&lt;$&gt;</span> <span style="color: red">(</span><span>fromIntegral</span> <span>base</span> <span>&gt;&lt;</span> <span>str</span><span style="color: red">)</span> <span>&lt;*&gt;</span> <span>str</span>
+
+<span>solve</span> <span style="color: red">::</span> <span>TC</span> <span style="color: red">-&gt;</span> <span>Integer</span>
+<span>solve</span> <span>TC</span><span style="color: red">{</span><span style="color: red">..</span><span style="color: red">}</span> <span style="color: red">=</span> <span>foldl'</span> <span style="color: red">(</span><span style="color: red">\</span><span>n</span> <span>d</span> <span style="color: red">-&gt;</span> <span>n</span><span>*</span><span>base</span> <span>+</span> <span>d</span><span style="color: red">)</span> <span class="hs-num">0</span> <span style="color: red">(</span><span>decode</span> <span>t</span> <span>number</span><span style="color: red">)</span>
+  <span style="color: blue;font-weight: bold">where</span>
+    <span>t</span> <span style="color: red">=</span> <span>mkTrie</span> <span style="color: red">(</span><span>zip</span> <span>digits</span> <span style="color: red">[</span><span class="hs-num">0</span> <span style="color: red">::</span> <span>Integer</span> <span style="color: red">..</span><span style="color: red">]</span><span style="color: red">)</span>
+</code></pre>
+<h2 id="practice-problems">Practice problems</h2>
+<p>Here are a few other problems where you can profitably make use of tries. Some of these can be solved directly using the <code>Trie</code> code given above; others may require some modifications or enhancements to the basic concept.</p>
+<ul>
+<li><a href="https://open.kattis.com/problems/baza">Baza</a></li>
+<li><a href="https://open.kattis.com/problems/prefixfreecode">Prefix Free Code</a></li>
+<li><a href="https://open.kattis.com/problems/haiku">Haiku</a></li>
+</ul>
+<h2 id="for-next-time">For next time</h2>
+<p>For next time, I challenge you to solve <a href="https://open.kattis.com/problems/chemistsvows">Chemist’s vows</a>!</p>
+

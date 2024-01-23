@@ -1,0 +1,42 @@
+---
+title: Maniac week postmortem
+published: 2014-08-19T16:02:04Z
+categories: meta
+tags: Beeminder,commitment,dissertation,maniac,productivity,week
+---
+
+<p>My <a href="http://byorgey.wordpress.com/2014/08/04/maniac-week/">maniac week</a> was a great success! First things first: here’s a time-lapse video<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> (I recommend watching it at the full size, 1280x720).</p>
+<p>[youtube http://www.youtube.com/watch?v=WH8TiSYplng&w=560&h=315]</p>
+<p>Some statistics<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>:</p>
+<ul>
+<li>Total hours of productive work: 55.5 (74 pings)</li>
+<li>Average hours of work per day<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>: 11</li>
+<li>Average hours of sleep per night: 7.8 (52 pings over 5 nights)<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a></li>
+<li>Total hours not working or sleeping: 27.25 (37 pings)</li>
+<li>Average hours not working per day: 5.5</li>
+<li>Pages of dissertation written: 24 (157 to 181)</li>
+</ul>
+<p>[I was planning to also make a visualization of my TagTime data showing when I was sleeping, working, or not-working, but putting together the video and this blog post has taken long enough already! Perhaps I’ll get around to it later.]</p>
+<p>Overall, I would call the experiment a huge success—although as you can see, I was a full 2.5 hours per day off my target of 13.5 hours of productive work each day. What with eating, showering, making lunch, getting dinner, taking breaks (both intentional breaks as well as slacking off), and a few miscellaneous things I had to take care of like taking the car to get the tire pressure adjusted… it all adds up surprisingly fast. I think this was one of the biggest revelations for me; going into it I thought 3 hours of not-work per day was extremely generous. I now think three hours of not-work per day is probably within reach for me but would be extremely difficult, and would probably require things like planning out meals ahead of time. In any case, 55 hours of actual, focused work is still fantastic.</p>
+<p>Some random observations/thoughts:</p>
+<ul>
+<li><p>Having multiple projects to work on was really valuable; when I got tired of working on one thing I could often just switch to something else instead of taking an actual break. I can imagine this might be different if I were working on a big coding project (as most of the other maniac weeks have been). The big project would itself provide multiple different subtasks to work on, but more importantly, coding provides immediate feedback that is really addictive. Code a new feature, and you can actually run the new code! And it does something cool! That it didn’t do before! In contrast, when I write another page of my dissertation I just have… another page of my dissertation. I am, in fact, relatively excited about my dissertation, but it can’t provide that same sort of immediate reinforcing feedback, and it was difficult to keep going at times.</p></li>
+<li><p>I found that having music playing really helped me get into a state of “flow”. The first few days I would play some album and then it would stop and I wouldn’t think to put on more. Later in the week I would just queue up many hours of music at a time and that worked great.</p></li>
+<li><p>I was definitely feeling worn out by the end of the week—the last two days in particular, it felt a lot harder to get into a flow. I think I felt so good the first few days that I became overconfident—which is good to keep in mind if I do this again. The evening of 12 August was particularly bad; I just couldn’t focus. It might have been better in the long run to just go home and read a book or something; I’m just not sure how to tell in the moment when I should push through and when it’s better to cut my losses.</p></li>
+<li><p>Blocking Facebook, turning off email notifications, <em>etc.</em> was really helpful. I did end up allowing myself to check email using my phone (I edited the rules a few hours before I started) and I think it was a good idea—I ended up still needing to communicate with some people, so it was very convenient and not too distracting.</p></li>
+<li><p>Note there are two places on Tuesday afternoon where you can see the clock jump ahead by an hour or so; of course those are times when I turned off the recording. One corresponded to a time when I needed to read and write some sensitive emails; during the other, I was putting student pictures into an anki deck, and turned off the recording to avoid running afoul of <a href="http://www2.ed.gov/policy/gen/guid/fpco/ferpa/index.html">FERPA</a>.</p></li>
+</ul>
+<p>That’s all I can think of for now; questions or comments, of course, are welcome.</p>
+<div class="references">
+
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Some technical notes (don’t try this at home; see http://expost.padm.us/maniactech for some recommendations on making your own timelapse). To record and create the video I used a homegrown concoction of scrot, streamer, ImageMagick, ffmpeg, with some zsh and Haskell scripts to tie it all together, and using <a href="http://projects.haskell.org/diagrams/">diagrams</a> to generate the clock and tag displays. I took about 3GB worth of raw screenshots, and it takes probably about a half hour to process all of it into a video.<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>These statistics are according to <a href="http://messymatters.com/tagtime/">TagTime</a>, <em>i.e.</em> gathered via random sampling, so there is a bit of inherent uncertainty. I leave it as an exercise for the reader to calculate the proper error bars on these times (given that I use a standard ping interval of 45 minutes).<a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>Computed as 74/(171 - 9) pings multiplied by 24 hours; 9 pings occurred on Sunday morning which I did not count as part of the maniac week.<a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p>This is somewhat inflated by Saturday night/Sunday morning, when I <em>both</em> slept in <em>and</em> got a higher-than-average number of pings; the average excluding that night is 6.75 hours, which sounds about right.<a href="#fnref4">↩</a></p></li>
+</ol>
+</div>
+

@@ -1,0 +1,282 @@
+---
+title: Advent of code #16 solution: an algebra of bitstrings
+published: 2017-01-27T18:36:09Z
+categories: haskell
+tags: advent,algebra,bits,code,curve,dragon,DSL
+---
+
+<p>I had fun this past December solving <a href="http://adventofcode.com/">Advent of Code</a> problems in Haskell. I was particularly proud of my solution to <a href="http://adventofcode.com/2016/day/16">one particular problem</a> involving generating and processing large bitstrings, which I’d like to share here. I think it really shows off the power of an algebraic, DSL-based approach to problem solving.</p>
+<p>This post is literate Haskell—download it and play along!</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:green;">{-# LANGUAGE GADTs #-}</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Arrow</span>   <span style="color:red;">(</span><span style="color:red;">(</span><span>***</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Bits</span>       <span style="color:red;">(</span><span>xor</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>List</span>       <span style="color:red;">(</span><span>unfoldr</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>List</span><span>.</span><span>Split</span> <span style="color:red;">(</span><span>chunksOf</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Maybe</span>      <span style="color:red;">(</span><span>fromJust</span><span style="color:red;">)</span>
+</code></pre>
+<h1 id="the-problem">The problem</h1>
+<p>You can go <a href="http://adventofcode.com/2016/day/16">read the problem description</a> if you like, but it’s rather verbose—I’ll try to give a more concise description here, illustrated with Haskell code.</p>
+<p>The problem is concerned with strings of bits:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>BitString</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span>Bool</span><span style="color:red;">]</span>
+</code></pre>
+<p>We’ll start just by defining a few utility functions to view and input bitstrings conveniently.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>readbits</span> <span style="color:red;">::</span> <span>String</span> <span style="color:red;">-&gt;</span> <span>BitString</span>
+<span>&gt;</span> <span>readbits</span> <span style="color:red;">=</span> <span>map</span> <span style="color:red;">(</span><span>==</span><span style="color:teal;">'1'</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>showbits</span> <span style="color:red;">::</span> <span>BitString</span> <span style="color:red;">-&gt;</span> <span>String</span>
+<span>&gt;</span> <span>showbits</span> <span style="color:red;">=</span> <span>map</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>b</span> <span style="color:red;">-&gt;</span> <span style="color:blue;font-weight:bold;">if</span> <span>b</span> <span style="color:blue;font-weight:bold;">then</span> <span style="color:teal;">'1'</span> <span style="color:blue;font-weight:bold;">else</span> <span style="color:teal;">'0'</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>withbits</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>BitString</span> <span style="color:red;">-&gt;</span> <span>BitString</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>String</span> <span style="color:red;">-&gt;</span> <span>String</span>
+<span>&gt;</span> <span>withbits</span> <span>f</span> <span style="color:red;">=</span> <span>showbits</span> <span>.</span> <span>f</span> <span>.</span> <span>readbits</span>
+</code></pre>
+<p>Now on to the problem proper. There is a central operation—which I’ll call the “dragon transform”—which makes a longer bitstring from a shorter one. Given a bitstring $latex s$, append a 0 to the end, and then append a reversed and inverted version of $latex s$ (where “invert” means to flip all the bits). Like so:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>invert</span> <span style="color:red;">::</span> <span>BitString</span> <span style="color:red;">-&gt;</span> <span>BitString</span>
+<span>&gt;</span> <span>invert</span> <span style="color:red;">=</span> <span>map</span> <span>not</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>dragon</span> <span style="color:red;">::</span> <span>BitString</span> <span style="color:red;">-&gt;</span> <span>BitString</span>
+<span>&gt;</span> <span>dragon</span> <span>s</span> <span style="color:red;">=</span> <span>s</span> <span>++</span> <span style="color:red;">[</span><span>False</span><span style="color:red;">]</span> <span>++</span> <span>invert</span> <span style="color:red;">(</span><span>reverse</span> <span>s</span><span style="color:red;">)</span>
+</code></pre>
+<p>For example,</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>withbits dragon "1"
+  "100"
+
+<span style="color:gray;">ghci&gt; </span>withbits dragon "1101111"
+  "110111100000100"
+</code></pre>
+<p>(Incidentally, this operation is called <code>dragon</code> since it is related to the classic <a href="https://en.wikipedia.org/wiki/Dragon_curve">dragon curve</a>. Hint: interpret 0 as a left turn and 1 as a right turn.)</p>
+<p>Given a starting bitstring, and a target length, we are supposed to iterate <code>dragon</code> until we have at least the number of target bits, and then truncate the string to the desired length:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>fill</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>BitString</span> <span style="color:red;">-&gt;</span> <span>BitString</span>
+<span>&gt;</span> <span>fill</span> <span>len</span> <span style="color:red;">=</span> <span>take</span> <span>len</span> <span>.</span> <span>head</span> <span>.</span> <span>dropWhile</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>&lt;</span> <span>len</span><span style="color:red;">)</span> <span>.</span> <span>length</span><span style="color:red;">)</span> <span>.</span> <span>iterate</span> <span>dragon</span>
+</code></pre>
+<p>For example, if we start with <code>1</code>, we have to iterate <code>dragon</code> three times to end up with at least ten bits.</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>map showbits . take 4 $ iterate dragon [True]
+  ["1","100","1000110","100011001001110"]
+
+<span style="color:gray;">ghci&gt; </span>withbits (fill 10) "1"
+  "1000110010"
+</code></pre>
+<p>Finally, after extending an initial bitstring to a given length, we perform a checksum operation:</p>
+<ul>
+<li>If there are an odd number of bits, we are done.</li>
+<li>Otherwise, take the bits two at a time and compute the negation of their exclusive or: that is, 1 if the bits are the same and 0 if they are different (otherwise known as <code>(==)</code>). This results in a bitstring half as long. Now repeat the process, continuing to halve the length until we have an odd number of bits remaining.</li>
+</ul>
+<p>In code:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>checksum</span> <span style="color:red;">::</span> <span>BitString</span> <span style="color:red;">-&gt;</span> <span>BitString</span>
+<span>&gt;</span> <span>checksum</span> <span>a</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>odd</span> <span style="color:red;">(</span><span>length</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>a</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span>checksum</span> <span>.</span> <span>map</span> <span>xnor</span> <span>.</span> <span>chunksOf</span> <span class="hs-num">2</span> <span>$</span> <span>a</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>     <span>xnor</span> <span style="color:red;">[</span><span>x</span><span style="color:red;">,</span><span>y</span><span style="color:red;">]</span> <span style="color:red;">=</span> <span>x</span> <span>==</span> <span>y</span>
+</code></pre>
+<h1 id="the-first-task">The first task</h1>
+<p>So, we now have a simple reference implementation that directly follows the specification. We can use this to solve the first task, which just asks to start with a given short bitstring, extend it to length $latex 272$, and then compute the checksum. I think different logged-in users get different starting strings, but mine was <code>01000100010010111</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>input</span> <span style="color:red;">=</span> <span style="color:teal;">"01000100010010111"</span>
+</code></pre>
+<pre><code><span style="color:gray;">ghci&gt; </span>withbits (checksum . fill 272) input
+  "10010010110011010"
+</code></pre>
+<p>Notice that $latex 272 = 17 \cdot 2^4$, so after expanding to that length and then repeatedly halving the length, we end up with a checksum of length 17.</p>
+<h1 id="the-second-task">The second task</h1>
+<p>That was easy. Bring on the second task! Well… of course, it is much bigger. It asks to use the same starting bitstring, but this time extend it to length $latex 35651584 = 17 \cdot 2^{21}$ before computing the checksum (which will again end up having length 17). Using this naive, unoptimized implementation completely blows up: it turns out that generating a list of 35 million booleans is really not a good idea. Using actual lists with a cons cell for each bit incurs a whole lot of memory and allocation overhead; it just made my computer grind to a halt.</p>
+<p>As you may realize, there is a lot of low-hanging fruit here: for example, we can <a href="https://github.com/glguy/advent2016/blob/master/Day16.hs">use an unboxed <code>Vector</code> instead of a list</a>, or even do some <a href="http://lpaste.net/2640787794728845312">deforestation to avoid allocation</a> (the former code is by <a href="https://galois.com/team/eric-mertens/">Eric Mertens aka <code>glguy</code></a>, the latter by <a href="http://dmwit.com/">Daniel Wagner aka <code>dmwit</code></a>). Using techniques like that, it’s possible to get the runtime and memory requirements down to something reasonable. But that’s not what I want to talk about. Though more efficient, those solutions are still actually computing every single bit. It seemed to me we shouldn’t have to do that: the computation has a lot of nice structure, and seemingly a lot of opportunity for sharing intermediate results. I went off in search of a way to compute the correct checksum <em>without</em> actually generating the entire intermediate bitstring.</p>
+<h1 id="interlude-xnor">Interlude: xnor</h1>
+<p>The first order of business was to work out an algebraic understanding of the <code>xnor</code> operation, which I will denote $latex \overline{x \oplus y}$ (the circled plus operator $latex \oplus$ denotes <code>xor</code>, and the overbar denotes logical negation). One fundamental fact is that</p>
+<p><div style="text-align:center;">
+$latex \displaystyle \overline{x \oplus y} = \overline{x} \oplus y = x \oplus \overline{y}$
+</div></p>
+<p>(checking whether $latex x$ and $latex y$ are equal is the same as first negating one and then checking whether they are unequal). From this, and the fact that $latex \oplus$ is associative, we can prove associativity of <code>xnor</code>:</p>
+<p><div style="text-align:center;">
+$latex \displaystyle \overline{\overline{x \oplus y} \oplus z} = (\overline{x} \oplus y) \oplus \overline{z} = \overline{x} \oplus (y \oplus \overline{z}) = \overline{x \oplus \overline{y \oplus z}}$
+</div></p>
+<p>Associativity, along with the fact that $latex 1$ is an identity for the operation, means it forms a monoid. When we repeatedly take the <code>xnor</code> of adjacent bits, we are therefore basically doing an <code>mconcat</code> using a strictly balanced combining scheme. But associativity means we can be freer about the order in which we do the combining. If we start with a bitstring of length $latex n \cdot 2^k$, the checksumming operation iterates $latex k$ times, and each consecutive sequence of $latex 2^k$ bits gets folded down into a single bit via <code>mconcat</code>. In other words, the <code>checksum</code> operation can be reimplemented like this:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>checksum2</span> <span style="color:red;">::</span> <span>BitString</span> <span style="color:red;">-&gt;</span> <span>BitString</span>
+<span>&gt;</span> <span>checksum2</span> <span>a</span> <span style="color:red;">=</span> <span>map</span> <span>combine</span> <span>.</span> <span>chunksOf</span> <span style="color:red;">(</span><span>powTwo</span> <span style="color:red;">(</span><span>length</span> <span>a</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>$</span> <span>a</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>     <span>combine</span> <span style="color:red;">=</span> <span>foldr</span> <span style="color:red;">(</span><span>==</span><span style="color:red;">)</span> <span>True</span>
+<span>&gt;</span> 
+<span>&gt;</span>     <span style="color:green;">-- Find the biggest power of two that divides n</span>
+<span>&gt;</span>     <span>powTwo</span> <span>n</span>
+<span>&gt;</span>       <span style="color:red;">|</span> <span>odd</span> <span>n</span>     <span style="color:red;">=</span> <span class="hs-num">1</span>
+<span>&gt;</span>       <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span class="hs-num">2</span> <span>*</span> <span>powTwo</span> <span style="color:red;">(</span><span>n</span> <span>`div`</span> <span class="hs-num">2</span><span style="color:red;">)</span>
+</code></pre>
+<p>Let’s check that this works:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>withbits (checksum2 . fill 272) input
+  "10010010110011010"
+
+<span style="color:gray;">ghci&gt; </span>let bits = fill 272 (readbits input) in checksum bits == checksum2 bits
+  True
+</code></pre>
+<p>Now, this isn’t really any faster yet; but this idea will be important later!</p>
+<p>There’s one more thing we can observe about <code>xnor</code>: if we fold an <em>odd</em> number of bits with <code>xnor</code>, it’s the same as taking the <code>xor</code> of all the bits; if we fold an <em>even</em> number of bits, it’s the same as taking the <code>xor</code> of all the bits and then negating the result. That is,</p>
+<p><div style="text-align:center;">
+$latex \displaystyle \begin{array}{rcl} \overline{x_1 \oplus x_2} &amp;=&amp; \overline{x_1 \oplus x_2} \\[0.5em] \overline{x_1 \oplus \overline{x_2 \oplus x_3}} &amp;=&amp; x_1 \oplus x_2 \oplus x_3 \\[0.5em] \overline{x \oplus \overline{x_2 \oplus \overline{x_3 \oplus x_4}}} &amp;=&amp; \overline{x_1 \oplus x_2 \oplus x_3 \oplus x_4} \\[0.5em] \overline{x \oplus \overline{x_2 \oplus \overline{x_3 \oplus \overline{x_4 \oplus x_5}}}} &amp;=&amp; x_1 \oplus x_2 \oplus x_3 \oplus x_4 \oplus x_5 \end{array}$
+</div></p>
+<p>and so on. The proof is a simple induction argument, making use of the relation $latex \overline{x \oplus y} = \overline{x} \oplus y$ we noted before. So when folding <code>xnor</code>, as a simple optimization, we can avoid doing a lot of negations by just computing the <code>xor</code> and then negating appropriately based on the parity of the number of bits.</p>
+<h1 id="the-algebra-of-bitstrings">The algebra of bitstrings</h1>
+<p>With that under our belts, we can move on to the real meat of the solution. The central idea is that instead of representing bitstrings directly as lists (or vectors, or whatever) of bits, we represent them using a <em>deep embedding</em> of a little bitstring algebra (aka DSL). That is, we represent each bitstring operation as a constructor of an algebraic data type, which allows us to directly manipulate bitstring <em>expressions</em>. The point is that this algebra/DSL has a lot of nice structure that allows us to work at an abstract, algebraic level instead of working directly with bits.</p>
+<p>There’s one more twist to note before actually seeing the data type definition. We know that we will need to talk about the <em>length</em> of bitstrings as well as their <em>xnor/xor</em>. Instead of having to recalculate these every time we need them, we can <em>cache</em> them at each node of a bitstring expression. We’ll see how these cached values come in handy later.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>BitExpr</span> <span style="color:blue;font-weight:bold;">where</span>
+</code></pre>
+<p>So, what does our algebra of bitstrings need? First, it’s useful to have an explicit representation of the empty bitstring, as well as a singleton bit. We don’t need to cache length or <code>xor</code> values here, since they are obvious and can be computed in constant time.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>   <span>Emp</span> <span style="color:red;">::</span> <span>BitExpr</span>
+<span>&gt;</span>   <span>Bit</span> <span style="color:red;">::</span> <span>Bool</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+</code></pre>
+<p>Next, we need to be able to append bitstrings. Notice the <code>Bool</code>, which represents the cached <code>xor</code> of the entire bitstring, as well as the <code>Integer</code> which represents the length.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>   <span>App</span> <span style="color:red;">::</span> <span>!</span><span>Bool</span> <span style="color:red;">-&gt;</span> <span>!</span><span>Integer</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+</code></pre>
+<p>Finally, we need three unary operations on bitstrings: invert, reverse, and <code>dragon</code>. Each also carries a cached length and <code>xor</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>   <span>Inv</span> <span style="color:red;">::</span> <span>!</span><span>Bool</span> <span style="color:red;">-&gt;</span> <span>!</span><span>Integer</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span>   <span>Rev</span> <span style="color:red;">::</span> <span>!</span><span>Bool</span> <span style="color:red;">-&gt;</span> <span>!</span><span>Integer</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span>   <span>Drg</span> <span style="color:red;">::</span> <span>!</span><span>Bool</span> <span style="color:red;">-&gt;</span> <span>!</span><span>Integer</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> 
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span>
+</code></pre>
+<p>Note that <code>Drg</code> is redundant in some sense, since the dragon transform can be encoded in terms of append, inverse, and reverse. However, it’s critical that we include it explicitly: since the dragon transform uses the input bitstring twice, expanding an iterated application of <code>Drg</code> in terms of the other constructors would result in an exponential blowup in the size of the expression.</p>
+<p>To be concrete, let’s write a straightforward interpreter which formally connects a bitstring expression with its intended semantics as a bitstring. This comes in handy for testing, but other than testing, the whole point is that we will <em>not</em> use this—we want to solve the problem at the level of bitstring expressions, without ever actually generating their corresponding bitstrings.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>toBits</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitString</span>
+<span>&gt;</span> <span>toBits</span> <span>Emp</span> <span style="color:red;">=</span> <span>[]</span>
+<span>&gt;</span> <span>toBits</span> <span style="color:red;">(</span><span>Bit</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span>b</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>toBits</span> <span style="color:red;">(</span><span>App</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s1</span> <span>s2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>toBits</span> <span>s1</span> <span>++</span> <span>toBits</span> <span>s2</span>
+<span>&gt;</span> <span>toBits</span> <span style="color:red;">(</span><span>Inv</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>invert</span>  <span style="color:red;">(</span><span>toBits</span> <span>s</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>toBits</span> <span style="color:red;">(</span><span>Rev</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>reverse</span> <span style="color:red;">(</span><span>toBits</span> <span>s</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>toBits</span> <span style="color:red;">(</span><span>Drg</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>dragon</span>  <span style="color:red;">(</span><span>toBits</span> <span>s</span><span style="color:red;">)</span>
+</code></pre>
+<p>Next, let’s write some simple utility functions to extract the cached length or <code>xor</code> from the root of a bitstring expression:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>bsLen</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>Integer</span>
+<span>&gt;</span> <span>bsLen</span> <span>Emp</span>           <span style="color:red;">=</span> <span class="hs-num">0</span>
+<span>&gt;</span> <span>bsLen</span> <span style="color:red;">(</span><span>Bit</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>       <span style="color:red;">=</span> <span class="hs-num">1</span>
+<span>&gt;</span> <span>bsLen</span> <span style="color:red;">(</span><span>App</span> <span style="color:blue;font-weight:bold;">_</span> <span>l</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>l</span>
+<span>&gt;</span> <span>bsLen</span> <span style="color:red;">(</span><span>Inv</span> <span style="color:blue;font-weight:bold;">_</span> <span>l</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>l</span>
+<span>&gt;</span> <span>bsLen</span> <span style="color:red;">(</span><span>Rev</span> <span style="color:blue;font-weight:bold;">_</span> <span>l</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>l</span>
+<span>&gt;</span> <span>bsLen</span> <span style="color:red;">(</span><span>Drg</span> <span style="color:blue;font-weight:bold;">_</span> <span>l</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>l</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>bsXor</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>Bool</span>
+<span>&gt;</span> <span>bsXor</span> <span>Emp</span>           <span style="color:red;">=</span> <span>False</span>
+<span>&gt;</span> <span>bsXor</span> <span style="color:red;">(</span><span>Bit</span> <span>b</span><span style="color:red;">)</span>       <span style="color:red;">=</span> <span>b</span>
+<span>&gt;</span> <span>bsXor</span> <span style="color:red;">(</span><span>App</span> <span>b</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>b</span>
+<span>&gt;</span> <span>bsXor</span> <span style="color:red;">(</span><span>Inv</span> <span>b</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>b</span>
+<span>&gt;</span> <span>bsXor</span> <span style="color:red;">(</span><span>Rev</span> <span>b</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>b</span>
+<span>&gt;</span> <span>bsXor</span> <span style="color:red;">(</span><span>Drg</span> <span>b</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>b</span>
+</code></pre>
+<p>Next, we’ll write some smart constructors which automatically take care of properly computing the cached length and <code>xor</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>bit</span> <span style="color:red;">::</span> <span>Bool</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>bit</span> <span style="color:red;">=</span> <span>Bit</span>
+</code></pre>
+<p>Appending combines <code>xor</code> values with <code>xor</code> and adds lengths. <code>app</code> also does a bit of optimization when appending with the empty bitstring. For convenience, we can also use <code>app</code> to create a function <code>bits</code> to convert a literal bitstring into a <code>BitExpr</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>app</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>app</span> <span>s1</span> <span>Emp</span> <span style="color:red;">=</span> <span>s1</span>
+<span>&gt;</span> <span>app</span> <span>s1</span> <span>s2</span> <span style="color:red;">=</span> <span>App</span> <span style="color:red;">(</span><span>bsXor</span> <span>s1</span> <span>`xor`</span> <span>bsXor</span> <span>s2</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>bsLen</span> <span>s1</span> <span>+</span> <span>bsLen</span> <span>s2</span><span style="color:red;">)</span> <span>s1</span> <span>s2</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>bits</span> <span style="color:red;">::</span> <span>String</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>bits</span> <span style="color:red;">=</span> <span>foldr</span> <span style="color:red;">(</span><span>app</span> <span>.</span> <span>bit</span> <span>.</span> <span style="color:red;">(</span><span>==</span><span style="color:teal;">'1'</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>Emp</span>
+</code></pre>
+<p>Inverting a bitstring preserves the <code>xor</code> when it has even length, and inverts the <code>xor</code> when it has odd length. Note how we make use of <em>both</em> the cached <code>xor</code> and length values to compute the new cached <code>xor</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>inv</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>inv</span> <span>s</span> <span style="color:red;">=</span> <span>Inv</span> <span style="color:red;">(</span><span style="color:blue;font-weight:bold;">if</span> <span>even</span> <span style="color:red;">(</span><span>bsLen</span> <span>s</span><span style="color:red;">)</span> <span style="color:blue;font-weight:bold;">then</span> <span>bsXor</span> <span>s</span> <span style="color:blue;font-weight:bold;">else</span> <span>not</span> <span style="color:red;">(</span><span>bsXor</span> <span>s</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>             <span style="color:red;">(</span><span>bsLen</span> <span>s</span><span style="color:red;">)</span>
+<span>&gt;</span>             <span>s</span>
+</code></pre>
+<p>Reversing preserves <code>xor</code> and length.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>rev</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>rev</span> <span>s</span> <span style="color:red;">=</span> <span>Rev</span> <span style="color:red;">(</span><span>bsXor</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>bsLen</span> <span>s</span><span style="color:red;">)</span> <span>s</span>
+</code></pre>
+<p>Finally, the <code>dragon</code> operation: the <code>xor</code> of <code>dragon s</code> is the <code>xor</code> of <code>s</code> combined with the <code>xor</code> of <code>inv s</code>; the length is one more than twice the length of <code>s</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>drg</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>drg</span> <span>s</span> <span style="color:red;">=</span> <span>Drg</span> <span style="color:red;">(</span><span>bsXor</span> <span>s</span> <span>`xor`</span> <span>bsXor</span> <span style="color:red;">(</span><span>inv</span> <span>s</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">(</span><span class="hs-num">2</span><span>*</span><span style="color:red;">(</span><span>bsLen</span> <span>s</span><span style="color:red;">)</span> <span>+</span> <span class="hs-num">1</span><span style="color:red;">)</span> <span>s</span>
+</code></pre>
+<p>We can test these:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>let t = drg (bits "11" `app` inv (bits "10000"))
+<span style="color:gray;">ghci&gt; </span>showbits . toBits $ t
+  "110111100000100"
+
+<span style="color:gray;">ghci&gt; </span>bsLen t
+  15
+</code></pre>
+<h1 id="splitting">Splitting</h1>
+<p>Remember that our high-level goal is to take the expanded version of our bitstring, split it into blocks of length $latex 2^k$, and then separately reduce each block with <code>xnor</code>. It turns out that we have enough information to split a bitstring <em>expression</em> into two bitstring expressions which correspond to splitting off a block of a given size from the beginning of the corresponding bitstring. That is, we will write a function <code>splitBits :: Integer -&gt; BitExpr -&gt; (BitExpr, BitExpr)</code> which works like <code>splitAt</code>, but on bitstring expressions instead of bitstrings. In other words, it will satisfy the property</p>
+<pre><code>splitAt n . toBits == (toBits *** toBits) . splitBits n</code></pre>
+<p>We’ll go through the implementation case by case. You might like to try implementing <code>splitBits</code> yourself before peeking at mine; it makes for a nice exercise.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>splitBits</span> <span style="color:red;">::</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>BitExpr</span><span style="color:red;">,</span> <span>BitExpr</span><span style="color:red;">)</span>
+</code></pre>
+<p>In the base cases, to split zero bits off the front of a bitstring, or if we are asked to split off more bits than there are, just generate the empty bitstring expression.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>splitBits</span> <span class="hs-num">0</span> <span>s</span>                <span style="color:red;">=</span> <span style="color:red;">(</span><span>Emp</span><span style="color:red;">,</span> <span>s</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>splitBits</span> <span>n</span> <span>s</span> <span style="color:red;">|</span> <span>n</span> <span>&gt;=</span> <span>bsLen</span> <span>s</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>s</span><span style="color:red;">,</span> <span>Emp</span><span style="color:red;">)</span>
+</code></pre>
+<p>To split an <code>App</code> node, compare the number of bits we want to split off with the length of the first bitstring, and recursively split in either the left or right side appropriately, remembering to subtract the length of the first bitstring from the number of bits to split if we recurse on the right side.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>splitBits</span> <span>n</span> <span style="color:red;">(</span><span>App</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s1</span> <span>s2</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>n</span> <span>&lt;</span> <span>bsLen</span> <span>s1</span>
+<span>&gt;</span>     <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">let</span> <span style="color:red;">(</span><span>s1a</span><span style="color:red;">,</span> <span>s1b</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>splitBits</span> <span>n</span> <span>s1</span> <span style="color:blue;font-weight:bold;">in</span> <span style="color:red;">(</span><span>s1a</span><span style="color:red;">,</span> <span>s1b</span> <span>`app`</span> <span>s2</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>otherwise</span>
+<span>&gt;</span>     <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">let</span> <span style="color:red;">(</span><span>s2a</span><span style="color:red;">,</span> <span>s2b</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>splitBits</span> <span style="color:red;">(</span><span>n</span> <span style="color:green;">-</span> <span>bsLen</span> <span>s1</span><span style="color:red;">)</span> <span>s2</span> <span style="color:blue;font-weight:bold;">in</span> <span style="color:red;">(</span><span>s1</span> <span>`app`</span> <span>s2a</span><span style="color:red;">,</span> <span>s2b</span><span style="color:red;">)</span>
+</code></pre>
+<p>Inverting commutes with splitting, so to split an <code>Inv</code> node, we can just split recursively and then rewrap the results with <code>inv</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>splitBits</span> <span>n</span> <span style="color:red;">(</span><span>Inv</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>inv</span> <span>***</span> <span>inv</span><span style="color:red;">)</span> <span>$</span> <span>splitBits</span> <span>n</span> <span>s</span>
+</code></pre>
+<p>To split <code>Rev</code> and <code>Drg</code> nodes, we expand the expressions a bit to get rid of the top-level constructor before re-calling <code>splitBits</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>splitBits</span> <span>n</span> <span style="color:red;">(</span><span>Rev</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>splitBits</span> <span>n</span> <span style="color:red;">(</span><span>pushRev</span> <span>s</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>splitBits</span> <span>n</span> <span style="color:red;">(</span><span>Drg</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>splitBits</span> <span>n</span> <span style="color:red;">(</span><span>expandDragon</span> <span>s</span><span style="color:red;">)</span>
+</code></pre>
+<p>In the case of <code>Rev</code>, we can “push the reverse through” one level, transforming it into an equivalent expression which no longer has a <code>Rev</code> node at the top. We make use of some nice algebraic properties governing the interaction of reverse with the other operations:</p>
+<ul>
+<li>Reversing an empty or singleton bitstring does nothing.</li>
+<li><code>reverse (s1 ++ s2) == reverse s2 ++ reverse s1</code></li>
+<li><code>reverse . invert = invert . reverse</code></li>
+<li><code>reverse . reverse = id</code></li>
+<li>Finally, <code>reverse . dragon = dragon . invert</code>, which can be easily proved by expanding <code>dragon</code> in terms of the other operations and then applying the above algebraic laws.</li>
+</ul>
+<p>Using these properties, we can implement <code>pushRev</code> as follows:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>pushRev</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>pushRev</span> <span>Emp</span>     <span style="color:red;">=</span> <span>Emp</span>
+<span>&gt;</span> <span>pushRev</span> <span style="color:red;">(</span><span>Bit</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Bit</span> <span>b</span>
+<span>&gt;</span> <span>pushRev</span> <span style="color:red;">(</span><span>App</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s1</span> <span>s2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>rev</span> <span>s2</span> <span>`app`</span> <span>rev</span> <span>s1</span>
+<span>&gt;</span> <span>pushRev</span> <span style="color:red;">(</span><span>Inv</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>inv</span> <span style="color:red;">(</span><span>rev</span> <span>s</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>pushRev</span> <span style="color:red;">(</span><span>Rev</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>s</span>
+<span>&gt;</span> <span>pushRev</span> <span style="color:red;">(</span><span>Drg</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>drg</span> <span style="color:red;">(</span><span>inv</span> <span>s</span><span style="color:red;">)</span>
+</code></pre>
+<p>Finally, <code>expandDragon</code> just expands a dragon operation in terms of the other operations. Although this approximately doubles the size of the bitstring expression, we only do this lazily, when we are actually trying to split the result of a dragon transform. It’s only natural that splitting an expression results in somewhat larger expressions.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>expandDragon</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>expandDragon</span> <span>s</span> <span style="color:red;">=</span> <span>s</span> <span>`app`</span> <span style="color:red;">(</span><span>bit</span> <span>False</span> <span>`app`</span> <span>inv</span> <span style="color:red;">(</span><span>rev</span> <span>s</span><span style="color:red;">)</span><span style="color:red;">)</span>
+</code></pre>
+<h1 id="filling-and-checksumming">Filling and checksumming</h1>
+<p>We’re almost there! We can now implement the <code>fill</code> and <code>checksum</code> operations at the level of bitstring expressions.</p>
+<p><code>fill</code> is straightforward: keep applying the <code>drg</code> smart constructor until the cached length is sufficient, then use <code>splitBits</code> to create an expression corresponding to only the first $latex n$ bits.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>fillE</span> <span style="color:red;">::</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>String</span> <span style="color:red;">-&gt;</span> <span>BitExpr</span>
+<span>&gt;</span> <span>fillE</span> <span>n</span> <span>str</span> <span style="color:red;">=</span> <span>fst</span> <span>.</span> <span>splitBits</span> <span>n</span> <span>$</span> <span>go</span> <span style="color:red;">(</span><span>bits</span> <span>str</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>     <span>go</span> <span>s</span> <span style="color:red;">|</span> <span>bsLen</span> <span>s</span> <span>&gt;=</span> <span>n</span> <span style="color:red;">=</span> <span>s</span>
+<span>&gt;</span>          <span style="color:red;">|</span> <span>otherwise</span>    <span style="color:red;">=</span> <span>go</span> <span style="color:red;">(</span><span>drg</span> <span>s</span><span style="color:red;">)</span>
+</code></pre>
+<p>Finally, we can implement <code>checksumE</code> using the same pattern as <code>checksum2</code>, where we break up the string into chunks of size $latex 2^k$ and then reduce each chunk. The only difference is that now we use <code>splitBits</code> to split, and the cached <code>xor</code> to compute the reduction. We know each of the blocks has an even length, so the <code>xnor</code> is just the negation of the cached <code>xor</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>checksumE</span> <span style="color:red;">::</span> <span>BitExpr</span> <span style="color:red;">-&gt;</span> <span>BitString</span>
+<span>&gt;</span> <span>checksumE</span> <span>s</span> <span style="color:red;">=</span> <span>map</span> <span style="color:red;">(</span><span>not</span> <span>.</span> <span>bsXor</span><span style="color:red;">)</span> <span>.</span> <span>unfoldr</span> <span>doSplit</span> <span>$</span> <span>s</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>     <span>doSplit</span> <span>Emp</span> <span style="color:red;">=</span> <span>Nothing</span>
+<span>&gt;</span>     <span>doSplit</span> <span>s</span>   <span style="color:red;">=</span> <span>Just</span> <span style="color:red;">(</span><span>splitBits</span> <span>blockLen</span> <span>s</span><span style="color:red;">)</span>
+<span>&gt;</span>     <span>blockLen</span> <span style="color:red;">=</span> <span>powTwo</span> <span style="color:red;">(</span><span>bsLen</span> <span>s</span><span style="color:red;">)</span>
+<span>&gt;</span>     <span>powTwo</span> <span>n</span>
+<span>&gt;</span>       <span style="color:red;">|</span> <span>odd</span> <span>n</span>     <span style="color:red;">=</span> <span class="hs-num">1</span>
+<span>&gt;</span>       <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span class="hs-num">2</span> <span>*</span> <span>powTwo</span> <span style="color:red;">(</span><span>n</span> <span>`div`</span> <span class="hs-num">2</span><span style="color:red;">)</span>
+</code></pre>
+<p>Let’s check that we get the same answer for the first task:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>showbits $ checksumE (fillE 272 input)
+  "10010010110011010"
+
+<span style="color:gray;">ghci&gt; </span>withbits (checksum . fill 272) input
+  "10010010110011010"
+</code></pre>
+<p>Great! And now for the second task:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>showbits $ checksumE (fillE (17 * 2^21) input)
+  "01010100101011100"
+</code></pre>
+<p>On my machine this finishes pretty much instantaneously, taking only 0.02 seconds. In order to generate enough bits, the dragon transform must be applied 21 times, but that just generates a small expression with 21 <code>Drg</code> constructors. Splitting into chunks of length $latex 2^{21}$ certainly expands the size of the expressions a bit, but everything stays nice and logarithmic since many of the <code>Drg</code> constructors can remain unexpanded.</p>
+<p>In fact, this can easily handle MUCH larger problem instances. For example:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>showbits $ checksumE (fillE (17 * 2^80) input)
+  "10000100010001100"
+
+<span style="color:gray;">ghci&gt; </span>showbits $ checksumE (fillE (17 * 2^81) input)
+  "01010100101011100"
+</code></pre>
+<p>Semantically, this corresponds to generating <em>yottabytes</em> worth of bits (I had to look up the proper prefix) and then checksumming them; operationally, though, these are still basically instantaneous. (Interestingly, I also tried $latex 17 \cdot 2^{200}$, and it instantaneously printed the first 11 bits of the answer and then segfaulted. Perhaps I have found a bug in GHC 8.0.2.)</p>
+<p>Notice that the checksum for $latex 17 \cdot 2^{81}$ is actually the same as that for $latex 17 \cdot 2^{21}$. After playing around with it a bit, the checksums for $latex 17 \cdot 2^k$ seem to have a period of 12, but I’m not sure how to prove it!</p>
+

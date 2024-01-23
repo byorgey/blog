@@ -1,0 +1,61 @@
+---
+title: Swarm alpha release!
+published: 2022-10-06T20:01:34Z
+categories: haskell,projects
+tags: game,programming,resource,robot,Swarm
+---
+
+<p>The <a href="https://github.com/swarm-game/swarm/">Swarm</a> development team is very proud to announce the very first alpha release of the game. There are still many missing features (for example, <a href="https://github.com/swarm-game/swarm/issues/50">saving games is not yet possible</a>) and <a href="https://github.com/swarm-game/swarm/issues?q=is%3Aissue+is%3Aopen+label%3ABug+">known bugs</a>, but at this point it’s quite playable (and, dare we say, fun!) and ready for some intrepid souls to try it out and give us some feedback.</p>
+<div style="text-align: center">
+<p><img src="http://byorgey.files.wordpress.com/2022/10/log.png" /></p>
+</div>
+<div style="text-align: center">
+<p><img src="http://byorgey.files.wordpress.com/2022/10/tree_harvest.png" /></p>
+</div>
+<h2 id="what-is-it">What is it?</h2>
+<p>Swarm is a 2D, open-world programming and resource gathering game with a strongly-typed, functional programming language and a unique upgrade system. Unlocking language features is tied to collecting resources, making it an interesting challenge to bootstrap your way into the use of the full language.</p>
+<p>Notable changes since the <a href="https://byorgey.wordpress.com/2022/06/20/swarm-status-report/">last progress update</a> include:</p>
+<ul>
+<li>An all-new in-game tutorial consisting of a sequence of guided challenges</li>
+<li>Several new challenge scenarios (mazes! towers of hanoi!), and documentation on how to make your own</li>
+<li>Lots more in-game help and info, including help on currently available commands + recipes, and a dialog showing all live robots</li>
+<li>Many more entities, recipes, and language features to explore and collect</li>
+<li>Better mouse support</li>
+<li>Backwards incremental search and tab completion in the REPL</li>
+<li>Many, many small bug fixes and improvements!</li>
+</ul>
+<h2 id="give-it-a-try">Give it a try!</h2>
+<p>To install, check out the <a href="https://github.com/swarm-game/swarm#installing">installation instructions</a>: you can download a <a href="https://github.com/swarm-game/swarm/releases">binary release</a> (for now, Linux only, but MacOS binaries should be on the horizon), or <a href="https://hackage.haskell.org/package/swarm">install from Hackage</a>. Give it a try and send us your feedback, either <a href="https://github.com/swarm-game/swarm/issues/new/choose">via a github issue</a> or <a href="https://web.libera.chat/?channels=#swarm">via IRC</a>!</p>
+<h2 id="future-plans-getting-involved">Future plans &amp; getting involved</h2>
+<p>We’re still hard at work on the game, and will next turn our attention to some big features, such as:</p>
+<ul>
+<li><a href="https://github.com/swarm-game/swarm/issues/50">Saving and loading games</a></li>
+<li>New world features like aliens and <a href="https://github.com/swarm-game/swarm/issues/112">cities</a></li>
+<li>New language features like <a href="https://github.com/swarm-game/swarm/issues/154">recursive types</a>, <a href="https://github.com/swarm-game/swarm/issues/98">arrays</a>, <a href="https://github.com/swarm-game/swarm/issues/94">inter-robot communication</a>, and <a href="https://github.com/swarm-game/swarm/issues/495">a proper <code>import</code> construct</a></li>
+</ul>
+<p>Of course, there are also <a href="https://github.com/swarm-game/swarm/issues?q=is%3Aissue+is%3Aopen+label%3A%22C-Low+Hanging+Fruit%22">tons of small things that need fixing and polishing</a> too! If you’re interested in getting involved, check out our <a href="https://github.com/swarm-game/swarm/blob/main/CONTRIBUTING.md">contribution guide</a>, come <a href="https://web.libera.chat/?channels=#swarm">join us on IRC</a> (<code>#swarm</code> on Libera.Chat), or take a look at the list of <a href="https://github.com/swarm-game/swarm/issues?q=is%3Aissue+is%3Aopen+label%3A%22C-Low+Hanging+Fruit%22">issues marked “low-hanging fruit”</a>.</p>
+<p>Brought to you by the Swarm development team:</p>
+<ul>
+<li>Brent Yorgey</li>
+<li>Ondřej Šebek</li>
+<li>Tristan de Cacqueray</li>
+</ul>
+<p>With contributions from:</p>
+<ul>
+<li>Alexander Block</li>
+<li>Daniel Díaz Carrete</li>
+<li>Huw Campbell</li>
+<li>Ishan Bhanuka</li>
+<li>Jacob</li>
+<li>Jens Petersen</li>
+<li>José Rafael Vieira</li>
+<li>Joshua Price</li>
+<li>lsmor</li>
+<li>Noah Yorgey</li>
+<li>Norbert Dzikowski</li>
+<li>Paul Brauner</li>
+<li>Ryan Yates</li>
+<li>Sam Tay</li>
+</ul>
+<p>…not to mention many others who gave valuable suggestions and feedback. Want to see your name listed here in the next release? <a href="https://github.com/swarm-game/swarm/blob/main/CONTRIBUTING.md">See how you can contribute!</a></p>
+

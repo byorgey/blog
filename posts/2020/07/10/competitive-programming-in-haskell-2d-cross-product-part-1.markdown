@@ -1,0 +1,107 @@
+---
+title: Competitive programming in Haskell: 2D cross product, part 1
+published: 2020-07-11T02:43:01Z
+categories: competitive programming,haskell
+tags: cross,geometry,Kattis
+---
+
+<p>Time for some more geometry! In my <a href="https://byorgey.wordpress.com/2020/06/29/competitive-programming-in-haskell-data-representation-and-optimization-with-cake/">previous post</a> I challenged you to solve <a href="https://open.kattis.com/problems/cookiecutter">Cookie Cutters</a>, which asks us to scale the vertices of a polygon so that it has a certain prescribed area. It’s possible to solve this just by looking up an algorithm for computing the area of a polygon (see the <a href="https://en.wikipedia.org/wiki/Shoelace%20formula">“shoelace formula”</a>). But the way to get good at solving geometry problems is not by memorizing a bunch of formulas, but rather by understanding a few general primitives and principles which can be assembled to solve a wide range of problems.</p>
+<p>Incidentally, if you’re serious about getting good at geometric problems in competitive programming, then you absolutely must read <a href="https://vlecomte.github.io/cp-geo.pdf">Victor Lecomte’s <em>Handbook of geometry for competitive programmers</em></a>. (It’s still a great read even if you’re not serious!)</p>
+<h2 id="the-2d-cross-product">The 2D cross product</h2>
+<p>In two dimensions, given vectors $latex \mathbf{u} = (u_x, u_y)$ and $latex \mathbf{v} = (v_x, v_y)$, we can compute their <em>cross product</em> as</p>
+<div style="text-align:center;">
+<p>$latex \mathbf{u} \times \mathbf{v} = \begin{vmatrix} u_x &amp; v_x \\ u_y &amp; v_y \end{vmatrix} = u_x v_y - v_x u_y.$</p>
+</div>
+<p>One useful way to understand this as giving the <em>signed area</em> of the parallelogram determined by $latex \mathbf{u}$ and $latex \mathbf{v}$. The area is positive when $latex \mathbf{v}$ is counterclockwise from $latex \mathbf{u}$, negative when it is clockwise, and zero when the two vectors are colinear (<em>i.e.</em> parallel or antiparallel).</p>
+<div style="text-align:center;">
+<p><img src="http://byorgey.files.wordpress.com/2020/07/bc192dbfed78be26.png" /></p>
+</div>
+<p>I’m not going to prove this here, since to be quite honest I don’t remember off the top of my head how to derive it. (Also, <a href="https://crypto.stanford.edu/~blynn/haskell/ga.html">geometric algebra</a> does a much better job of explaining where this comes from and generalizing to any number of dimensions; in particular, $latex \mathbf{u} \times \mathbf{v}$ is the coefficient of the bivector resulting from the outer product of $latex \mathbf{u}$ and $latex \mathbf{v}$. But that would take us much too far afield for now!)</p>
+<p>So let’s write some Haskell code to compute the cross product of 2D vectors. (All this code has of course been added to <a href="https://github.com/byorgey/comprog-hs/blob/master/Geom.hs">Geom.hs</a>.)</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>cross</span> <span style="color:red;">::</span> <span>Num</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>V2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>V2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>cross</span> <span style="color:red;">(</span><span>V2</span> <span>ux</span> <span>uy</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>V2</span> <span>vx</span> <span>vy</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>ux</span><span>*</span><span>vy</span> <span style="color:green;">-</span> <span>vx</span><span>*</span><span>uy</span>
+
+<span>crossP</span> <span style="color:red;">::</span> <span>Num</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>crossP</span> <span>p1</span> <span>p2</span> <span>p3</span> <span style="color:red;">=</span> <span>cross</span> <span style="color:red;">(</span><span>p2</span> <span>^-^</span> <span>p1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>p3</span> <span>^-^</span> <span>p1</span><span style="color:red;">)</span>
+
+<span style="color:blue;font-weight:bold;">type</span> <span>P2</span> <span>s</span> <span style="color:red;">=</span> <span>V2</span> <span>s</span>
+<span style="color:blue;font-weight:bold;">type</span> <span>P2D</span>  <span style="color:red;">=</span> <span>P2</span> <span>Double</span></code></pre>
+<p>A few things to note:</p>
+<ul>
+<li><code>cross</code> works over <em>any</em> scalar type which is an instance of <code>Num</code>. In solving Cookie Cutters, this is going to be <code>Double</code>, but it could also be, <em>e.g.</em> <code>Integer</code>.</li>
+<li>For convenience, <code>crossP</code> is a variant of <code>cross</code> that takes three points as arguments, and computes the cross product of the vector from the first to the second with the vector from the first to the third. In many instances where we want to use the cross product, we actually have the coordinates of three points/vertices.</li>
+<li>We’ve added <code>P2</code> and <code>P2D</code> as type aliases for <code>V2</code> and <code>V2D</code>. They are just aliases, not newtypes, to reduce the need for separate operators that work on points vs vectors, but it’s still helpful to have different type aliases to at least alert us to whether our functions morally want to be given vectors or points as arguments.</li>
+</ul>
+<p>Now, keeping in mind the fundamental interpretation of the 2D cross product as computing the signed area of a parallelogram, we can derive a few other operations. First, given the three vertices of a triangle, we can compute the <em>signed</em> area of the triangle as half of the cross product (because the triangle is half the parallelogram). Note that the order of the vertices matters: the area will be positive if they are in counterclockwise order, and negative if clockwise. Swapping any two vertices negates the result. If we want the normal nonnegative area of a triangle regardless of the order of the vertices, of course we can just take the absolute value.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>signedTriArea</span> <span style="color:red;">::</span> <span>Fractional</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>signedTriArea</span> <span>p1</span> <span>p2</span> <span>p3</span> <span style="color:red;">=</span> <span>crossP</span> <span>p1</span> <span>p2</span> <span>p3</span> <span>/</span> <span class="hs-num">2</span>
+
+<span>triArea</span> <span style="color:red;">::</span> <span>Fractional</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>triArea</span> <span>p1</span> <span>p2</span> <span>p3</span> <span style="color:red;">=</span> <span>abs</span> <span style="color:red;">(</span><span>signedTriArea</span> <span>p1</span> <span>p2</span> <span>p3</span><span style="color:red;">)</span></code></pre>
+<p>(Notice the <code>Fractional</code> constraint since we have to divide by two.) At first glance, you might think the concept of “signed triangle area” is silly and useless. But it turns out to be the key to understanding the “shoelace formula”.</p>
+<h2 id="the-shoelace-formula-for-polygon-area">The shoelace formula for polygon area</h2>
+<p>Imagine first that we have a <em>convex</em> polygon. If we pick a point somewhere in its interior (say, the centroid) and draw lines from the central point to every vertex, we chop up the polygon into triangles. Obviously, adding up the areas of these triangles will give us the area of the polygon.</p>
+<div style="text-align:center;">
+<p><img src="http://byorgey.files.wordpress.com/2020/07/be40a2833ae51b20.png" /></p>
+</div>
+<p>What’s much less obvious is that if we add up the <em>signed</em> area of each triangle, it still works even if (1) the polygon is not convex, and/or (2) the “central point” is not in the interior of the polygon! That is, we just pick some arbitrary “central point” (the origin works nicely) and compute the signed area of the triangle formed by the origin and each edge of the polygon. A sort of magical inclusion-exclusion thing happens where all the area outside the polygon gets canceled out, and all the area inside ends up getting counted exactly once. Rather than try to prove this to you, I’ll just illustrate some examples.</p>
+<div style="text-align:center;">
+<p><img src="http://byorgey.files.wordpress.com/2020/07/3c2ced609a9dd302.png" /></p>
+</div>
+<div style="text-align:center;">
+<p><img src="http://byorgey.files.wordpress.com/2020/07/5f3158d45eb4a300.png" /></p>
+</div>
+<p>So, here’s the Haskell code. <code>signedPolyArea</code> yields a positive area if the vertices of the polygon are in “counterclockwise order” (puzzle: what does “counterclockwise order” mean for a non-convex polygon? Hint: look up “winding number”; this is also the key to a formal proof that all of this works), and negative if they are clockwise.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>signedPolyArea</span> <span style="color:red;">::</span> <span>Fractional</span> <span>s</span> <span style="color:red;">=&gt;</span> <span style="color:red;">[</span><span>P2</span> <span>s</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>signedPolyArea</span> <span>pts</span> <span style="color:red;">=</span> <span>sum</span> <span>$</span> <span>zipWith</span> <span style="color:red;">(</span><span>signedTriArea</span> <span>zero</span><span style="color:red;">)</span> <span>pts</span> <span style="color:red;">(</span><span>tail</span> <span>pts</span> <span>++</span> <span style="color:red;">[</span><span>head</span> <span>pts</span><span style="color:red;">]</span><span style="color:red;">)</span>
+
+<span>polyArea</span> <span style="color:red;">::</span> <span>Fractional</span> <span>s</span> <span style="color:red;">=&gt;</span> <span style="color:red;">[</span><span>P2</span> <span>s</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>polyArea</span> <span style="color:red;">=</span> <span>abs</span> <span>.</span> <span>signedPolyArea</span></code></pre>
+<p>The “shoelace formula”, as it is usually presented, falls out if you inline the <code>zero</code> argument to <code>signedTriArea</code> and then simplify the result. It would be possible to do this and code an optimized version of <code>signedPolyArea</code> that uses the shoelace formula more directly, but I much prefer having this version which is built out of meaningful and reusable components!</p>
+<p>Incidentally, there is a 3D analogue to the shoelace formula for computing the volume of a 3D polyhedron, but it requires some care to first make sure all the faces are oriented in a compatible way; see <a href="https://vlecomte.github.io/cp-geo.pdf">section 3.5 of Lecomte</a>.</p>
+<h2 id="other-utilities">Other utilities</h2>
+<p>I added a couple more utilities to <code>Geom.hs</code> which we will need. First, since we need to scale polygons up or down to give a required area, we need the concept of multiplying a vector by a scalar:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:red;">(</span><span>*^</span><span style="color:red;">)</span> <span style="color:red;">::</span> <span>Num</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>V2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>V2</span> <span>s</span>
+<span>k</span> <span>*^</span> <span style="color:red;">(</span><span>V2</span> <span>x</span> <span>y</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>V2</span> <span style="color:red;">(</span><span>k</span><span>*</span><span>x</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>k</span><span>*</span><span>y</span><span style="color:red;">)</span></code></pre>
+<p>Also, to help with reading vectors from the input, I added this combinator:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>v2</span> <span style="color:red;">::</span> <span>Applicative</span> <span>f</span> <span style="color:red;">=&gt;</span> <span>f</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>f</span> <span style="color:red;">(</span><span>V2</span> <span>s</span><span style="color:red;">)</span>
+<span>v2</span> <span>s</span> <span style="color:red;">=</span> <span>V2</span> <span>&lt;$&gt;</span> <span>s</span> <span>&lt;*&gt;</span> <span>s</span></code></pre>
+<p>The idea is to use it with <code>f ~ Scanner</code>. For example, if <code>double :: Scanner Double</code> then we can write <code>v2 double :: Scanner (V2 Double)</code>.</p>
+<p>Last but not least, I also added <code>getX</code> and <code>getY</code> field labels to the <code>V2</code> type, for when we need to extract the coordinates of a point or vector:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>V2</span> <span>s</span> <span style="color:red;">=</span> <span>V2</span> <span style="color:red;">{</span> <span>getX</span> <span style="color:red;">::</span> <span>!</span><span>s</span><span style="color:red;">,</span> <span>getY</span> <span style="color:red;">::</span> <span>!</span><span>s</span> <span style="color:red;">}</span> <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">,</span> <span>Show</span><span style="color:red;">)</span></code></pre>
+<h2 id="cookie-cutting">Cookie cutting</h2>
+<p>Finally, here’s my solution to <a href="https://open.kattis.com/problems/cookiecutter">Cookie Cutters</a>. First, some imports and <code>main</code>, which just scans the input, generates the required scaled and translated list of vertices, and then formats the output.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">import</span>           <span>Control.Arrow</span>
+<span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data.Foldable</span> <span style="color:blue;font-weight:bold;">as</span> <span>F</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Text.Printf</span>
+
+<span style="color:blue;font-weight:bold;">import</span>           <span>Geom</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Scanner</span>
+
+<span>main</span> <span style="color:red;">=</span> <span>interact</span> <span>$</span>
+  <span>runScanner</span> <span>scan</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>F.toList</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>printf</span> <span style="color:teal;">"%.5f"</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>unwords</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>unlines</span></code></pre>
+<p>Here’s the data type for storing the input, along with a <code>Scanner</code> for it. Notice how we use <code>v2 double'</code> to read in 2D vectors (well, actually points!) in the input. The annoying thing is that some floating-point values in the input are formatted like <code>.5</code>, with no leading <code>0</code>, and <code>read ".5" :: Double</code> crashes. Hence the need for the <code>double'</code> scanner below, which reads a string token and potentially adds a leading zero before conversion to <code>Double</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>TC</span> <span style="color:red;">=</span> <span>TC</span> <span style="color:red;">{</span> <span>polygon</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>P2D</span><span style="color:red;">]</span><span style="color:red;">,</span> <span>area</span> <span style="color:red;">::</span> <span>Double</span> <span style="color:red;">}</span>
+
+<span>scan</span> <span style="color:red;">::</span> <span>Scanner</span> <span>TC</span>
+<span>scan</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+  <span>n</span> <span style="color:red;">&lt;-</span> <span>int</span>
+  <span>TC</span> <span>&lt;$&gt;</span> <span>n</span> <span>`times`</span> <span style="color:red;">(</span><span>v2</span> <span>double'</span><span style="color:red;">)</span> <span>&lt;*&gt;</span> <span>double'</span>
+
+<span>double'</span> <span style="color:red;">::</span> <span>Scanner</span> <span>Double</span>
+<span>double'</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>read</span> <span>.</span> <span>fixup</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>str</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>fixup</span> <span>s</span><span style="color:red;">@</span><span style="color:red;">(</span><span style="color:teal;">'.'</span><span>:</span><span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:teal;">'0'</span><span>:</span><span>s</span>
+    <span>fixup</span> <span>s</span>         <span style="color:red;">=</span> <span>s</span></code></pre>
+<p>And finally, putting the pieces together to solve the meat of the problem. We first compute the area of the given polygon using <code>polyArea</code>, then divide the desired area by the original area to find the factor by which the area must increase (or decrease). Area scales as the <em>square</em> of distance, so we must take the square root of this factor to find the factor by which the vertices must scale. We simply scale all the vertices appropriately, then find the minimum x and y coordinates so we can translate by their negation, to make the polygon touch the positive x and y axes as required.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color:red;">::</span> <span>TC</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>P2D</span><span style="color:red;">]</span>
+<span>solve</span> <span style="color:red;">(</span><span>TC</span> <span>ps</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>map</span> <span style="color:red;">(</span><span>^-^</span> <span>V2</span> <span>xmin</span> <span>ymin</span><span style="color:red;">)</span> <span>ps'</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>a0</span> <span style="color:red;">=</span> <span>polyArea</span> <span>ps</span>
+    <span>s</span>  <span style="color:red;">=</span> <span>sqrt</span> <span style="color:red;">(</span><span>a</span> <span>/</span> <span>a0</span><span style="color:red;">)</span>     <span style="color:green;">-- scaling factor to get the desired area</span>
+    <span>ps'</span> <span style="color:red;">=</span> <span>map</span> <span style="color:red;">(</span><span>s</span> <span>*^</span><span style="color:red;">)</span> <span>ps</span>
+    <span>xmin</span> <span style="color:red;">=</span> <span>minimum</span> <span style="color:red;">(</span><span>map</span> <span>getX</span> <span>ps'</span><span style="color:red;">)</span>
+    <span>ymin</span> <span style="color:red;">=</span> <span>minimum</span> <span style="color:red;">(</span><span>map</span> <span>getY</span> <span>ps'</span><span style="color:red;">)</span></code></pre>
+<h2 id="next-time-chair-hopping">Next time: Chair Hopping</h2>
+<p>For next time I invite you to solve <a href="https://open.kattis.com/problems/chairhopping">Chair Hopping</a>. Warning, this one is rather difficult! But I had a lot of fun solving it, and the solution touches on several interesting topics (in fact, I’ll probably need more than one blog post).</p>
+

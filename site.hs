@@ -151,7 +151,7 @@ main = hakyllWith config $ do
 
   -- https://javran.github.io/posts/2014-03-01-add-tags-to-your-hakyll-blog.html
 
-  tags <- buildTags "posts/*" (fromCapture "tag/*.html")
+  tags <- buildTags "posts/**" (fromCapture "tag/*.html")
 
   tagsRules tags $ \tag pat -> do
     let title = "Posts tagged \"" ++ tag ++ "\""
@@ -173,9 +173,9 @@ main = hakyllWith config $ do
   -- Posts
   --------------------------------------------------
 
-  postList <- sortRecentFirst =<< getMatches "posts/*"
+  postList <- sortRecentFirst =<< getMatches "posts/**"
 
-  match "posts/*" $ do
+  match "posts/**" $ do
     route $ setExtension "html"
     compile $ do
       let prevPostID = lookupWithOffset (-1) postList . (==) . itemIdentifier
@@ -213,7 +213,7 @@ main = hakyllWith config $ do
       posts <-
         fmap (take 10)
           . recentFirst
-          =<< loadAllSnapshots "posts/*" "postContent"
+          =<< loadAllSnapshots "posts/**" "postContent"
       renderRss feedConfig feedCtx posts
 
   --------------------------------------------------
@@ -223,7 +223,7 @@ main = hakyllWith config $ do
   match "index.html" $ do
     route idRoute
     compile $ do
-      posts <- recentFirst =<< loadAll "posts/*"
+      posts <- recentFirst =<< loadAll "posts/**"
       let indexCtx =
             listField "posts" postCtx (return posts)
               <> defaultContext
@@ -244,7 +244,7 @@ main = hakyllWith config $ do
 -- create ["archive.html"] $ do
 --   route idRoute
 --   compile $ do
---     posts <- recentFirst =<< loadAll "posts/*"
+--     posts <- recentFirst =<< loadAll "posts/**"
 --     let archiveCtx =
 --           listField "posts" postCtx (return posts)
 --             <> constField "title" "Archives"
@@ -262,7 +262,7 @@ main = hakyllWith config $ do
 -- -- https://dannysu.com/2015/10/29/hakyll-pagination/
 -- -- http://limansky.me/posts/2016-12-28-pagination-with-hakyll.html
 
--- pag <- buildPaginateWith postsGrouper "posts/*" postsPageId
+-- pag <- buildPaginateWith postsGrouper "posts/**" postsPageId
 
 -- paginateRules pag $ \pageNum pat -> do
 --   route idRoute

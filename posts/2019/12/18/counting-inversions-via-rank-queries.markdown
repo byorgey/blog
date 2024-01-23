@@ -1,0 +1,129 @@
+---
+title: Counting inversions via rank queries
+published: 2019-12-18T12:48:53Z
+categories: haskell
+tags: balanced,binary,black,count,inversion,query,rank,red,search,tree
+---
+
+<p>In a <a href="https://byorgey.wordpress.com/2018/10/06/counting-inversions-with-monoidal-sparks/">post from about a year ago</a>, I explained an algorithm for counting the number of <em>inversions</em> of a sequence in $latex O(n \lg n)$ time. As a reminder, given a sequence $latex a_1, a_2, \dots, a_n$, an <em>inversion</em> is a pair of positions $latex i, j$ such that $latex a_i$ and $latex a_j$ are in the “wrong order”, that is, $latex i &lt; j$ but $latex a_i &gt; a_j$. There can be up to $latex n(n-1)/2$ inversions in the worst case, so we cannot hope to count them in faster than quadratic time by simply incrementing a counter. In my previous post, I explained one way to count inversions in $latex O(n \lg n)$ time, using a variant of merge sort.</p>
+<p>I recently learned of an entirely different algorithm for achieving the same result. (In fact, I learned of it when I gave this problem on an exam and a student came up with an unexpected solution!) This solution does not use a divide-and-conquer approach at all, but hinges on a clever data structure.</p>
+<p>Suppose we have a bag of values (<em>i.e.</em> a collection where duplicates are allowed) on which we can perform the following two operations:</p>
+<ol type="1">
+<li>Insert a new value into the bag.</li>
+<li>Count how many values in the bag are <em>strictly greater than</em> a given value.</li>
+</ol>
+<p>We’ll call the second operation a <em>rank query</em> because it really amounts to finding the <em>rank</em> or <em>index</em> of a given value in the bag—how many values are greater than it (and thus how many are less than or equal to it)?</p>
+<p>If we can do these two operations in logarithmic time (<em>i.e.</em> logarithmic in the number of values in the bag), then we can count inversions in $latex O(n \lg n)$ time. Can you see how before reading on? You might also like to think about how we could actually implement a data structure that supports these operations.</p>
+<h2 id="counting-inversions-with-bags-and-rank-queries">Counting inversions with bags and rank queries</h2>
+<p>So, let’s see how to use a bag with logarithmic insertion and rank queries to count inversions. Start with an empty bag. For each element in the sequence, see how many things in the bag are strictly greater than it, and add this count to a running total; then insert the element into the bag, and repeat with the next element. That is, for each element we compute the number of inversions of which it is the right end, by counting how many elements that came before it (and are hence in the bag already) are strictly greater than it. It’s easy to see that this will count every inversion exactly once. It’s also easy to see that it will take $latex O(n \lg n)$ time: for each of the $latex n$ elements, we do two $latex O(\lg n)$ operations (one rank query and one insertion).</p>
+<p>In fact, we can do a lot more with this data structure than just count inversions; it sometimes comes in handy for competitive programming problems. More in a future post, perhaps!</p>
+<p>So how do we implement this magical data structure? First of all, we can use a balanced binary search tree to store the values in the bag; clearly this will allow us to insert in logarithmic time. However, a plain binary search tree wouldn’t allow us to quickly count the number of values strictly greater than a given query value. The trick is to augment the tree so that each node also caches the size of the subtree rooted at that node, being careful to maintain these counts while inserting and balancing.</p>
+<h2 id="augmented-red-black-trees-in-haskell">Augmented red-black trees in Haskell</h2>
+<p>Let’s see some code! In Haskell, probably the easiest type of balanced BST to implement is a red-black tree. (If I were implementing this in an imperative language I might use <a href="https://en.wikipedia.org/wiki/Splay_tree">splay trees</a> instead, but they are super annoying to implement in Haskell. (At least as far as I know. I will definitely take you out for a social beverage of your choice if you can show me an elegant Haskell implementation of splay trees! <a href="https://gist.github.com/m2ym/4232390">This</a> is cool but somehow feels too complex.)) However, this isn’t going to be some <a href="https://github.com/sweirich/dth/tree/master/depending-on-types">fancy, type-indexed, correct-by-construction implementation</a> of red-black trees, although that is certainly fun. I am actually going to implement <em>left-leaning</em> red-black trees, mostly following <a href="https://www.cs.princeton.edu/~rs/talks/LLRB/RedBlack.pdf">Sedgewick</a>; see those slides for more explanation and proof. This is one of the simplest ways I know to implement red-black trees (though it’s not necessarily the most efficient).</p>
+<p>First, a red-black tree is either empty, or a node with a color (which we imagine as the color of the incoming edge), a cached size, a value, and two subtrees.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:green;">{-# LANGUAGE PatternSynonyms #-}</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Color</span> <span style="color:red;">=</span> <span>R</span> <span style="color:red;">|</span> <span>B</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>otherColor</span> <span style="color:red;">::</span> <span>Color</span> <span style="color:red;">-&gt;</span> <span>Color</span>
+<span>&gt;</span> <span>otherColor</span> <span>R</span> <span style="color:red;">=</span> <span>B</span>
+<span>&gt;</span> <span>otherColor</span> <span>B</span> <span style="color:red;">=</span> <span>R</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>RBTree</span> <span>a</span>
+<span>&gt;</span>   <span style="color:red;">=</span> <span>Empty</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>Node</span> <span>Color</span> <span>Int</span> <span style="color:red;">(</span><span>RBTree</span> <span>a</span><span style="color:red;">)</span> <span>a</span> <span style="color:red;">(</span><span>RBTree</span> <span>a</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span>
+</code></pre>
+<p>To make some of the tree manipulation code easier to read, we make some convenient patterns for matching on the structure of a tree when we don’t care about the values or cached sizes: <code>ANY</code> matches any tree and its subtrees, while <code>RED</code> and <code>BLACK</code> only match on nodes of the appropriate color. We also make a function to extract the cached <code>size</code> of a subtree.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>pattern</span> <span>ANY</span>   <span>l</span> <span>r</span> <span style="color:red;">&lt;-</span> <span>Node</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span>l</span> <span style="color:blue;font-weight:bold;">_</span> <span>r</span>
+<span>&gt;</span> <span>pattern</span> <span>RED</span>   <span>l</span> <span>r</span> <span style="color:red;">&lt;-</span> <span>Node</span> <span>R</span> <span style="color:blue;font-weight:bold;">_</span> <span>l</span> <span style="color:blue;font-weight:bold;">_</span> <span>r</span>
+<span>&gt;</span> <span>pattern</span> <span>BLACK</span> <span>l</span> <span>r</span> <span style="color:red;">&lt;-</span> <span>Node</span> <span>B</span> <span style="color:blue;font-weight:bold;">_</span> <span>l</span> <span style="color:blue;font-weight:bold;">_</span> <span>r</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>size</span> <span style="color:red;">::</span> <span>RBTree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>&gt;</span> <span>size</span> <span>Empty</span>            <span style="color:red;">=</span> <span class="hs-num">0</span>
+<span>&gt;</span> <span>size</span> <span style="color:red;">(</span><span>Node</span> <span style="color:blue;font-weight:bold;">_</span> <span>n</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>n</span>
+</code></pre>
+<p>The next thing to implement is the workhorse of most balanced binary tree implementations: rotations. The fiddliest bit here is managing the cached sizes appropriately. When rotating, the size of the root node remains unchanged, but the new child node, as compared to the original, has lost one subtree and gained another. Note also that we will only ever rotate around red edges, so we pattern-match on the color as a sanity check, although this is not strictly necessary. The <code>error</code> cases below should never happen.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>rotateL</span> <span style="color:red;">::</span> <span>RBTree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>RBTree</span> <span>a</span>
+<span>&gt;</span> <span>rotateL</span> <span style="color:red;">(</span><span>Node</span> <span>c</span> <span>n</span> <span>t1</span> <span>x</span> <span style="color:red;">(</span><span>Node</span> <span>R</span> <span>m</span> <span>t2</span> <span>y</span> <span>t3</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">=</span> <span>Node</span> <span>c</span> <span>n</span> <span style="color:red;">(</span><span>Node</span> <span>R</span> <span style="color:red;">(</span><span>m</span> <span>+</span> <span>size</span> <span>t1</span> <span style="color:green;">-</span> <span>size</span> <span>t3</span><span style="color:red;">)</span> <span>t1</span> <span>x</span> <span>t2</span><span style="color:red;">)</span> <span>y</span> <span>t3</span>
+<span>&gt;</span> <span>rotateL</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">=</span> <span>error</span> <span style="color:teal;">"rotateL on non-rotatable tree!"</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>rotateR</span> <span style="color:red;">::</span> <span>RBTree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>RBTree</span> <span>a</span>
+<span>&gt;</span> <span>rotateR</span> <span style="color:red;">(</span><span>Node</span> <span>c</span> <span>n</span> <span style="color:red;">(</span><span>Node</span> <span>R</span> <span>m</span> <span>t1</span> <span>x</span> <span>t2</span><span style="color:red;">)</span> <span>y</span> <span>t3</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">=</span> <span>Node</span> <span>c</span> <span>n</span> <span>t1</span> <span>x</span> <span style="color:red;">(</span><span>Node</span> <span>R</span> <span style="color:red;">(</span><span>m</span> <span style="color:green;">-</span> <span>size</span> <span>t1</span> <span>+</span> <span>size</span> <span>t3</span><span style="color:red;">)</span> <span>t2</span> <span>y</span> <span>t3</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>rotateR</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">=</span> <span>error</span> <span style="color:teal;">"rotateR on non-rotatable tree!"</span>
+</code></pre>
+<p>To <code>recolor</code> a node, we just flip its color. We can then <code>split</code> a tree with two red subtrees by recoloring all three nodes. (The “split” terminology comes from the isomorphism between red-black trees and 2-3-4 trees; red edges can be thought of as “gluing” nodes together into a larger node, and this recoloring operation corresponds to splitting a 4-node into three 2-nodes.)</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>recolor</span> <span style="color:red;">::</span> <span>RBTree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>RBTree</span> <span>a</span>
+<span>&gt;</span> <span>recolor</span> <span>Empty</span>            <span style="color:red;">=</span> <span>Empty</span>
+<span>&gt;</span> <span>recolor</span> <span style="color:red;">(</span><span>Node</span> <span>c</span> <span>n</span> <span>l</span> <span>x</span> <span>r</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Node</span> <span style="color:red;">(</span><span>otherColor</span> <span>c</span><span style="color:red;">)</span> <span>n</span> <span>l</span> <span>x</span> <span>r</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>split</span> <span style="color:red;">::</span> <span>RBTree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>RBTree</span> <span>a</span>
+<span>&gt;</span> <span>split</span> <span style="color:red;">(</span><span>Node</span> <span>c</span> <span>n</span> <span>l</span><span style="color:red;">@</span><span style="color:red;">(</span><span>RED</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span>x</span> <span>r</span><span style="color:red;">@</span><span style="color:red;">(</span><span>RED</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">=</span> <span style="color:red;">(</span><span>Node</span> <span style="color:red;">(</span><span>otherColor</span> <span>c</span><span style="color:red;">)</span> <span>n</span> <span style="color:red;">(</span><span>recolor</span> <span>l</span><span style="color:red;">)</span> <span>x</span> <span style="color:red;">(</span><span>recolor</span> <span>r</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>split</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">=</span> <span>error</span> <span style="color:teal;">"split on non-splittable tree!"</span>
+</code></pre>
+<p>Finally, we implement a function to “fix up” the invariants by doing rotations as necessary: if we have two red subtrees we don’t touch them; if we have only one <em>right</em> red subtree we rotate it to the left (this is where the name “left-leaning” comes from), and if we have a left red child which itself has a left red child, we rotate right. (This function probably seems quite mysterious on its own; see <a href="https://www.cs.princeton.edu/~rs/talks/LLRB/RedBlack.pdf">Sedgewick</a> for some nice pictures which explain it very well!)</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>fixup</span> <span style="color:red;">::</span> <span>RBTree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>RBTree</span> <span>a</span>
+<span>&gt;</span> <span>fixup</span> <span>t</span><span style="color:red;">@</span><span style="color:red;">(</span><span>ANY</span> <span style="color:red;">(</span><span>RED</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>RED</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>t</span>
+<span>&gt;</span> <span>fixup</span> <span>t</span><span style="color:red;">@</span><span style="color:red;">(</span><span>ANY</span> <span style="color:blue;font-weight:bold;">_</span>         <span style="color:red;">(</span><span>RED</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>rotateL</span> <span>t</span>
+<span>&gt;</span> <span>fixup</span> <span>t</span><span style="color:red;">@</span><span style="color:red;">(</span><span>ANY</span> <span style="color:red;">(</span><span>RED</span> <span style="color:red;">(</span><span>RED</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>rotateR</span> <span>t</span>
+<span>&gt;</span> <span>fixup</span> <span>t</span> <span style="color:red;">=</span> <span>t</span>
+</code></pre>
+<p>We can finally implement insertion. First, to insert into an empty tree, we create a red node with size 1.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>insert</span> <span style="color:red;">::</span> <span>Ord</span> <span>a</span> <span style="color:red;">=&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>RBTree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>RBTree</span> <span>a</span>
+<span>&gt;</span> <span>insert</span> <span>a</span> <span>Empty</span> <span style="color:red;">=</span> <span>Node</span> <span>R</span> <span class="hs-num">1</span> <span>Empty</span> <span>a</span> <span>Empty</span>
+</code></pre>
+<p>If we encounter a node with two red children, we perform a split before continuing. This may violate the red-black invariants above us, but we will fix it up later on our way back up the tree.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>insert</span> <span>a</span> <span>t</span><span style="color:red;">@</span><span style="color:red;">(</span><span>ANY</span> <span style="color:red;">(</span><span>RED</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>RED</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>insert</span> <span>a</span> <span style="color:red;">(</span><span>split</span> <span>t</span><span style="color:red;">)</span>
+</code></pre>
+<p>Otherwise, we compare the element to be inserted with the root, insert on the left or right as appropriate, increment the cached size, and <code>fixup</code> the result. Notice that we don’t stop recursing upon encountering a value that is equal to the value to be inserted, because our goal is to implement a <em>bag</em> rather than a <em>set</em>. Here I have chosen to put values equal to the root in the left subtree, but it really doesn’t matter.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>insert</span> <span>a</span> <span style="color:red;">(</span><span>Node</span> <span>c</span> <span>n</span> <span>l</span> <span>x</span> <span>r</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>a</span> <span>&lt;=</span> <span>x</span>    <span style="color:red;">=</span> <span>fixup</span> <span style="color:red;">(</span><span>Node</span> <span>c</span> <span style="color:red;">(</span><span>n</span><span>+</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>insert</span> <span>a</span> <span>l</span><span style="color:red;">)</span> <span>x</span> <span>r</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span>fixup</span> <span style="color:red;">(</span><span>Node</span> <span>c</span> <span style="color:red;">(</span><span>n</span><span>+</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>l</span> <span>x</span> <span style="color:red;">(</span><span>insert</span> <span>a</span> <span>r</span><span style="color:red;">)</span><span style="color:red;">)</span>
+</code></pre>
+<h2 id="implementing-rank-queries">Implementing rank queries</h2>
+<p>Now, thanks to the cached sizes, we can count the values greater than a query value.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>numGT</span> <span style="color:red;">::</span> <span>Ord</span> <span>a</span> <span style="color:red;">=&gt;</span> <span>RBTree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+</code></pre>
+<p>The empty tree contains 0 values strictly greater than anything.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>numGT</span> <span>Empty</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">=</span> <span class="hs-num">0</span>
+</code></pre>
+<p>For a non-empty tree, we distinguish two cases:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>numGT</span> <span style="color:red;">(</span><span>Node</span> <span style="color:blue;font-weight:bold;">_</span> <span>n</span> <span>l</span> <span>x</span> <span>r</span><span style="color:red;">)</span> <span>q</span>
+</code></pre>
+<p>If the query value <code>q</code> is less than the root, then we know that the root along with <em>everything</em> in the right subtree is strictly greater than <code>q</code>, so we can just add <code>1 + size r</code> without recursing into the right subtree. We also recurse into the left subtree to count any values greater than <code>q</code> it contains.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>   <span style="color:red;">|</span> <span>q</span> <span>&lt;</span> <span>x</span>     <span style="color:red;">=</span> <span>numGT</span> <span>l</span> <span>q</span> <span>+</span> <span class="hs-num">1</span> <span>+</span> <span>size</span> <span>r</span>
+</code></pre>
+<p>Otherwise, if <code>q</code> is greater than or equal to the root, any values strictly greater than <code>q</code> must be in the right subtree, so we recurse to count them.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>   <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span>numGT</span> <span>r</span> <span>q</span>
+</code></pre>
+<p>By inspection we can see that <code>numGT</code> calls itself at most once, moving one level down the tree with each recursive call, so it makes a logarithmic number of calls, with only a constant amount of work at each call—thanks to the fact that <code>size</code> takes only constant time to look up a cached value.</p>
+<h2 id="counting-inversions">Counting inversions</h2>
+<p>Finally, we can put together the pieces to count inversions. The code is quite simple: recurse through the list with an accumulating red-black tree, doing a rank query on each value, and sum the results.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>inversions</span> <span style="color:red;">::</span> <span>Ord</span> <span>a</span> <span style="color:red;">=&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>&gt;</span> <span>inversions</span> <span style="color:red;">=</span> <span>go</span> <span>Empty</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>     <span>go</span> <span style="color:blue;font-weight:bold;">_</span> <span>[]</span>     <span style="color:red;">=</span> <span class="hs-num">0</span>
+<span>&gt;</span>     <span>go</span> <span>t</span> <span style="color:red;">(</span><span>a</span><span>:</span><span style="color:blue;font-weight:bold;">as</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>numGT</span> <span>t</span> <span>a</span> <span>+</span> <span>go</span> <span style="color:red;">(</span><span>insert</span> <span>a</span> <span>t</span><span style="color:red;">)</span> <span style="color:blue;font-weight:bold;">as</span>
+</code></pre>
+<p>Let’s try it out!</p>
+<pre><code>λ&gt; inversions [3,5,1,4,2]
+6
+λ&gt; inversions [2,2,2,2,2,1]
+5
+λ&gt; :set +s
+λ&gt; inversions [3000, 2999 .. 1]
+4498500
+(0.19 secs, 96,898,384 bytes)</code></pre>
+<p>It seems to work, and is reasonably fast!</p>
+<h2 id="exercises">Exercises</h2>
+<ol type="1">
+<li><p>Further augment each node with a counter representing the number of copies of the given value which are contained in the bag, and maintain the invariant that each distinct value occurs in only a single node.</p></li>
+<li><p>Rewrite <code>inversions</code> without a recursive helper function, using a scan, a zip, and a fold.</p></li>
+<li><p>It should be possible to implement bags with rank queries using <a href="http://hackage.haskell.org/package/fingertree-0.1.4.2/docs/Data-FingerTree.html">fingertrees</a> instead of building our own custom balanced tree type (though it seems kind of overkill).</p></li>
+<li><p>My intuition tells me that it is not possible to count inversions faster than $latex n \lg n$. Prove it.</p></li>
+</ol>
+

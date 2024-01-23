@@ -1,0 +1,53 @@
+---
+title: Announcing diagrams-0.4
+published: 2011-10-23T18:47:24Z
+categories: haskell,projects
+tags: diagrams,drawing,EDSL,release
+---
+
+<p>I am pleased to announce the release of version 0.4 of <a href="http://projects.haskell.org/diagrams">diagrams</a>, a full-featured framework and embedded domain-specific language for declarative drawing.</p>
+<p>The last announcement was of the 0.1 release; there have been quite a few changes and improvements since then, including:</p>
+<ul>
+<li>A new <a href="http://projects.haskell.org/diagrams">website</a> including a <a href="http://projects.haskell.org/diagrams/gallery.html">gallery</a> of examples</li>
+<li>A new comprehensive <a href="http://projects.haskell.org/diagrams/manual/diagrams-manual.html">user manual</a> with lots of illustrative examples</li>
+<li>New primitive shapes: rounded rectangles, wedges, and a new flexible API for generating polygons</li>
+<li>Cubic splines</li>
+<li>Basic text support</li>
+<li>Support for external image primitives</li>
+<li>Lots more convenient combinators, bug fixes, and improvements</li>
+</ul>
+<h2 id="cool-how-can-i-try-it-out">Cool, how can I try it out?</h2>
+<p>For the truly impatient:</p>
+<pre><code>cabal install gtk2hs-buildtools
+cabal install diagrams
+</code></pre>
+<p>For the slightly less impatient, read the <a href="http://projects.haskell.org/diagrams/tutorial/DiagramsTutorial.html">quick tutorial</a>, which has detailed information about how to install the necessary packages and will introduce you to the fundamentals of the framework.</p>
+<p>For those who are even less impatient but want to really dig in and use the power features, read the <a href="http://projects.haskell.org/manual/diagrams-manual.html">user manual</a>.</p>
+<h2 id="cool-how-can-i-contribute">Cool, how can I contribute?</h2>
+<p>There are lots of ways you can contribute! First, you may want to subscribe to the <a href="http://groups.google.com/group/diagrams-discuss">project mailing list</a>, and/or come hang out in the <code>#diagrams</code> IRC channel on freenode.org.</p>
+<ul>
+<li>There are lots of easy bug fixes, improvements, and feature requests just waiting for people wanting to get involved: see the <a href="http://code.google.com/p/diagrams/issues/list">bug tracker</a> for a list of open tickets.
+<p>The source repositories are mirrored using both darcs (on patch-tag.com) and git (on github.com), and patches are accepted in either place, thanks to Owen Stephen's great work on <a href="http://wiki.darcs.net/DarcsBridgeUsage">darcs-bridge</a>.</p></li>
+<li>Create a higher-level module built on top of the diagrams framework (e.g. tree or graph layout, generating Turing machine configuration diagrams, Penrose tilings ... your imagination is the only limit!) and submit it for inclusion in a special diagrams-contrib package which will be created for such higher-level user-contributed modules.</li>
+<li>Use diagrams to create some cool graphics and submit them for inclusion in the <a href="http://projects.haskell.org/diagrams/gallery.html">gallery</a>.</li>
+<li>Start your own project built on top of diagrams and let us know how it goes!</li>
+<li>Last but certainly not least, just try it out for your pet graphics generation needs and contribute your bug reports and feature requests.</li>
+</ul>
+<p>Happy diagramming!</p>
+<p>Brought to you by the diagrams team:</p>
+<ul>
+<li>Brent Yorgey</li>
+<li>Ryan Yates</li>
+</ul>
+<p>with contributions from:</p>
+<ul>
+<li>Sam Griffin</li>
+<li>Claude Heiland-Allen</li>
+<li>John Lato</li>
+<li>Vilhelm Sjöberg</li>
+<li>Luite Stegeman</li>
+<li>Kanchalai Suveepattananont</li>
+<li>Scott Walck</li>
+</ul>
+
+

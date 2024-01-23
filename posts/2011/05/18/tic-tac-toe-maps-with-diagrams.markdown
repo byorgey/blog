@@ -1,0 +1,257 @@
+---
+title: Tic-tac-toe maps with diagrams
+published: 2011-05-18T14:41:53Z
+categories: haskell,projects
+tags: best play,diagrams,example,map,tic-tac-toe
+---
+
+<p>Inspired by <a href="http://xkcd.com/832/">Randall Munroe</a>, here are some handy guides to optimal tic-tac-toe play, created with the <a href="http://byorgey.wordpress.com/2011/05/17/announcing-diagrams-preview-release/">diagrams EDSL</a>. Click the images to open (zoomable) PDF versions.</p>
+
+<a href="http://byorgey.files.wordpress.com/2011/05/xmap.pdf"><img src="http://byorgey.files.wordpress.com/2011/05/xmap.png" alt="" title="xMap" width="400" height="400" class="aligncenter size-full wp-image-599" /></a>
+
+<a href="http://byorgey.files.wordpress.com/2011/05/omap.pdf"><img src="http://byorgey.files.wordpress.com/2011/05/omap.png" alt="" title="oMap" width="400" height="400" class="aligncenter size-full wp-image-601" /></a>
+
+<p>I hacked this up in just a few hours. How did I do it? First, some code for solving tic-tac-toe (no graphics involved here, just game trees and minimax search):</p><pre><code><span>&gt;</span> <span style="color:green;">{-# LANGUAGE PatternGuards, ViewPatterns #-}</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">module</span> <span>Solve</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Array</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Tree</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Function</span> <span style="color:red;">(</span><span>on</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>List</span> <span style="color:red;">(</span><span>groupBy</span><span style="color:red;">,</span> <span>maximumBy</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Maybe</span> <span style="color:red;">(</span><span>isNothing</span><span style="color:red;">,</span> <span>isJust</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Monoid</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Applicative</span> <span style="color:red;">(</span><span>liftA2</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Arrow</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>&amp;&amp;&amp;</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Monad</span> <span style="color:red;">(</span><span>guard</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Player</span> <span style="color:red;">=</span> <span>X</span> <span style="color:red;">|</span> <span>O</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Show</span><span style="color:red;">,</span> <span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>next</span> <span>X</span> <span style="color:red;">=</span> <span>O</span>
+<span>&gt;</span> <span>next</span> <span>O</span> <span style="color:red;">=</span> <span>X</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Result</span> <span style="color:red;">=</span> <span>Win</span> <span>Player</span> <span>Int</span> <span style="color:red;">[</span><span>Loc</span><span style="color:red;">]</span> <span style="color:green;">-- ^ This player can win in n moves</span>
+<span>&gt;</span>             <span style="color:red;">|</span> <span>Cats</span>                 <span style="color:green;">-- ^ Tie game</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Show</span><span style="color:red;">,</span> <span>Eq</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>compareResultsFor</span> <span style="color:red;">::</span> <span>Player</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>Result</span> <span style="color:red;">-&gt;</span> <span>Result</span> <span style="color:red;">-&gt;</span> <span>Ordering</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>compareResultsFor</span> <span>X</span> <span style="color:red;">=</span> <span>compare</span> <span>`on`</span> <span>resultToScore</span>
+<span>&gt;</span>     <span style="color:blue;font-weight:bold;">where</span> <span>resultToScore</span> <span style="color:red;">(</span><span>Win</span> <span>X</span> <span>n</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span class="hs-num">1</span><span>/</span><span style="color:red;">(</span><span class="hs-num">1</span><span>+</span><span>fromIntegral</span> <span>n</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>           <span>resultToScore</span> <span>Cats</span>        <span style="color:red;">=</span> <span class="hs-num">0</span>
+<span>&gt;</span>           <span>resultToScore</span> <span style="color:red;">(</span><span>Win</span> <span>O</span> <span>n</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span style="color:green;">-</span><span class="hs-num">1</span><span>/</span><span style="color:red;">(</span><span class="hs-num">1</span><span>+</span><span>fromIntegral</span> <span>n</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>compareResultsFor</span> <span>O</span> <span style="color:red;">=</span> <span>flip</span> <span style="color:red;">(</span><span>compareResultsFor</span> <span>X</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>Loc</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>Int</span><span style="color:red;">,</span><span>Int</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>Board</span> <span style="color:red;">=</span> <span>Array</span> <span>Loc</span> <span style="color:red;">(</span><span>Maybe</span> <span>Player</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>emptyBoard</span> <span style="color:red;">::</span> <span>Board</span>
+<span>&gt;</span> <span>emptyBoard</span> <span style="color:red;">=</span> <span>listArray</span> <span style="color:red;">(</span><span style="color:red;">(</span><span class="hs-num">0</span><span style="color:red;">,</span><span class="hs-num">0</span><span style="color:red;">)</span><span style="color:red;">,</span> <span style="color:red;">(</span><span class="hs-num">2</span><span style="color:red;">,</span><span class="hs-num">2</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>repeat</span> <span>Nothing</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>showBoard</span> <span style="color:red;">::</span> <span>Board</span> <span style="color:red;">-&gt;</span> <span>String</span>
+<span>&gt;</span> <span>showBoard</span> <span style="color:red;">=</span> <span>unlines</span> <span>.</span> <span>map</span> <span>showRow</span> <span>.</span> <span>groupBy</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>==</span><span style="color:red;">)</span> <span>`on`</span> <span style="color:red;">(</span><span>fst</span> <span>.</span> <span>fst</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>.</span> <span>assocs</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>showRow</span> <span style="color:red;">=</span> <span>concatMap</span> <span style="color:red;">(</span><span>showPiece</span> <span>.</span> <span>snd</span><span style="color:red;">)</span>
+<span>&gt;</span>         <span>showPiece</span> <span>Nothing</span>  <span style="color:red;">=</span> <span style="color:teal;">" "</span>
+<span>&gt;</span>         <span>showPiece</span> <span style="color:red;">(</span><span>Just</span> <span>p</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>show</span> <span>p</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Move</span> <span style="color:red;">=</span> <span>Move</span> <span>Player</span> <span>Loc</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>makeMove</span> <span style="color:red;">::</span> <span>Move</span> <span style="color:red;">-&gt;</span> <span>Board</span> <span style="color:red;">-&gt;</span> <span>Board</span>
+<span>&gt;</span> <span>makeMove</span> <span style="color:red;">(</span><span>Move</span> <span>p</span> <span>l</span><span style="color:red;">)</span> <span>b</span> <span style="color:red;">=</span> <span>b</span> <span>//</span> <span style="color:red;">[</span><span style="color:red;">(</span><span>l</span><span style="color:red;">,</span> <span>Just</span> <span>p</span><span style="color:red;">)</span><span style="color:red;">]</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Game</span> <span style="color:red;">=</span> <span>Game</span> <span>Board</span>           <span style="color:green;">-- ^ The current board state.</span>
+<span>&gt;</span>                  <span>Player</span>          <span style="color:green;">-- ^ Whose turn is it?</span>
+<span>&gt;</span>                  <span style="color:red;">[</span><span>Move</span><span style="color:red;">]</span>          <span style="color:green;">-- ^ The list of moves so far (most</span>
+<span>&gt;</span>                                  <span style="color:green;">--   recent first).</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>initialGame</span> <span style="color:red;">=</span> <span>Game</span> <span>emptyBoard</span> <span>X</span> <span>[]</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | The full game tree for tic-tac-toe.</span>
+<span>&gt;</span> <span>gameTree</span> <span style="color:red;">::</span> <span>Tree</span> <span>Game</span>
+<span>&gt;</span> <span>gameTree</span> <span style="color:red;">=</span> <span>unfoldTree</span> <span style="color:red;">(</span><span>id</span> <span>&amp;&amp;&amp;</span> <span>genMoves</span><span style="color:red;">)</span> <span>initialGame</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Generate all possible successor games from the given game.</span>
+<span>&gt;</span> <span>genMoves</span> <span style="color:red;">::</span> <span>Game</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Game</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>genMoves</span> <span style="color:red;">(</span><span>Game</span> <span>board</span> <span>player</span> <span>moves</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>newGames</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>validLocs</span> <span style="color:red;">=</span> <span>map</span> <span>fst</span> <span>.</span> <span>filter</span> <span style="color:red;">(</span><span>isNothing</span> <span>.</span> <span>snd</span><span style="color:red;">)</span> <span>.</span> <span>assocs</span> <span>$</span> <span>board</span>
+<span>&gt;</span>         <span>newGames</span>  <span style="color:red;">=</span> <span style="color:red;">[</span><span>Game</span> <span style="color:red;">(</span><span>makeMove</span> <span>m</span> <span>board</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>next</span> <span>player</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>m</span><span>:</span><span>moves</span><span style="color:red;">)</span>
+<span>&gt;</span>                       <span style="color:red;">|</span> <span>p</span> <span style="color:red;">&lt;-</span> <span>validLocs</span>
+<span>&gt;</span>                       <span style="color:red;">,</span> <span style="color:blue;font-weight:bold;">let</span> <span>m</span> <span style="color:red;">=</span> <span>Move</span> <span>player</span> <span>p</span>
+<span>&gt;</span>                     <span style="color:red;">]</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Simple fold for Trees.  The Data.Tree module does not provide</span>
+<span>&gt;</span> <span style="color:green;">--   this.</span>
+<span>&gt;</span> <span>foldTree</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>a</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>b</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>b</span>
+<span>&gt;</span> <span>foldTree</span> <span>f</span> <span style="color:red;">(</span><span>Node</span> <span>a</span> <span>ts</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>f</span> <span>a</span> <span style="color:red;">(</span><span>map</span> <span style="color:red;">(</span><span>foldTree</span> <span>f</span><span style="color:red;">)</span> <span>ts</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Solve the game for player @p@: prune all but the optimal moves</span>
+<span>&gt;</span> <span style="color:green;">--   for player @p@, and annotate each game with its result (given</span>
+<span>&gt;</span> <span style="color:green;">--   best play).</span>
+<span>&gt;</span> <span>solveFor</span> <span style="color:red;">::</span> <span>Player</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span>Game</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span style="color:red;">(</span><span>Game</span><span style="color:red;">,</span> <span>Result</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>solveFor</span> <span>p</span> <span style="color:red;">=</span> <span>foldTree</span> <span style="color:red;">(</span><span>solveStep</span> <span>p</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Given a game and its continuations (including their results),</span>
+<span>&gt;</span> <span style="color:green;">--   solve the game for player p.  If it is player p's turn, prune all</span>
+<span>&gt;</span> <span style="color:green;">--   continuations except the optimal one for p. Otherwise, leave all</span>
+<span>&gt;</span> <span style="color:green;">--   continuations.  The result of this game is the result of the</span>
+<span>&gt;</span> <span style="color:green;">--   optimal choice if it is p's turn, otherwise the worst possible</span>
+<span>&gt;</span> <span style="color:green;">--   outcome for p.</span>
+<span>&gt;</span> <span>solveStep</span> <span style="color:red;">::</span> <span>Player</span> <span style="color:red;">-&gt;</span> <span>Game</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tree</span> <span style="color:red;">(</span><span>Game</span><span style="color:red;">,</span> <span>Result</span><span style="color:red;">)</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span style="color:red;">(</span><span>Game</span><span style="color:red;">,</span> <span>Result</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>solveStep</span> <span>p</span> <span>g</span><span style="color:red;">@</span><span style="color:red;">(</span><span>Game</span> <span>brd</span> <span>curPlayer</span> <span>moves</span><span style="color:red;">)</span> <span>conts</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>Just</span> <span>res</span> <span style="color:red;">&lt;-</span> <span>gameOver</span> <span>g</span> <span style="color:red;">=</span> <span>Node</span> <span style="color:red;">(</span><span>g</span><span style="color:red;">,</span> <span>res</span><span style="color:red;">)</span> <span>[]</span>
+<span>&gt;</span> 
+<span>&gt;</span>   <span style="color:red;">|</span> <span>curPlayer</span> <span>==</span> <span>p</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">let</span> <span>c</span>   <span style="color:red;">=</span> <span>bestContFor</span> <span>p</span> <span>conts</span>
+<span>&gt;</span>                          <span>res</span> <span style="color:red;">=</span> <span>inc</span> <span>.</span> <span>snd</span> <span>.</span> <span>rootLabel</span> <span>$</span> <span>c</span>
+<span>&gt;</span>                      <span style="color:blue;font-weight:bold;">in</span>  <span>Node</span> <span style="color:red;">(</span><span>g</span><span style="color:red;">,</span> <span>res</span><span style="color:red;">)</span> <span style="color:red;">[</span><span>c</span><span style="color:red;">]</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>otherwise</span>      <span style="color:red;">=</span> <span>Node</span> <span style="color:red;">(</span><span>g</span><span style="color:red;">,</span> <span>bestResultFor</span> <span style="color:red;">(</span><span>next</span> <span>p</span><span style="color:red;">)</span> <span>conts</span><span style="color:red;">)</span> <span>conts</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>bestContFor</span> <span style="color:red;">::</span> <span>Player</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tree</span> <span style="color:red;">(</span><span>Game</span><span style="color:red;">,</span> <span>Result</span><span style="color:red;">)</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span style="color:red;">(</span><span>Game</span><span style="color:red;">,</span> <span>Result</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>bestContFor</span> <span>p</span> <span style="color:red;">=</span> <span>maximumBy</span> <span style="color:red;">(</span><span>compareResultsFor</span> <span>p</span> <span>`on`</span> <span style="color:red;">(</span><span>snd</span> <span>.</span> <span>rootLabel</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>bestResultFor</span> <span style="color:red;">::</span> <span>Player</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tree</span> <span style="color:red;">(</span><span>Game</span><span style="color:red;">,</span> <span>Result</span><span style="color:red;">)</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Result</span>
+<span>&gt;</span> <span>bestResultFor</span> <span>p</span> <span style="color:red;">=</span> <span>inc</span> <span>.</span> <span>snd</span> <span>.</span> <span>rootLabel</span> <span>.</span> <span>bestContFor</span> <span>p</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>inc</span> <span style="color:red;">::</span> <span>Result</span> <span style="color:red;">-&gt;</span> <span>Result</span>
+<span>&gt;</span> <span>inc</span> <span style="color:red;">(</span><span>Win</span> <span>p</span> <span>n</span> <span>ls</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Win</span> <span>p</span> <span style="color:red;">(</span><span>n</span><span>+</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>ls</span>
+<span>&gt;</span> <span>inc</span> <span>Cats</span>         <span style="color:red;">=</span> <span>Cats</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Check whether the game is over, returning the result if it is.</span>
+<span>&gt;</span> <span>gameOver</span> <span style="color:red;">::</span> <span>Game</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span>Result</span>
+<span>&gt;</span> <span>gameOver</span> <span style="color:red;">(</span><span>Game</span> <span>board</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">=</span> <span>getFirst</span> <span>$</span> <span>mconcat</span> <span style="color:red;">(</span><span>map</span> <span style="color:red;">(</span><span>checkWin</span> <span>board</span><span style="color:red;">)</span> <span>threes</span><span style="color:red;">)</span> <span>`mappend`</span> <span>checkCats</span> <span>board</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>checkWin</span> <span style="color:red;">::</span> <span>Board</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Loc</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>First</span> <span>Result</span>
+<span>&gt;</span> <span>checkWin</span> <span>board</span> <span style="color:red;">=</span> <span>First</span>
+<span>&gt;</span>                <span>.</span> <span style="color:red;">(</span><span>&gt;&gt;=</span> <span>winAsResult</span><span style="color:red;">)</span>      <span style="color:green;">-- Maybe Result</span>
+<span>&gt;</span>                <span>.</span> <span>mapM</span> <span>strength</span>          <span style="color:green;">-- Maybe [(Loc, Player)]</span>
+<span>&gt;</span>                <span>.</span> <span>map</span> <span style="color:red;">(</span><span>id</span> <span>&amp;&amp;&amp;</span> <span style="color:red;">(</span><span>board</span><span>!</span><span style="color:red;">)</span><span style="color:red;">)</span>  <span style="color:green;">-- [(Loc, Maybe Player)]</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>winAsResult</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span style="color:red;">(</span><span>Loc</span><span style="color:red;">,</span> <span>Player</span><span style="color:red;">)</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span>Result</span>
+<span>&gt;</span> <span>winAsResult</span> <span style="color:red;">(</span><span>unzip</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>ls</span><span style="color:red;">,</span><span>ps</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>Just</span> <span>p</span> <span style="color:red;">&lt;-</span> <span>allEqual</span> <span>ps</span> <span style="color:red;">=</span> <span>Just</span> <span style="color:red;">(</span><span>Win</span> <span>p</span> <span class="hs-num">0</span> <span>ls</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>winAsResult</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">=</span> <span>Nothing</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>checkCats</span> <span style="color:red;">::</span> <span>Board</span> <span style="color:red;">-&gt;</span> <span>First</span> <span>Result</span>
+<span>&gt;</span> <span>checkCats</span> <span>b</span> <span style="color:red;">|</span> <span>all</span> <span>isJust</span> <span style="color:red;">(</span><span>elems</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>First</span> <span style="color:red;">(</span><span>Just</span> <span>Cats</span><span style="color:red;">)</span>
+<span>&gt;</span>             <span style="color:red;">|</span> <span>otherwise</span>            <span style="color:red;">=</span> <span>First</span> <span>Nothing</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>allEqual</span> <span style="color:red;">::</span> <span>Eq</span> <span>a</span> <span style="color:red;">=&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span>a</span>
+<span>&gt;</span> <span>allEqual</span> <span style="color:red;">=</span> <span>foldr1</span> <span>combine</span> <span>.</span> <span>map</span> <span>Just</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>combine</span> <span style="color:red;">(</span><span>Just</span> <span>x</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>Just</span> <span>y</span><span style="color:red;">)</span> <span style="color:red;">|</span> <span>x</span> <span>==</span> <span>y</span> <span style="color:red;">=</span> <span>Just</span> <span>x</span>
+<span>&gt;</span>                                   <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span>Nothing</span>
+<span>&gt;</span>         <span>combine</span> <span>Nothing</span> <span style="color:blue;font-weight:bold;">_</span>         <span style="color:red;">=</span> <span>Nothing</span>
+<span>&gt;</span>         <span>combine</span> <span style="color:blue;font-weight:bold;">_</span> <span>Nothing</span>         <span style="color:red;">=</span> <span>Nothing</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>strength</span> <span style="color:red;">::</span> <span>Functor</span> <span>f</span> <span style="color:red;">=&gt;</span> <span style="color:red;">(</span><span>a</span><span style="color:red;">,</span> <span>f</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>f</span> <span style="color:red;">(</span><span>a</span><span style="color:red;">,</span><span>b</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>strength</span> <span style="color:red;">(</span><span>a</span><span style="color:red;">,</span> <span>f</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>fmap</span> <span style="color:red;">(</span><span>(,)</span> <span>a</span><span style="color:red;">)</span> <span>f</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>threes</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span style="color:red;">[</span><span>Loc</span><span style="color:red;">]</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>threes</span> <span style="color:red;">=</span> <span>rows</span> <span>++</span> <span>cols</span> <span>++</span> <span>diags</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>rows</span>     <span style="color:red;">=</span> <span style="color:red;">[</span> <span style="color:red;">[</span> <span style="color:red;">(</span><span>r</span><span style="color:red;">,</span><span>c</span><span style="color:red;">)</span> <span style="color:red;">|</span> <span>c</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span class="hs-num">2</span><span style="color:red;">]</span> <span style="color:red;">]</span> <span style="color:red;">|</span> <span>r</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span class="hs-num">2</span><span style="color:red;">]</span> <span style="color:red;">]</span>
+<span>&gt;</span>         <span>cols</span>     <span style="color:red;">=</span> <span style="color:red;">[</span> <span style="color:red;">[</span> <span style="color:red;">(</span><span>r</span><span style="color:red;">,</span><span>c</span><span style="color:red;">)</span> <span style="color:red;">|</span> <span>r</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span class="hs-num">2</span><span style="color:red;">]</span> <span style="color:red;">]</span> <span style="color:red;">|</span> <span>c</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span class="hs-num">2</span><span style="color:red;">]</span> <span style="color:red;">]</span>
+<span>&gt;</span>         <span>diags</span>    <span style="color:red;">=</span> <span style="color:red;">[</span> <span style="color:red;">[</span> <span style="color:red;">(</span><span>i</span><span style="color:red;">,</span><span>i</span><span style="color:red;">)</span> <span style="color:red;">|</span> <span>i</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span class="hs-num">2</span><span style="color:red;">]</span> <span style="color:red;">]</span>
+<span>&gt;</span>                    <span style="color:red;">,</span> <span style="color:red;">[</span> <span style="color:red;">(</span><span>i</span><span style="color:red;">,</span><span class="hs-num">2</span><span style="color:green;">-</span><span>i</span><span style="color:red;">)</span> <span style="color:red;">|</span> <span>i</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span class="hs-num">2</span><span style="color:red;">]</span> <span style="color:red;">]</span>
+<span>&gt;</span>                    <span style="color:red;">]</span>
+</code></pre><p>Once we have a solved game tree, we can use it to generate a graphical map as follows.</p><pre><code><span>&gt;</span> <span style="color:green;">{-# LANGUAGE NoMonomorphismRestriction #-}</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- Maps of optimal tic-tac-toe play, inspired by similar maps created</span>
+<span>&gt;</span> <span style="color:green;">-- by Randall Munroe, <a href="http://xkcd.com/832/">http://xkcd.com/832/</a></span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Diagrams</span><span>.</span><span>Prelude</span> <span>hiding</span> <span style="color:red;">(</span><span>Result</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Diagrams</span><span>.</span><span>Backend</span><span>.</span><span>Cairo</span><span>.</span><span>CmdLine</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>List</span><span>.</span><span>Split</span> <span style="color:red;">(</span><span>chunk</span><span style="color:red;">)</span>                   <span style="color:green;">-- cabal install split</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Maybe</span> <span style="color:red;">(</span><span>fromMaybe</span><span style="color:red;">,</span> <span>catMaybes</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data</span><span>.</span><span>Map</span> <span style="color:blue;font-weight:bold;">as</span> <span>M</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Tree</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Arrow</span> <span style="color:red;">(</span><span>second</span><span style="color:red;">,</span> <span style="color:red;">(</span><span>&amp;&amp;&amp;</span><span style="color:red;">)</span><span style="color:red;">,</span> <span style="color:red;">(</span><span>***</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Array</span> <span style="color:red;">(</span><span>assocs</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Solve</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>D</span> <span style="color:red;">=</span> <span>Diagram</span> <span>Cairo</span> <span>R2</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>x</span><span style="color:red;">,</span> <span>o</span> <span style="color:red;">::</span> <span>D</span>
+<span>&gt;</span> <span>x</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>stroke</span> <span>$</span> <span>fromVertices</span> <span style="color:red;">[</span><span>P</span> <span style="color:red;">(</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">,</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">,</span> <span>P</span> <span style="color:red;">(</span><span class="hs-num">1</span><span style="color:red;">,</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">]</span> <span>&lt;&gt;</span> <span>fromVertices</span> <span style="color:red;">[</span><span>P</span> <span style="color:red;">(</span><span class="hs-num">1</span><span style="color:red;">,</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">,</span> <span>P</span> <span style="color:red;">(</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">,</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">]</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span>#</span> <span>lw</span> <span class="hs-num">0.05</span>
+<span>&gt;</span>   <span>#</span> <span>lineCap</span> <span>LineCapRound</span>
+<span>&gt;</span>   <span>#</span> <span>scale</span> <span class="hs-num">0.4</span>
+<span>&gt;</span>   <span>#</span> <span>freeze</span>
+<span>&gt;</span>   <span>#</span> <span>centerXY</span>
+<span>&gt;</span> <span>o</span> <span style="color:red;">=</span> <span>circle</span>
+<span>&gt;</span>   <span>#</span> <span>lw</span> <span class="hs-num">0.05</span>
+<span>&gt;</span>   <span>#</span> <span>scale</span> <span class="hs-num">0.4</span>
+<span>&gt;</span>   <span>#</span> <span>freeze</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Render a list of lists of diagrams in a grid.</span>
+<span>&gt;</span> <span>grid</span> <span style="color:red;">::</span> <span>Double</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span style="color:red;">[</span><span>D</span><span style="color:red;">]</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>D</span>
+<span>&gt;</span> <span>grid</span> <span>s</span> <span style="color:red;">=</span> <span>centerXY</span>
+<span>&gt;</span>        <span>.</span> <span>vcat'</span> <span>with</span> <span style="color:red;">{</span><span>catMethod</span> <span style="color:red;">=</span> <span>Distrib</span><span style="color:red;">,</span> <span>sep</span> <span style="color:red;">=</span> <span>s</span><span style="color:red;">}</span>
+<span>&gt;</span>        <span>.</span> <span>map</span> <span style="color:red;">(</span><span>hcat'</span> <span>with</span> <span style="color:red;">{</span><span>catMethod</span> <span style="color:red;">=</span> <span>Distrib</span><span style="color:red;">,</span> <span>sep</span> <span style="color:red;">=</span> <span>s</span><span style="color:red;">}</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Given a mapping from (r,c) locations (in a 3x3 grid) to diagrams,</span>
+<span>&gt;</span> <span style="color:green;">--   render them in a grid, surrounded by a square.</span>
+<span>&gt;</span> <span>renderGrid</span> <span style="color:red;">::</span> <span>M</span><span>.</span><span>Map</span> <span>Loc</span> <span>D</span> <span style="color:red;">-&gt;</span> <span>D</span>
+<span>&gt;</span> <span>renderGrid</span> <span>g</span>
+<span>&gt;</span>   <span style="color:red;">=</span> <span style="color:red;">(</span><span>grid</span> <span class="hs-num">1</span>
+<span>&gt;</span>   <span>.</span> <span>chunk</span> <span class="hs-num">3</span>
+<span>&gt;</span>   <span>.</span> <span>map</span> <span style="color:red;">(</span><span>fromMaybe</span> <span style="color:red;">(</span><span>phantom</span> <span>x</span><span style="color:red;">)</span> <span>.</span> <span>flip</span> <span>M</span><span>.</span><span>lookup</span> <span>g</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span>$</span> <span style="color:red;">[</span> <span style="color:red;">(</span><span>r</span><span style="color:red;">,</span><span>c</span><span style="color:red;">)</span> <span style="color:red;">|</span> <span>r</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span class="hs-num">2</span><span style="color:red;">]</span><span style="color:red;">,</span> <span>c</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span class="hs-num">2</span><span style="color:red;">]</span> <span style="color:red;">]</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span>     <span>`atop`</span>
+<span>&gt;</span>     <span>square</span> <span>#</span> <span>lw</span> <span class="hs-num">0.02</span> <span>#</span> <span>scale</span> <span class="hs-num">3</span> <span>#</span> <span>freeze</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Given a solved game tree, where the first move is being made by</span>
+<span>&gt;</span> <span style="color:green;">--   the player for whom the tree is solved, render a map of optimal play.</span>
+<span>&gt;</span> <span>renderSolvedP</span> <span style="color:red;">::</span> <span>Tree</span> <span style="color:red;">(</span><span>Game</span><span style="color:red;">,</span> <span>Result</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>D</span>
+<span>&gt;</span> <span>renderSolvedP</span> <span style="color:red;">(</span><span>Node</span> <span style="color:red;">(</span><span>Game</span> <span style="color:blue;font-weight:bold;">_</span> <span>p</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">,</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span>[]</span><span style="color:red;">)</span>   <span style="color:green;">-- cats game, this player does not</span>
+<span>&gt;</span>     <span style="color:red;">=</span> <span>renderPlayer</span> <span style="color:red;">(</span><span>next</span> <span>p</span><span style="color:red;">)</span> <span>#</span> <span>scale</span> <span class="hs-num">3</span>     <span style="color:green;">-- get another move; instead of</span>
+<span>&gt;</span>                                           <span style="color:green;">-- recursively rendering this game</span>
+<span>&gt;</span>                                           <span style="color:green;">-- just render an X or an O</span>
+<span>&gt;</span> <span>renderSolvedP</span> <span style="color:red;">(</span><span>Node</span> <span style="color:red;">(</span><span>Game</span> <span>board</span> <span>player1</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">,</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>
+<span>&gt;</span>                     <span style="color:red;">[</span><span>g'</span><span style="color:red;">@</span><span style="color:red;">(</span><span>Node</span> <span style="color:red;">(</span><span>Game</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">(</span><span>Move</span> <span style="color:blue;font-weight:bold;">_</span> <span>loc</span> <span>:</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span><span style="color:red;">,</span> <span>res</span><span style="color:red;">)</span> <span>conts</span><span style="color:red;">)</span><span style="color:red;">]</span><span style="color:red;">)</span>
+<span>&gt;</span>     <span style="color:red;">=</span> <span>renderResult</span> <span>res</span> <span>&lt;&gt;</span>    <span style="color:green;">-- Draw a line through a win</span>
+<span>&gt;</span>       <span>renderGrid</span> <span>cur</span>   <span>&lt;&gt;</span>    <span style="color:green;">-- Draw the optimal move + current moves</span>
+<span>&gt;</span>       <span>renderOtherP</span> <span>g'</span>        <span style="color:green;">-- Recursively render responses to other moves</span>
+<span>&gt;</span> 
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>cur</span> <span style="color:red;">=</span> <span>M</span><span>.</span><span>singleton</span> <span>loc</span> <span style="color:red;">(</span><span>renderPlayer</span> <span>player1</span> <span>#</span> <span>lc</span> <span>red</span><span style="color:red;">)</span>  <span style="color:green;">-- the optimal move</span>
+<span>&gt;</span>               <span>&lt;&gt;</span> <span>curMoves</span> <span>board</span>                                <span style="color:green;">-- current moves</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>renderSolvedP</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">=</span> <span>error</span> <span style="color:teal;">"renderSolvedP should be called on solved trees only"</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Given a solved game tree, where the first move is being made by the</span>
+<span>&gt;</span> <span style="color:green;">--   opponent of the player for whom the tree is solved, render a map of optimal</span>
+<span>&gt;</span> <span style="color:green;">--   play.</span>
+<span>&gt;</span> <span>renderOtherP</span> <span style="color:red;">::</span> <span>Tree</span> <span style="color:red;">(</span><span>Game</span><span style="color:red;">,</span> <span>Result</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>D</span>
+<span>&gt;</span> <span>renderOtherP</span> <span style="color:red;">(</span><span>Node</span> <span style="color:blue;font-weight:bold;">_</span> <span>conts</span><span style="color:red;">)</span>
+<span>&gt;</span>     <span style="color:green;">-- just recursively render each game arising from an opponent's move in a grid.</span>
+<span>&gt;</span>   <span style="color:red;">=</span> <span>renderGrid</span> <span>.</span> <span>M</span><span>.</span><span>fromList</span> <span>.</span> <span>map</span> <span style="color:red;">(</span><span>getMove</span> <span>&amp;&amp;&amp;</span> <span style="color:red;">(</span><span>scale</span> <span style="color:red;">(</span><span class="hs-num">1</span><span>/</span><span class="hs-num">3</span><span style="color:red;">)</span> <span>.</span> <span>renderSolvedP</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>$</span> <span>conts</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>getMove</span> <span style="color:red;">(</span><span>Node</span> <span style="color:red;">(</span><span>Game</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">(</span><span>Move</span> <span style="color:blue;font-weight:bold;">_</span> <span>m</span> <span>:</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span><span style="color:red;">,</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>m</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Extract the current moves from a board.</span>
+<span>&gt;</span> <span>curMoves</span> <span style="color:red;">::</span> <span>Board</span> <span style="color:red;">-&gt;</span> <span>M</span><span>.</span><span>Map</span> <span>Loc</span> <span>D</span>
+<span>&gt;</span> <span>curMoves</span> <span style="color:red;">=</span> <span>M</span><span>.</span><span>fromList</span> <span>.</span> <span style="color:red;">(</span><span>map</span> <span>.</span> <span>second</span><span style="color:red;">)</span> <span>renderPlayer</span> <span>.</span> <span>catMaybes</span> <span>.</span> <span>map</span> <span>strength</span> <span>.</span> <span>assocs</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:green;">-- | Render a line through a win.</span>
+<span>&gt;</span> <span>renderResult</span> <span style="color:red;">::</span> <span>Result</span> <span style="color:red;">-&gt;</span> <span>D</span>
+<span>&gt;</span> <span>renderResult</span> <span style="color:red;">(</span><span>Win</span> <span style="color:blue;font-weight:bold;">_</span> <span class="hs-num">0</span> <span>ls</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>winLine</span> <span>#</span> <span>freeze</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>winLine</span> <span style="color:red;">::</span> <span>D</span>
+<span>&gt;</span>         <span>winLine</span> <span style="color:red;">=</span> <span>stroke</span> <span style="color:red;">(</span><span>fromVertices</span> <span style="color:red;">(</span><span>map</span> <span style="color:red;">(</span><span>P</span> <span>.</span> <span>conv</span><span style="color:red;">)</span> <span>ls</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>                           <span>#</span> <span>lw</span> <span class="hs-num">0.2</span>
+<span>&gt;</span>                           <span>#</span> <span>lc</span> <span>blue</span>
+<span>&gt;</span>                           <span>#</span> <span>lineCap</span> <span>LineCapRound</span>
+<span>&gt;</span>         <span>conv</span> <span style="color:red;">(</span><span>r</span><span style="color:red;">,</span><span>c</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>fromIntegral</span> <span>$</span> <span>c</span> <span style="color:green;">-</span> <span class="hs-num">1</span><span style="color:red;">,</span> <span>fromIntegral</span> <span>$</span> <span class="hs-num">1</span> <span style="color:green;">-</span> <span>r</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>renderResult</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">=</span> <span>mempty</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>renderPlayer</span> <span>X</span> <span style="color:red;">=</span> <span>x</span>
+<span>&gt;</span> <span>renderPlayer</span> <span>O</span> <span style="color:red;">=</span> <span>o</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>xMap</span> <span style="color:red;">=</span> <span>renderSolvedP</span> <span>.</span> <span>solveFor</span> <span>X</span> <span>$</span> <span>gameTree</span>
+<span>&gt;</span> <span>oMap</span> <span style="color:red;">=</span> <span>renderOtherP</span>  <span>.</span> <span>solveFor</span> <span>O</span> <span>$</span> <span>gameTree</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>main</span> <span style="color:red;">=</span> <span>defaultMain</span> <span style="color:red;">(</span><span>pad</span> <span class="hs-num">1.1</span> <span>xMap</span><span style="color:red;">)</span>
+<span>&gt;</span>        <span style="color:green;">-- defaultMain (pad 1.1 oMap)</span>
+</code></pre>
+

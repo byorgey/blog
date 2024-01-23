@@ -1,0 +1,306 @@
+---
+title: Adventures in enumerating balanced brackets
+published: 2016-10-25T04:42:59Z
+categories: combinatorics,haskell
+tags: balanced,brackets,enumeration,Kattis
+---
+
+<p>Since I’ve been coaching my school’s <a href="https://icpc.baylor.edu/">ACM ICPC</a> programming team, I’ve been spending a bit of time solving programming contest problems, partly to stay sharp and be able to coach them better, but also just for fun.</p>
+<p>I recently solved a problem (using Haskell) that ended up being tougher than I thought, but I learned a lot along the way. Rather than just presenting a solution, I’d like to take you through my thought process, crazy detours and all.</p>
+<p>Of course, I should preface this with a big <b>spoiler alert</b>: if you want to try <a href="https://open.kattis.com/problems/enumeratingbrackets">solving the problem yourself</a>, you should stop reading now!</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:green;">{-# LANGUAGE GADTs #-}</span>
+<span>&gt;</span> <span style="color:green;">{-# LANGUAGE DeriveFunctor #-}</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">module</span> <span>Brackets</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>List</span> <span style="color:red;">(</span><span>sort</span><span style="color:red;">,</span> <span>genericLength</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>MemoTrie</span> <span style="color:red;">(</span><span>memo</span><span style="color:red;">,</span> <span>memo2</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Prelude</span> <span>hiding</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>++</span><span style="color:red;">)</span><span style="color:red;">)</span>
+</code></pre>
+<h2 id="the-problem">The problem</h2>
+<p>There’s a lot of extra verbiage at <a href="https://open.kattis.com/problems/enumeratingbrackets">the official problem description</a>, but what it boils down to is this:</p>
+<p><em>Find the $latex m$th element of the lexicographically ordered sequence of all balanced bracketings of length $latex n$.</em></p>
+<p>There is a <a href="https://open.kattis.com/problems/enumeratingbrackets">longer description at the problem page</a>, but hopefully a few examples will suffice. A <em>balanced bracketing</em> is a string consisting solely of parentheses, in which opening and closing parens can be matched up in a one-to-one, properly nested way. For example, there are five balanced bracketings of length $latex 6$:</p>
+<p><code>((())), (()()), (())(), ()(()), ()()()</code></p>
+<p>By <em>lexicographically ordered</em> we just mean that the bracketings should be in “dictionary order” where <code>(</code> comes before <code>)</code>, that is, bracketing $latex x$ comes before bracketing $latex y$ if and only if in the first position where they differ, $latex x$ has <code>(</code> and $latex y$ has <code>)</code>. As you can verify, the list of length-$latex 6$ bracketings above is, in fact, lexicographically ordered.</p>
+<h2 id="a-first-try">A first try</h2>
+<p>Oh, this is easy, I thought, especially if we consider the well-known isomorphism between balanced bracketings and binary trees. In particular, the empty string corresponds to a leaf, and <code>(L)R</code> (where <code>L</code> and <code>R</code> are themselves balanced bracketings) corresponds to a node with subtrees <code>L</code> and <code>R</code>. So the five balanced bracketings of length $latex 6$ correspond to the five binary trees with three nodes:</p>
+<div style="text-align:center;">
+<p><img src="http://byorgey.files.wordpress.com/2016/10/2360f45f62c97086.png" /></p>
+</div>
+<p>We can easily generate all the binary trees of a given size with a simple recursive algorithm. If $latex n = 0$, generate a <code>Leaf</code>; otherwise, decide how many nodes to put on the left and how many on the right, and for each such distribution recursively generate all possible trees on the left and right.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Tree</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>Leaf</span> <span style="color:red;">::</span> <span>Tree</span>
+<span>&gt;</span>   <span>Node</span> <span style="color:red;">::</span> <span>Tree</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span style="color:red;">-&gt;</span> <span>Tree</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Show</span><span style="color:red;">,</span> <span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>allTrees</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tree</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>allTrees</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span>Leaf</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>allTrees</span> <span>n</span> <span style="color:red;">=</span>
+<span>&gt;</span>   <span style="color:red;">[</span> <span>Node</span> <span>l</span> <span>r</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>k</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">..</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">]</span>
+<span>&gt;</span>   <span style="color:red;">,</span> <span>l</span> <span style="color:red;">&lt;-</span> <span>allTrees</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:green;">-</span> <span>k</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">,</span> <span>r</span> <span style="color:red;">&lt;-</span> <span>allTrees</span> <span>k</span>
+<span>&gt;</span>   <span style="color:red;">]</span>
+</code></pre>
+<p>We generate the trees in “left-biased” order, where we first choose to put all $latex n-1$ nodes on the left, then $latex n-2$ on the left and $latex 1$ on the right, and so on. Since a subtree on the left will result in another opening paren, but a subtree on the right will result in a closing paren followed by an open paren, it makes intuitive sense that this corresponds to generating bracketings in sorted order. You can see that the size-$latex 3$ trees above, generated in left-biased order, indeed have their bracketings sorted.</p>
+<p>Writing <code>allTrees</code> is easy enough, but it’s definitely not going to cut it: the problem states that we could have up to $latex n = 1000$. The number of trees with $latex 1000$ nodes <em>has 598 digits</em> (!!), so we can’t possibly generate the entire list and then index into it. Instead we need a function that can more efficiently generate the tree with a given index, <em>without</em> having to generate all the other trees before it.</p>
+<p>So I immediately launched into writing such a function, but it’s tricky to get right. It involves computing Catalan numbers, and cumulative sums of products of Catalan numbers, and <code>divMod</code>, and… I never did get that function working properly.</p>
+<h2 id="the-first-epiphany">The first epiphany</h2>
+<p>But I never should have written that function in the first place! What I <em>should</em> have done first was to do some simple tests just to confirm my intuition that left-biased tree order corresponds to sorted bracketing order. Because if I had, I would have found this:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>brackets</span> <span style="color:red;">::</span> <span>Tree</span> <span style="color:red;">-&gt;</span> <span>String</span>
+<span>&gt;</span> <span>brackets</span> <span>Leaf</span>       <span style="color:red;">=</span> <span style="color:teal;">""</span>
+<span>&gt;</span> <span>brackets</span> <span style="color:red;">(</span><span>Node</span> <span>l</span> <span>r</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>mconcat</span> <span style="color:red;">[</span><span style="color:teal;">"("</span><span style="color:red;">,</span> <span>brackets</span> <span>l</span><span style="color:red;">,</span> <span style="color:teal;">")"</span><span style="color:red;">,</span> <span>brackets</span> <span>r</span><span style="color:red;">]</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>sorted</span> <span style="color:red;">::</span> <span>Ord</span> <span>a</span> <span style="color:red;">=&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Bool</span>
+<span>&gt;</span> <span>sorted</span> <span>xs</span> <span style="color:red;">=</span> <span>xs</span> <span>==</span> <span>sort</span> <span>xs</span>
+</code></pre>
+<pre><code><span style="color:gray;">ghci&gt; </span>sorted (map brackets (allTrees 3))
+  True
+
+<span style="color:gray;">ghci&gt; </span>sorted (map brackets (allTrees 4))
+  False
+</code></pre>
+<p>As you can see, my intuition actually led me astray! $latex n = 3$ is a small enough case that left-biased order just happens to be the same as sorted bracketing order, but for $latex n = 4$ this breaks down. Let’s see what goes wrong:</p>
+<div style="text-align:center;">
+<p><img src="http://byorgey.files.wordpress.com/2016/10/1f85459754f73313.png" /></p>
+</div>
+<p>In the top row are the size-$latex 4$ trees in “left-biased” order, <em>i.e.</em> the order generated by <code>allTrees</code>. You can see it is nice and symmetric: reflecting the list across a vertical line leaves it unchanged. On the bottom row are the same trees, but sorted lexicographically by their bracketings. You can see that the lists are <em>almost</em> the same except the red tree is in a different place. The issue is the length of the left spine: the red tree has a left spine of three nodes, which means its bracketing will begin with <code>(((</code>, so it should come before any trees with a left spine of length 2, even if they have all their nodes in the left subtree (whereas the red tree has one of its nodes in the right subtree).</p>
+<p>My next idea was to try to somehow enumerate trees in order by the length of their left spine. But since I hadn’t even gotten indexing into the original left-biased order to work, it seemed hopeless to get this to work by implementing it directly. I needed some bigger guns.</p>
+<h2 id="building-enumerations">Building enumerations</h2>
+<p>At this point I had the good idea to introduce some abstraction. I defined a type of <em>enumerations</em> (a la <a href="http://hackage.haskell.org/package/testing-feat">FEAT</a> or <a href="http://docs.racket-lang.org/data/Enumerations.html">data/enumerate</a>):</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Enumeration</span> <span>a</span> <span style="color:red;">=</span> <span>Enumeration</span>
+<span>&gt;</span>   <span style="color:red;">{</span> <span>fromNat</span> <span style="color:red;">::</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>a</span>
+<span>&gt;</span>   <span style="color:red;">,</span> <span>size</span>    <span style="color:red;">::</span> <span>Integer</span>
+<span>&gt;</span>   <span style="color:red;">}</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span>Functor</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>enumerate</span> <span style="color:red;">::</span> <span>Enumeration</span> <span>a</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>enumerate</span> <span style="color:red;">(</span><span>Enumeration</span> <span>f</span> <span>n</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>map</span> <span>f</span> <span style="color:red;">[</span><span class="hs-num">0</span><span style="color:red;">..</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">]</span>
+</code></pre>
+<p>An <code>Enumeration</code> consists of a <code>size</code> along with a function <code>Integer -&gt; a</code>, which we think of as being defined on <code>[0 .. size-1]</code>. That is, an <code>Enumeration</code> is isomorphic to a finite list of a given length, where instead of explicitly storing the elements, we have a function which can compute the element at a given index on demand. If the enumeration has some nice combinatorial structure, then we expect that this on-demand indexing can be done much more efficiently than simply listing all the elements. The <code>enumerate</code> function simply turns an <code>Enumeration</code> into the corresponding finite list, by mapping the indexing function over all possible indices.</p>
+<p>Note that <code>Enumeration</code> has a natural <code>Functor</code> instance, which GHC can automatically derive for us. Namely, if <code>e</code> is an <code>Enumeration</code>, then <code>fmap f e</code> is the <code>Enumeration</code> which first computes the element of <code>e</code> for a given index, and then applies <code>f</code> to it before returning.</p>
+<p>Now, let’s define some combinators for building <code>Enumeration</code>s. We expect them to have all the nice algebraic flavor of finite lists, aka free monoids.</p>
+<p>First, we can create empty or singleton enumerations, or convert any finite list into an enumeration:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>empty</span> <span style="color:red;">::</span> <span>Enumeration</span> <span>a</span>
+<span>&gt;</span> <span>empty</span> <span style="color:red;">=</span> <span>Enumeration</span> <span style="color:red;">(</span><span>const</span> <span>undefined</span><span style="color:red;">)</span> <span class="hs-num">0</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>singleton</span> <span style="color:red;">::</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>a</span>
+<span>&gt;</span> <span>singleton</span> <span>a</span> <span style="color:red;">=</span> <span>Enumeration</span> <span style="color:red;">(</span><span style="color:red;">\</span><span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">-&gt;</span> <span>a</span><span style="color:red;">)</span> <span class="hs-num">1</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>list</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>a</span>
+<span>&gt;</span> <span>list</span> <span style="color:blue;font-weight:bold;">as</span> <span style="color:red;">=</span> <span>Enumeration</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>n</span> <span style="color:red;">-&gt;</span> <span style="color:blue;font-weight:bold;">as</span> <span>!!</span> <span>fromIntegral</span> <span>n</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>genericLength</span> <span style="color:blue;font-weight:bold;">as</span><span style="color:red;">)</span>
+</code></pre>
+<pre><code><span style="color:gray;">ghci&gt; </span>enumerate (empty :: Enumeration Int)
+  []
+
+<span style="color:gray;">ghci&gt; </span>enumerate (singleton 3)
+  [3]
+
+<span style="color:gray;">ghci&gt; </span>enumerate (list [4,6,7])
+  [4,6,7]
+</code></pre>
+<p>We can form the concatenation of two enumerations. The indexing function compares the given index against the size of the first enumeration, and then indexes into the first or second enumeration appropriately. For convenience we can also define <code>union</code>, which is just an iterated version of <code>(++)</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:red;">(</span><span>++</span><span style="color:red;">)</span> <span style="color:red;">::</span> <span>Enumeration</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>a</span>
+<span>&gt;</span> <span>e1</span> <span>++</span> <span>e2</span> <span style="color:red;">=</span> <span>Enumeration</span>
+<span>&gt;</span>   <span style="color:red;">(</span><span style="color:red;">\</span><span>n</span> <span style="color:red;">-&gt;</span> <span style="color:blue;font-weight:bold;">if</span> <span>n</span> <span>&lt;</span> <span>size</span> <span>e1</span> <span style="color:blue;font-weight:bold;">then</span> <span>fromNat</span> <span>e1</span> <span>n</span> <span style="color:blue;font-weight:bold;">else</span> <span>fromNat</span> <span>e2</span> <span style="color:red;">(</span><span>n</span> <span style="color:green;">-</span> <span>size</span> <span>e1</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">(</span><span>size</span> <span>e1</span> <span>+</span> <span>size</span> <span>e2</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>union</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Enumeration</span> <span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>a</span>
+<span>&gt;</span> <span>union</span> <span style="color:red;">=</span> <span>foldr</span> <span style="color:red;">(</span><span>++</span><span style="color:red;">)</span> <span>empty</span>
+</code></pre>
+<pre><code><span style="color:gray;">ghci&gt; </span>enumerate (list [3, 5, 6] ++ empty ++ singleton 8)
+  [3,5,6,8]
+</code></pre>
+<p>Finally, we can form a Cartesian product: <code>e1 &gt;&lt; e2</code> is the enumeration of all possible pairs of elements from <code>e1</code> and <code>e2</code>, ordered so that all the pairs formed from the first element of <code>e1</code> come first, followed by all the pairs with the second element of <code>e1</code>, and so on. The indexing function divides the given index by the size of <code>e2</code>, and uses the quotient to index into <code>e1</code>, and the remainder to index into <code>e2</code>.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:red;">(</span><span>&gt;&lt;</span><span style="color:red;">)</span> <span style="color:red;">::</span> <span>Enumeration</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>b</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span style="color:red;">(</span><span>a</span><span style="color:red;">,</span><span>b</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>e1</span> <span>&gt;&lt;</span> <span>e2</span> <span style="color:red;">=</span> <span>Enumeration</span>
+<span>&gt;</span>   <span style="color:red;">(</span><span style="color:red;">\</span><span>n</span> <span style="color:red;">-&gt;</span> <span style="color:blue;font-weight:bold;">let</span> <span style="color:red;">(</span><span>l</span><span style="color:red;">,</span><span>r</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>n</span> <span>`divMod`</span> <span>size</span> <span>e2</span> <span style="color:blue;font-weight:bold;">in</span> <span style="color:red;">(</span><span>fromNat</span> <span>e1</span> <span>l</span><span style="color:red;">,</span> <span>fromNat</span> <span>e2</span> <span>r</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">(</span><span>size</span> <span>e1</span> <span>*</span> <span>size</span> <span>e2</span><span style="color:red;">)</span>
+</code></pre>
+<pre><code><span style="color:gray;">ghci&gt; </span>enumerate (list [1,2,3] &gt;&lt; list [10,20])
+  [(1,10),(1,20),(2,10),(2,20),(3,10),(3,20)]
+
+<span style="color:gray;">ghci&gt; </span>let big = list [0..999] &gt;&lt; list [0..999] &gt;&lt; list [0..999] &gt;&lt; list [0..999]
+<span style="color:gray;">ghci&gt; </span>fromNat big 2973428654
+  (((2,973),428),654)
+</code></pre>
+<p>Notice in particular how the fourfold product of <code>list [0..999]</code> has $latex 1000^4 = 10^{12}$ elements, but indexing into it with <code>fromNat</code> is basically instantaneous.</p>
+<p>Since <code>Enumeration</code>s are isomorphic to finite lists, we expect them to have <code>Applicative</code> and <code>Monad</code> instances, too. First, the <code>Applicative</code> instance is fairly straightforward:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Applicative</span> <span>Enumeration</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>pure</span>    <span style="color:red;">=</span> <span>singleton</span>
+<span>&gt;</span>   <span>f</span> <span>&lt;*&gt;</span> <span>x</span> <span style="color:red;">=</span> <span>uncurry</span> <span style="color:red;">(</span><span>$</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span style="color:red;">(</span><span>f</span> <span>&gt;&lt;</span> <span>x</span><span style="color:red;">)</span>
+</code></pre>
+<pre><code><span style="color:gray;">ghci&gt; </span>enumerate $ (*) &lt;$&gt; list [1,2,3] &lt;*&gt; list [10, 100]
+  [10,100,20,200,30,300]
+</code></pre>
+<p><code>pure</code> creates a singleton enumeration, and applying an enumeration of functions to an enumeration of arguments works by taking a Cartesian product and then applying each pair.</p>
+<p>The <code>Monad</code> instance works by substitution: in <code>e &gt;&gt;= k</code>, the continuation <code>k</code> is applied to each element of the enumeration <code>e</code>, and the resulting enumerations are unioned together in order.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Monad</span> <span>Enumeration</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>return</span>  <span style="color:red;">=</span> <span>pure</span>
+<span>&gt;</span>   <span>e</span> <span>&gt;&gt;=</span> <span>f</span> <span style="color:red;">=</span> <span>union</span> <span style="color:red;">(</span><span>map</span> <span>f</span> <span style="color:red;">(</span><span>enumerate</span> <span>e</span><span style="color:red;">)</span><span style="color:red;">)</span>
+</code></pre>
+<pre><code><span style="color:gray;">ghci&gt; </span>enumerate $ list [1,2,3] &gt;&gt;= \i -&gt; list (replicate i i)
+  [1,2,2,3,3,3]
+</code></pre>
+<p>Having to actually enumerate the elements of <code>e</code> is a bit unsatisfying, but there is really no way around it: we otherwise have no way to know how big the resulting enumerations are going to be.</p>
+<p>Now, that function I tried (and failed) to write before that generates the tree at a particular index in left-biased order? Using these enumeration combinators, it’s a piece of cake. Basically, since we built up combinators that mirror those available for lists, it’s just as easy to write this indexing version as it is to write the original <code>allTrees</code> function (which I’ve copied below for comparison):</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>allTrees</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tree</span><span style="color:red;">]</span>
+<span>allTrees</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span>Leaf</span><span style="color:red;">]</span>
+<span>allTrees</span> <span>n</span> <span style="color:red;">=</span>
+  <span style="color:red;">[</span> <span>Node</span> <span>l</span> <span>r</span>
+  <span style="color:red;">|</span> <span>k</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">..</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">]</span>
+  <span style="color:red;">,</span> <span>l</span> <span style="color:red;">&lt;-</span> <span>allTrees</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:green;">-</span> <span>k</span><span style="color:red;">)</span>
+  <span style="color:red;">,</span> <span>r</span> <span style="color:red;">&lt;-</span> <span>allTrees</span> <span>k</span>
+  <span style="color:red;">]</span></code></pre>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>enumTrees</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>Tree</span>
+<span>&gt;</span> <span>enumTrees</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>singleton</span> <span>Leaf</span>
+<span>&gt;</span> <span>enumTrees</span> <span>n</span> <span style="color:red;">=</span> <span>union</span>
+<span>&gt;</span>   <span style="color:red;">[</span> <span>Node</span> <span>&lt;$&gt;</span> <span>enumTrees</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span>k</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>&lt;*&gt;</span> <span>enumTrees</span> <span>k</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>k</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">..</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">]</span>
+<span>&gt;</span>   <span style="color:red;">]</span>
+</code></pre>
+<p>(<code>enumTrees</code> and <code>allTrees</code> look a bit different, but actually <code>allTrees</code> can be rewritten in a very similar style:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>allTrees</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tree</span><span style="color:red;">]</span>
+<span>allTrees</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span>Leaf</span><span style="color:red;">]</span>
+<span>allTrees</span> <span>n</span> <span style="color:red;">=</span> <span>concat</span>
+  <span style="color:red;">[</span> <span>Node</span> <span>&lt;$&gt;</span> <span>allTrees</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:green;">-</span> <span>k</span><span style="color:red;">)</span> <span>&lt;*&gt;</span> <span>r</span> <span style="color:red;">&lt;-</span> <span>allTrees</span> <span>k</span>
+  <span style="color:red;">|</span> <span>k</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">..</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">]</span>
+  <span style="color:red;">]</span></code></pre>
+<p>Doing as much as possible using the <code>Applicative</code> interface gives us added “parallelism”, which in this case means the ability to index directly into a product with <code>divMod</code>, rather than scanning through the results of calling a function on <code>enumerate</code> until we have accumulated the right size. See <a href="http://research.microsoft.com/en-us/um/people/simonpj/papers/list-comp/applicativedo.pdf">the paper on the GHC <code>ApplicativeDo</code> extension</a>.)</p>
+<p>Let’s try it out:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>enumerate (enumTrees 3)
+  [Node (Node (Node Leaf Leaf) Leaf) Leaf,Node (Node Leaf (Node Leaf Leaf)) Leaf,Node (Node Leaf Leaf) (Node Leaf Leaf),Node Leaf (Node (Node Leaf Leaf) Leaf),Node Leaf (Node Leaf (Node Leaf Leaf))]
+
+<span style="color:gray;">ghci&gt; </span>enumerate (enumTrees 3) == allTrees 3
+  True
+
+<span style="color:gray;">ghci&gt; </span>enumerate (enumTrees 7) == allTrees 7
+  True
+
+<span style="color:gray;">ghci&gt; </span>brackets $ fromNat (enumTrees 7) 43
+  "((((()())))())"
+</code></pre>
+<p>It seems to work! Though actually, if we try larger values of $latex n$, <code>enumTrees</code> just seems to hang. The problem is that it ends up making many redundant recursive calls. Well… nothing a bit of memoization can’t fix! (Here I’m using Conal Elliott’s nice <a href="http://hackage.haskell.org/package/MemoTrie">MemoTrie</a> package.)</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>enumTreesMemo</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>Tree</span>
+<span>&gt;</span> <span>enumTreesMemo</span> <span style="color:red;">=</span> <span>memo</span> <span>enumTreesMemo'</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>     <span>enumTreesMemo'</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>singleton</span> <span>Leaf</span>
+<span>&gt;</span>     <span>enumTreesMemo'</span> <span>n</span> <span style="color:red;">=</span> <span>union</span>
+<span>&gt;</span>       <span style="color:red;">[</span> <span>Node</span> <span>&lt;$&gt;</span> <span>enumTreesMemo</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span>k</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>&lt;*&gt;</span> <span>enumTreesMemo</span> <span>k</span>
+<span>&gt;</span>       <span style="color:red;">|</span> <span>k</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">..</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">]</span>
+<span>&gt;</span>       <span style="color:red;">]</span>
+</code></pre>
+<pre><code><span style="color:gray;">ghci&gt; </span>size (enumTreesMemo 10)
+  16796
+
+<span style="color:gray;">ghci&gt; </span>size (enumTreesMemo 100)
+  896519947090131496687170070074100632420837521538745909320
+
+<span style="color:gray;">ghci&gt; </span>size (enumTreesMemo 1000)
+  2046105521468021692642519982997827217179245642339057975844538099572176010191891863964968026156453752449015750569428595097318163634370154637380666882886375203359653243390929717431080443509007504772912973142253209352126946839844796747697638537600100637918819326569730982083021538057087711176285777909275869648636874856805956580057673173655666887003493944650164153396910927037406301799052584663611016897272893305532116292143271037140718751625839812072682464343153792956281748582435751481498598087586998603921577523657477775758899987954012641033870640665444651660246024318184109046864244732001962029120
+
+<span style="color:gray;">ghci&gt; </span>brackets $ fromNat (enumTreesMemo 1000) 8234587623904872309875907638475639485792863458726398487590287348957628934765
+  "((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((()(((()((((()))())(()()()))()(())(())((()((()))(((())()(((((()(((()()))(((()((((()()(())()())(((()))))(((()()()(()()))))(((()((()))(((()())())))())(()()(())(())()(()())))()))((()()))()))()))()(((()))(()))))))())()()()))((())((()))((((())(())))((())))))()))()(())))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))"
+</code></pre>
+<p>That’s better!</p>
+<h2 id="a-second-try">A second try</h2>
+<p>At this point, I thought that I needed to enumerate trees in order by the length of their left spine. Given a tree with a left spine of length $latex s$, we enumerate all the ways to partition the remaining $latex n-s$ elements among the right children of the $latex s$ spine nodes, preferring to first put elements as far to the left as possible. As you’ll see, this turns out to be wrong, but it’s fun to see how easy it is to write this using the enumeration framework.</p>
+<p>First, we need an enumeration of the partitions of a given $latex n$ into exactly $latex k$ parts, in lexicographic order.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>kPartitions</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span>
+</code></pre>
+<p>There is exactly one way to partition $latex 0$ into zero parts.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>kPartitions</span> <span class="hs-num">0</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>singleton</span> <span>[]</span>
+</code></pre>
+<p>We can’t partition anything other than $latex 0$ into zero parts.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>kPartitions</span> <span style="color:blue;font-weight:bold;">_</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>empty</span>
+</code></pre>
+<p>Otherwise, pick a number $latex i$ from $latex n$ down to $latex 0$ to go in the first spot, and then recursively enumerate partitions of $latex n-i$ into exactly $latex k-1$ parts.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>kPartitions</span> <span>n</span> <span>k</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+<span>&gt;</span>   <span>i</span> <span style="color:red;">&lt;-</span> <span>list</span> <span style="color:red;">[</span><span>n</span><span style="color:red;">,</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span> <span style="color:red;">..</span> <span class="hs-num">0</span><span style="color:red;">]</span>
+<span>&gt;</span>   <span style="color:red;">(</span><span>i</span><span>:</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>kPartitions</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span>i</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>k</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span>
+</code></pre>
+<p>Let’s try it:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>let p43 = enumerate $ kPartitions 4 3
+<span style="color:gray;">ghci&gt; </span>p43
+  [[4,0,0],[3,1,0],[3,0,1],[2,2,0],[2,1,1],[2,0,2],[1,3,0],[1,2,1],[1,1,2],[1,0,3],[0,4,0],[0,3,1],[0,2,2],[0,1,3],[0,0,4]]
+
+<span style="color:gray;">ghci&gt; </span>all ((==3) . length) p43
+  True
+
+<span style="color:gray;">ghci&gt; </span>all ((==4) . sum) p43
+  True
+
+<span style="color:gray;">ghci&gt; </span>sorted (reverse p43)
+  True
+</code></pre>
+<p>Now we can use <code>kPartitions</code> to build our enumeration of trees:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>spinyTrees</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>Tree</span>
+<span>&gt;</span> <span>spinyTrees</span> <span style="color:red;">=</span> <span>memo</span> <span>spinyTrees'</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>     <span>spinyTrees'</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>singleton</span> <span>Leaf</span>
+<span>&gt;</span>     <span>spinyTrees'</span> <span>n</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+<span>&gt;</span> 
+<span>&gt;</span>       <span style="color:green;">-- Pick the length of the left spine</span>
+<span>&gt;</span>       <span>spineLen</span>  <span style="color:red;">&lt;-</span> <span>list</span> <span style="color:red;">[</span><span>n</span><span style="color:red;">,</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span> <span style="color:red;">..</span> <span class="hs-num">1</span><span style="color:red;">]</span>
+<span>&gt;</span> 
+<span>&gt;</span>       <span style="color:green;">-- Partition the remaining elements among the spine nodes</span>
+<span>&gt;</span>       <span>bushSizes</span> <span style="color:red;">&lt;-</span> <span>kPartitions</span> <span style="color:red;">(</span><span>n</span> <span style="color:green;">-</span> <span>spineLen</span><span style="color:red;">)</span> <span>spineLen</span>
+<span>&gt;</span>       <span>bushes</span> <span style="color:red;">&lt;-</span> <span>traverse</span> <span>spinyTrees</span> <span>bushSizes</span>
+<span>&gt;</span>       <span>return</span> <span>$</span> <span>buildSpine</span> <span style="color:red;">(</span><span>reverse</span> <span>bushes</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span>     <span>buildSpine</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Tree</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Tree</span>
+<span>&gt;</span>     <span>buildSpine</span> <span>[]</span>     <span style="color:red;">=</span> <span>Leaf</span>
+<span>&gt;</span>     <span>buildSpine</span> <span style="color:red;">(</span><span>b</span><span>:</span><span>bs</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Node</span> <span style="color:red;">(</span><span>buildSpine</span> <span>bs</span><span style="color:red;">)</span> <span>b</span>
+</code></pre>
+<p>This appears to give us something reasonable:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>size (spinyTrees 7) == size (enumTreesMemo 7)
+  True
+</code></pre>
+<p>But it’s pretty slow—which is to be expected with all those monadic operations required. And there’s more:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>sorted . map brackets . enumerate $ spinyTrees 3
+  True
+
+<span style="color:gray;">ghci&gt; </span>sorted . map brackets . enumerate $ spinyTrees 4
+  True
+
+<span style="color:gray;">ghci&gt; </span>sorted . map brackets . enumerate $ spinyTrees 5
+  False
+</code></pre>
+<p>Foiled again! All we did was stave off failure a bit, until $latex n=5$. I won’t draw all the trees of size $latex 5$ for you, but the failure mode is pretty similar: picking subtrees for the spine based just on how many elements they have doesn’t work, because there are cases where we want to first shift some elements to a later subtree, keeping the left spine of a subtree, before moving the elements back and having a shorter left spine.</p>
+<h2 id="the-solution-just-forget-about-trees-already">The solution: just forget about trees, already</h2>
+<p>It finally occurred to me that there was nothing in the problem statement that said anything about trees. That was just something my overexcited combinatorial brain imposed on it: <em>obviously</em>, since there is a bijection between balanced bracketings and binary trees, we should think about binary trees, right? …well, there is also a bijection between balanced bracketings and permutations avoiding (231), and lattice paths that stay above the main diagonal, and <a href="http://www.cambridge.org/us/academic/subjects/mathematics/discrete-mathematics-information-theory-and-coding/catalan-numbers?format=PB&amp;isbn=9781107427747">hundreds of other things</a>, so… not necessarily.</p>
+<p>In this case, I think trees just end up making things harder. Let’s think instead about enumerating balanced bracket sequences directly. To do it recursively, we need to know how to enumerate <em>possible endings</em> to the start of any balanced bracket sequence. That is, we need to enumerate sequences containing $latex n$ opening brackets and $latex c$ extra closing brackets (so $latex n+c$ closing brackets in total), which can be appended to a sequence of brackets with $latex c$ more opening brackets than closing brackets.</p>
+<p>Given this idea, the code is fairly straightforward:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>enumBrackets</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>String</span>
+<span>&gt;</span> <span>enumBrackets</span> <span>n</span> <span style="color:red;">=</span> <span>enumBracketsTail</span> <span>n</span> <span class="hs-num">0</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>enumBracketsTail</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>String</span>
+<span>&gt;</span> <span>enumBracketsTail</span> <span style="color:red;">=</span> <span>memo2</span> <span>enumBracketsTail'</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+</code></pre>
+<p>To enumerate a sequence with no opening brackets, just generate <code>c</code> closing brackets.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>     <span>enumBracketsTail'</span> <span class="hs-num">0</span> <span>c</span> <span style="color:red;">=</span> <span>singleton</span> <span style="color:red;">(</span><span>replicate</span> <span>c</span> <span style="color:teal;">')'</span><span style="color:red;">)</span>
+</code></pre>
+<p>To enumerate balanced sequences with $latex n$ opening brackets and an exactly matching number of closing brackets, start by generating an opening bracket and then continue by generating sequences with $latex n-1$ opening brackets and one extra closing bracket to match the opening bracket we started with.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>     <span>enumBracketsTail'</span> <span>n</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span style="color:teal;">'('</span><span>:</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>enumBracketsTail</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span class="hs-num">1</span>
+</code></pre>
+<p>In general, a sequence with $latex n$ opening and $latex c$ extra closing brackets is either an opening bracket followed by an <code>(n-1, c+1)</code>-sequence, or a closing bracket followed by an <code>(n, c-1)</code>-sequence.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>     <span>enumBracketsTail'</span> <span>n</span> <span>c</span> <span style="color:red;">=</span>
+<span>&gt;</span>         <span style="color:red;">(</span><span style="color:red;">(</span><span style="color:teal;">'('</span><span>:</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>enumBracketsTail</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>c</span><span>+</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>         <span>++</span>
+<span>&gt;</span>         <span style="color:red;">(</span><span style="color:red;">(</span><span style="color:teal;">')'</span><span>:</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>enumBracketsTail</span> <span>n</span> <span style="color:red;">(</span><span>c</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">)</span>
+</code></pre>
+<p>This is quite fast, and as a quick check, it does indeed seem to give us the same size enumerations as the other tree enumerations:</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>fromNat (enumBrackets 40) 16221270422764920820
+  "((((((((()((())()(()()()())(()))((()()()()(()((()())))((()())))))))()))()())()))"
+
+<span style="color:gray;">ghci&gt; </span>size (enumBrackets 100) == size (enumTreesMemo 100)
+  True
+</code></pre>
+<p>But, are they sorted? It would seem so!</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>all sorted (map (enumerate . enumBrackets) [1..10])
+  True
+</code></pre>
+<p>At this point, you might notice that this can be easily de-abstracted into a fairly simple dynamic programming solution, using a 2D array to keep track of the size of the enumeration for each <code>(n,c)</code> pair. I’ll leave the details to interested readers.</p>
+

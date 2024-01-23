@@ -1,0 +1,42 @@
+---
+title: Using multiple versions of GHC in parallel with GNU stow
+published: 2012-11-01T17:58:00Z
+categories: haskell
+tags: installation,multiple,stow,tool
+---
+
+<p>Do any of the following apply to you?</p>
+<ul>
+<li>You sometimes hack on GHC.</li>
+<li>You sometimes want to try out an unreleased GHC version.</li>
+<li>You maintain a library and want to make sure it builds with several different versions of GHC.</li>
+<li>You want to try out a newly released version of GHC but without blowing away your existing (working!) GHC install.</li>
+</ul>
+<p>As you can see, these are roughly in order from most to least “hard core”, and I expect that the last two are fairly common, even if the first two are not. The common thread, of course, is <strong>having multiple versions of GHC installed simultaneously</strong>.</p>
+<h2 id="the-solution">The solution</h2>
+<p>A solution that I’ve found which works quite well (on Linux, and I expect it would work on OSX as well) and deserves to be better known is <a href="http://www.gnu.org/software/stow/">GNU stow</a>. Here’s how it works: instead of installing things directly in <code>/usr/local</code> (or <code>$HOME/local</code>, or whatever), you instead install in sandboxed locations like <code>/usr/local/stow/ghc-7.6.1</code>. You then tell <code>stow</code> that you want to “install” <code>ghc-7.6.1</code>, and it creates all the necessary symlinks to mirror the directory structure under the <code>ghc-7.6.1</code> directory into <code>/usr/local</code>. But of course it tracks everything so that you can easily <em>uninstall</em> all these symlinks as well. (And yes, it’s smart about symlinking an entire directory when possible, instead of all the individual files, and later “splitting up” such big-scale links when necessary.)</p>
+<p>The pros of this sort of scheme should be clear:</p>
+<ol style="list-style-type:decimal;">
+<li>Once you’ve “installed” a particular version you just use it as normal—no need to pass the right directories as flags to tools like <code>cabal</code> or <code>ghc-pkg</code>.</li>
+<li>Switching to a different version of GHC is relatively quick (see below).</li>
+<li>Installing new versions is pain-free; it’s just as easy to have twenty different versions as it is to have two.</li>
+</ol>
+<p>Of course, there are a few downsides as well:</p>
+<ol style="list-style-type:decimal;">
+<li>Trusting a Perl script to munge your <code>/usr/local</code>. (Though for what it’s worth, I have been using it heavily for about a year now—I currently have six different versions of GHC installed—and have never once encountered a single problem.)<br /></li>
+<li>You can’t use several versions of GHC <em>at once</em>—there is always exactly one “current” version. So if you want to, <em>e.g.</em>, do test builds of a library under several versions of GHC in parallel, you need a different solution.</li>
+</ol>
+<h2 id="a-step-by-step-guide">A step-by-step guide</h2>
+<p>So here’s how this works in more detail. First, of course, you have to <a href="http://www.gnu.org/software/stow/">install stow itself</a>; I’ll assume you can get it from your OS package manager or know how to build it from source. What you get is simply an executable called <code>stow</code>.</p>
+<p>Now, when installing GHC (whether a binary distribution or from source), give the <code>configure</code> step an extra <code>prefix</code> argument, for example:</p>
+<p><code>./configure --prefix=/usr/local/stow/ghc-7.6.1</code></p>
+<p>Just take the directory where you would usually install GHC, and add <code>stow</code> and then an additional subdirectory for the particular version you are installing. This directory doesn’t have to already exist; the installer will create it if it doesn’t.</p>
+<p>(Note that if you already have GHC installed, you’ll have to uninstall it first and then reinstall it with <code>stow</code>—<code>stow</code> won’t work unless it can manage <em>all</em> your GHC installs.)</p>
+<p>After the installation process completes, you have an unusable <code>ghc</code> because, of course, <code>.../stow/ghc-7.6.1</code> isn’t on any relevant paths. All you have to do to finish installing it is</p>
+<p><code>cd /usr/local/stow &amp;&amp; stow ghc-7.6.1</code></p>
+<p>This instructs <code>stow</code> to make symlinks into <code>ghc-7.6.1</code> from <code>/usr/local</code>. After this completes, that’s it! You can use your new GHC as usual.</p>
+<p>To <em>uninstall</em>, follow the same procedure but give <code>stow</code> the <code>-D</code> option:</p>
+<p><code>cd /usr/local/stow &amp;&amp; stow -D ghc-7.6.1</code></p>
+<p>To <em>switch</em> from one version of GHC to another just uninstall the current version and then install the new one. I actually have a <a href="http://hub.darcs.net/byorgey/brent/browse/Main.hs#109">script which automates this process</a>: it looks in the <code>stow</code> directory to see which versions are availble, prompts me to choose one from a list, then uninstalls the current version (obtained with <code>ghc --numeric-version</code>) and installs the newly selected version. On my laptop this process takes just a couple seconds.</p>
+<p>That’s it! Happy stowing!</p>
+

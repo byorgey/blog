@@ -1,0 +1,9 @@
+---
+title: Hac φ 2010!
+published: 2010-05-20T20:39:57Z
+categories: haskell,projects
+tags: diagrams,graphics,Hac φ,hackathon
+---
+
+<a href="http://haskell.org/haskellwiki/Hac_%CF%86">Hac φ 2010</a> is starting tomorrow, and I'm super excited.  I am finally buckling down to do some serious work on the newly redesigned version of <a href="http://hackage.haskell.org/package/diagrams">diagrams</a>, and it is going to be sweet.  I know I've been saying that for like a year, so feel free to not believe me until I actually upload something to <a href="http://haskell.org/hackage">Hackage</a>.  But I'm serious.
+
