@@ -1,5 +1,5 @@
 ---
-title: Hac φ 2010!
+title: 'Hac φ 2010!'
 published: 2010-05-20T20:39:57Z
 categories: haskell,projects
 tags: diagrams,graphics,Hac φ,hackathon

@@ -1,5 +1,5 @@
 ---
-title: Announcing diagrams-0.4
+title: 'Announcing diagrams-0.4'
 published: 2011-10-23T18:47:24Z
 categories: haskell,projects
 tags: diagrams,drawing,EDSL,release

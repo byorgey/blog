@@ -1,5 +1,5 @@
 ---
-title: Meeting people at ICFP in Nara
+title: 'Meeting people at ICFP in Nara'
 published: 2016-09-15T13:53:05Z
 categories: meta
 tags: ICFP

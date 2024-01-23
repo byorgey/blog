@@ -1,5 +1,5 @@
 ---
-title: Call for submissions: Monad.Reader issue 15
+title: 'Call for submissions: Monad.Reader issue 15'
 published: 2009-10-12T14:40:25Z
 categories: haskell,writing
 tags: functional programming,Monad.Re

@@ -1,5 +1,5 @@
 ---
-title: Off the Beaten Track: Explaining Type Errors
+title: 'Off the Beaten Track: Explaining Type Errors'
 published: 2018-01-21T21:26:53Z
 categories: projects,writing
 tags: derivation,errors,explaining,explanation,OBT,slides,talk,type,untyping

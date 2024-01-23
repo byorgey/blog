@@ -1,5 +1,5 @@
 ---
-title: Adventures in enumerating balanced brackets
+title: 'Adventures in enumerating balanced brackets'
 published: 2016-10-25T04:42:59Z
 categories: combinatorics,haskell
 tags: balanced,brackets,enumeration,Kattis
@@ -19,16 +19,16 @@ tags: balanced,brackets,enumeration,Kattis
 </code></pre>
 <h2 id="the-problem">The problem</h2>
 <p>There’s a lot of extra verbiage at <a href="https://open.kattis.com/problems/enumeratingbrackets">the official problem description</a>, but what it boils down to is this:</p>
-<p><em>Find the $latex m$th element of the lexicographically ordered sequence of all balanced bracketings of length $latex n$.</em></p>
-<p>There is a <a href="https://open.kattis.com/problems/enumeratingbrackets">longer description at the problem page</a>, but hopefully a few examples will suffice. A <em>balanced bracketing</em> is a string consisting solely of parentheses, in which opening and closing parens can be matched up in a one-to-one, properly nested way. For example, there are five balanced bracketings of length $latex 6$:</p>
+<p><em>Find the $m$th element of the lexicographically ordered sequence of all balanced bracketings of length $n$.</em></p>
+<p>There is a <a href="https://open.kattis.com/problems/enumeratingbrackets">longer description at the problem page</a>, but hopefully a few examples will suffice. A <em>balanced bracketing</em> is a string consisting solely of parentheses, in which opening and closing parens can be matched up in a one-to-one, properly nested way. For example, there are five balanced bracketings of length $6$:</p>
 <p><code>((())), (()()), (())(), ()(()), ()()()</code></p>
-<p>By <em>lexicographically ordered</em> we just mean that the bracketings should be in “dictionary order” where <code>(</code> comes before <code>)</code>, that is, bracketing $latex x$ comes before bracketing $latex y$ if and only if in the first position where they differ, $latex x$ has <code>(</code> and $latex y$ has <code>)</code>. As you can verify, the list of length-$latex 6$ bracketings above is, in fact, lexicographically ordered.</p>
+<p>By <em>lexicographically ordered</em> we just mean that the bracketings should be in “dictionary order” where <code>(</code> comes before <code>)</code>, that is, bracketing $x$ comes before bracketing $y$ if and only if in the first position where they differ, $x$ has <code>(</code> and $y$ has <code>)</code>. As you can verify, the list of length-$6$ bracketings above is, in fact, lexicographically ordered.</p>
 <h2 id="a-first-try">A first try</h2>
-<p>Oh, this is easy, I thought, especially if we consider the well-known isomorphism between balanced bracketings and binary trees. In particular, the empty string corresponds to a leaf, and <code>(L)R</code> (where <code>L</code> and <code>R</code> are themselves balanced bracketings) corresponds to a node with subtrees <code>L</code> and <code>R</code>. So the five balanced bracketings of length $latex 6$ correspond to the five binary trees with three nodes:</p>
+<p>Oh, this is easy, I thought, especially if we consider the well-known isomorphism between balanced bracketings and binary trees. In particular, the empty string corresponds to a leaf, and <code>(L)R</code> (where <code>L</code> and <code>R</code> are themselves balanced bracketings) corresponds to a node with subtrees <code>L</code> and <code>R</code>. So the five balanced bracketings of length $6$ correspond to the five binary trees with three nodes:</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2016/10/2360f45f62c97086.png" /></p>
 </div>
-<p>We can easily generate all the binary trees of a given size with a simple recursive algorithm. If $latex n = 0$, generate a <code>Leaf</code>; otherwise, decide how many nodes to put on the left and how many on the right, and for each such distribution recursively generate all possible trees on the left and right.</p>
+<p>We can easily generate all the binary trees of a given size with a simple recursive algorithm. If $n = 0$, generate a <code>Leaf</code>; otherwise, decide how many nodes to put on the left and how many on the right, and for each such distribution recursively generate all possible trees on the left and right.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Tree</span> <span style="color:blue;font-weight:bold;">where</span>
 <span>&gt;</span>   <span>Leaf</span> <span style="color:red;">::</span> <span>Tree</span>
 <span>&gt;</span>   <span>Node</span> <span style="color:red;">::</span> <span>Tree</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span style="color:red;">-&gt;</span> <span>Tree</span>
@@ -43,8 +43,8 @@ tags: balanced,brackets,enumeration,Kattis
 <span>&gt;</span>   <span style="color:red;">,</span> <span>r</span> <span style="color:red;">&lt;-</span> <span>allTrees</span> <span>k</span>
 <span>&gt;</span>   <span style="color:red;">]</span>
 </code></pre>
-<p>We generate the trees in “left-biased” order, where we first choose to put all $latex n-1$ nodes on the left, then $latex n-2$ on the left and $latex 1$ on the right, and so on. Since a subtree on the left will result in another opening paren, but a subtree on the right will result in a closing paren followed by an open paren, it makes intuitive sense that this corresponds to generating bracketings in sorted order. You can see that the size-$latex 3$ trees above, generated in left-biased order, indeed have their bracketings sorted.</p>
-<p>Writing <code>allTrees</code> is easy enough, but it’s definitely not going to cut it: the problem states that we could have up to $latex n = 1000$. The number of trees with $latex 1000$ nodes <em>has 598 digits</em> (!!), so we can’t possibly generate the entire list and then index into it. Instead we need a function that can more efficiently generate the tree with a given index, <em>without</em> having to generate all the other trees before it.</p>
+<p>We generate the trees in “left-biased” order, where we first choose to put all $n-1$ nodes on the left, then $n-2$ on the left and $1$ on the right, and so on. Since a subtree on the left will result in another opening paren, but a subtree on the right will result in a closing paren followed by an open paren, it makes intuitive sense that this corresponds to generating bracketings in sorted order. You can see that the size-$3$ trees above, generated in left-biased order, indeed have their bracketings sorted.</p>
+<p>Writing <code>allTrees</code> is easy enough, but it’s definitely not going to cut it: the problem states that we could have up to $n = 1000$. The number of trees with $1000$ nodes <em>has 598 digits</em> (!!), so we can’t possibly generate the entire list and then index into it. Instead we need a function that can more efficiently generate the tree with a given index, <em>without</em> having to generate all the other trees before it.</p>
 <p>So I immediately launched into writing such a function, but it’s tricky to get right. It involves computing Catalan numbers, and cumulative sums of products of Catalan numbers, and <code>divMod</code>, and… I never did get that function working properly.</p>
 <h2 id="the-first-epiphany">The first epiphany</h2>
 <p>But I never should have written that function in the first place! What I <em>should</em> have done first was to do some simple tests just to confirm my intuition that left-biased tree order corresponds to sorted bracketing order. Because if I had, I would have found this:</p>
@@ -61,11 +61,11 @@ tags: balanced,brackets,enumeration,Kattis
 <span style="color:gray;">ghci&gt; </span>sorted (map brackets (allTrees 4))
   False
 </code></pre>
-<p>As you can see, my intuition actually led me astray! $latex n = 3$ is a small enough case that left-biased order just happens to be the same as sorted bracketing order, but for $latex n = 4$ this breaks down. Let’s see what goes wrong:</p>
+<p>As you can see, my intuition actually led me astray! $n = 3$ is a small enough case that left-biased order just happens to be the same as sorted bracketing order, but for $n = 4$ this breaks down. Let’s see what goes wrong:</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2016/10/1f85459754f73313.png" /></p>
 </div>
-<p>In the top row are the size-$latex 4$ trees in “left-biased” order, <em>i.e.</em> the order generated by <code>allTrees</code>. You can see it is nice and symmetric: reflecting the list across a vertical line leaves it unchanged. On the bottom row are the same trees, but sorted lexicographically by their bracketings. You can see that the lists are <em>almost</em> the same except the red tree is in a different place. The issue is the length of the left spine: the red tree has a left spine of three nodes, which means its bracketing will begin with <code>(((</code>, so it should come before any trees with a left spine of length 2, even if they have all their nodes in the left subtree (whereas the red tree has one of its nodes in the right subtree).</p>
+<p>In the top row are the size-$4$ trees in “left-biased” order, <em>i.e.</em> the order generated by <code>allTrees</code>. You can see it is nice and symmetric: reflecting the list across a vertical line leaves it unchanged. On the bottom row are the same trees, but sorted lexicographically by their bracketings. You can see that the lists are <em>almost</em> the same except the red tree is in a different place. The issue is the length of the left spine: the red tree has a left spine of three nodes, which means its bracketing will begin with <code>(((</code>, so it should come before any trees with a left spine of length 2, even if they have all their nodes in the left subtree (whereas the red tree has one of its nodes in the right subtree).</p>
 <p>My next idea was to try to somehow enumerate trees in order by the length of their left spine. But since I hadn’t even gotten indexing into the original left-biased order to work, it seemed hopeless to get this to work by implementing it directly. I needed some bigger guns.</p>
 <h2 id="building-enumerations">Building enumerations</h2>
 <p>At this point I had the good idea to introduce some abstraction. I defined a type of <em>enumerations</em> (a la <a href="http://hackage.haskell.org/package/testing-feat">FEAT</a> or <a href="http://docs.racket-lang.org/data/Enumerations.html">data/enumerate</a>):</p>
@@ -125,7 +125,7 @@ tags: balanced,brackets,enumeration,Kattis
 <span style="color:gray;">ghci&gt; </span>fromNat big 2973428654
   (((2,973),428),654)
 </code></pre>
-<p>Notice in particular how the fourfold product of <code>list [0..999]</code> has $latex 1000^4 = 10^{12}$ elements, but indexing into it with <code>fromNat</code> is basically instantaneous.</p>
+<p>Notice in particular how the fourfold product of <code>list [0..999]</code> has $1000^4 = 10^{12}$ elements, but indexing into it with <code>fromNat</code> is basically instantaneous.</p>
 <p>Since <code>Enumeration</code>s are isomorphic to finite lists, we expect them to have <code>Applicative</code> and <code>Monad</code> instances, too. First, the <code>Applicative</code> instance is fairly straightforward:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Applicative</span> <span>Enumeration</span> <span style="color:blue;font-weight:bold;">where</span>
 <span>&gt;</span>   <span>pure</span>    <span style="color:red;">=</span> <span>singleton</span>
@@ -181,7 +181,7 @@ tags: balanced,brackets,enumeration,Kattis
 <span style="color:gray;">ghci&gt; </span>brackets $ fromNat (enumTrees 7) 43
   "((((()())))())"
 </code></pre>
-<p>It seems to work! Though actually, if we try larger values of $latex n$, <code>enumTrees</code> just seems to hang. The problem is that it ends up making many redundant recursive calls. Well… nothing a bit of memoization can’t fix! (Here I’m using Conal Elliott’s nice <a href="http://hackage.haskell.org/package/MemoTrie">MemoTrie</a> package.)</p>
+<p>It seems to work! Though actually, if we try larger values of $n$, <code>enumTrees</code> just seems to hang. The problem is that it ends up making many redundant recursive calls. Well… nothing a bit of memoization can’t fix! (Here I’m using Conal Elliott’s nice <a href="http://hackage.haskell.org/package/MemoTrie">MemoTrie</a> package.)</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>enumTreesMemo</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>Tree</span>
 <span>&gt;</span> <span>enumTreesMemo</span> <span style="color:red;">=</span> <span>memo</span> <span>enumTreesMemo'</span>
 <span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
@@ -205,17 +205,17 @@ tags: balanced,brackets,enumeration,Kattis
 </code></pre>
 <p>That’s better!</p>
 <h2 id="a-second-try">A second try</h2>
-<p>At this point, I thought that I needed to enumerate trees in order by the length of their left spine. Given a tree with a left spine of length $latex s$, we enumerate all the ways to partition the remaining $latex n-s$ elements among the right children of the $latex s$ spine nodes, preferring to first put elements as far to the left as possible. As you’ll see, this turns out to be wrong, but it’s fun to see how easy it is to write this using the enumeration framework.</p>
-<p>First, we need an enumeration of the partitions of a given $latex n$ into exactly $latex k$ parts, in lexicographic order.</p>
+<p>At this point, I thought that I needed to enumerate trees in order by the length of their left spine. Given a tree with a left spine of length $s$, we enumerate all the ways to partition the remaining $n-s$ elements among the right children of the $s$ spine nodes, preferring to first put elements as far to the left as possible. As you’ll see, this turns out to be wrong, but it’s fun to see how easy it is to write this using the enumeration framework.</p>
+<p>First, we need an enumeration of the partitions of a given $n$ into exactly $k$ parts, in lexicographic order.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>kPartitions</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span>
 </code></pre>
-<p>There is exactly one way to partition $latex 0$ into zero parts.</p>
+<p>There is exactly one way to partition $0$ into zero parts.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>kPartitions</span> <span class="hs-num">0</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>singleton</span> <span>[]</span>
 </code></pre>
-<p>We can’t partition anything other than $latex 0$ into zero parts.</p>
+<p>We can’t partition anything other than $0$ into zero parts.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>kPartitions</span> <span style="color:blue;font-weight:bold;">_</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>empty</span>
 </code></pre>
-<p>Otherwise, pick a number $latex i$ from $latex n$ down to $latex 0$ to go in the first spot, and then recursively enumerate partitions of $latex n-i$ into exactly $latex k-1$ parts.</p>
+<p>Otherwise, pick a number $i$ from $n$ down to $0$ to go in the first spot, and then recursively enumerate partitions of $n-i$ into exactly $k-1$ parts.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>kPartitions</span> <span>n</span> <span>k</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
 <span>&gt;</span>   <span>i</span> <span style="color:red;">&lt;-</span> <span>list</span> <span style="color:red;">[</span><span>n</span><span style="color:red;">,</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span> <span style="color:red;">..</span> <span class="hs-num">0</span><span style="color:red;">]</span>
 <span>&gt;</span>   <span style="color:red;">(</span><span>i</span><span>:</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>kPartitions</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span>i</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>k</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span>
@@ -267,10 +267,10 @@ tags: balanced,brackets,enumeration,Kattis
 <span style="color:gray;">ghci&gt; </span>sorted . map brackets . enumerate $ spinyTrees 5
   False
 </code></pre>
-<p>Foiled again! All we did was stave off failure a bit, until $latex n=5$. I won’t draw all the trees of size $latex 5$ for you, but the failure mode is pretty similar: picking subtrees for the spine based just on how many elements they have doesn’t work, because there are cases where we want to first shift some elements to a later subtree, keeping the left spine of a subtree, before moving the elements back and having a shorter left spine.</p>
+<p>Foiled again! All we did was stave off failure a bit, until $n=5$. I won’t draw all the trees of size $5$ for you, but the failure mode is pretty similar: picking subtrees for the spine based just on how many elements they have doesn’t work, because there are cases where we want to first shift some elements to a later subtree, keeping the left spine of a subtree, before moving the elements back and having a shorter left spine.</p>
 <h2 id="the-solution-just-forget-about-trees-already">The solution: just forget about trees, already</h2>
 <p>It finally occurred to me that there was nothing in the problem statement that said anything about trees. That was just something my overexcited combinatorial brain imposed on it: <em>obviously</em>, since there is a bijection between balanced bracketings and binary trees, we should think about binary trees, right? …well, there is also a bijection between balanced bracketings and permutations avoiding (231), and lattice paths that stay above the main diagonal, and <a href="http://www.cambridge.org/us/academic/subjects/mathematics/discrete-mathematics-information-theory-and-coding/catalan-numbers?format=PB&amp;isbn=9781107427747">hundreds of other things</a>, so… not necessarily.</p>
-<p>In this case, I think trees just end up making things harder. Let’s think instead about enumerating balanced bracket sequences directly. To do it recursively, we need to know how to enumerate <em>possible endings</em> to the start of any balanced bracket sequence. That is, we need to enumerate sequences containing $latex n$ opening brackets and $latex c$ extra closing brackets (so $latex n+c$ closing brackets in total), which can be appended to a sequence of brackets with $latex c$ more opening brackets than closing brackets.</p>
+<p>In this case, I think trees just end up making things harder. Let’s think instead about enumerating balanced bracket sequences directly. To do it recursively, we need to know how to enumerate <em>possible endings</em> to the start of any balanced bracket sequence. That is, we need to enumerate sequences containing $n$ opening brackets and $c$ extra closing brackets (so $n+c$ closing brackets in total), which can be appended to a sequence of brackets with $c$ more opening brackets than closing brackets.</p>
 <p>Given this idea, the code is fairly straightforward:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>enumBrackets</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Enumeration</span> <span>String</span>
 <span>&gt;</span> <span>enumBrackets</span> <span>n</span> <span style="color:red;">=</span> <span>enumBracketsTail</span> <span>n</span> <span class="hs-num">0</span>
@@ -282,10 +282,10 @@ tags: balanced,brackets,enumeration,Kattis
 <p>To enumerate a sequence with no opening brackets, just generate <code>c</code> closing brackets.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>     <span>enumBracketsTail'</span> <span class="hs-num">0</span> <span>c</span> <span style="color:red;">=</span> <span>singleton</span> <span style="color:red;">(</span><span>replicate</span> <span>c</span> <span style="color:teal;">')'</span><span style="color:red;">)</span>
 </code></pre>
-<p>To enumerate balanced sequences with $latex n$ opening brackets and an exactly matching number of closing brackets, start by generating an opening bracket and then continue by generating sequences with $latex n-1$ opening brackets and one extra closing bracket to match the opening bracket we started with.</p>
+<p>To enumerate balanced sequences with $n$ opening brackets and an exactly matching number of closing brackets, start by generating an opening bracket and then continue by generating sequences with $n-1$ opening brackets and one extra closing bracket to match the opening bracket we started with.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>     <span>enumBracketsTail'</span> <span>n</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span style="color:teal;">'('</span><span>:</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>enumBracketsTail</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span class="hs-num">1</span>
 </code></pre>
-<p>In general, a sequence with $latex n$ opening and $latex c$ extra closing brackets is either an opening bracket followed by an <code>(n-1, c+1)</code>-sequence, or a closing bracket followed by an <code>(n, c-1)</code>-sequence.</p>
+<p>In general, a sequence with $n$ opening and $c$ extra closing brackets is either an opening bracket followed by an <code>(n-1, c+1)</code>-sequence, or a closing bracket followed by an <code>(n, c-1)</code>-sequence.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span>     <span>enumBracketsTail'</span> <span>n</span> <span>c</span> <span style="color:red;">=</span>
 <span>&gt;</span>         <span style="color:red;">(</span><span style="color:red;">(</span><span style="color:teal;">'('</span><span>:</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>enumBracketsTail</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>c</span><span>+</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">)</span>
 <span>&gt;</span>         <span>++</span>

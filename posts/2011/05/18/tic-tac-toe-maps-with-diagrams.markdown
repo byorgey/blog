@@ -1,5 +1,5 @@
 ---
-title: Tic-tac-toe maps with diagrams
+title: 'Tic-tac-toe maps with diagrams'
 published: 2011-05-18T14:41:53Z
 categories: haskell,projects
 tags: best play,diagrams,example,map,tic-tac-toe

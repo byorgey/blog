@@ -1,5 +1,5 @@
 ---
-title: POGIL workshop
+title: 'POGIL workshop'
 published: 2016-08-07T20:54:34Z
 categories: teaching
 tags: guided,learning,pedagogy,POGIL

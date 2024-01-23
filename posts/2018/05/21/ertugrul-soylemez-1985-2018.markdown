@@ -1,5 +1,5 @@
 ---
-title: Ertugrul Söylemez: 1985-2018
+title: 'Ertugrul Söylemez: 1985-2018'
 published: 2018-05-22T02:02:07Z
 categories: haskell,meta
 tags: ertes,Ertugrul Söylemez,FRP,IRC

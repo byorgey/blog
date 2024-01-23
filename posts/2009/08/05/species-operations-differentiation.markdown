@@ -1,5 +1,5 @@
 ---
-title: Species operations: differentiation
+title: 'Species operations: differentiation'
 published: 2009-08-06T03:26:34Z
 categories: combinatorics,haskell,math
 tags: combinatorial species,differentiation
@@ -9,27 +9,27 @@ Continuing my series describing my new <a href="http://hackage.haskell.org/packa
 
 You may remember that the <code>Species</code> type class has an <code>Algebra.Differential</code> constraint, which, <a href="http://byorgey.wordpress.com/2009/07/30/primitive-species-and-species-operations/">as I previously explained</a>, transitively implies an <code>Algebra.Ring</code> constraint.  But we haven't yet talked about the <code>Differential</code> contraint itself, which requires a method <code>differentiate :: Species s =&gt; s -&gt; s</code> (which I will abbreviate using the standard "prime" notation), which should satisfy
 
-$latex (x * y)' \equiv x' * y + x * y'$
+$(x * y)' \equiv x' * y + x * y'$
 
 (up to isomorphism).  Okay, this is just the normal product rule for differentiation, from calculus---but what on earth could such a thing mean <i>combinatorially</i>?
 
-There is actually a nice, simple answer: an $latex F'$-structure on the underlying set $latex U$ consists of an $latex F$-structure on $latex U \cup \{*\}$, where $latex *$ is a distinguished element distinct from all the elements of $latex U$.  To make the connection to <a href="http://en.wikibooks.org/wiki/Haskell/Zippers#Differentiation_of_data_types">data type differentiation</a>, we can also think of $latex *$ as a "hole".
+There is actually a nice, simple answer: an $F'$-structure on the underlying set $U$ consists of an $F$-structure on $U \cup \{*\}$, where $*$ is a distinguished element distinct from all the elements of $U$.  To make the connection to <a href="http://en.wikibooks.org/wiki/Haskell/Zippers#Differentiation_of_data_types">data type differentiation</a>, we can also think of $*$ as a "hole".
 
 [caption id="attachment_271" align="aligncenter" width="400" caption="Species differentiation"]<img src="http://byorgey.files.wordpress.com/2009/08/diff.png" alt="Species differentiation" title="diff" width="400" height="92" class="size-full wp-image-271" />[/caption]
 
-The above diagram illustrates the situation: an $latex F'$-structure on $latex \{1,2,3,4,5\}$ is an $latex F$-structure on $latex \{1,2,3,4,5,*\}$.
+The above diagram illustrates the situation: an $F'$-structure on $\{1,2,3,4,5\}$ is an $F$-structure on $\{1,2,3,4,5,*\}$.
 
-And how about the law $latex (F * G)' \equiv F' * G + F * G'$?  Does this make combinatorial sense? (You may want to stop and think about it before reading on!)
+And how about the law $(F * G)' \equiv F' * G + F * G'$?  Does this make combinatorial sense? (You may want to stop and think about it before reading on!)
 
-By definition, an $latex (F * G)'$-structure on $latex U$ is an $latex (F*G)$-structure on $latex U \cup \{*\}$, which is a pair of an $latex F$-structure and a $latex G$-structure on a splitting (a two-partition) of $latex U \cup \{*\}$.  The distinguished $latex *$ label must end up on one side or the other, so an $latex (F*G)'$-structure can arise in one of two ways: it is either an $latex F'$-structure paired with a $latex G$-structure, or an $latex F$-structure paired with a $latex G'$-structure, depending on where the $latex *$ ends up.  But this is precisely saying that $latex (F * G)' \equiv F' * G + F * G'$!
+By definition, an $(F * G)'$-structure on $U$ is an $(F*G)$-structure on $U \cup \{*\}$, which is a pair of an $F$-structure and a $G$-structure on a splitting (a two-partition) of $U \cup \{*\}$.  The distinguished $*$ label must end up on one side or the other, so an $(F*G)'$-structure can arise in one of two ways: it is either an $F'$-structure paired with a $G$-structure, or an $F$-structure paired with a $G'$-structure, depending on where the $*$ ends up.  But this is precisely saying that $(F * G)' \equiv F' * G + F * G'$!
 
-Where does species differentiation show up?  The most well-known place is in defining the species $latex L$ of <i>lists</i> (linear orderings).  In fact,
-
-
-$latex L = C'$,
+Where does species differentiation show up?  The most well-known place is in defining the species $L$ of <i>lists</i> (linear orderings).  In fact,
 
 
-that is, the species $latex L$ is the derivative of the <a href="http://byorgey.wordpress.com/2009/07/31/primitive-species-and-species-operations-part-ii/">species $latex C$ of cycles</a>.  A cycle defines an ordering, but there is no distinguished beginning or end; by making a cycle out of some elements with a distinguished extra element $latex *$, we uniquely identify a beginning/end of the ordering on the original elements: a list!
+$L = C'$,
+
+
+that is, the species $L$ is the derivative of the <a href="http://byorgey.wordpress.com/2009/07/31/primitive-species-and-species-operations-part-ii/">species $C$ of cycles</a>.  A cycle defines an ordering, but there is no distinguished beginning or end; by making a cycle out of some elements with a distinguished extra element $*$, we uniquely identify a beginning/end of the ordering on the original elements: a list!
 
 [caption id="attachment_274" align="aligncenter" width="400" caption="Differentiating a cycle to get a list"]<img src="http://byorgey.files.wordpress.com/2009/08/cyclediff.png" alt="Differentiating a cycle to get a list" title="cyclediff" width="400" height="137" class="size-full wp-image-274" />[/caption]
 
@@ -48,12 +48,12 @@ Here's an example of differentiation in action.  In the species library, the fun
 
 To finish off this post, a few exercises for you (you can check your answers with the species library):
 <ol>
-	<li>Describe the species $latex 1'$.</li>
-	<li>Describe the species $latex X'$.</li>
-	<li>Describe the species $latex E'$.</li>
-	<li>Does differentiation distribute over addition?  That is, is it true that $latex (F + G)' \equiv F' + G'$ for any species $latex F$ and $latex G$?  Give a combinatorial interpretation of this identity, or say why it does not hold.</li>
-	<li>Describe the species $latex L'$.</li>
-	<li>Describe the species $latex C^{(n)}$ (i.e. the nth derivative of the species of cycles).</li>
+	<li>Describe the species $1'$.</li>
+	<li>Describe the species $X'$.</li>
+	<li>Describe the species $E'$.</li>
+	<li>Does differentiation distribute over addition?  That is, is it true that $(F + G)' \equiv F' + G'$ for any species $F$ and $G$?  Give a combinatorial interpretation of this identity, or say why it does not hold.</li>
+	<li>Describe the species $L'$.</li>
+	<li>Describe the species $C^{(n)}$ (i.e. the nth derivative of the species of cycles).</li>
 </ol>
 
 

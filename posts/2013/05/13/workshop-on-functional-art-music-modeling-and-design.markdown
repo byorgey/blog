@@ -1,5 +1,5 @@
 ---
-title: Workshop on Functional Art, Music, Modeling and Design
+title: 'Workshop on Functional Art, Music, Modeling and Design'
 published: 2013-05-13T21:10:59Z
 categories: meta
 tags: art,beauty,CFP,design,functional,ICFP,music,programming,workshop

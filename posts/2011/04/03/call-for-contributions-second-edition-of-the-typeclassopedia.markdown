@@ -1,5 +1,5 @@
 ---
-title: Call for contributions: second edition of the Typeclassopedia
+title: 'Call for contributions: second edition of the Typeclassopedia'
 published: 2011-04-03T18:55:01Z
 categories: haskell,writing
 tags: call,contributions,edition,second,Typeclassopedia

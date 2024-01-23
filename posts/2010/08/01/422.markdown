@@ -1,5 +1,5 @@
 ---
-title: Species and Functors and Types, Oh My!
+title: 'Species and Functors and Types, Oh My!'
 published: 2010-08-01T15:34:10Z
 categories: combinatorics,haskell,math,writing
 tags: 2010,paper,species,symposium

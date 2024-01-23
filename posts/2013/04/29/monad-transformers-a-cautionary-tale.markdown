@@ -1,5 +1,5 @@
 ---
-title: Monad transformers: a cautionary tale
+title: 'Monad transformers: a cautionary tale'
 published: 2013-04-29T21:03:48Z
 categories: haskell
 tags: commutative,monad,random,transformer
@@ -17,7 +17,7 @@ tags: commutative,monad,random,transformer
 
 <span>bar</span> <span style="color:red;">::</span> <span>RandT</span> <span>StdGen</span> <span>Maybe</span> <span>()</span>
 <span>bar</span> <span style="color:red;">=</span> <span>foo</span> <span>`mplus`</span> <span>bar</span></code></pre>
-<p>Seems straightforward, right? <code>bar</code> should always succeed pretty much instantly, since there’s only a $latex 1/2^n$ chance that it will have to call <code>foo</code> $latex n$ times.</p>
+<p>Seems straightforward, right? <code>bar</code> should always succeed pretty much instantly, since there’s only a $1/2^n$ chance that it will have to call <code>foo</code> $n$ times.</p>
 <p>However, this is not what happens: some of the time <code>bar</code> returns instantly as expected, and some of the time it hangs in what seems like an infinite loop! What gives?</p>
 <p>Have you figured it out yet? (If you like these sorts of puzzles you might want to stop and see if you can figure out what was going on.) The problem is that the <code>mplus</code> operation for <code>RandT StdGen Maybe</code> runs both of its arguments with the same random seed! In other words, when a computation fails the generator state gets thrown away. And if we think about how monad transformers work this is actually not surprising. We have the following isomorphisms:</p>
 <pre><code>   RandT StdGen Maybe ()

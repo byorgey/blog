@@ -1,5 +1,5 @@
 ---
-title: Monoids for Maybe
+title: 'Monoids for Maybe'
 published: 2011-04-18T14:46:20Z
 categories: haskell
 tags: applicative,instances,Maybe,monoid
@@ -31,7 +31,7 @@ tags: applicative,instances,Maybe,monoid
 AM {unAM = Nothing}
 *Main&gt; Just (Sum 3) &lt;&gt; Nothing
 Just (Sum {getSum = 3})</code></pre><p>Wait, hold on, what?! It turns out that the default <code>Monoid</code> instance for <code>Maybe</code> is <em>not</em> an instance of this pattern after all! I previously thought there were <em>three</em> different ways of declaring a <code>Monoid</code> instance for <code>Maybe</code>; I now know that there are (at least) <em>four</em>.</p><ul><li>The default instance defined in <code>Data.Monoid</code> uses <code>Nothing</code> as the identity element, so <code>Nothing</code> represents &quot;no information&quot;. It requires a <code>Monoid</code> constraint on the type wrapped by <code>Maybe</code>, although <code>Monoid</code> is slightly too strong, since the type's own identity element is effectively ignored. In fact, the <code>Data.Monoid</code> documentation states<blockquote>
-    Lift a semigroup into <code>Maybe</code> forming a <code>Monoid</code> according to <a href="http://en.wikipedia.org/wiki/Monoid">http://en.wikipedia.org/wiki/Monoid</a>: &quot;Any semigroup $latex S$ may be turned into a monoid simply by adjoining an element $latex e$ not in $latex S$ and defining $latex e*e = e$ and $latex e*s = s = s*e$ for all $latex s \in S$.&quot; Since there is no <code>Semigroup</code> type class providing just <code>mappend</code>, we use <code>Monoid</code> instead.</blockquote>
+    Lift a semigroup into <code>Maybe</code> forming a <code>Monoid</code> according to <a href="http://en.wikipedia.org/wiki/Monoid">http://en.wikipedia.org/wiki/Monoid</a>: &quot;Any semigroup $S$ may be turned into a monoid simply by adjoining an element $e$ not in $S$ and defining $e*e = e$ and $e*s = s = s*e$ for all $s \in S$.&quot; Since there is no <code>Semigroup</code> type class providing just <code>mappend</code>, we use <code>Monoid</code> instead.</blockquote>
     <p>(Actually, there is (now) <a href="http://hackage.haskell.org/packages/archive/semigroups/0.3.4.1/doc/html/Data-Semigroup.html#t:Semigroup">a <code>Semigroup</code> type class</a>...)</p><pre><code>*Main&gt; mconcat [Just (Sum 3), Nothing]
 Just (Sum {getSum = 3})
 *Main&gt; mconcat [Just (Sum 3), Nothing, Just (Sum 4), Nothing]

@@ -1,5 +1,5 @@
 ---
-title: Typeclassopedia v2: moving my efforts to the Haskell wiki
+title: 'Typeclassopedia v2: moving my efforts to the Haskell wiki'
 published: 2011-11-26T04:39:37Z
 categories: haskell,projects,writing
 tags: 

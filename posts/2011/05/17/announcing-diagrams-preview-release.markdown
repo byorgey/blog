@@ -1,5 +1,5 @@
 ---
-title: Announcing diagrams preview release
+title: 'Announcing diagrams preview release'
 published: 2011-05-17T15:42:28Z
 categories: haskell,projects
 tags: announcement,diagrams,drawing,EDSL,preview,release

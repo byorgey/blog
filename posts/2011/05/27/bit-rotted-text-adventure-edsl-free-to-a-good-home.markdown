@@ -1,5 +1,5 @@
 ---
-title: Bit-rotted text adventure EDSL free to a good home
+title: 'Bit-rotted text adventure EDSL free to a good home'
 published: 2011-05-27T16:33:39Z
 categories: haskell,projects
 tags: adventure,EDSL,public domain,text

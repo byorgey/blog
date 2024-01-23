@@ -1,5 +1,5 @@
 ---
-title: BlogLiterately
+title: 'BlogLiterately'
 published: 2012-07-02T17:09:34Z
 categories: 
 tags: 
@@ -28,7 +28,7 @@ tags:
 </div>
 
 <p><a href="http://hackage.haskell.org/package/BlogLiterately"><code>BlogLiterately</code></a> is a tool for uploading blog posts to servers that support the <a href="http://www.xmlrpc.com/metaWeblogApi">MetaWeblog API</a> (such as <a href="http://wordpress.org/">WordPress</a>-based blogs and many others). Blog posts to be published via <code>BlogLiterately</code> are written in <a href="http://daringfireball.net/projects/markdown/">markdown</a> or <a href="http://docutils.sourceforge.net/docs/user/rst/quickref.html">reStructuredText</a> format, with <a href="http://johnmacfarlane.net/pandoc/README.html#pandocs-markdown">extensions supported</a> by <a href="http://johnmacfarlane.net/pandoc/">pandoc</a>. Posts may be actual “bird-style” literate Haskell files, with commentary formatted using markdown or reStructuredText. Though <code>BlogLiterately</code> offers special support for literate Haskell in particular, it is also useful for writing posts including code written in other languages, or even no code at all. You may also be interested in the <a href="http://hackage.haskell.org/package/BlogLiterately%2Ddiagrams">BlogLiterately-diagrams</a> package, a plugin for <code>BlogLiterately</code> which allows embedding images in your posts defined using the <a href="http://projects.haskell.org/diagrams/">diagrams</a> vector graphics framework.</p>
-<p><code>BlogLiterately</code> includes support for syntax highlighting, $latex \LaTeX$ (including special support for WordPress blogs), automatic image uploading, and automatic generation and formatting of <code>ghci</code> sessions. Each of these features is explained in more detail below.</p>
+<p><code>BlogLiterately</code> includes support for syntax highlighting, $\LaTeX$ (including special support for WordPress blogs), automatic image uploading, and automatic generation and formatting of <code>ghci</code> sessions. Each of these features is explained in more detail below.</p>
 <h2>Example usage</h2>
 <p>If you do not specify a blog URL, by default <code>BlogLiterately</code> simply prints the generated HTML to stdout. So, to preview the generated HTML before uploading requires merely something like</p>
 <pre><code>BlogLiterately Sample.lhs</code></pre>
@@ -91,9 +91,9 @@ foo :: String -&gt; String
 <li><p>Simply run <code>BlogLiterately</code>; citation processing is on by default. (You can explicitly turn it on with the <code>--citations</code> flag; to turn it off, use <code>--no-citations</code>.) Citations will be typeset and a bibliography will be appended at the end. You may want to include a section heading like <code># References</code> or <code># Bibliography</code> at the end of your post, to go above the generated bibliography.</p></li>
 </ol>
 <h2>LaTeX</h2>
-<p>LaTeX can be included in documents using single dollar signs to enclose inline LaTeX, and double dollar signs to enclose “display-style” LaTeX. For example, <code>$\pi^2 / 6$</code> produces $latex \pi^2 / 6$, and <code>$$\sum_{k=0}^\infty 1/k^2$$</code> (when put by itself in its own paragraph) produces</p>
+<p>LaTeX can be included in documents using single dollar signs to enclose inline LaTeX, and double dollar signs to enclose “display-style” LaTeX. For example, <code>$\pi^2 / 6$</code> produces $\pi^2 / 6$, and <code>$$\sum_{k=0}^\infty 1/k^2$$</code> (when put by itself in its own paragraph) produces</p>
 <p><div style="text-align:center;">
-$latex \displaystyle \sum_{k=0}^\infty 1/k^2.$
+$\displaystyle \sum_{k=0}^\infty 1/k^2.$
 </div></p>
 <p>Using the <code>--math</code> option, any <a href="http://johnmacfarlane.net/pandoc/README.html#math-rendering-in-html">Pandoc math rendering method may be chosen</a>, including MathML, jsMath, MathJax, and others. Note that for some methods to work properly, you may need to ensure that the generated HTML ends up in the proper CSS or JavaScript environment. (What that means depends on the method used.)</p>
 <p>Alternatively, blogs hosted on <a href="http://www.wordpress.com">wordpress.com</a> have built-in support for LaTeX, compiling LaTeX expressions to embedded images on-the-fly. Passing the <code>--wplatex</code> option to <code>BlogLiterately</code> causes any embedded LaTeX to be output in the format expected by WordPress. Note that an extra <code>$latex...</code> won’t be added to the beginning of LaTeX expressions which already appear to be in WordPress format.</p>

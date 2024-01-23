@@ -1,5 +1,5 @@
 ---
-title: an application (haha) for darcs
+title: 'an application (haha) for darcs'
 published: 2007-12-05T22:18:49Z
 categories: grad school
 tags: darcs,essay,personal statement

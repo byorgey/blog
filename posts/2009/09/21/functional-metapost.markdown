@@ -1,5 +1,5 @@
 ---
-title: Functional MetaPost
+title: 'Functional MetaPost'
 published: 2009-09-22T03:25:14Z
 categories: haskell
 tags: errors,funcmp,MetaPost

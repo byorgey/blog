@@ -1,5 +1,5 @@
 ---
-title: Swarm 0.4 release
+title: 'Swarm 0.4 release'
 published: 2023-08-22T17:37:34Z
 categories: haskell,projects
 tags: game,programming,resource,robot,Swarm

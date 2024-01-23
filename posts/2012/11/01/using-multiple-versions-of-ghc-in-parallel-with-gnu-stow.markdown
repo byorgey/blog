@@ -1,5 +1,5 @@
 ---
-title: Using multiple versions of GHC in parallel with GNU stow
+title: 'Using multiple versions of GHC in parallel with GNU stow'
 published: 2012-11-01T17:58:00Z
 categories: haskell
 tags: installation,multiple,stow,tool

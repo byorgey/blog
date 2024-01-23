@@ -1,5 +1,5 @@
 ---
-title: BlogLiterately 0.8.1, now with HTTPS!
+title: 'BlogLiterately 0.8.1, now with HTTPS!'
 published: 2015-06-02T02:49:35Z
 categories: haskell
 tags: BlogLiterately,haxr,HTTPS,Wordpress,XML-RPC

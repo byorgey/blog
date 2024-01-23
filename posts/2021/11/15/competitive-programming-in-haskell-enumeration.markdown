@@ -1,5 +1,5 @@
 ---
-title: Competitive programming in Haskell: Enumeration
+title: 'Competitive programming in Haskell: Enumeration'
 published: 2021-11-15T22:29:57Z
 categories: competitive programming,haskell
 tags: enumeration,index,invertible,Kattis

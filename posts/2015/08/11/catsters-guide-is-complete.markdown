@@ -1,5 +1,5 @@
 ---
-title: Catsters guide is complete!
+title: 'Catsters guide is complete!'
 published: 2015-08-11T21:01:28Z
 categories: haskell,math,teaching
 tags: category

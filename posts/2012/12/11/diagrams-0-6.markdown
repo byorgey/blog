@@ -1,5 +1,5 @@
 ---
-title: Diagrams 0.6
+title: 'Diagrams 0.6'
 published: 2012-12-12T02:32:05Z
 categories: haskell,projects
 tags: diagrams,EDSL,graphics,release

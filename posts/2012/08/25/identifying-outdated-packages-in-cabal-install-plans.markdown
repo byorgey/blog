@@ -1,5 +1,5 @@
 ---
-title: Identifying outdated packages in cabal install plans
+title: 'Identifying outdated packages in cabal install plans'
 published: 2012-08-25T17:37:52Z
 categories: haskell
 tags: cabal,development,highlight,install,plan,versions

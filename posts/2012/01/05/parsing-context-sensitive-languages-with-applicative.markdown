@@ -1,5 +1,5 @@
 ---
-title: Parsing context-sensitive languages with Applicative
+title: 'Parsing context-sensitive languages with Applicative'
 published: 2012-01-05T05:21:03Z
 categories: haskell
 tags: applicative,context-free,context-sensitive,grammars,infinite,monad,parsing

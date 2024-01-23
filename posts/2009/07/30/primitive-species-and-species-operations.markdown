@@ -1,5 +1,5 @@
 ---
-title: Primitive species and species operations
+title: 'Primitive species and species operations'
 published: 2009-07-30T21:48:32Z
 categories: combinatorics,haskell,math
 tags: combinatorial species,DSL,primitives
@@ -37,7 +37,7 @@ but what does it mean?  (Actually, this particular example is pretty meaningless
 
 The <code>Algebra.Differential.C</code> constraint requires any instance of <code>Species</code> to be a <i>differentiable ring</i>.  In particular, it (transitively) implies the constraint <code>Algebra.Additive.C</code>, which means that instances of <code>Species</code> must form an additive group: there must be a species operation <code>(+)</code>, and a species <code>0</code> which is the identity for <code>(+)</code>.  (It also requires an operation <code>negate</code> which produces additive inverses, but that isn't implemented yet!) Let's see what these correspond to.
 
-The species $latex 0$ is the Scrooge of the species world: it refuses to create a single structure, no matter how many labels you give it!
+The species $0$ is the Scrooge of the species world: it refuses to create a single structure, no matter how many labels you give it!
 
 [caption id="attachment_220" align="aligncenter" width="400" caption="The species 0"]<img src="http://byorgey.files.wordpress.com/2009/07/zero.png" alt="The species 0" title="zero" width="400" height="92" class="size-full wp-image-220" />[/caption]
 
@@ -51,13 +51,13 @@ Let's see how to use this species with the library:
 []
 </code>
 
-Pretty boring, huh?  Well, it's supposed to be.  $latex 0$ doesn't get explicitly used very much, but it's nice to know it's there.
+Pretty boring, huh?  Well, it's supposed to be.  $0$ doesn't get explicitly used very much, but it's nice to know it's there.
 
 (Also, remember that to follow along, you'll have to start ghci with the <code>-XNoImplicitPrelude</code> flag, then remove the loaded Prelude module with <code>:m -Prelude</code>, and then load <code>MyPrelude</code> (from the NumericPrelude library) and the species library: <code>:m +MyPrelude Math.Combinatorics.Species</code>.)
 
 <h3>Species sum</h3>
 
-And what about species addition?  Addition just corresponds to disjoint (i.e. tagged) union: an $latex (F+G)$-structure is either an $latex F$-structure or a $latex G$-structure, along with a tag so you know which it is.  If you have $latex m$ $latex F$-structures and $latex n$ $latex G$-structures, then you have $latex m + n$ $latex (F+G)$-structures.
+And what about species addition?  Addition just corresponds to disjoint (i.e. tagged) union: an $(F+G)$-structure is either an $F$-structure or a $G$-structure, along with a tag so you know which it is.  If you have $m$ $F$-structures and $n$ $G$-structures, then you have $m + n$ $(F+G)$-structures.
 
 <code>
 &gt; take 10 $ labelled lists
@@ -71,7 +71,7 @@ And what about species addition?  Addition just corresponds to disjoint (i.e. ta
  inr(&lt;[1],[2]&gt;)]
 </code>
 
-Do you see why the $latex 0$ species is the identity element for species sum?  If you have a structure of the species $latex 0 + F$, it must be either a $latex 0$-structure, or an $latex F$-structure: but there <i>are</i> no $latex 0$-structures!  Now, you may complain that $latex 0$ is not really an <i>identity</i>, since the addition still introduces an extra tag:
+Do you see why the $0$ species is the identity element for species sum?  If you have a structure of the species $0 + F$, it must be either a $0$-structure, or an $F$-structure: but there <i>are</i> no $0$-structures!  Now, you may complain that $0$ is not really an <i>identity</i>, since the addition still introduces an extra tag:
 
 <code>
 &gt; generate subsets ([1..3] :: [Int])
@@ -81,13 +81,13 @@ Do you see why the $latex 0$ species is the identity element for species sum?  I
  inr({2,3}),inr({2}),inr({3}),inr({})]
 </code>
 
-That's true, but we really only care about species identity <i>up to isomorphism</i>, and the species $latex F$, $latex 0 + F$, and $latex F + 0$ are clearly all isomorphic for any species $latex F$, even if they are not identical.
+That's true, but we really only care about species identity <i>up to isomorphism</i>, and the species $F$, $0 + F$, and $F + 0$ are clearly all isomorphic for any species $F$, even if they are not identical.
 
 <h3>1</h3>
 
 The <code>Algebra.Differential.C</code> constraint also implies a <code>Algebra.Ring.C</code> constraint, which requires a multiplication operation <code>(*)</code> and identity element <code>1</code>.
 
-So, what is the species $latex 1$?  It puts a singleton structure on the empty set of labels, but no structures on any nonempty label sets:
+So, what is the species $1$?  It puts a singleton structure on the empty set of labels, but no structures on any nonempty label sets:
 
 [caption id="attachment_223" align="aligncenter" width="400" caption="The species 1"]<img src="http://byorgey.files.wordpress.com/2009/07/one.png" alt="The species 1" title="one" width="400" height="198" class="size-full wp-image-223" />[/caption]
 
@@ -102,20 +102,20 @@ So, what is the species $latex 1$?  It puts a singleton structure on the empty s
 []
 </code>
 
-So you can see that on the empty set, $latex 1$ generates a single structure which is also called 1 (although it could be called anything, really).
+So you can see that on the empty set, $1$ generates a single structure which is also called 1 (although it could be called anything, really).
 
 <h3>Species product</h3>
 
-And species product?  An $latex (F*G)$-structure on a set of labels is a pair consisting of an $latex F$-structure on a subset of the labels, and a $latex G$-structure on whatever labels are left over.  In other words, to form all $latex (F*G)$-structures on a set of labels $latex U$, we first partition $latex U$ into an ordered pair of subsets in all possible ways, and for each pair, take all possible combinations of an $latex F$-structure on the first subset, and a $latex G$-structure on the second subset.  For example:
+And species product?  An $(F*G)$-structure on a set of labels is a pair consisting of an $F$-structure on a subset of the labels, and a $G$-structure on whatever labels are left over.  In other words, to form all $(F*G)$-structures on a set of labels $U$, we first partition $U$ into an ordered pair of subsets in all possible ways, and for each pair, take all possible combinations of an $F$-structure on the first subset, and a $G$-structure on the second subset.  For example:
 
 <code>
 &gt; generate (list * list) ([1..3] :: [Int])
 [([1,2,3],[]),([1,3,2],[]),([2,1,3],[]),([2,3,1],[]),([3,1,2],[]),([3,2,1],[]),([1,2],[3]),([2,1],[3]),([1,3],[2]),([3,1],[2]),([1],[2,3]),([1],[3,2]),([2,3],[1]),([3,2],[1]),([2],[1,3]),([2],[3,1]),([3],[1,2]),([3],[2,1]),([],[1,2,3]),([],[1,3,2]),([],[2,1,3]),([],[2,3,1]),([],[3,1,2]),([],[3,2,1])]
 </code>
 
-Can you see why $latex 1$ is the identity element for this operation?  The only partition of the label set that will produce any $latex (1*F)$-structures is $latex (\emptyset, U)$: in any other case, $latex 1$ produces no structures.  But a $latex 1$-structure paired with an $latex F$-structure on $latex U$ is really just an $latex F$-structure on $latex U$, since there is only one $latex 1$-structure.
+Can you see why $1$ is the identity element for this operation?  The only partition of the label set that will produce any $(1*F)$-structures is $(\emptyset, U)$: in any other case, $1$ produces no structures.  But a $1$-structure paired with an $F$-structure on $U$ is really just an $F$-structure on $U$, since there is only one $1$-structure.
 
-As an exercise, can you figure out what the species $latex 2$, $latex 3$, ... ought to be?
+As an exercise, can you figure out what the species $2$, $3$, ... ought to be?
 
 I think I'll stop there for now.  In my next post, I'll talk about the other primitive species in the <code>Species</code> type class: singletons, sets, and cycles.
 

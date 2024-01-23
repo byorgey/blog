@@ -1,5 +1,5 @@
 ---
-title: Lightweight, efficiently sampleable enumerations in Haskell
+title: 'Lightweight, efficiently sampleable enumerations in Haskell'
 published: 2019-05-14T19:48:46Z
 categories: combinatorics,haskell,projects
 tags: data,enumeration,function,index,sampling

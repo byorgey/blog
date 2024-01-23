@@ -1,5 +1,5 @@
 ---
-title: Typed type-level programming in Haskell, part II: type families
+title: 'Typed type-level programming in Haskell, part II: type families'
 published: 2010-07-06T10:28:37Z
 categories: haskell
 tags: programming,type families,type-level,types

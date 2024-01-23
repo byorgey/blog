@@ -1,5 +1,5 @@
 ---
-title: Creating documents with embedded diagrams
+title: 'Creating documents with embedded diagrams'
 published: 2012-08-28T17:27:40Z
 categories: haskell,projects,writing
 tags: announcement,BlogLiterately,build,diagrams,document,dynamic,embedding,hint,LaTeX,Markdown

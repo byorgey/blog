@@ -1,5 +1,5 @@
 ---
-title: And now, back to your regularly scheduled combinatorial species
+title: 'And now, back to your regularly scheduled combinatorial species'
 published: 2012-10-18T01:43:42Z
 categories: combinatorics,math,writing
 tags: combinatorial species,research

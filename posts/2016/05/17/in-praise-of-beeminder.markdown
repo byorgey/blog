@@ -1,5 +1,5 @@
 ---
-title: In praise of Beeminder
+title: 'In praise of Beeminder'
 published: 2016-05-18T03:13:14Z
 categories: meta
 tags: Beeminder,data,goals,productivity

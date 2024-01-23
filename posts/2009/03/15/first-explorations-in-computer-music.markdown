@@ -1,5 +1,5 @@
 ---
-title: First explorations in computer music
+title: 'First explorations in computer music'
 published: 2009-03-15T18:04:46Z
 categories: haskell,learning,music
 tags: ALSA,ChucK,computer music,Haskore,hsc,jack,live coding,SuperCollider

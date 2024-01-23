@@ -1,5 +1,5 @@
 ---
-title: How to print things
+title: 'How to print things'
 published: 2016-05-19T16:33:48Z
 categories: reading
 tags: documents,double,Möbius,pages,paper,printing,sheets,sided,single,stack
@@ -13,7 +13,7 @@ tags: documents,double,Möbius,pages,paper,printing,sheets,sided,single,stack
 <p>I actually now use this in practice. As compared to the usual method of printing double-sided, this has several advantages:</p>
 <ul>
 <li>One always does the exact same action after finishing every page; there is no need to remember whether you are on an even or an odd page.</li>
-<li>Any consecutive sequence of $latex n/2$ pages are on different sheets of paper, so it is easy to simultaneously refer to multiple pages close together. There is never any need to keep flipping a sheet back and forth to refer to the previous page (as there is with traditional double-sided printing).</li>
+<li>Any consecutive sequence of $n/2$ pages are on different sheets of paper, so it is easy to simultaneously refer to multiple pages close together. There is never any need to keep flipping a sheet back and forth to refer to the previous page (as there is with traditional double-sided printing).</li>
 </ul>
 <p>But there are even new things to say about traditional double-sided printing, as well. I now know of several different algorithms for reading double-sided, each with its pros and cons; previously I had not even considered that there might be more than one way to do it.</p>
 <div id="refs" class="references">

@@ -1,5 +1,5 @@
 ---
-title: A (work in progress) translation of Joyal’s original paper on species
+title: 'A (work in progress) translation of Joyal’s original paper on species'
 published: 2018-02-13T15:07:20Z
 categories: combinatorics,projects,writing
 tags: commentary,English,French,species,translation

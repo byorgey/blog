@@ -1,5 +1,5 @@
 ---
-title: MonadRandom 0.5 and mwc-random: feedback wanted
+title: 'MonadRandom 0.5 and mwc-random: feedback wanted'
 published: 2016-11-16T11:36:03Z
 categories: haskell,projects
 tags: monad,random

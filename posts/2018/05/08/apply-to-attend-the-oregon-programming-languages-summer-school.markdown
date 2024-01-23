@@ -1,5 +1,5 @@
 ---
-title: Apply to attend the Oregon Programming Languages Summer School!
+title: 'Apply to attend the Oregon Programming Languages Summer School!'
 published: 2018-05-09T02:21:56Z
 categories: links,meta
 tags: concurrency,OPLSS,Oregon,parallelism,school,summer,theory

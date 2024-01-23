@@ -1,5 +1,5 @@
 ---
-title: Maniac week postmortem
+title: 'Maniac week postmortem'
 published: 2014-08-19T16:02:04Z
 categories: meta
 tags: Beeminder,commitment,dissertation,maniac,productivity,week

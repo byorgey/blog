@@ -1,5 +1,5 @@
 ---
-title: diagrams 0.2.1, and future plans
+title: 'diagrams 0.2.1, and future plans'
 published: 2009-09-24T19:48:25Z
 categories: haskell,projects
 tags: constraint solving,declarative,diagrams,drawing,EDSL,rewrite

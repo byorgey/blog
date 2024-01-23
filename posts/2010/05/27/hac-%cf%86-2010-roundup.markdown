@@ -1,5 +1,5 @@
 ---
-title: Hac φ 2010 roundup
+title: 'Hac φ 2010 roundup'
 published: 2010-05-27T16:45:20Z
 categories: haskell
 tags: 

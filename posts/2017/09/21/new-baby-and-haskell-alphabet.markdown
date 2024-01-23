@@ -1,5 +1,5 @@
 ---
-title: New baby, and Haskell Alphabet
+title: 'New baby, and Haskell Alphabet'
 published: 2017-09-21T18:46:46Z
 categories: haskell,meta
 tags: alphabet,baby

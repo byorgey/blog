@@ -1,5 +1,5 @@
 ---
-title: More counting lambda terms
+title: 'More counting lambda terms'
 published: 2011-10-24T21:33:00Z
 categories: haskell
 tags: 

@@ -1,5 +1,5 @@
 ---
-title: Singing card guts
+title: 'Singing card guts'
 published: 2008-07-29T18:17:32Z
 categories: meta
 tags: circuits,singing card

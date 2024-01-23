@@ -1,5 +1,5 @@
 ---
-title: Things I have learned about vector spaces
+title: 'Things I have learned about vector spaces'
 published: 2010-11-20T04:31:52Z
 categories: math,projects
 tags: affine,diagrams,inverse,normals,points,translation,transpose,vectors

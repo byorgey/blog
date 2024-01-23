@@ -1,5 +1,5 @@
 ---
-title: Towards a new programming languages course: ideas welcome!
+title: 'Towards a new programming languages course: ideas welcome!'
 published: 2016-05-23T17:02:04Z
 categories: teaching
 tags: course,design,languages,programming

@@ -1,5 +1,5 @@
 ---
-title: Hac φ is underway!
+title: 'Hac φ is underway!'
 published: 2009-07-24T20:31:01Z
 categories: haskell,meta
 tags: hackathon,Philadelphia

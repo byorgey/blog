@@ -1,5 +1,5 @@
 ---
-title: Beeminding for fun and profit
+title: 'Beeminding for fun and profit'
 published: 2013-04-17T03:22:28Z
 categories: grad school,meta
 tags: Beeminder,data,goals,productivity

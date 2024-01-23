@@ -1,5 +1,5 @@
 ---
-title: Philadelphia!
+title: 'Philadelphia!'
 published: 2008-08-04T21:40:52Z
 categories: grad school
 tags: move Philadelphia

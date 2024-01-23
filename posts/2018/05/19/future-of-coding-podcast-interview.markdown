@@ -1,5 +1,5 @@
 ---
-title: Future of Coding podcast interview
+title: 'Future of Coding podcast interview'
 published: 2018-05-19T15:16:14Z
 categories: haskell,meta,teaching
 tags: coding,future,interview,podcast,Steve Krouse

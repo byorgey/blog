@@ -1,5 +1,5 @@
 ---
-title: Dynamic programming in Haskell: lazy immutable arrays
+title: 'Dynamic programming in Haskell: lazy immutable arrays'
 published: 2023-06-02T16:09:44Z
 categories: competitive programming,haskell
 tags: challenge,dynamic programming,Kattis

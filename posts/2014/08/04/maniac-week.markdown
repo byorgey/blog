@@ -1,5 +1,5 @@
 ---
-title: Maniac week
+title: 'Maniac week'
 published: 2014-08-04T20:46:57Z
 categories: grad school,meta,writing
 tags: Beeminder,commitment,dissertation,maniac,productivity,week

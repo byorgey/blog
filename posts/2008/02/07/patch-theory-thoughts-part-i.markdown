@@ -1,5 +1,5 @@
 ---
-title: Patch theory thoughts, part I
+title: 'Patch theory thoughts, part I'
 published: 2008-02-07T20:19:22Z
 categories: haskell,learning,projects
 tags: collaborative editing,darcs,patch theory

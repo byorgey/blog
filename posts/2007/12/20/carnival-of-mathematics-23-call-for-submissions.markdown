@@ -1,5 +1,5 @@
 ---
-title: Carnival of Mathematics #23 -- call for submissions
+title: 'Carnival of Mathematics #23 -- call for submissions'
 published: 2007-12-20T21:40:46Z
 categories: meta
 tags: 

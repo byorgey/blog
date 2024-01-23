@@ -1,5 +1,5 @@
 ---
-title: ZipEdit
+title: 'ZipEdit'
 published: 2008-06-21T22:09:03Z
 categories: haskell
 tags: editing,lists,zipper

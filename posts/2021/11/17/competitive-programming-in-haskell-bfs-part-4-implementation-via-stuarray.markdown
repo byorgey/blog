@@ -1,5 +1,5 @@
 ---
-title: Competitive programming in Haskell: BFS, part 4 (implementation via STUArray)
+title: 'Competitive programming in Haskell: BFS, part 4 (implementation via STUArray)'
 published: 2021-11-17T15:52:12Z
 categories: competitive programming,haskell
 tags: BFS,graph,Kattis,mutable,search,STUArray
@@ -47,7 +47,7 @@ tags: BFS,graph,Kattis,mutable,search,STUArray
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">type</span> <span>V</span> <span style="color:red;">=</span> <span>Int</span>
 <span style="color:blue;font-weight:bold;">data</span> <span>BFSState</span> <span>s</span> <span style="color:red;">=</span>
   <span>BS</span> <span style="color:red;">{</span> <span>level</span> <span style="color:red;">::</span> <span>STUArray</span> <span>s</span> <span>V</span> <span>Int</span><span style="color:red;">,</span> <span>parent</span> <span style="color:red;">::</span> <span>STUArray</span> <span>s</span> <span>V</span> <span>V</span><span style="color:red;">,</span> <span>queue</span> <span style="color:red;">::</span> <span>Seq</span> <span>V</span> <span style="color:red;">}</span></code></pre>
-<p>To initialize a BFS state, we allocate new mutable level and parent arrays (initializing them to all $latex -1$ values), and fill in the <code>level</code> array and queue with the given start vertices. Notice how we need to be explicitly given the size of the arrays we should allocate; we will get this size from the <code>Enumeration</code> passed to <code>bfs</code>.</p>
+<p>To initialize a BFS state, we allocate new mutable level and parent arrays (initializing them to all $-1$ values), and fill in the <code>level</code> array and queue with the given start vertices. Notice how we need to be explicitly given the size of the arrays we should allocate; we will get this size from the <code>Enumeration</code> passed to <code>bfs</code>.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>initBFSState</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>V</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>ST</span> <span>s</span> <span style="color:red;">(</span><span>BFSState</span> <span>s</span><span style="color:red;">)</span>
 <span>initBFSState</span> <span>n</span> <span>vs</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
   <span>l</span> <span style="color:red;">&lt;-</span> <span>newArray</span> <span style="color:red;">(</span><span class="hs-num">0</span><span style="color:red;">,</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span>
@@ -122,7 +122,7 @@ tags: BFS,graph,Kattis,mutable,search,STUArray
 <span>step</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Move</span> <span style="color:red;">-&gt;</span> <span>Int</span>
 <span>step</span> <span>m</span> <span>v</span> <span style="color:red;">(</span><span>Move</span> <span>a</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>a</span><span>*</span><span>v</span> <span>+</span> <span>b</span><span style="color:red;">)</span> <span>`mod`</span> <span>m</span>
 <span style="color:green;">{-# INLINE step #-}</span></code></pre>
-<p>It’s pretty much unchanged <a href="https://byorgey.wordpress.com/2021/10/14/competitive-programming-in-haskell-bfs-part-1/">from before</a>, except for the need to pass an <code>Enumeration</code> to <code>bfs</code> (in this case we just use <code>finiteE m</code>, which is the identity on the interval $latex [0 .. m)$).</p>
+<p>It’s pretty much unchanged <a href="https://byorgey.wordpress.com/2021/10/14/competitive-programming-in-haskell-bfs-part-1/">from before</a>, except for the need to pass an <code>Enumeration</code> to <code>bfs</code> (in this case we just use <code>finiteE m</code>, which is the identity on the interval $[0 .. m)$).</p>
 <h2 id="some-remaining-questions">Some remaining questions</h2>
 <p>This is definitely not the end of the story.</p>
 <ul>

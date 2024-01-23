@@ -1,5 +1,5 @@
 ---
-title: Draft of my TMR article on multiset partitions
+title: 'Draft of my TMR article on multiset partitions'
 published: 2007-08-23T11:43:24Z
 categories: haskell,writing
 tags: 

@@ -1,5 +1,5 @@
 ---
-title: Diagrams mentoring at Hac Phi
+title: 'Diagrams mentoring at Hac Phi'
 published: 2012-07-09T18:49:28Z
 categories: haskell,projects
 tags: diagrams,Hac φ,mentoring

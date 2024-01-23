@@ -1,5 +1,5 @@
 ---
-title: Blogging again, &amp; some major life events
+title: 'Blogging again, &amp; some major life events'
 published: 2015-03-31T18:03:42Z
 categories: meta
 tags: blogging,diagrams,dissertation,PhD,publication,tenure

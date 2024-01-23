@@ -1,5 +1,5 @@
 ---
-title: Academic integrity: context and concrete steps
+title: 'Academic integrity: context and concrete steps'
 published: 2016-08-21T23:06:39Z
 categories: teaching
 tags: academic,generosity,integrity,thankfulness,virtues

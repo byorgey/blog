@@ -1,5 +1,5 @@
 ---
-title: diagrams repos now mirrored on github!
+title: 'diagrams repos now mirrored on github!'
 published: 2011-09-11T00:26:45Z
 categories: haskell,projects
 tags: bridge,darcs,diagrams,git

@@ -1,5 +1,5 @@
 ---
-title: Competitive programming in Haskell: building unordered trees
+title: 'Competitive programming in Haskell: building unordered trees'
 published: 2020-05-22T22:17:00Z
 categories: competitive programming,haskell
 tags: equality,Kattis,multiset,parsec,parsing,set,shape,subway,tree

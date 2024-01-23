@@ -1,5 +1,5 @@
 ---
-title: BlogLiterately 0.4 release
+title: 'BlogLiterately 0.4 release'
 published: 2012-07-02T17:43:54Z
 categories: haskell,writing
 tags: blogging,BlogLiterately,ghci,LaTeX
@@ -14,7 +14,7 @@ tags: blogging,BlogLiterately,ghci,LaTeX
 <span>&gt;</span> <span>fib</span> <span class="hs-num">1</span> <span style="color:red;">=</span> <span class="hs-num">1</span>
 <span>&gt;</span> <span>fib</span> <span>n</span> <span style="color:red;">=</span> <span>fib</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>+</span> <span>fib</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">2</span><span style="color:red;">)</span>
 </code></pre>
-<p>Special support for WordPress LaTeX is built in: $latex \pi^2 / 6$. <code>ghci</code> sessions can be automatically generated from a list of inputs:</p>
+<p>Special support for WordPress LaTeX is built in: $\pi^2 / 6$. <code>ghci</code> sessions can be automatically generated from a list of inputs:</p>
 <pre><code><span style="color:gray;">ghci&gt;</span> fib 20  
   6765
 

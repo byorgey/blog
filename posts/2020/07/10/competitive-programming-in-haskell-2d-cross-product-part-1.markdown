@@ -1,5 +1,5 @@
 ---
-title: Competitive programming in Haskell: 2D cross product, part 1
+title: 'Competitive programming in Haskell: 2D cross product, part 1'
 published: 2020-07-11T02:43:01Z
 categories: competitive programming,haskell
 tags: cross,geometry,Kattis
@@ -8,15 +8,15 @@ tags: cross,geometry,Kattis
 <p>Time for some more geometry! In my <a href="https://byorgey.wordpress.com/2020/06/29/competitive-programming-in-haskell-data-representation-and-optimization-with-cake/">previous post</a> I challenged you to solve <a href="https://open.kattis.com/problems/cookiecutter">Cookie Cutters</a>, which asks us to scale the vertices of a polygon so that it has a certain prescribed area. It’s possible to solve this just by looking up an algorithm for computing the area of a polygon (see the <a href="https://en.wikipedia.org/wiki/Shoelace%20formula">“shoelace formula”</a>). But the way to get good at solving geometry problems is not by memorizing a bunch of formulas, but rather by understanding a few general primitives and principles which can be assembled to solve a wide range of problems.</p>
 <p>Incidentally, if you’re serious about getting good at geometric problems in competitive programming, then you absolutely must read <a href="https://vlecomte.github.io/cp-geo.pdf">Victor Lecomte’s <em>Handbook of geometry for competitive programmers</em></a>. (It’s still a great read even if you’re not serious!)</p>
 <h2 id="the-2d-cross-product">The 2D cross product</h2>
-<p>In two dimensions, given vectors $latex \mathbf{u} = (u_x, u_y)$ and $latex \mathbf{v} = (v_x, v_y)$, we can compute their <em>cross product</em> as</p>
+<p>In two dimensions, given vectors $\mathbf{u} = (u_x, u_y)$ and $\mathbf{v} = (v_x, v_y)$, we can compute their <em>cross product</em> as</p>
 <div style="text-align:center;">
-<p>$latex \mathbf{u} \times \mathbf{v} = \begin{vmatrix} u_x &amp; v_x \\ u_y &amp; v_y \end{vmatrix} = u_x v_y - v_x u_y.$</p>
+<p>$\mathbf{u} \times \mathbf{v} = \begin{vmatrix} u_x &amp; v_x \\ u_y &amp; v_y \end{vmatrix} = u_x v_y - v_x u_y.$</p>
 </div>
-<p>One useful way to understand this as giving the <em>signed area</em> of the parallelogram determined by $latex \mathbf{u}$ and $latex \mathbf{v}$. The area is positive when $latex \mathbf{v}$ is counterclockwise from $latex \mathbf{u}$, negative when it is clockwise, and zero when the two vectors are colinear (<em>i.e.</em> parallel or antiparallel).</p>
+<p>One useful way to understand this as giving the <em>signed area</em> of the parallelogram determined by $\mathbf{u}$ and $\mathbf{v}$. The area is positive when $\mathbf{v}$ is counterclockwise from $\mathbf{u}$, negative when it is clockwise, and zero when the two vectors are colinear (<em>i.e.</em> parallel or antiparallel).</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2020/07/bc192dbfed78be26.png" /></p>
 </div>
-<p>I’m not going to prove this here, since to be quite honest I don’t remember off the top of my head how to derive it. (Also, <a href="https://crypto.stanford.edu/~blynn/haskell/ga.html">geometric algebra</a> does a much better job of explaining where this comes from and generalizing to any number of dimensions; in particular, $latex \mathbf{u} \times \mathbf{v}$ is the coefficient of the bivector resulting from the outer product of $latex \mathbf{u}$ and $latex \mathbf{v}$. But that would take us much too far afield for now!)</p>
+<p>I’m not going to prove this here, since to be quite honest I don’t remember off the top of my head how to derive it. (Also, <a href="https://crypto.stanford.edu/~blynn/haskell/ga.html">geometric algebra</a> does a much better job of explaining where this comes from and generalizing to any number of dimensions; in particular, $\mathbf{u} \times \mathbf{v}$ is the coefficient of the bivector resulting from the outer product of $\mathbf{u}$ and $\mathbf{v}$. But that would take us much too far afield for now!)</p>
 <p>So let’s write some Haskell code to compute the cross product of 2D vectors. (All this code has of course been added to <a href="https://github.com/byorgey/comprog-hs/blob/master/Geom.hs">Geom.hs</a>.)</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>cross</span> <span style="color:red;">::</span> <span>Num</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>V2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>V2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>s</span>
 <span>cross</span> <span style="color:red;">(</span><span>V2</span> <span>ux</span> <span>uy</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>V2</span> <span>vx</span> <span>vy</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>ux</span><span>*</span><span>vy</span> <span style="color:green;">-</span> <span>vx</span><span>*</span><span>uy</span>

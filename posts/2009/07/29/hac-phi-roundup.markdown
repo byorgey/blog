@@ -1,5 +1,5 @@
 ---
-title: Hac φ roundup
+title: 'Hac φ roundup'
 published: 2009-07-29T16:45:13Z
 categories: haskell,meta
 tags: Hac φ,hackathon,projects,roundup

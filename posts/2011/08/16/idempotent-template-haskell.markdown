@@ -1,5 +1,5 @@
 ---
-title: Idempotent Template Haskell
+title: 'Idempotent Template Haskell'
 published: 2011-08-16T15:09:20Z
 categories: haskell
 tags: conditional,generation,template

@@ -1,5 +1,5 @@
 ---
-title: Competitive programming in Haskell: BFS, part 3 (implementation via HashMap)
+title: 'Competitive programming in Haskell: BFS, part 3 (implementation via HashMap)'
 published: 2021-10-29T21:55:52Z
 categories: competitive programming,haskell
 tags: BFS,graph,HashMap,Kattis,search

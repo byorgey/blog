@@ -1,5 +1,5 @@
 ---
-title: Binders Unbound
+title: 'Binders Unbound'
 published: 2011-03-29T03:06:24Z
 categories: grad school,haskell,projects,writing
 tags: binding,EDSL,ICFP,library,names,paper

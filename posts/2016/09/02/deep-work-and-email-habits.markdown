@@ -1,5 +1,5 @@
 ---
-title: Deep work and email habits
+title: 'Deep work and email habits'
 published: 2016-09-02T19:54:01Z
 categories: meta
 tags: deep,email,work

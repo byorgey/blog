@@ -1,5 +1,5 @@
 ---
-title: More from Hac φ
+title: 'More from Hac φ'
 published: 2009-07-25T22:34:48Z
 categories: haskell,meta
 tags: gitit,Hac φ,hackathon,JavaScript,monoids,pictures,talks

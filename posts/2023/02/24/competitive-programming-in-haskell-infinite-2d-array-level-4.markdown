@@ -1,15 +1,15 @@
 ---
-title: Competitive programming in Haskell: Infinite 2D array, Level 4
+title: 'Competitive programming in Haskell: Infinite 2D array, Level 4'
 published: 2023-02-24T13:31:27Z
 categories: competitive programming,haskell
 tags: Kattis,number
 ---
 
-<p>In a <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-in-haskell-infinite-2d-array/">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. After <a href="https://byorgey.wordpress.com/2022/12/03/competitive-programming-in-haskell-infinite-2d-array-level-1/">deriving a formula</a> for $latex F_{x,y}$ that involves only a linear number of terms, <a href="https://byorgey.wordpress.com/2023/01/16/competitive-programming-in-haskell-infinite-2d-array-levels-2-and-3/">last time</a> we discussed how to efficiently calculate Fibonacci numbers and binomial coefficients modulo a prime. Today, we’ll finally see some actual Haskell code for solving this problem.</p>
+<p>In a <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-in-haskell-infinite-2d-array/">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. After <a href="https://byorgey.wordpress.com/2022/12/03/competitive-programming-in-haskell-infinite-2d-array-level-1/">deriving a formula</a> for $F_{x,y}$ that involves only a linear number of terms, <a href="https://byorgey.wordpress.com/2023/01/16/competitive-programming-in-haskell-infinite-2d-array-levels-2-and-3/">last time</a> we discussed how to efficiently calculate Fibonacci numbers and binomial coefficients modulo a prime. Today, we’ll finally see some actual Haskell code for solving this problem.</p>
 <p>The code is not very long, and seems rather simple, but what it doesn’t show is the large amount of time and effort I spent trying different versions until I figured out how to make it fast enough. Later in the post I will share some lessons learned.</p>
 <h2 id="modular-arithmetic">Modular arithmetic</h2>
 <p>When a problem requires a fixed modulus like this, I typically prefer using a <code>newtype M</code> with a <code>Num</code> instance that does all operations using modular arithmetic, as <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">explained in this post</a>. However, that approach has a big downside: we cannot (easily) store our own <code>newtype</code> values in an unboxed array (<code>UArray</code>), since that requires <a href="https://stackoverflow.com/questions/40970726/using-newtype-in-data-array-unboxed-with-ghc-7-10">defining a bunch of instances by hand</a>. And the speedup we get from using unboxed vs boxed arrays is significant, especially for this problem.</p>
-<p>So instead I just made some standalone functions to do arithmetic modulo $latex 10^9 + 7$:</p>
+<p>So instead I just made some standalone functions to do arithmetic modulo $10^9 + 7$:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>p</span> <span style="color: red">::</span> <span>Int</span>
 <span>p</span> <span style="color: red">=</span> <span class="hs-num">10</span><span>^</span><span class="hs-num">9</span> <span>+</span> <span class="hs-num">7</span>
 
@@ -25,7 +25,7 @@ tags: Kattis,number
   <span style="color: blue;font-weight: bold">where</span>
     <span style="color: red">(</span><span style="color: blue;font-weight: bold">_</span><span style="color: red">,</span><span style="color: blue;font-weight: bold">_</span><span style="color: red">,</span><span>y</span><span style="color: red">)</span> <span style="color: red">=</span> <span>extendedGCD</span> <span>p</span> <span>a</span></code></pre>
 <h2 id="fibonacci-numbers-and-factorials">Fibonacci numbers and factorials</h2>
-<p>We want to compute Fibonacci numbers and factorials modulo $latex p = 10^9 + 7$ and put them in tables so we can quickly look them up later. The simplest way to do this is to generate an infinite list of each (via the standard knot-tying approach in the case of Fibonacci numbers, and <code>scanl'</code> in the case of factorials) and then put them into an appropriate <code>UArray</code>:</p>
+<p>We want to compute Fibonacci numbers and factorials modulo $p = 10^9 + 7$ and put them in tables so we can quickly look them up later. The simplest way to do this is to generate an infinite list of each (via the standard knot-tying approach in the case of Fibonacci numbers, and <code>scanl'</code> in the case of factorials) and then put them into an appropriate <code>UArray</code>:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>fibList</span> <span style="color: red">::</span> <span style="color: red">[</span><span>Int</span><span style="color: red">]</span>
 <span>fibList</span> <span style="color: red">=</span> <span class="hs-num">0</span> <span>:</span> <span class="hs-num">1</span> <span>:</span> <span>zipWith</span> <span>padd</span> <span>fibList</span> <span style="color: red">(</span><span>tail</span> <span>fibList</span><span style="color: red">)</span>
 

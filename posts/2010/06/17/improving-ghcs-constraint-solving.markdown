@@ -1,5 +1,5 @@
 ---
-title: Improving GHC's constraint solving
+title: "Improving GHC's constraint solving"
 published: 2010-06-17T17:25:18Z
 categories: haskell
 tags: constraints,GHC,inference,MSR,type

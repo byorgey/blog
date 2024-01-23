@@ -1,5 +1,5 @@
 ---
-title: Hac φ day 2
+title: 'Hac φ day 2'
 published: 2009-07-25T16:48:38Z
 categories: haskell,meta
 tags: Hac φ,hackathon,pictures

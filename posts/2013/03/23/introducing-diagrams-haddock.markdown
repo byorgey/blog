@@ -1,5 +1,5 @@
 ---
-title: Introducing diagrams-haddock
+title: 'Introducing diagrams-haddock'
 published: 2013-03-24T00:24:18Z
 categories: haskell,writing
 tags: diagrams,documentation,Haddock,images

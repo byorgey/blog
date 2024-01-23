@@ -1,5 +1,5 @@
 ---
-title: Swarm virtual hackathon
+title: 'Swarm virtual hackathon'
 published: 2022-12-12T21:20:58Z
 categories: haskell,projects
 tags: game,hackathon,programming,robot,Swarm

@@ -1,5 +1,5 @@
 ---
-title: Wanted GHC feature: warn about unused constraints
+title: 'Wanted GHC feature: warn about unused constraints'
 published: 2011-11-06T01:03:52Z
 categories: haskell
 tags: constraints,GHC,unused,warning

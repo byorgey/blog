@@ -1,11 +1,11 @@
 ---
-title: Collecting unstructured information with the monoid of partial knowledge
+title: 'Collecting unstructured information with the monoid of partial knowledge'
 published: 2008-04-17T21:32:00Z
 categories: haskell,math
 tags: knowledge,monoid,preorder
 ---
 
-In <a href="http://byorgey.wordpress.com/2008/04/17/an-interesting-monoid/">my last post</a>, I described what I'm calling the "monoid of partial knowledge", a way of creating a monoid over sets of elements from a preorder, which is a generalization of the familiar monoid $latex (S,\max)$ over a set with a total order and a smallest element.
+In <a href="http://byorgey.wordpress.com/2008/04/17/an-interesting-monoid/">my last post</a>, I described what I'm calling the "monoid of partial knowledge", a way of creating a monoid over sets of elements from a preorder, which is a generalization of the familiar monoid $(S,\max)$ over a set with a total order and a smallest element.
 
 There's actually one situation where a special case of this monoid is commonly used in Haskell.  Suppose you have a record type which contains several fields, and you would like to parse some input to create a value of this type.  The problem is that the input is not very nice: the bits of input which designate values for various fields are not in any particular order; some occur more than once; some might even be missing.  How to deal with this?
 
@@ -41,7 +41,7 @@ R {name = Just "Brent", age = Just 26}
 
 Note how the appending is left-biased, because mplus is left-biased: after seeing the first age, all subsequent ages are ignored.
 
-Now, really what we're doing here is using the monoid (as in my previous post) induced by the preorder which says that any name is $latex \lesssim$ any other name, and any age is $latex \lesssim$ any other age, and names and ages can't be compared! 
+Now, really what we're doing here is using the monoid (as in my previous post) induced by the preorder which says that any name is $\lesssim$ any other name, and any age is $\lesssim$ any other age, and names and ages can't be compared! 
 
 Some code is in order.  First, we create a class for preorders, and a newtype to contain sets of elements (there's already a Monoid instance for Set, so we need a newtype to give a different semantics).  Then we translate the specification from my previous post directly into a Monoid instance.
 
@@ -130,7 +130,7 @@ PStar {unPStar = fromList [Age 53]}
 
 This would have been a huge pain to do with the Record model!  Now, this isn't an unqualified improvement; there are several things we can't do here.  One is if we want to be able to combine facts into larger compound facts: we can do that fairly straightforwardly with the Record-of-Maybes model, but not with the preorder-monoid model.  We also can't easily choose to have some fields be left-biased and some right-biased (the Monoid instance for PStar has left-bias built in!).  But it's certainly an interesting approach.
 
-Now, one thing we do have to be careful of is that our Preorder instances really do define a preorder! For example, at first I tried using $latex n &lt; 18$ in the above Preorder instance instead of $latex n &gt; 50$, and was confused by the weird results I got.  But such a Preorder instance violates transitivity, so no wonder I was getting weird semantics. =)  It would be interesting to reformulate this in a dependently typed language like <a href="http://appserv.cs.chalmers.se/users/ulfn/wiki/agda.php">Agda</a>, where creating a Preorder could actually require a proof that it satisfied the preorder axioms.
+Now, one thing we do have to be careful of is that our Preorder instances really do define a preorder! For example, at first I tried using $n &lt; 18$ in the above Preorder instance instead of $n &gt; 50$, and was confused by the weird results I got.  But such a Preorder instance violates transitivity, so no wonder I was getting weird semantics. =)  It would be interesting to reformulate this in a dependently typed language like <a href="http://appserv.cs.chalmers.se/users/ulfn/wiki/agda.php">Agda</a>, where creating a Preorder could actually require a proof that it satisfied the preorder axioms.
 
 Thanks to <a href="http://conal.net/">Conal Elliott</a> for some suggestions on making the formulation in the previous post more elegant -- we'll see what comes of it!
 

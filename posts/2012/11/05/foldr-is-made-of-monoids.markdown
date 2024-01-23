@@ -1,5 +1,5 @@
 ---
-title: foldr is made of monoids
+title: 'foldr is made of monoids'
 published: 2012-11-06T02:01:12Z
 categories: haskell,math
 tags: foldr,free,lists,mconcat,monoids
@@ -32,8 +32,8 @@ tags: foldr,free,lists,mconcat,monoids
 <span>&gt;</span> <span>mconcat'</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>$</span><span>mempty</span><span style="color:red;">)</span> <span>.</span> <span>compose</span> <span>.</span> <span>map</span> <span>mappend</span>
 </code></pre>
 <p>The key idea is that we can turn any value from some monoidal type <code>m</code> into a function <code>m -&gt; m</code> by partially applying <code>mappend</code>; composing these functions then corresponds to combining the original values, and the final value can be recovered by applying the resulting function to <code>mempty</code>.<sup><a href="#fn1" class="footnoteRef" id="fnref1">1</a></sup> That is,</p>
-<p>$latex m_1 \diamond m_2 \diamond \dots \diamond m_n = ((m_1 \diamond) \circ (m_2 \diamond) \circ \dots \circ (m_n \diamond))\ \varepsilon$</p>
-<p>(where I have used $latex \diamond$ and $latex \varepsilon$ to represent <code>mappend</code> and <code>mempty</code>, respectively). Written out this way, I hope you can see why the equality holds by thinking about what the composition on the right evaluates to (and remembering the right identity law, $latex x \diamond \varepsilon = x$).</p>
+<p>$m_1 \diamond m_2 \diamond \dots \diamond m_n = ((m_1 \diamond) \circ (m_2 \diamond) \circ \dots \circ (m_n \diamond))\ \varepsilon$</p>
+<p>(where I have used $\diamond$ and $\varepsilon$ to represent <code>mappend</code> and <code>mempty</code>, respectively). Written out this way, I hope you can see why the equality holds by thinking about what the composition on the right evaluates to (and remembering the right identity law, $x \diamond \varepsilon = x$).</p>
 <p>So we can also say that <code>foldr</code> = <code>map</code> + <code>mconcat</code>! This gets at the idea that lists are <em>free</em> (or <em>initial</em>) monoids, which intuitively means that of all monoids, they “preserve the most information”—up to the monoid laws, combining lists preserves <em>all</em> the information about the original lists and how you have combined them. This also means that there is a canonical way to “convert” a list into any other <code>Monoid</code>: that is, given a mapping <code>f :: a -&gt; m</code>, there is a canonical way to take a list <code>[a]</code> and turn it into an <code>m</code>, namely, <code>mconcat . map f</code>.</p>
 <p>Let’s make the connection to <code>foldr</code> even more explicit. First, let’s swap around the order of arguments and add some parentheses which aren’t strictly necessary:</p>
 <pre><code><span>foldr''</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>a</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>b</span> <span style="color:red;">-&gt;</span> <span>b</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>b</span> <span style="color:red;">-&gt;</span> <span>b</span><span style="color:red;">)</span></code></pre>

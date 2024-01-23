@@ -1,5 +1,5 @@
 ---
-title: FARM 2013: call for demonstration proposals
+title: 'FARM 2013: call for demonstration proposals'
 published: 2013-07-08T16:55:59Z
 categories: meta
 tags: art,beauty,CFP,design,functional,ICFP,music,programming,workshop

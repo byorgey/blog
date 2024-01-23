@@ -1,5 +1,5 @@
 ---
-title: FringeDC talk
+title: 'FringeDC talk'
 published: 2008-03-27T19:02:08Z
 categories: haskell
 tags: FringeDC,talk,xmonad

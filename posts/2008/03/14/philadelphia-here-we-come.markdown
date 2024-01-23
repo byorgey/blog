@@ -1,5 +1,5 @@
 ---
-title: Philadelphia, here we come!
+title: 'Philadelphia, here we come!'
 published: 2008-03-14T21:03:16Z
 categories: grad school
 tags: Philadelphia,UPenn

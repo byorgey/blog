@@ -1,5 +1,5 @@
 ---
-title: New ko-fi page: help me attend ICFP!
+title: 'New ko-fi page: help me attend ICFP!'
 published: 2023-05-22T19:27:30Z
 categories: haskell,meta
 tags: community,contribution,ICFP,ko-fi,open-source,tips

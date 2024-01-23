@@ -1,5 +1,5 @@
 ---
-title: Themes on Streams
+title: 'Themes on Streams'
 published: 2011-05-10T01:48:47Z
 categories: haskell,math
 tags: comonad,diagonal,functor,monad,monoid,stream

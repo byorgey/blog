@@ -1,5 +1,5 @@
 ---
-title: On being a researcher
+title: 'On being a researcher'
 published: 2011-07-11T22:47:48Z
 categories: grad school
 tags: comparison,grad,research,school

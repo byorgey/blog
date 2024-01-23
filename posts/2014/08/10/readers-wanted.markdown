@@ -1,5 +1,5 @@
 ---
-title: Readers wanted!
+title: 'Readers wanted!'
 published: 2014-08-10T19:42:02Z
 categories: category theory,combinatorics,diagrams,grad school,math,writing
 tags: dissertation,feedback,readers,species,thesis

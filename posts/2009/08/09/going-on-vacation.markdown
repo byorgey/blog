@@ -1,5 +1,5 @@
 ---
-title: Going on vacation
+title: 'Going on vacation'
 published: 2009-08-09T15:05:02Z
 categories: meta
 tags: Internet,vacation

@@ -1,5 +1,5 @@
 ---
-title: Typed type-level programming: status report
+title: 'Typed type-level programming: status report'
 published: 2010-12-03T21:51:31Z
 categories: haskell,projects
 tags: extension,GHC,hacking,lifting,progress,refactoring,types

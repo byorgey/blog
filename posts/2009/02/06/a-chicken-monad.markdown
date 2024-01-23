@@ -1,5 +1,5 @@
 ---
-title: a chicken monad
+title: 'a chicken monad'
 published: 2009-02-06T19:39:24Z
 categories: humor,meta
 tags: chicken,monads

@@ -1,5 +1,5 @@
 ---
-title: Meeting new people at ICFP
+title: 'Meeting new people at ICFP'
 published: 2015-08-29T14:49:51Z
 categories: haskell
 tags: 

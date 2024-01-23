@@ -1,5 +1,5 @@
 ---
-title: diagrams slides
+title: 'diagrams slides'
 published: 2010-05-22T04:43:01Z
 categories: haskell,projects
 tags: diagrams,graphics,Hac φ,hackathon,slides,talk

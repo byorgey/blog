@@ -1,5 +1,5 @@
 ---
-title: Higher-dimensional enumeration
+title: 'Higher-dimensional enumeration'
 published: 2007-10-01T21:27:08Z
 categories: combinatorics,haskell
 tags: binomial,enumeration,generalization,non-regular types,simplex

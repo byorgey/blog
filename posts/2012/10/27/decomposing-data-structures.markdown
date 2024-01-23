@@ -1,5 +1,5 @@
 ---
-title: Decomposing data structures
+title: 'Decomposing data structures'
 published: 2012-10-28T03:01:07Z
 categories: math,species
 tags: data structures,labels,locations,shapes
@@ -13,7 +13,7 @@ tags: data structures,labels,locations,shapes
 <img src="http://byorgey.files.wordpress.com/2012/10/82e8948fc7048c08ac1eaaa1d3dadb5b.png" /><p class="caption"></p>
 </div>
 </div>
-<p>One thing that’s important to get straight from the beginning is that we are talking about structures with <em>labeled locations</em>. The <strong>numbers in the picture above are <em>not</em> data</strong> being stored in the structures, but <em>names</em> or <em>labels</em> for the locations. To talk about a <em>data structure</em> (<em>i.e.</em> a structure filled with data), we would have to also specify a mapping from locations to data, like $latex \{ 0 \mapsto \texttt{'s'}, 1 \mapsto \texttt{'p'}, 2 \mapsto \texttt{'e'} \dots \}$</p>
+<p>One thing that’s important to get straight from the beginning is that we are talking about structures with <em>labeled locations</em>. The <strong>numbers in the picture above are <em>not</em> data</strong> being stored in the structures, but <em>names</em> or <em>labels</em> for the locations. To talk about a <em>data structure</em> (<em>i.e.</em> a structure filled with data), we would have to also specify a mapping from locations to data, like $\{ 0 \mapsto \texttt{'s'}, 1 \mapsto \texttt{'p'}, 2 \mapsto \texttt{'e'} \dots \}$</p>
 <div style="text-align:center;">
 <div class="figure">
 <img src="http://byorgey.files.wordpress.com/2012/10/24ee86a859a0b6a3a54bcf3f6a1188df.png" /><p class="caption"></p>

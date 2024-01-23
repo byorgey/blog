@@ -1,5 +1,5 @@
 ---
-title: Typed type-level programming in Haskell, part I: functional dependencies
+title: 'Typed type-level programming in Haskell, part I: functional dependencies'
 published: 2010-06-29T11:29:55Z
 categories: haskell
 tags: addition,functional dependencies,programming,type-level

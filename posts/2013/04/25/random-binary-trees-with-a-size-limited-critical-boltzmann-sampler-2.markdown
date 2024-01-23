@@ -1,5 +1,5 @@
 ---
-title: Random binary trees with a size-limited critical Boltzmann sampler
+title: 'Random binary trees with a size-limited critical Boltzmann sampler'
 published: 2013-04-25T21:20:31Z
 categories: combinatorics,haskell,math,species
 tags: Boltzmann,generation,QuickCheck,random,sampler,tree
@@ -38,12 +38,12 @@ tags: Boltzmann,generation,QuickCheck,random,sampler,tree
 <span>&gt;</span>     <span style="color:blue;font-weight:bold;">then</span> <span>return</span> <span>Leaf</span>
 <span>&gt;</span>     <span style="color:blue;font-weight:bold;">else</span> <span>Branch</span> <span>&lt;$&gt;</span> <span>randomTree</span> <span>&lt;*&gt;</span> <span>randomTree</span>
 </code></pre>
-<p>We choose each of the constructors with probability $latex 1/2$, and recurse in the <code>Branch</code> case.</p>
+<p>We choose each of the constructors with probability $1/2$, and recurse in the <code>Branch</code> case.</p>
 <p>Now, <a href="http://www.cse.chalmers.se/~rjmh/QuickCheck/manual.html">as is well-known</a>, this works rather poorly. Why is that? Let’s generate 100 random trees and print out their sizes in descending order:</p>
 <pre><code><span style="color:gray;">ghci&gt; </span>reverse . sort . map size &lt;$&gt; replicateM 100 randomTree
   [118331,7753,2783,763,237,203,195,163,159,73,65,63,49,41,39,29,29,23,23,21,19,19,15,11,9,9,9,9,7,7,7,5,5,5,5,5,5,5,5,5,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 </code></pre>
-<p>As you can see, this is a really weird distribution of sizes. For one thing, we get lots of trees that are very small—in fact, it’s easy to see that we expect about 50 of them to be single leaf nodes. The other weird thing, however, is that we also get some really humongous trees. The above output gets randomly regenerated every time I process this post—so I don’t know exactly what sizes you’ll end up seeing—but it’s a good bet that there is at least one tree with a size greater than $latex 10^4$. To get an intuitive idea of why this happens, imagine generating the tree in a breadth-first manner. At each new level we have a collection of “active” nodes corresponding to pending recursive calls to <code>randomTree</code>. Each active node generates zero or two new active nodes on the next level with equal probability, so <em>on average</em> the number of active nodes remains the same from level to level. So if we happen to make a lot of <code>Branch</code> choices right off the bat, it may take a long time before the tree “thins out” again. And if this distribution didn’t seem weird enough already, it turns out (though it is far from obvious how to prove this) that the <em>expected</em> size of the generated trees is <em>infinite</em>!</p>
+<p>As you can see, this is a really weird distribution of sizes. For one thing, we get lots of trees that are very small—in fact, it’s easy to see that we expect about 50 of them to be single leaf nodes. The other weird thing, however, is that we also get some really humongous trees. The above output gets randomly regenerated every time I process this post—so I don’t know exactly what sizes you’ll end up seeing—but it’s a good bet that there is at least one tree with a size greater than $10^4$. To get an intuitive idea of why this happens, imagine generating the tree in a breadth-first manner. At each new level we have a collection of “active” nodes corresponding to pending recursive calls to <code>randomTree</code>. Each active node generates zero or two new active nodes on the next level with equal probability, so <em>on average</em> the number of active nodes remains the same from level to level. So if we happen to make a lot of <code>Branch</code> choices right off the bat, it may take a long time before the tree “thins out” again. And if this distribution didn’t seem weird enough already, it turns out (though it is far from obvious how to prove this) that the <em>expected</em> size of the generated trees is <em>infinite</em>!</p>
 <p>The usual solution with <code>QuickCheck</code> is to use the <code>sized</code> combinator to limit the size of generated structures, but this does not help with the problem of having too many very small trees.</p>
 <p>Here’s a (seemingly!) stupid idea. Suppose we want to generate trees of size approximately 100 (say, within 10%). Let’s simply use the above algorithm, but with the following modifications:</p>
 <ol style="list-style-type:decimal;">
@@ -101,12 +101,12 @@ tags: Boltzmann,generation,QuickCheck,random,sampler,tree
 <pre><code><span style="color:gray;">ghci&gt; </span>map size . fromJust &lt;$&gt; runGenM 100 0.1 (replicateM 30 genTree)
   [105,91,105,103,107,101,105,93,93,93,95,91,103,91,91,107,105,103,97,95,105,107,93,97,93,103,91,103,101,95]
 </code></pre>
-<p>Neat! Okay, but surely this is really, really slow, right? We spend a bunch of time just throwing away trees of the wrong size. Before reading on, would you care to guess the asymptotic time complexity to generate a tree of size $latex n$ using this algorithm?</p>
+<p>Neat! Okay, but surely this is really, really slow, right? We spend a bunch of time just throwing away trees of the wrong size. Before reading on, would you care to guess the asymptotic time complexity to generate a tree of size $n$ using this algorithm?</p>
 <p>And while you think about that, here is a random binary tree of size approximately 1000.</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2013/04/5f8af30e809e8b0fa48b9a1a8eaf3a64.png" /></p>
 </div>
-<p>And the answer is… it is <em>linear</em>! That is, it takes $latex O(n)$ time to generate a tree of size $latex n$. This is astounding—it’s the best we could possibly hope for, because of course it takes at least $latex O(n)$ time to generate an object of size $latex O(n)$. If you don’t believe me, I invite you to run some experiments with this code yourself. I did, and it sure looks linear:</p>
+<p>And the answer is… it is <em>linear</em>! That is, it takes $O(n)$ time to generate a tree of size $n$. This is astounding—it’s the best we could possibly hope for, because of course it takes at least $O(n)$ time to generate an object of size $O(n)$. If you don’t believe me, I invite you to run some experiments with this code yourself. I did, and it sure looks linear:</p>
 <pre><code>main = do
   [sz] &lt;- getArgs
   Just ts &lt;- runGenM (read sz) 0.1 $ replicateM 1000 genTree
@@ -127,12 +127,12 @@ archimedes :: research/species/boltzmann » time ./GenTree 400
 archimedes :: research/species/boltzmann » time ./GenTree 800
 795.798
 ./GenTree 800  25.99s user 0.16s system 99% cpu 26.228 total</code></pre>
-<p>The proof of this astounding fact uses some <em>complex analysis</em> which I do not understand; I wish I was joking. Of course, the constant factor can be big, depending on how small you set the “epsilon” allowing for wiggle room around the target size.<sup><a href="#fn1" class="footnoteRef" id="fnref1">1</a></sup> But it is still quite feasible to generate rather large trees (with, say, $latex 10^5$ nodes).</p>
+<p>The proof of this astounding fact uses some <em>complex analysis</em> which I do not understand; I wish I was joking. Of course, the constant factor can be big, depending on how small you set the “epsilon” allowing for wiggle room around the target size.<sup><a href="#fn1" class="footnoteRef" id="fnref1">1</a></sup> But it is still quite feasible to generate rather large trees (with, say, $10^5$ nodes).</p>
 <p>There is much, much more to say on this topic. I just wanted to start out with a simple example before jumping into more of the technical details and generalizations, which I plan to write about in future posts. I also hope to package this and a bunch of other stuff into a library. In the meantime, you can read Duchon <em>et. al</em><sup><a href="#fn2" class="footnoteRef" id="fnref2">2</a></sup> if you want the details.</p>
 <div class="footnotes">
 <hr />
 <ol>
-<li id="fn1"><p>Actually, if you set epsilon to zero, the asymptotic complexity jumps to $latex O(n^2)$.<a href="#fnref1">↩</a></p></li>
+<li id="fn1"><p>Actually, if you set epsilon to zero, the asymptotic complexity jumps to $O(n^2)$.<a href="#fnref1">↩</a></p></li>
 <li id="fn2"><p>Duchon, Philippe, <em>et al.</em> “Boltzmann samplers for the random generation of combinatorial structures.” Combinatorics Probability and Computing 13.4-5 (2004): 577-625.<a href="#fnref2">↩</a></p></li>
 </ol>
 </div>

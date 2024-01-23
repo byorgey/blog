@@ -1,5 +1,5 @@
 ---
-title: Computing Eulerian paths is harder than you think
+title: 'Computing Eulerian paths is harder than you think'
 published: 2019-11-20T16:41:29Z
 categories: learning
 tags: algorithm,Eulerian,graph,Hierholzer,path

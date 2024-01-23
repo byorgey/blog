@@ -1,5 +1,5 @@
 ---
-title: Diagrams 1.0
+title: 'Diagrams 1.0'
 published: 2014-01-17T12:23:41Z
 categories: diagrams,haskell,projects
 tags: 1.0,announcement,release

@@ -1,5 +1,5 @@
 ---
-title: Data structure challenge: application
+title: 'Data structure challenge: application'
 published: 2020-04-07T02:41:01Z
 categories: data structures
 tags: balanced,challenge,competitive,data,empty,full,Kattis,log,rank,rightmost,select,slot,structure,tree,union-find

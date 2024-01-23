@@ -1,5 +1,5 @@
 ---
-title: CCSC-Midsouth conference and programming contest
+title: 'CCSC-Midsouth conference and programming contest'
 published: 2016-04-02T18:56:47Z
 categories: meta
 tags: computer science,conference,consortium,contest,Hendrix,programming

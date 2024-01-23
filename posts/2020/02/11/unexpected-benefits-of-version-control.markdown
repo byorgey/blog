@@ -1,5 +1,5 @@
 ---
-title: Unexpected benefits of version control
+title: 'Unexpected benefits of version control'
 published: 2020-02-11T12:35:38Z
 categories: humor
 tags: commit,dream,git,mustache

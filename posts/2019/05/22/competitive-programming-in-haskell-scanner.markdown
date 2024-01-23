@@ -1,27 +1,27 @@
 ---
-title: Competitive Programming in Haskell: Scanner
+title: 'Competitive Programming in Haskell: Scanner'
 published: 2019-05-22T17:58:00Z
 categories: haskell
 tags: competitive,parsing,programming,Scanner
 ---
 
 <p>In my <a href="https://byorgey.wordpress.com/2019/04/24/competitive-programming-in-haskell-basic-setup/">previous post</a> I explored solving a simple competitive programming problem in Haskell. The input of the problem just consisted of a bunch of lines containing specific data, so that we could parse it using <code>lines</code> and <code>words</code>. There is another common class of problems, however, which follow this pattern:</p>
-<p><em>The first line of the input consists of an integer $latex T$. Each of the next $latex T$ lines consists of…</em></p>
+<p><em>The first line of the input consists of an integer $T$. Each of the next $T$ lines consists of…</em></p>
 <p>That is, the input contains integers which are not input data per se but just tell you how many things are to follow. This is really easy to process in an imperative language like Java or C++. For example, in Java we might write code like this:</p>
 <div class="sourceCode"><pre class="sourceCode java"><code class="sourceCode java"><span class="bu">Scanner</span> in = <span class="kw">new</span> <span class="bu">Scanner</span>(<span class="bu">System</span>.<span class="fu">in</span>);
 <span class="dt">int</span> T = in.<span class="fu">nextInt</span>();
 <span class="kw">for</span> (<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; T; i++) {
    <span class="co">// process each line</span>
 }</code></pre></div>
-<p>Occasionally, we can get away with completely ignoring the extra information in Haskell. For example, if the input consists of a number $latex T$ followed by $latex T$ lines, each of which contains a number $latex n$ followed by a list of $latex n$ numbers, we can just write</p>
+<p>Occasionally, we can get away with completely ignoring the extra information in Haskell. For example, if the input consists of a number $T$ followed by $T$ lines, each of which contains a number $n$ followed by a list of $n$ numbers, we can just write</p>
 <pre><code>main = interact $
   lines &gt;&gt;&gt; drop 1 &gt;&gt;&gt; map (words &gt;&gt;&gt; drop 1 &gt;&gt;&gt; map read) &gt;&gt;&gt; ...</code></pre>
-<p>That is, we can ignore the first line containing $latex T$ since the end-of-file will tell us how many lines there are; and we can ignore the $latex n$ at the beginning of each line, since the newline character tells us when the list on that line is done.</p>
+<p>That is, we can ignore the first line containing $T$ since the end-of-file will tell us how many lines there are; and we can ignore the $n$ at the beginning of each line, since the newline character tells us when the list on that line is done.</p>
 <p>Sometimes, however, this isn’t possible, especially when there are multiple test cases, or when a single test case has multiple parts, each of which can have a variable length. For example, consider <a href="https://open.kattis.com/problems/vote">Popular Vote</a>, which describes its input as follows:</p>
 <blockquote>
-The first line of input contains a single positive integer $latex T \leq 500$ indicating the number of test cases. The first line of each test case also contains a single positive integer $latex n$ indicating the number of candidates in the election. This is followed by $latex n$ lines, with the $latex i$th line containing a single nonnegative integer indicating the number of votes candidate $latex i$ received.
+The first line of input contains a single positive integer $T \leq 500$ indicating the number of test cases. The first line of each test case also contains a single positive integer $n$ indicating the number of candidates in the election. This is followed by $n$ lines, with the $i$th line containing a single nonnegative integer indicating the number of votes candidate $i$ received.
 </blockquote>
-<p>How would we parse this? We could still ignore $latex T$—just keep reading until the end of the file—but there’s no way we can ignore the $latex n$ values. Since the values for each test case are all on separate lines instead of on one line, there’s otherwise no way to know when one test case ends and the next begins.</p>
+<p>How would we parse this? We could still ignore $T$—just keep reading until the end of the file—but there’s no way we can ignore the $n$ values. Since the values for each test case are all on separate lines instead of on one line, there’s otherwise no way to know when one test case ends and the next begins.</p>
 <p>Once upon a time, I would have done this using <code>splitAt</code> and explicit recursion, like so:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">type</span> <span>Election</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span>
 
@@ -55,10 +55,10 @@ The first line of input contains a single positive integer $latex T \leq 500$ in
 <span>double</span> <span style="color:red;">::</span> <span>Scanner</span> <span>Double</span>
 <span>double</span> <span style="color:red;">=</span> <span>read</span> <span>&lt;$&gt;</span> <span>str</span></code></pre>
 <p>Again, these will crash if they see a token in an unexpected format, and that is a very deliberate choice.</p>
-<p>Now, as I explained earlier, a very common pattern is to have an integer $latex n$ followed by $latex n$ copies of something. So let’s make a combinator to encapsulate that pattern:</p>
+<p>Now, as I explained earlier, a very common pattern is to have an integer $n$ followed by $n$ copies of something. So let’s make a combinator to encapsulate that pattern:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>numberOf</span> <span style="color:red;">::</span> <span>Scanner</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Scanner</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span>
 <span>numberOf</span> <span>s</span> <span style="color:red;">=</span> <span>int</span> <span>&gt;&gt;=</span> <span>flip</span> <span>replicateM</span> <span>s</span></code></pre>
-<p><code>numberOf s</code> expects to first see an <code>Int</code> value $latex n$, and then it runs the provided scanner $latex n$ times, returning a list of the results.</p>
+<p><code>numberOf s</code> expects to first see an <code>Int</code> value $n$, and then it runs the provided scanner $n$ times, returning a list of the results.</p>
 <p>It’s also sometimes useful to have a way to repeat a <code>Scanner</code> some unknown number of times until encountering EOF (for example, the input for some problems doesn’t specify the number of test cases up front the way that Popular Vote does). This is similar to the <code>many</code> combinator from <code>Alternative</code>.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>many</span> <span style="color:red;">::</span> <span>Scanner</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Scanner</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span>
 <span>many</span> <span>s</span> <span style="color:red;">=</span> <span>get</span> <span>&gt;&gt;=</span> <span style="color:red;">\</span><span style="color:blue;font-weight:bold;">case</span> <span style="color:red;">{</span> <span>[]</span> <span style="color:red;">-&gt;</span> <span>return</span> <span>[]</span><span style="color:red;">;</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>:</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>s</span> <span>&lt;*&gt;</span> <span>many</span> <span>s</span> <span style="color:red;">}</span></code></pre>
@@ -78,7 +78,7 @@ The first line of input contains a single positive integer $latex T \leq 500$ in
 <p>In practice I would probably just inline the definition of <code>elections</code> directly: <code>interact $ runScanner (numberOf (numberOf int)) &gt;&gt;&gt; ...</code></p>
 <p>As a slightly more involved example, chosen almost at random, consider <a href="https://open.kattis.com/problems/wrapping">Board Wrapping</a>:</p>
 <blockquote>
-On the first line of input there is one integer, $latex N \leq 50$, giving the number of test cases (moulds) in the input. After this line, $latex N$ test cases follow. Each test case starts with a line containing one integer $latex n, 1 \leq n \leq 600$, which is the number of boards in the mould. Then $latex n$ lines follow, each with five floating point numbers $latex x,y,w,h,v$ where $latex 0 \leq x,y,w,h \leq 10000$ and $latex -90^{\circ} &lt; v \leq 90^{\circ}$. The $latex x$ and $latex y$ are the coordinates of the center of the board and $latex w$ and $latex h$ are the width and height of the board, respectively. $latex v$ is the angle between the height axis of the board to the $latex y$-axis in degrees, positive clockwise.
+On the first line of input there is one integer, $N \leq 50$, giving the number of test cases (moulds) in the input. After this line, $N$ test cases follow. Each test case starts with a line containing one integer $n, 1 \leq n \leq 600$, which is the number of boards in the mould. Then $n$ lines follow, each with five floating point numbers $x,y,w,h,v$ where $0 \leq x,y,w,h \leq 10000$ and $-90^{\circ} &lt; v \leq 90^{\circ}$. The $x$ and $y$ are the coordinates of the center of the board and $w$ and $h$ are the width and height of the board, respectively. $v$ is the angle between the height axis of the board to the $y$-axis in degrees, positive clockwise.
 </blockquote>
 <p>Here’s how I would set up the input, using <code>Scanner</code> and a custom data type to represent boards.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">import</span> <span>Scanner</span>

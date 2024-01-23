@@ -1,5 +1,5 @@
 ---
-title: Nested folds
+title: 'Nested folds'
 published: 2023-06-17T21:54:56Z
 categories: haskell
 tags: ADH,fold,fusion,nested

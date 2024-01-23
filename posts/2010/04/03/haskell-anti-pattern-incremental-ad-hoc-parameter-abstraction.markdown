@@ -1,5 +1,5 @@
 ---
-title: Haskell anti-pattern: incremental ad-hoc parameter abstraction
+title: 'Haskell anti-pattern: incremental ad-hoc parameter abstraction'
 published: 2010-04-03T20:13:14Z
 categories: haskell
 tags: anti-pattern,default,named,optional,parameters,records

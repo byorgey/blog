@@ -1,5 +1,5 @@
 ---
-title: Modern art with diagrams: the face of progress
+title: 'Modern art with diagrams: the face of progress'
 published: 2011-11-12T18:23:56Z
 categories: 
 tags: art,bugs,diagrams,modern,tiling

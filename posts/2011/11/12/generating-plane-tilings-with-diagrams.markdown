@@ -1,5 +1,5 @@
 ---
-title: Generating plane tilings with diagrams
+title: 'Generating plane tilings with diagrams'
 published: 2011-11-12T16:41:19Z
 categories: haskell,math,projects
 tags: diagrams,plane,tiling
@@ -22,7 +22,7 @@ As the first "contribution" I put some <a href="https://patch-tag.com/r/byorgey/
 
 The first question is really a question of <i>representation</i>: how do we represent vertices in such a way that we can decide their equality?  Representing them with a pair of floating point coordinates does not work: taking two different paths to a vertex will surely result in slightly different coordinates due to floating point error. Another idea is to represent vertices by the <i>path</i> taken to reach them, but now we have to deal with the thorny problem of deciding when two paths are equivalent.
 
-But it turns out we can do something a bit more clever. The only regular polygons that can appear in plane tilings are triangles, squares, hexagons, octagons, and dodecagons.  If you remember your high school trigonometry, these all have "special" angles whose sines and cosines can be represented exactly using square roots.  It suffices to work in $latex \mathbb{Q}[\sqrt{2}, \sqrt{3}]$, that is, the ring of rational numbers adjoined with $latex \sqrt{2}$ and $latex \sqrt{3}$.  Put simply, we use quadruples of rational numbers $latex (a,b,c,d)$ which represent the real number $latex a + b\sqrt{2} + c\sqrt{3} + d\sqrt{6}$.  Now we can represent vertices <i>exactly</i>, so remembering which we've already visited is easy.
+But it turns out we can do something a bit more clever. The only regular polygons that can appear in plane tilings are triangles, squares, hexagons, octagons, and dodecagons.  If you remember your high school trigonometry, these all have "special" angles whose sines and cosines can be represented exactly using square roots.  It suffices to work in $\mathbb{Q}[\sqrt{2}, \sqrt{3}]$, that is, the ring of rational numbers adjoined with $\sqrt{2}$ and $\sqrt{3}$.  Put simply, we use quadruples of rational numbers $(a,b,c,d)$ which represent the real number $a + b\sqrt{2} + c\sqrt{3} + d\sqrt{6}$.  Now we can represent vertices <i>exactly</i>, so remembering which we've already visited is easy.
 
 <a href="http://byorgey.files.wordpress.com/2011/11/t33336r.png"><img src="http://byorgey.files.wordpress.com/2011/11/t33336r.png" alt="" title="t33336R" width="200" height="200" class="alignnone size-full wp-image-708" /></a><a href="http://byorgey.files.wordpress.com/2011/11/t33336l.png"><img src="http://byorgey.files.wordpress.com/2011/11/t33336l.png" alt="" title="t33336L" width="200" height="200" class="alignnone size-full wp-image-707" /></a>
 

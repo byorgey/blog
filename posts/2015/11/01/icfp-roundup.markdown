@@ -1,5 +1,5 @@
 ---
-title: ICFP roundup
+title: 'ICFP roundup'
 published: 2015-11-02T02:43:28Z
 categories: haskell
 tags: diagrams,ICFP

@@ -1,5 +1,5 @@
 ---
-title: The Typeclassopedia is now up-to-date
+title: 'The Typeclassopedia is now up-to-date'
 published: 2017-06-07T19:47:02Z
 categories: haskell,writing
 tags: AMP,BBP,FTP,revision,Typeclassopedia

@@ -1,5 +1,5 @@
 ---
-title: Ally Skills Tutorial at ICFP
+title: 'Ally Skills Tutorial at ICFP'
 published: 2015-06-10T20:47:09Z
 categories: haskell
 tags: ally,ICFP,skills,tutorial,workshop

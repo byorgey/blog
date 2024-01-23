@@ -1,5 +1,5 @@
 ---
-title: New 2D text layout library
+title: 'New 2D text layout library'
 published: 2009-08-14T16:19:28Z
 categories: haskell,projects
 tags: boxes,layout,pretty printing,text

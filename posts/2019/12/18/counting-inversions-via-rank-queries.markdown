@@ -1,11 +1,11 @@
 ---
-title: Counting inversions via rank queries
+title: 'Counting inversions via rank queries'
 published: 2019-12-18T12:48:53Z
 categories: haskell
 tags: balanced,binary,black,count,inversion,query,rank,red,search,tree
 ---
 
-<p>In a <a href="https://byorgey.wordpress.com/2018/10/06/counting-inversions-with-monoidal-sparks/">post from about a year ago</a>, I explained an algorithm for counting the number of <em>inversions</em> of a sequence in $latex O(n \lg n)$ time. As a reminder, given a sequence $latex a_1, a_2, \dots, a_n$, an <em>inversion</em> is a pair of positions $latex i, j$ such that $latex a_i$ and $latex a_j$ are in the “wrong order”, that is, $latex i &lt; j$ but $latex a_i &gt; a_j$. There can be up to $latex n(n-1)/2$ inversions in the worst case, so we cannot hope to count them in faster than quadratic time by simply incrementing a counter. In my previous post, I explained one way to count inversions in $latex O(n \lg n)$ time, using a variant of merge sort.</p>
+<p>In a <a href="https://byorgey.wordpress.com/2018/10/06/counting-inversions-with-monoidal-sparks/">post from about a year ago</a>, I explained an algorithm for counting the number of <em>inversions</em> of a sequence in $O(n \lg n)$ time. As a reminder, given a sequence $a_1, a_2, \dots, a_n$, an <em>inversion</em> is a pair of positions $i, j$ such that $a_i$ and $a_j$ are in the “wrong order”, that is, $i &lt; j$ but $a_i &gt; a_j$. There can be up to $n(n-1)/2$ inversions in the worst case, so we cannot hope to count them in faster than quadratic time by simply incrementing a counter. In my previous post, I explained one way to count inversions in $O(n \lg n)$ time, using a variant of merge sort.</p>
 <p>I recently learned of an entirely different algorithm for achieving the same result. (In fact, I learned of it when I gave this problem on an exam and a student came up with an unexpected solution!) This solution does not use a divide-and-conquer approach at all, but hinges on a clever data structure.</p>
 <p>Suppose we have a bag of values (<em>i.e.</em> a collection where duplicates are allowed) on which we can perform the following two operations:</p>
 <ol type="1">
@@ -13,9 +13,9 @@ tags: balanced,binary,black,count,inversion,query,rank,red,search,tree
 <li>Count how many values in the bag are <em>strictly greater than</em> a given value.</li>
 </ol>
 <p>We’ll call the second operation a <em>rank query</em> because it really amounts to finding the <em>rank</em> or <em>index</em> of a given value in the bag—how many values are greater than it (and thus how many are less than or equal to it)?</p>
-<p>If we can do these two operations in logarithmic time (<em>i.e.</em> logarithmic in the number of values in the bag), then we can count inversions in $latex O(n \lg n)$ time. Can you see how before reading on? You might also like to think about how we could actually implement a data structure that supports these operations.</p>
+<p>If we can do these two operations in logarithmic time (<em>i.e.</em> logarithmic in the number of values in the bag), then we can count inversions in $O(n \lg n)$ time. Can you see how before reading on? You might also like to think about how we could actually implement a data structure that supports these operations.</p>
 <h2 id="counting-inversions-with-bags-and-rank-queries">Counting inversions with bags and rank queries</h2>
-<p>So, let’s see how to use a bag with logarithmic insertion and rank queries to count inversions. Start with an empty bag. For each element in the sequence, see how many things in the bag are strictly greater than it, and add this count to a running total; then insert the element into the bag, and repeat with the next element. That is, for each element we compute the number of inversions of which it is the right end, by counting how many elements that came before it (and are hence in the bag already) are strictly greater than it. It’s easy to see that this will count every inversion exactly once. It’s also easy to see that it will take $latex O(n \lg n)$ time: for each of the $latex n$ elements, we do two $latex O(\lg n)$ operations (one rank query and one insertion).</p>
+<p>So, let’s see how to use a bag with logarithmic insertion and rank queries to count inversions. Start with an empty bag. For each element in the sequence, see how many things in the bag are strictly greater than it, and add this count to a running total; then insert the element into the bag, and repeat with the next element. That is, for each element we compute the number of inversions of which it is the right end, by counting how many elements that came before it (and are hence in the bag already) are strictly greater than it. It’s easy to see that this will count every inversion exactly once. It’s also easy to see that it will take $O(n \lg n)$ time: for each of the $n$ elements, we do two $O(\lg n)$ operations (one rank query and one insertion).</p>
 <p>In fact, we can do a lot more with this data structure than just count inversions; it sometimes comes in handy for competitive programming problems. More in a future post, perhaps!</p>
 <p>So how do we implement this magical data structure? First of all, we can use a balanced binary search tree to store the values in the bag; clearly this will allow us to insert in logarithmic time. However, a plain binary search tree wouldn’t allow us to quickly count the number of values strictly greater than a given query value. The trick is to augment the tree so that each node also caches the size of the subtree rooted at that node, being careful to maintain these counts while inserting and balancing.</p>
 <h2 id="augmented-red-black-trees-in-haskell">Augmented red-black trees in Haskell</h2>
@@ -124,6 +124,6 @@ tags: balanced,binary,black,count,inversion,query,rank,red,search,tree
 <li><p>Further augment each node with a counter representing the number of copies of the given value which are contained in the bag, and maintain the invariant that each distinct value occurs in only a single node.</p></li>
 <li><p>Rewrite <code>inversions</code> without a recursive helper function, using a scan, a zip, and a fold.</p></li>
 <li><p>It should be possible to implement bags with rank queries using <a href="http://hackage.haskell.org/package/fingertree-0.1.4.2/docs/Data-FingerTree.html">fingertrees</a> instead of building our own custom balanced tree type (though it seems kind of overkill).</p></li>
-<li><p>My intuition tells me that it is not possible to count inversions faster than $latex n \lg n$. Prove it.</p></li>
+<li><p>My intuition tells me that it is not possible to count inversions faster than $n \lg n$. Prove it.</p></li>
 </ol>
 

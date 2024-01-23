@@ -1,5 +1,5 @@
 ---
-title: Data.List.Split
+title: 'Data.List.Split'
 published: 2008-12-21T19:13:28Z
 categories: haskell,projects
 tags: library,list,split

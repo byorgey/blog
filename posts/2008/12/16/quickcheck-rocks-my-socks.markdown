@@ -1,5 +1,5 @@
 ---
-title: QuickCheck rocks my socks
+title: 'QuickCheck rocks my socks'
 published: 2008-12-17T03:59:43Z
 categories: haskell,projects
 tags: infinite recursion,QuickCheck

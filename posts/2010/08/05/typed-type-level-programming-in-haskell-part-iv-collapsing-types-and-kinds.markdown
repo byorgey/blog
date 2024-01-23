@@ -1,5 +1,5 @@
 ---
-title: Typed type-level programming in Haskell, part IV: collapsing types and kinds
+title: 'Typed type-level programming in Haskell, part IV: collapsing types and kinds'
 published: 2010-08-05T14:28:28Z
 categories: haskell,projects
 tags: lifting,programming,type-level,types

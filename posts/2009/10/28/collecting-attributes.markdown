@@ -1,5 +1,5 @@
 ---
-title: Collecting attributes
+title: 'Collecting attributes'
 published: 2009-10-28T18:59:03Z
 categories: haskell,projects
 tags: attributes,diagrams,monoid,overriding,priority

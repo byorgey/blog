@@ -1,5 +1,5 @@
 ---
-title: BlogLiterately 0.5 release
+title: 'BlogLiterately 0.5 release'
 published: 2012-07-07T18:06:31Z
 categories: haskell,writing
 tags: blogging,BlogLiterately,ghci,images,release,upload

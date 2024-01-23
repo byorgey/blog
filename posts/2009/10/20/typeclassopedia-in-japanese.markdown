@@ -1,5 +1,5 @@
 ---
-title: Typeclassopedia in Japanese!
+title: 'Typeclassopedia in Japanese!'
 published: 2009-10-20T14:51:16Z
 categories: links
 tags: haskell,Japanese,translation,Typeclassopedia

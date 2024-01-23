@@ -1,5 +1,5 @@
 ---
-title: Beeminder guest post on Beeminding All The Things
+title: 'Beeminder guest post on Beeminding All The Things'
 published: 2018-03-05T04:05:34Z
 categories: meta
 tags: Beeminder,guest,post

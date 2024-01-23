@@ -1,5 +1,5 @@
 ---
-title: Idea for a physics-based rolling ball puzzle game
+title: 'Idea for a physics-based rolling ball puzzle game'
 published: 2019-03-14T10:19:53Z
 categories: projects
 tags: angular,ball,game,idea,physics,rolling,velocity

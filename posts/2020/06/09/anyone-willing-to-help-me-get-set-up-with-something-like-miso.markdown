@@ -1,5 +1,5 @@
 ---
-title: Anyone willing to help me get set up with something like miso?
+title: 'Anyone willing to help me get set up with something like miso?'
 published: 2020-06-09T13:30:09Z
 categories: haskell
 tags: GHCJS,help,IDE,miso,web

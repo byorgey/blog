@@ -1,5 +1,5 @@
 ---
-title: What’s the right way to QuickCheck floating-point routines?
+title: 'What’s the right way to QuickCheck floating-point routines?'
 published: 2019-02-24T04:46:08Z
 categories: haskell,math
 tags: diagrams,finding,floating,point,polynomial,QuickCheck,root,solve,test
@@ -17,7 +17,7 @@ tags: diagrams,finding,floating,point,polynomial,QuickCheck,root,solve,test
 <span class="hs-sel">_polyRoots_prop</span> <span style="color:blue;font-weight:bold;">as</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>length</span> <span style="color:blue;font-weight:bold;">as</span> <span>&gt;</span> <span class="hs-num">1</span><span style="color:red;">)</span> <span>==&gt;</span>
   <span>all</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>&lt;</span> <span class="hs-num">1e-10</span><span style="color:red;">)</span> <span>.</span> <span>abs</span> <span>.</span> <span>horner</span> <span style="color:blue;font-weight:bold;">as</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>polyRoots</span> <span style="color:blue;font-weight:bold;">as</span><span style="color:red;">)</span></code></pre>
 <p>This property passes 100 tests for quadratic polynomials, but for cubic I get failures; here’s an example. Consider the polynomial</p>
-<p>$latex 0.1 x^3 - 15.005674483568866 x^2 - 8.597718287916894 x + 8.29$</p>
+<p>$0.1 x^3 - 15.005674483568866 x^2 - 8.597718287916894 x + 8.29$</p>
 <p>Finding its roots via <code>hmatrix</code> yields three:</p>
 <p><code>[-1.077801388041068, 0.5106483227001805, 150.6238979010295]</code></p>
 <p>Notice that the third root is much bigger in magnitude than the other two, and indeed, that third root is the problematic one. Evaluating the polynomial at these roots via Horner’s method yields</p>

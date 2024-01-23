@@ -1,5 +1,5 @@
 ---
-title: Finding roots of polynomials in Haskell?
+title: 'Finding roots of polynomials in Haskell?'
 published: 2019-02-13T22:19:59Z
 categories: haskell,math
 tags: diagrams,finding,polynomial,root,solve
@@ -12,7 +12,7 @@ tags: diagrams,finding,polynomial,root,solve
 <h2 id="theres-root-finding-and-then-theres-root-finding">There’s root finding, and then there’s root finding</h2>
 <p>The first thing to get out of the way is that when you talk about “root finding” there are (at least!) two pretty different things you could mean:</p>
 <ol type="1">
-<li>Given a function $latex f$ and some particular interval, or an initial guess, find a value $latex x$ in the interval/close to the initial guess for which $latex f(x) = 0$.</li>
+<li>Given a function $f$ and some particular interval, or an initial guess, find a value $x$ in the interval/close to the initial guess for which $f(x) = 0$.</li>
 <li>Given a polynomial with {real, complex} coefficients, find all its {real, complex} roots.</li>
 </ol>
 <p>If you want to do (1), there are several nice Haskell packages you could use. The <a href="http://hackage.haskell.org/package/math-functions-0.3.1.0/docs/Numeric-RootFinding.html"><code>Numeric.RootFinding</code> module</a> from the <a href="http://hackage.haskell.org/package/math-functions"><code>math-functions</code> package</a> is probably your best bet; it implements both Ridders’ method and the Newton-Raphson method, which both attempt to find a single root of a function on a given interval. They both work on any continuous <code>Double -&gt; Double</code> function, not just polynomials (Newton-Raphson also needs to know the first derivative). But they don’t work well if you don’t already have an interval in mind to search; and if you want to find <em>all</em> the roots you have to call these multiple times (somehow coming up with an appropriate interval each time).</p>

@@ -1,5 +1,5 @@
 ---
-title: Deducing code from types: filterM
+title: 'Deducing code from types: filterM'
 published: 2007-06-26T16:44:38Z
 categories: haskell,learning
 ---

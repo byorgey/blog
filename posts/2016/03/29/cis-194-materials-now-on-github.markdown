@@ -1,5 +1,5 @@
 ---
-title: CIS 194 materials now on github
+title: 'CIS 194 materials now on github'
 published: 2016-03-29T21:45:32Z
 categories: haskell
 tags: 194,CIS,git,github,materials,repo,teaching

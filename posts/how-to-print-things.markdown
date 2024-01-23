@@ -1,5 +1,5 @@
 ---
-title: How to print things
+title: 'How to print things'
 published: 2016-05-19T16:18:38Z
 categories: 
 tags: 
@@ -42,7 +42,7 @@ tags:
 <li>It is easy to extend the document after it has already been printed, simply by adding more pages to the end.</li>
 <li>The physical process of reading the document is simple and requires no memory (see the algorithms below).</li>
 <li>It is easy to simultaneously refer to multiple pages, since each page is on a separate sheet.</li>
-<li>There is ample space for writing notes. For example, notes related to page $latex n$ can be written on the back of the sheet containing page $latex n-1$; see the “book” algorithm below.</li>
+<li>There is ample space for writing notes. For example, notes related to page $n$ can be written on the back of the sheet containing page $n-1$; see the “book” algorithm below.</li>
 <li>Printing one-sided is supported by every printer ever.</li>
 </ul>
 <p><strong>Cons</strong></p>
@@ -108,7 +108,7 @@ tags:
 <p><strong>How to print</strong></p>
 <p>Simply use a printer that supports double-sided printing, and choose the double-sided option.</p>
 <h1 id="möbius-double-sided">Möbius double-sided</h1>
-<p>With an $latex n$-page document, put pages $latex 1$ through $latex \lceil n/2 \rceil$ on the fronts of the sheets, and then put the remaining pages on the backs (in the same order), as in the illustration below.</p>
+<p>With an $n$-page document, put pages $1$ through $\lceil n/2 \rceil$ on the fronts of the sheets, and then put the remaining pages on the backs (in the same order), as in the illustration below.</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2016/05/143246e209e17410.png" /></p>
 </div>
@@ -116,12 +116,12 @@ tags:
 <p><strong>Pros</strong></p>
 <ul>
 <li>There is a particularly simple algorithm for reading a document printed using this method (see below), which does not require making separate stacks and hence does not require a flat surface. There is no state to remember; the same action is done at the end of each page.</li>
-<li>Consecutive pages are always on different sheets, so one can always simultaneously refer to the current page and the previous page without confusion or flipping back and forth. In fact, <em>any</em> sequence of consecutive pages (not exceeding the number of sheets) is always on separarate sheets. For example, in a $latex 10$-page document printed on $latex 5$ sheets, pages 2–6 are all on separate sheets, as are pages 3–7, 4–8, and so on. Thus, it is easy to simultaneously reference any pages which are not too far apart in the document.</li>
+<li>Consecutive pages are always on different sheets, so one can always simultaneously refer to the current page and the previous page without confusion or flipping back and forth. In fact, <em>any</em> sequence of consecutive pages (not exceeding the number of sheets) is always on separarate sheets. For example, in a $10$-page document printed on $5$ sheets, pages 2–6 are all on separate sheets, as are pages 3–7, 4–8, and so on. Thus, it is easy to simultaneously reference any pages which are not too far apart in the document.</li>
 <li>Still saves paper as compared to single-sided printing.</li>
 </ul>
 <p><strong>Cons</strong></p>
 <ul>
-<li>The pages must be turned one at a time; there is no easy way to jump ahead multiple pages. For many, this is a major downside. In technical terms, seeking to an arbitrary page is $latex O(n)$.</li>
+<li>The pages must be turned one at a time; there is no easy way to jump ahead multiple pages. For many, this is a major downside. In technical terms, seeking to an arbitrary page is $O(n)$.</li>
 <li>The document cannot be easily split into subsections, since each sheet contains two pages which are far apart in the document.</li>
 <li>If you hand a document printed in this manner to someone else, they are likely to be confused.</li>
 <li>Printing documents in this manner requires more effort (although it is not hard; see below).</li>
@@ -139,11 +139,11 @@ tags:
 <li><p><em>Double-print</em>: This method works with most printers that can print double-sided. Print the first half (rounded up) of the document <em>single</em>-sided. Then take the resulting stack of paper and put it back in the printer, with page 1 facing up and the top towards you. Then print the second half of the document single-sided. It just so happens that this works out nicely with most printers, so that you don’t need to reverse all the sheets before putting them back in the printer. However, this method does not work with some simpler printers, especially those that can only print one-sided. The key property is whether documents with multiple pages come out of your printer in the correct order, or in reversed order. If they come out in reversed order, then you will need to reverse them before putting them back through to print the back sides.</p></li>
 <li><p><em>Pre-collate</em>: The slightly more high-tech method is to first reorder the pages of a PDF so that they will come out in Möbius order when printed using conventional double-sided printing. Specifically, the pages must be in the order</p>
 <p><div style="text-align:center;">
-$latex \displaystyle 1, \lceil n/2 \rceil, 2, \lceil n/2 \rceil + 1, \dots$
+$\displaystyle 1, \lceil n/2 \rceil, 2, \lceil n/2 \rceil + 1, \dots$
 </div></p>
-<p>(Note that $latex \lceil n/2 \rceil$ correctly handles documents with an odd number of pages, ensuring that the blank page is on the back of the last sheet.) This can be accomplished by splitting the document in half and then interleaving the halves. For example, the <a href="https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/"><code>pdftk</code></a> tool can be used to perform this operation, using a command line like</p>
+<p>(Note that $\lceil n/2 \rceil$ correctly handles documents with an odd number of pages, ensuring that the blank page is on the back of the last sheet.) This can be accomplished by splitting the document in half and then interleaving the halves. For example, the <a href="https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/"><code>pdftk</code></a> tool can be used to perform this operation, using a command line like</p>
 <pre><code>pdftk &lt;input.pdf&gt; shuffle 1-&lt;m&gt; &lt;m+1&gt;-end output &lt;output.pdf&gt;</code></pre>
-<p>where <code>&lt;input.pdf&gt;</code> and <code>&lt;output.pdf&gt;</code> should be replaced by appropriate file names, and <code>&lt;m&gt;</code> and <code>&lt;m+1&gt;</code> should be replaced by $latex \lceil n/2 \rceil$ and one more, respectively. For example, to turn the 11-page document <code>foo.pdf</code> into <code>foo-mobius.pdf</code>, one would write</p>
+<p>where <code>&lt;input.pdf&gt;</code> and <code>&lt;output.pdf&gt;</code> should be replaced by appropriate file names, and <code>&lt;m&gt;</code> and <code>&lt;m+1&gt;</code> should be replaced by $\lceil n/2 \rceil$ and one more, respectively. For example, to turn the 11-page document <code>foo.pdf</code> into <code>foo-mobius.pdf</code>, one would write</p>
 <pre><code>pdftk foo.pdf shuffle 1-6 7-end output foo-mobius.pdf</code></pre>
 <p>Here is a <a href="https://github.com/byorgey/bin/blob/master/spliff">zsh script</a> I use which handles this automatically:</p>
 <pre class="zsh"><code>#!/bin/zsh
@@ -154,7 +154,7 @@ N=`pdftk $1 dump_data | grep NumberOfPages | head -n 1 | cut -d &quot; &quot; -f
 pdftk $1 shuffle 1-$(((N+1)/2)) $(((N+1)/2 + 1))-end output $OUTPUT</code></pre></li>
 </ul>
 <h1 id="two-way-double-sided">Two-way double-sided</h1>
-<p>With an $latex n$-page document, put pages $latex 1$ through $latex \lceil n/2 \rceil$ on the fronts of the sheets, just as in the Möbius method, but then put the remaining pages on the backs of the sheets in the <em>opposite</em> order, as in the illustration below. If there are an odd number of pages, leave the back of the first sheet blank.</p>
+<p>With an $n$-page document, put pages $1$ through $\lceil n/2 \rceil$ on the fronts of the sheets, just as in the Möbius method, but then put the remaining pages on the backs of the sheets in the <em>opposite</em> order, as in the illustration below. If there are an odd number of pages, leave the back of the first sheet blank.</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2016/05/c69e92db12f79907.png" /></p>
 </div>
@@ -162,7 +162,7 @@ pdftk $1 shuffle 1-$(((N+1)/2)) $(((N+1)/2 + 1))-end output $OUTPUT</code></pre>
 <p><strong>Pros</strong></p>
 <ul>
 <li>Like Möbius double-sided, there is a very simple algorithm for reading two-way double-sided documents, requiring (almost) no memory—see below.</li>
-<li>A major benefit as compared to Möbius printing is that it is possible to skip multiple pages just by shifting multiple sheets to the top or bottom all together as a group. This makes it easy to quickly move to an arbitrary point in the document (in essentially $latex O(\log n)$ time).</li>
+<li>A major benefit as compared to Möbius printing is that it is possible to skip multiple pages just by shifting multiple sheets to the top or bottom all together as a group. This makes it easy to quickly move to an arbitrary point in the document (in essentially $O(\log n)$ time).</li>
 <li><p>Two consecutive pages are <em>almost</em> always on different sheets—except for the two middle pages. If desired, this can even be remedied by inserting two extra blank pages, like this:</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2016/05/5f5dcf692c0abf5d.png" /></p>
@@ -182,10 +182,10 @@ pdftk $1 shuffle 1-$(((N+1)/2)) $(((N+1)/2 + 1))-end output $OUTPUT</code></pre>
 </ul>
 <p><strong>How to print</strong></p>
 <ul>
-<li><p><em>Double-print</em>: you can start by printing the first $latex \lceil n/2  \rceil$ pages single-sided. Unfortunately, with most printers, you will then have to manually reverse the sheets before putting them back in the tray to print the remaining pages. See the discussion of double-printing Möbius documents above.</p></li>
+<li><p><em>Double-print</em>: you can start by printing the first $\lceil n/2  \rceil$ pages single-sided. Unfortunately, with most printers, you will then have to manually reverse the sheets before putting them back in the tray to print the remaining pages. See the discussion of double-printing Möbius documents above.</p></li>
 <li><p><em>Pre-collate</em>: fortunately this is not too much harder than for Möbius printing. Using <code>pdftk</code> again, you can simply reverse the order of the endpoints of a page range to reverse the pages. So one would use a command line like</p>
 <pre><code>pdftk &lt;input.pdf&gt; shuffle 1-&lt;m&gt; end-&lt;m+1&gt; output &lt;output.pdf&gt;</code></pre>
-<p>where <code>&lt;input.pdf&gt;</code> and <code>&lt;output.pdf&gt;</code> should be replaced by appropriate file names, and <code>&lt;m&gt;</code> and <code>&lt;m+1&gt;</code> should be replaced by $latex \lceil n/2 \rceil$ and one more, respectively.</p>
+<p>where <code>&lt;input.pdf&gt;</code> and <code>&lt;output.pdf&gt;</code> should be replaced by appropriate file names, and <code>&lt;m&gt;</code> and <code>&lt;m+1&gt;</code> should be replaced by $\lceil n/2 \rceil$ and one more, respectively.</p>
 <p>This works perfectly when there are an even number of pages. Unfortunately, when the number of pages is odd, this does not quite do the right thing with blank pages (although this is not a huge deal). I do not know of a way to use <code>pdftk</code> to insert blank pages at appropriate points. If you know of an easy way to do this properly, I would love to update this page to include your solution.</p></li>
 </ul>
 

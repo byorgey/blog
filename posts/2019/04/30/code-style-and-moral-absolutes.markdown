@@ -1,5 +1,5 @@
 ---
-title: Code style and moral absolutes
+title: 'Code style and moral absolutes'
 published: 2019-04-30T21:31:00Z
 categories: haskell
 tags: code,moral,style

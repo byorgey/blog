@@ -1,5 +1,5 @@
 ---
-title: Math.Combinatorics.Multiset
+title: 'Math.Combinatorics.Multiset'
 published: 2010-02-20T23:03:42Z
 categories: haskell,projects
 tags: algorithm,combinatorial,multiset,partitions,permutations
