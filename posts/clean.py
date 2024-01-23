@@ -8,15 +8,22 @@ for root, dirs, files in os.walk(os.path.curdir):
             with in_place.InPlace(full) as md:
                 meta = False
                 for line in md:
-                    rewritten = False
                     if line == "---\n":
                         meta = not meta
                     colonidx = line.find(':')
                     if meta and colonidx != -1 and line[:colonidx] == 'title':
                         content = line[colonidx+1:].strip()
-                        md.write(f'title: \'{content}\'\n')
-                        rewritten = True
+                        if content[0] != '\'' and content[0] != '"':
+                            if "'" in content and "'" in content:
+                                print(f"Bad title! {full}")
+                            elif "'" in content:
+                                content = '"' + content + '"':
+                            else:
+                                content = "'" + content + "'"
+                        line = f'title: {content}\n'
 
-                    if not rewritten:
-                        md.write(line)
+                    if not meta:
+                        line = line.replace('$latex ', '$')
+
+                    md.write(line)
 
