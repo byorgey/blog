@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import in_place
 
@@ -24,6 +26,7 @@ for root, dirs, files in os.walk(os.path.curdir):
 
                     if not meta:
                         line = line.replace('$latex ', '$')
+                        line = line.replace('$$', '\\$\\$')
 
                     md.write(line)
 

@@ -91,7 +91,7 @@ foo :: String -&gt; String
 <li><p>Simply run <code>BlogLiterately</code>; citation processing is on by default. (You can explicitly turn it on with the <code>--citations</code> flag; to turn it off, use <code>--no-citations</code>.) Citations will be typeset and a bibliography will be appended at the end. You may want to include a section heading like <code># References</code> or <code># Bibliography</code> at the end of your post, to go above the generated bibliography.</p></li>
 </ol>
 <h2>LaTeX</h2>
-<p>LaTeX can be included in documents using single dollar signs to enclose inline LaTeX, and double dollar signs to enclose “display-style” LaTeX. For example, <code>$\pi^2 / 6$</code> produces $\pi^2 / 6$, and <code>$$\sum_{k=0}^\infty 1/k^2$$</code> (when put by itself in its own paragraph) produces</p>
+<p>LaTeX can be included in documents using single dollar signs to enclose inline LaTeX, and double dollar signs to enclose “display-style” LaTeX. For example, <code>$\pi^2 / 6$</code> produces $\pi^2 / 6$, and <code>\$\$\sum_{k=0}^\infty 1/k^2\$\$</code> (when put by itself in its own paragraph) produces</p>
 <p><div style="text-align:center;">
 $\displaystyle \sum_{k=0}^\infty 1/k^2.$
 </div></p>
