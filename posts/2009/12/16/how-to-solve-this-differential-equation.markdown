@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'How to solve this differential equation?'
 published: 2009-12-16T14:01:38Z
 categories: combinatorics,math

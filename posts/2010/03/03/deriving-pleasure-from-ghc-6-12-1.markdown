@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Deriving pleasure from GHC 6.12.1'
 published: 2010-03-03T23:16:37Z
 categories: haskell

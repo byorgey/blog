@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Unique isomorphism and generalized "the"'
 published: 2014-05-13T15:26:25Z
 categories: category theory,math,species

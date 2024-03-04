@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Math.Combinatorics.Multiset'
 published: 2010-02-20T23:03:42Z
 categories: haskell,projects

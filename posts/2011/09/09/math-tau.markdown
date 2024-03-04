@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Math.Tau'
 published: 2011-09-09T20:07:29Z
 categories: haskell

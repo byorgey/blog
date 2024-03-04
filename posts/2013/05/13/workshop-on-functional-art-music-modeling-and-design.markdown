@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Workshop on Functional Art, Music, Modeling and Design'
 published: 2013-05-13T21:10:59Z
 categories: meta

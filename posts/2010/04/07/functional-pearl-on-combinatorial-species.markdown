@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Functional pearl on combinatorial species'
 published: 2010-04-08T01:30:28Z
 categories: combinatorics,haskell,writing

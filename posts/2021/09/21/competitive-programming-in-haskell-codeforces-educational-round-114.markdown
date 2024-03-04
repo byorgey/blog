@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: Codeforces Educational Round 114'
 published: 2021-09-22T02:07:36Z
 categories: competitive programming,haskell

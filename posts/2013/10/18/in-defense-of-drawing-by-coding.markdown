@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'In defense of drawing by coding'
 published: 2013-10-18T18:39:09Z
 categories: 

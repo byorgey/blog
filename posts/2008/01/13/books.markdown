@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Books!'
 published: 2008-01-13T22:16:45Z
 categories: 

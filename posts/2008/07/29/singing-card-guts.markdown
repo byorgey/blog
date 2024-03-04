@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Singing card guts'
 published: 2008-07-29T18:17:32Z
 categories: meta

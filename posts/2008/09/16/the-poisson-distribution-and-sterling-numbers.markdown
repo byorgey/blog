@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The Poisson distribution and Stirling numbers'
 published: 2008-09-16T12:11:19Z
 categories: combinatorics,grad school,learning,math

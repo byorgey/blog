@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Come visit the FARM!'
 published: 2013-08-11T01:56:45Z
 categories: haskell

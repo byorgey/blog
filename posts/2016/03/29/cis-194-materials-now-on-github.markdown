@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'CIS 194 materials now on github'
 published: 2016-03-29T21:45:32Z
 categories: haskell

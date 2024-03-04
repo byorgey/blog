@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Counting linear lambda terms'
 published: 2011-01-26T18:03:50Z
 categories: combinatorics

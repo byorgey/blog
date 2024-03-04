@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive Programming in Haskell: Scanner'
 published: 2019-05-22T17:58:00Z
 categories: haskell

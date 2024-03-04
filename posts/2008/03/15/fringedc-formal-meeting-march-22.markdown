@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'FringeDC formal meeting, March 22'
 published: 2008-03-15T16:40:54Z
 categories: haskell,meta

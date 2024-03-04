@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'FogBugz, Beeminder, and... pure functions in the cloud?'
 published: 2012-10-13T21:02:00Z
 categories: meta

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Subtracting natural numbers: types and usability'
 published: 2023-02-07T17:03:46Z
 categories: projects,teaching

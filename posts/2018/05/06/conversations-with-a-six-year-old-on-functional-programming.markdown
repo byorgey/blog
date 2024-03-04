@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Conversations with a six-year-old on functional programming'
 published: 2018-05-06T19:19:00Z
 categories: teaching

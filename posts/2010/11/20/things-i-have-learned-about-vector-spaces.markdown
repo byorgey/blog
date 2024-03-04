@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Things I have learned about vector spaces'
 published: 2010-11-20T04:31:52Z
 categories: math,projects

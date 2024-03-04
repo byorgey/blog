@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'A strange representation of Z6'
 published: 2015-11-15T05:29:48Z
 categories: math

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'My new programming languages course'
 published: 2017-01-13T21:55:01Z
 categories: teaching

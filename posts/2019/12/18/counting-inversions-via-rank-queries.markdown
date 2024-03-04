@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Counting inversions via rank queries'
 published: 2019-12-18T12:48:53Z
 categories: haskell

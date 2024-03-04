@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Hac phi 3!'
 published: 2011-07-30T13:22:14Z
 categories: haskell

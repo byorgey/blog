@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The Species of Bracelets'
 published: 2015-07-10T20:20:30Z
 categories: combinatorics,haskell,math

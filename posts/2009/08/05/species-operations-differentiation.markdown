@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Species operations: differentiation'
 published: 2009-08-06T03:26:34Z
 categories: combinatorics,haskell,math

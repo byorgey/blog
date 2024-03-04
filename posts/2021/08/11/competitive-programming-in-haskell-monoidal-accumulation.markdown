@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: monoidal accumulation'
 published: 2021-08-11T21:51:58Z
 categories: competitive programming,haskell

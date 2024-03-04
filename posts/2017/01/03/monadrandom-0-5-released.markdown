@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'MonadRandom 0.5 released'
 published: 2017-01-03T22:32:15Z
 categories: haskell,projects

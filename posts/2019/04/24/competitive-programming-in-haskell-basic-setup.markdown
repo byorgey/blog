@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive Programming in Haskell: Basic Setup'
 published: 2019-04-24T15:49:22Z
 categories: haskell

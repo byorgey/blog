@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Dynamic programming in Haskell: automatic memoization'
 published: 2023-06-06T14:21:04Z
 categories: competitive programming,haskell

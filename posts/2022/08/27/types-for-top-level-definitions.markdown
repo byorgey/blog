@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Types for top-level definitions'
 published: 2022-08-27T12:47:50Z
 categories: projects

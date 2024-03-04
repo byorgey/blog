@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Data structure challenge: application'
 published: 2020-04-07T02:41:01Z
 categories: data structures

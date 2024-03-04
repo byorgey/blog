@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'New Haskell diagrams library'
 published: 2008-04-30T17:21:35Z
 categories: haskell,projects

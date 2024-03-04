@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Academic integrity and other virtues'
 published: 2016-08-18T19:41:01Z
 categories: teaching

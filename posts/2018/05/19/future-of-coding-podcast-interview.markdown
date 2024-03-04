@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Future of Coding podcast interview'
 published: 2018-05-19T15:16:14Z
 categories: haskell,meta,teaching

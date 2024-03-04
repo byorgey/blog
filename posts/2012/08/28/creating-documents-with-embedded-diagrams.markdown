@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Creating documents with embedded diagrams'
 published: 2012-08-28T17:27:40Z
 categories: haskell,projects,writing

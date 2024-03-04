@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'What would Dijkstra do? Proving the associativity of min'
 published: 2020-02-23T04:07:43Z
 categories: math

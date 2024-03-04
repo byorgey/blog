@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: BFS, part 4 (implementation via STUArray)'
 published: 2021-11-17T15:52:12Z
 categories: competitive programming,haskell

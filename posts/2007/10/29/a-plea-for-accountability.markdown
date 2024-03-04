@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'a plea for accountability'
 published: 2007-10-29T21:36:40Z
 categories: writing

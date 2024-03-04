@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'First day of class'
 published: 2008-09-04T04:37:41Z
 categories: grad school

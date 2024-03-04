@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Enumerating linear inhabitants'
 published: 2011-02-24T21:10:19Z
 categories: haskell

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: BFS, part 2 (alternative APIs)'
 published: 2021-10-18T19:48:36Z
 categories: competitive programming,haskell

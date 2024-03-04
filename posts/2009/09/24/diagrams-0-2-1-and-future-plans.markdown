@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'diagrams 0.2.1, and future plans'
 published: 2009-09-24T19:48:25Z
 categories: haskell,projects

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'On being a researcher'
 published: 2011-07-11T22:47:48Z
 categories: grad school

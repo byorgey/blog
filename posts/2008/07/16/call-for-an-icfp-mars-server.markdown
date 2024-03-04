@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Call for an ICFP Mars Server!'
 published: 2008-07-16T15:03:41Z
 categories: haskell

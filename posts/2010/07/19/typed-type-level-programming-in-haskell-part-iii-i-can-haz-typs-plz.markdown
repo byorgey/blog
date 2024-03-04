@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Typed type-level programming in Haskell, part III: I can haz typs plz?'
 published: 2010-07-19T13:49:32Z
 categories: haskell

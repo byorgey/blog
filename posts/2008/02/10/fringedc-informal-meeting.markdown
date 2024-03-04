@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'FringeDC informal meeting'
 published: 2008-02-10T21:59:14Z
 categories: haskell

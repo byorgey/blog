@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'In praise of Beeminder'
 published: 2016-05-18T03:13:14Z
 categories: meta

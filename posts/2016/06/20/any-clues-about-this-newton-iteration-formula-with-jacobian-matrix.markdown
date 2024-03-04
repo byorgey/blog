@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Any clues about this Newton iteration formula with Jacobian matrix?'
 published: 2016-06-20T21:59:56Z
 categories: math

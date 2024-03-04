@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Themes on Streams, Part II'
 published: 2011-05-20T20:18:27Z
 categories: haskell,math

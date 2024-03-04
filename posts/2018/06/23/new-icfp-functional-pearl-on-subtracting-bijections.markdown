@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'New ICFP functional pearl on subtracting bijections'
 published: 2018-06-23T21:47:58Z
 categories: combinatorics,haskell,writing

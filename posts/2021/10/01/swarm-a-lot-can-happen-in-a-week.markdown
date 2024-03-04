@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Swarm: a lot can happen in a week'
 published: 2021-10-01T19:31:58Z
 categories: haskell,projects

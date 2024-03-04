@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Finding roots of polynomials in Haskell?'
 published: 2019-02-13T22:19:59Z
 categories: haskell,math

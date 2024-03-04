@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The Typeclassopedia is now up-to-date'
 published: 2017-06-07T19:47:02Z
 categories: haskell,writing

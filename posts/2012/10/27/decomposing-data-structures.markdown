@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Decomposing data structures'
 published: 2012-10-28T03:01:07Z
 categories: math,species

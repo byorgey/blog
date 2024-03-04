@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Monoidal sparks'
 published: 2018-10-01T16:15:04Z
 categories: math

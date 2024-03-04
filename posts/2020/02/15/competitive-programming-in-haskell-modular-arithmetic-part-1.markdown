@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive Programming in Haskell: modular arithmetic, part 1'
 published: 2020-02-15T21:06:10Z
 categories: haskell

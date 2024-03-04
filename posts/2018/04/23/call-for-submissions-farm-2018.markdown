@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Call for submissions: FARM 2018'
 published: 2018-04-23T12:35:54Z
 categories: meta

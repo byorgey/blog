@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Types versus sets in math and programming languages'
 published: 2021-06-24T11:34:50Z
 categories: projects,teaching

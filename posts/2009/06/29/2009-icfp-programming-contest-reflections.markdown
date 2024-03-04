@@ -1,4 +1,5 @@
 ---
+katex: true
 title: '2009 ICFP programming contest reflections'
 published: 2009-06-29T21:41:20Z
 categories: haskell,learning,puzzle

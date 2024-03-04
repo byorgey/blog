@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'What’s the Difference? video and slides'
 published: 2018-10-20T20:38:03Z
 categories: combinatorics,haskell,writing

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Apply to attend the Oregon Programming Languages Summer School!'
 published: 2018-05-09T02:21:56Z
 categories: links,meta

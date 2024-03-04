@@ -1,4 +1,5 @@
 ---
+katex: true
 title: "Mgu's and universal properties"
 published: 2009-12-11T14:09:05Z
 categories: math

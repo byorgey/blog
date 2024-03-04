@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Announcing diagrams preview release'
 published: 2011-05-17T15:42:28Z
 categories: haskell,projects

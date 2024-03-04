@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'More from Hac φ'
 published: 2009-07-25T22:34:48Z
 categories: haskell,meta

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Monad transformers: a cautionary tale'
 published: 2013-04-29T21:03:48Z
 categories: haskell

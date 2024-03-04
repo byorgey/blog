@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'ICFP programming contest reflections'
 published: 2008-07-15T21:18:18Z
 categories: haskell

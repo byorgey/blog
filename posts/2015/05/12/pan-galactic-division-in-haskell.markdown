@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Pan-Galactic Division in Haskell'
 published: 2015-05-12T20:49:24Z
 categories: haskell,math,species

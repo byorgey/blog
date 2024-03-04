@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Monads: Easy or Hard?'
 published: 2012-07-19T15:31:31Z
 categories: haskell,learning,teaching

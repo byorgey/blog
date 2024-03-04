@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Summer in Cambridge'
 published: 2010-06-03T01:34:12Z
 categories: haskell

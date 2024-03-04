@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Signed sets and ballots, part 1'
 published: 2017-02-21T03:42:11Z
 categories: combinatorics,math

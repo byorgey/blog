@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Visiting Portland!'
 published: 2008-01-25T19:05:17Z
 categories: grad school

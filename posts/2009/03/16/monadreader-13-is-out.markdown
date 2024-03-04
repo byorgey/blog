@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Monad.Reader #13 is out!'
 published: 2009-03-16T14:35:58Z
 categories: haskell,teaching,writing

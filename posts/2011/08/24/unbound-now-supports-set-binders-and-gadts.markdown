@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Unbound now supports "set" binders and GADTs'
 published: 2011-08-24T20:32:16Z
 categories: haskell,projects

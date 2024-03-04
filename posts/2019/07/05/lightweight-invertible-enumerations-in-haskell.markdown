@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Lightweight invertible enumerations in Haskell'
 published: 2019-07-05T13:34:47Z
 categories: combinatorics,haskell,projects

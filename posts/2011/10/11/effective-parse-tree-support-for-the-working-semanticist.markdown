@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Effective parse tree support for the working semanticist'
 published: 2011-10-11T19:04:25Z
 categories: haskell,projects

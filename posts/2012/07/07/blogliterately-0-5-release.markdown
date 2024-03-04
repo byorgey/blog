@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'BlogLiterately 0.5 release'
 published: 2012-07-07T18:06:31Z
 categories: haskell,writing

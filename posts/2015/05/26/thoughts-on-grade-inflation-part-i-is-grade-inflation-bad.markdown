@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Thoughts on grade inflation, part I: is grade inflation bad?'
 published: 2015-05-26T19:57:01Z
 categories: teaching

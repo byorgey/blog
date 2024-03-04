@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Deep work and email habits: a followup'
 published: 2017-03-05T02:29:27Z
 categories: meta

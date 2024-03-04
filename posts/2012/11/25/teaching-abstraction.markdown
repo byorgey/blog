@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Teaching abstraction'
 published: 2012-11-25T19:24:22Z
 categories: teaching

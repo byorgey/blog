@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'How to print things'
 published: 2016-05-19T16:18:38Z
 categories: 

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Swarm: status report'
 published: 2022-06-20T16:26:36Z
 categories: haskell,projects

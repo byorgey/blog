@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Polynomial Functors Constrained by Regular Expressions'
 published: 2015-04-15T01:22:46Z
 categories: math,writing

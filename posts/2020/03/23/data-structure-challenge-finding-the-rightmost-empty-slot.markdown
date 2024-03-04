@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Data structure challenge: finding the rightmost empty slot'
 published: 2020-03-23T11:53:08Z
 categories: data structures

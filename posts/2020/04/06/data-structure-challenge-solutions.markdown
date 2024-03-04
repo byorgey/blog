@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Data structure challenge: solutions'
 published: 2020-04-06T11:07:39Z
 categories: data structures

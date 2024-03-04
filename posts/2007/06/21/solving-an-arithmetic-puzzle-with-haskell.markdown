@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Solving an arithmetic puzzle with Haskell'
 published: 2007-06-21T15:29:48Z
 categories: haskell,math,puzzle

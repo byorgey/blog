@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The divided difference track'
 published: 2016-11-09T03:17:19Z
 categories: humor

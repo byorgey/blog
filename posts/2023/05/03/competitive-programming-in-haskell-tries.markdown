@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: tries'
 published: 2023-05-03T19:57:58Z
 categories: competitive programming,haskell

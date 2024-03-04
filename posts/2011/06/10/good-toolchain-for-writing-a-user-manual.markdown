@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Good toolchain for writing a user manual?'
 published: 2011-06-10T13:00:58Z
 categories: projects,writing

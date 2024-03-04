@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'List convolutions'
 published: 2008-04-22T20:23:35Z
 categories: haskell

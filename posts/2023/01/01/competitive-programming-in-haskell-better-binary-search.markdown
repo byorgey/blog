@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: better binary search'
 published: 2023-01-01T04:29:34Z
 categories: competitive programming,haskell

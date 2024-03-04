@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell challenge: Letter Optimization'
 published: 2023-03-11T19:24:03Z
 categories: competitive programming,haskell

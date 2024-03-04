@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'First explorations in computer music'
 published: 2009-03-15T18:04:46Z
 categories: haskell,learning,music

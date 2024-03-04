@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: building unordered trees'
 published: 2020-05-22T22:17:00Z
 categories: competitive programming,haskell

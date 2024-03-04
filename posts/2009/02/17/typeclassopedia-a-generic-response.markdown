@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Typeclassopedia -- a generic response'
 published: 2009-02-17T18:58:22Z
 categories: haskell,teaching,writing

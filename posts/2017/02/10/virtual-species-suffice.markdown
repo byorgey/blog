@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Virtual species suffice'
 published: 2017-02-10T18:11:39Z
 categories: combinatorics

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Diagrams mentoring at Hac Phi'
 published: 2012-07-09T18:49:28Z
 categories: haskell,projects

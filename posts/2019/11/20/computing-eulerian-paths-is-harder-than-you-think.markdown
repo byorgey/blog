@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Computing Eulerian paths is harder than you think'
 published: 2019-11-20T16:41:29Z
 categories: learning

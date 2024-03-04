@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: data representation and optimization, with cake'
 published: 2020-06-29T21:55:19Z
 categories: competitive programming,haskell

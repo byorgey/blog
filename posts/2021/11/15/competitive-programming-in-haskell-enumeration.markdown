@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: Enumeration'
 published: 2021-11-15T22:29:57Z
 categories: competitive programming,haskell

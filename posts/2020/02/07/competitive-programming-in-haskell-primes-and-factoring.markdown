@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive Programming in Haskell: primes and factoring'
 published: 2020-02-07T22:21:13Z
 categories: haskell

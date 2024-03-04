@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: permutations'
 published: 2020-05-30T14:00:01Z
 categories: competitive programming,haskell

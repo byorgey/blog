@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Announcing diagrams-0.4'
 published: 2011-10-23T18:47:24Z
 categories: haskell,projects

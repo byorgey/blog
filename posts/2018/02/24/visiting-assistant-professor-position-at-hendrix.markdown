@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Visiting assistant professor position at Hendrix'
 published: 2018-02-25T03:36:47Z
 categories: meta

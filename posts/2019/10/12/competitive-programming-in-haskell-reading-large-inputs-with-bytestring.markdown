@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive Programming in Haskell: reading large inputs with ByteString'
 published: 2019-10-13T02:46:38Z
 categories: haskell

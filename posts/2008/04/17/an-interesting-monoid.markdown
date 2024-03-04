@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'An interesting monoid'
 published: 2008-04-17T19:37:24Z
 categories: math

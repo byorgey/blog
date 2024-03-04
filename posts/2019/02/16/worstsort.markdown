@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Worstsort'
 published: 2019-02-16T20:36:50Z
 categories: haskell,humor,math

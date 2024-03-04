@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'diagrams repos now mirrored on github!'
 published: 2011-09-11T00:26:45Z
 categories: haskell,projects

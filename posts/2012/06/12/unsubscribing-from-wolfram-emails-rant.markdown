@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Unsubscribing from Wolfram emails (rant)'
 published: 2012-06-12T14:08:26Z
 categories: humor

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Back from Baltimore'
 published: 2010-10-02T21:23:46Z
 categories: haskell,links,writing

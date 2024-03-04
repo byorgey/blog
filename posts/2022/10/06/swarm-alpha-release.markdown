@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Swarm alpha release!'
 published: 2022-10-06T20:01:34Z
 categories: haskell,projects

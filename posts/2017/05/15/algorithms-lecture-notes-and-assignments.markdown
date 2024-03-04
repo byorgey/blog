@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Algorithms lecture notes and assignments'
 published: 2017-05-15T18:10:05Z
 categories: teaching

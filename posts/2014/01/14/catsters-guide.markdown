@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Catsters guide'
 published: 2014-01-14T21:02:05Z
 categories: haskell,math,teaching

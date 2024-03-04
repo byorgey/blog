@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Call for video cameras!'
 published: 2008-03-20T03:30:05Z
 categories: meta

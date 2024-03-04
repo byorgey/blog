@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'trapd'
 published: 2011-05-11T19:40:47Z
 categories: haskell,humor

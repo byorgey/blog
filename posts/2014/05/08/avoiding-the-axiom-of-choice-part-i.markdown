@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Avoiding the axiom of choice, part I'
 published: 2014-05-08T15:59:54Z
 categories: category theory,math,species

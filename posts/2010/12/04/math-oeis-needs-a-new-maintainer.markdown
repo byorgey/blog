@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Math.OEIS needs a new maintainer'
 published: 2010-12-04T21:32:01Z
 categories: haskell,math,projects

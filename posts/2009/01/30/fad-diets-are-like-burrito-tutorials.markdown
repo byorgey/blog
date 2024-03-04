@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Fad diets are like burrito tutorials'
 published: 2009-01-30T19:00:23Z
 categories: humor

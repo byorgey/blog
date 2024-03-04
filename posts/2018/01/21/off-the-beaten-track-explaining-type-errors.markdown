@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Off the Beaten Track: Explaining Type Errors'
 published: 2018-01-21T21:26:53Z
 categories: projects,writing

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: introduction to dynamic programming'
 published: 2023-05-31T14:47:46Z
 categories: competitive programming,haskell

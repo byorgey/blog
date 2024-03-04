@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Adventures in enumerating balanced brackets'
 published: 2016-10-25T04:42:59Z
 categories: combinatorics,haskell

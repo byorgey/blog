@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Test your intuition: logarithmic time'
 published: 2018-03-01T03:55:56Z
 categories: teaching

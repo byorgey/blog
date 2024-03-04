@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Counting inversions with monoidal sparks'
 published: 2018-10-06T20:53:48Z
 categories: math

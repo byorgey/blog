@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Collecting attributes'
 published: 2009-10-28T18:59:03Z
 categories: haskell,projects

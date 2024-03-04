@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Readers wanted!'
 published: 2014-08-10T19:42:02Z
 categories: category theory,combinatorics,diagrams,grad school,math,writing

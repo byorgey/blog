@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'What’s the right way to QuickCheck floating-point routines?'
 published: 2019-02-24T04:46:08Z
 categories: haskell,math

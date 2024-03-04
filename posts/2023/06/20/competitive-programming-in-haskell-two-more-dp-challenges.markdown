@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive Programming in Haskell: two more DP challenges'
 published: 2023-06-20T20:42:24Z
 categories: competitive programming,haskell

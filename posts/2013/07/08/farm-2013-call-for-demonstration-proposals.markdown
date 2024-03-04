@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'FARM 2013: call for demonstration proposals'
 published: 2013-07-08T16:55:59Z
 categories: meta

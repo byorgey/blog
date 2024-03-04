@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Counting linear lambda terms: choice and correspondence'
 published: 2011-02-09T03:01:39Z
 categories: combinatorics

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Typed type-level programming: status report'
 published: 2010-12-03T21:51:31Z
 categories: haskell,projects

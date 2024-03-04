@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The algebra of species: primitives'
 published: 2013-01-07T15:48:22Z
 categories: math,species

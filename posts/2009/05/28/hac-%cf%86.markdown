@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Hac φ!'
 published: 2009-05-28T22:12:51Z
 categories: haskell

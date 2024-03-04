@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'diagrams slides'
 published: 2010-05-22T04:43:01Z
 categories: haskell,projects

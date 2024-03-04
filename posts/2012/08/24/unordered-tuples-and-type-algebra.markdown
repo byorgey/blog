@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Unordered tuples and type algebra'
 published: 2012-08-24T18:41:46Z
 categories: combinatorics

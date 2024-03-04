@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The generic-random library, part 1: simple generic Arbitrary instances'
 published: 2016-09-20T22:27:21Z
 categories: combinatorics,haskell

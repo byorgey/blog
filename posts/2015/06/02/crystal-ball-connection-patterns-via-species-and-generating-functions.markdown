@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Crystal Ball Connection Patterns via Species and Generating Functions'
 published: 2015-06-02T17:40:57Z
 categories: combinatorics,haskell,math

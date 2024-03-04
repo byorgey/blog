@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Collecting unstructured information with the monoid of partial knowledge'
 published: 2008-04-17T21:32:00Z
 categories: haskell,math

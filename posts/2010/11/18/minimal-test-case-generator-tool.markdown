@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Minimal test case generator tool?'
 published: 2010-11-18T22:28:27Z
 categories: meta

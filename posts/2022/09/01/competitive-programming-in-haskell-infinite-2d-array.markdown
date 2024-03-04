@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: Infinite 2D array'
 published: 2022-09-01T17:04:53Z
 categories: competitive programming,haskell

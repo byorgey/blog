@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'BlogLiterately 0.5.2 release, with improved image uploading'
 published: 2012-08-27T01:43:37Z
 categories: haskell,writing

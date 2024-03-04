@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Higher-dimensional enumeration'
 published: 2007-10-01T21:27:08Z
 categories: combinatorics,haskell

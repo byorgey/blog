@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'BumpTop private beta invite'
 published: 2009-04-06T12:00:29Z
 categories: meta

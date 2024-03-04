@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'At SIGCSE 2016 in Memphis'
 published: 2016-03-03T03:58:32Z
 categories: meta

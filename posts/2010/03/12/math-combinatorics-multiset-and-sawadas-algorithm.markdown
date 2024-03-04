@@ -1,4 +1,5 @@
 ---
+katex: true
 title: "Math.Combinatorics.Multiset and Sawada's algorithm"
 published: 2010-03-12T15:20:35Z
 categories: haskell,links,math

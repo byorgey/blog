@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Catsters guide'
 published: 2014-01-13T16:35:53Z
 categories: 

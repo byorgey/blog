@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'cabal init'
 published: 2010-04-16T03:03:11Z
 categories: haskell

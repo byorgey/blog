@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The Typeclassopedia -- request for feedback'
 published: 2009-02-16T09:12:34Z
 categories: haskell,teaching,writing

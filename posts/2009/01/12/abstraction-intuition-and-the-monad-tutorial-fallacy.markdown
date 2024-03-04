@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Abstraction, intuition, and the "monad tutorial fallacy"'
 published: 2009-01-13T03:34:00Z
 categories: haskell,learning,math,teaching

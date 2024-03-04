@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Introducing Math.Combinatorics.Species!'
 published: 2009-07-24T22:22:10Z
 categories: combinatorics,haskell,math,projects

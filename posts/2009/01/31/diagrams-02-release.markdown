@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Diagrams 0.2 release'
 published: 2009-01-31T23:35:37Z
 categories: haskell,projects

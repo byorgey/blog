@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The network reliability problem and star semirings'
 published: 2016-04-06T01:28:24Z
 categories: math

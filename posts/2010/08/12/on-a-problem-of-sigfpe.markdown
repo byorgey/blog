@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'On a Problem of sigfpe'
 published: 2010-08-12T20:31:16Z
 categories: haskell

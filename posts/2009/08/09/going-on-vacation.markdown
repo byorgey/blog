@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Going on vacation'
 published: 2009-08-09T15:05:02Z
 categories: meta

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: BFS, part 1'
 published: 2021-10-14T16:09:53Z
 categories: competitive programming,haskell

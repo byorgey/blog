@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'QuickCheck rocks my socks'
 published: 2008-12-17T03:59:43Z
 categories: haskell,projects

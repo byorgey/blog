@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Boltzmann sampling for generic Arbitrary instances'
 published: 2016-03-23T17:58:01Z
 categories: combinatorics,haskell,math,species

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Edinburgh'
 published: 2009-08-26T15:41:53Z
 categories: learning,meta

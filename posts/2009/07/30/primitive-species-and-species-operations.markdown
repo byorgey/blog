@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Primitive species and species operations'
 published: 2009-07-30T21:48:32Z
 categories: combinatorics,haskell,math

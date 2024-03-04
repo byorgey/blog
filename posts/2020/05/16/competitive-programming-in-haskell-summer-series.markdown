@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: summer series'
 published: 2020-05-16T19:43:06Z
 categories: competitive programming,haskell

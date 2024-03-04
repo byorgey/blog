@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Average and median via optimization'
 published: 2021-06-08T16:07:47Z
 categories: math

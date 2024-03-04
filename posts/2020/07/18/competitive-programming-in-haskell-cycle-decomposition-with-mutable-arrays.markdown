@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: cycle decomposition with mutable arrays'
 published: 2020-07-18T19:56:55Z
 categories: competitive programming,haskell

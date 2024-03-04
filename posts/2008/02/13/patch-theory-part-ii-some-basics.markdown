@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Patch theory, part II: some basics'
 published: 2008-02-13T19:14:36Z
 categories: haskell,learning,projects

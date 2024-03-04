@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Mapping over a nested functor?'
 published: 2007-08-16T13:49:43Z
 categories: haskell,learning

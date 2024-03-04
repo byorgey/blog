@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Combinatorial species definition'
 published: 2012-11-20T17:00:42Z
 categories: math,species

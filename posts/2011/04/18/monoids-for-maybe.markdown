@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Monoids for Maybe'
 published: 2011-04-18T14:46:20Z
 categories: haskell

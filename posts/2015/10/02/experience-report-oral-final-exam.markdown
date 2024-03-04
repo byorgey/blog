@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Experience report: oral final exam'
 published: 2015-10-02T21:00:02Z
 categories: teaching

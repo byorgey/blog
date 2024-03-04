@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Swarm: preview and call for collaboration'
 published: 2021-09-24T02:51:02Z
 categories: haskell,projects

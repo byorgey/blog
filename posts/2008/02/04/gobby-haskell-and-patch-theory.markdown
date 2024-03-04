@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Gobby, Haskell, and patch theory'
 published: 2008-02-04T22:24:16Z
 categories: haskell,projects

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'A strange dream'
 published: 2009-05-17T14:37:09Z
 categories: humor

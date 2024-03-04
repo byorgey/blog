@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Random binary trees with a size-limited critical Boltzmann sampler'
 published: 2013-04-25T21:20:31Z
 categories: combinatorics,haskell,math,species

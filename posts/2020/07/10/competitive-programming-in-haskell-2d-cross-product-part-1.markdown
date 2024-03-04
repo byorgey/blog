@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: 2D cross product, part 1'
 published: 2020-07-11T02:43:01Z
 categories: competitive programming,haskell

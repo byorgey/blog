@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Automatically updated, cached views with lens'
 published: 2021-09-17T15:44:02Z
 categories: haskell

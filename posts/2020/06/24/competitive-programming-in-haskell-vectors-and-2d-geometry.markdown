@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: vectors and 2D geometry'
 published: 2020-06-24T20:21:43Z
 categories: competitive programming,haskell

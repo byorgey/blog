@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Binary search over floating point representations'
 published: 2023-01-02T13:44:33Z
 categories: haskell

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Species subtraction made simple'
 published: 2010-11-25T02:44:09Z
 categories: combinatorics,haskell

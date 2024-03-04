@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Monad.Reader article (Multiset partitions)'
 published: 2007-09-28T16:22:23Z
 categories: haskell,math,writing

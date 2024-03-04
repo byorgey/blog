@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'About me'
 published: 2007-05-25T18:07:48Z
 categories: 

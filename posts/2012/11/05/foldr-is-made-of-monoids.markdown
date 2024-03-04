@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'foldr is made of monoids'
 published: 2012-11-06T02:01:12Z
 categories: haskell,math

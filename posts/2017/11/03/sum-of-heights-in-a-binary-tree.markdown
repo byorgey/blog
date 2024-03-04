@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Sum of heights in a binary tree'
 published: 2017-11-03T15:06:40Z
 categories: math,teaching

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Implementing Hindley-Milner with the unification-fd library'
 published: 2021-09-08T17:31:29Z
 categories: haskell,teaching

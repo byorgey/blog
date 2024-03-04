@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: Infinite 2D array, Level 4'
 published: 2023-02-24T13:31:27Z
 categories: competitive programming,haskell

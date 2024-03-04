@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'BlogLiterately'
 published: 2012-07-02T17:09:34Z
 categories: 

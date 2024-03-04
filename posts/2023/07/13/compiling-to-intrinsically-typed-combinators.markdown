@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Compiling to Intrinsically Typed Combinators'
 published: 2023-07-13T20:55:18Z
 categories: haskell

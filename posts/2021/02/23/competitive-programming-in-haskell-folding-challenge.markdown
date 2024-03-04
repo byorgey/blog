@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: folding challenge'
 published: 2021-02-23T12:21:47Z
 categories: competitive programming,haskell

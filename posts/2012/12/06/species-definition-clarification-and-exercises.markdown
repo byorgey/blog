@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Species definition clarification and exercises'
 published: 2012-12-06T16:44:33Z
 categories: math,species

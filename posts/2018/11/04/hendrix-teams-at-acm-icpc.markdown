@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Hendrix teams at ACM ICPC'
 published: 2018-11-04T04:53:47Z
 categories: meta,teaching

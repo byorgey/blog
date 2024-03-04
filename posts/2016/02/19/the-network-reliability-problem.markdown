@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The network reliability problem'
 published: 2016-02-19T19:30:00Z
 categories: math

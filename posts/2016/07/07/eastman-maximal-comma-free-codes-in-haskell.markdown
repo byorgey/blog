@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Eastman maximal comma-free codes in Haskell'
 published: 2016-07-07T21:58:26Z
 categories: combinatorics,haskell

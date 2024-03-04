@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'New haxr release'
 published: 2012-07-07T15:00:58Z
 categories: haskell

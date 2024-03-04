@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Ally Skills Tutorial at ICFP'
 published: 2015-06-10T20:47:09Z
 categories: haskell

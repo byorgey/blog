@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: parsing with an NFA'
 published: 2023-05-24T11:03:02Z
 categories: competitive programming,haskell

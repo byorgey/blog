@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Rationals!'
 published: 2007-08-13T19:37:06Z
 categories: haskell,math

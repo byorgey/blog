@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Type theory, here I come...'
 published: 2007-12-27T01:16:11Z
 categories: learning

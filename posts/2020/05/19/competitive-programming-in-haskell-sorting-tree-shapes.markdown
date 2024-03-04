@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: sorting tree shapes'
 published: 2020-05-19T18:45:17Z
 categories: competitive programming,haskell

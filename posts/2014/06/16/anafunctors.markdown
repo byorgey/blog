@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Anafunctors'
 published: 2014-06-16T18:35:16Z
 categories: category theory,math,species

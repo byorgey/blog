@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Parametricity for Bifunctor'
 published: 2018-03-31T03:12:25Z
 categories: haskell,math

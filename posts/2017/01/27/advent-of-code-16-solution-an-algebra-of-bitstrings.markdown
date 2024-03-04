@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Advent of code #16 solution: an algebra of bitstrings'
 published: 2017-01-27T18:36:09Z
 categories: haskell

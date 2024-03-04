@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Signed sets and ballots and naturality'
 published: 2017-02-27T22:49:34Z
 categories: combinatorics,math

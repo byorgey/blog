@@ -8,8 +8,13 @@ for root, dirs, files in os.walk(os.path.curdir):
         full = os.path.join(root, f)
         if os.path.splitext(f)[1] in ['.markdown', '.md']:
             with in_place.InPlace(full) as md:
+                wrote_katex = False
                 meta = False
                 for line in md:
+                    if meta and not wrote_katex:
+                        md.write('katex: true\n')
+                        wrote_katex = True
+
                     if line == "---\n":
                         meta = not meta
                     colonidx = line.find(':')

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Squarefree numbers in Haskell'
 published: 2007-09-02T02:26:32Z
 categories: haskell,math

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'A word to the wise'
 published: 2007-12-19T12:25:26Z
 categories: grad school,haskell

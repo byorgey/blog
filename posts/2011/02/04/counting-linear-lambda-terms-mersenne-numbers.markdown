@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Counting linear lambda terms: Mersenne numbers'
 published: 2011-02-04T20:32:42Z
 categories: combinatorics

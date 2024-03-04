@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'New Haskell Symposium paper on "twisted functors"'
 published: 2016-08-04T20:08:35Z
 categories: haskell,writing

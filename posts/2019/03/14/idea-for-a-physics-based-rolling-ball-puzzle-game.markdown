@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Idea for a physics-based rolling ball puzzle game'
 published: 2019-03-14T10:19:53Z
 categories: projects

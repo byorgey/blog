@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'AC and equivalence of categories'
 published: 2014-06-05T19:55:19Z
 categories: category theory,math,species

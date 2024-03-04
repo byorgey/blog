@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: Kadane’s algorithm'
 published: 2021-09-09T11:26:41Z
 categories: competitive programming,haskell

@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'The Haskell Alphabet'
 published: 2010-09-18T15:57:43Z
 categories: haskell,humor,writing

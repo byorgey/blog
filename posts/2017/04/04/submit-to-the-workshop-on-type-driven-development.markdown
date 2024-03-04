@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Submit to the Workshop on Type-Driven Development!'
 published: 2017-04-05T03:27:42Z
 categories: meta

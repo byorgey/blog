@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Generating plane tilings with diagrams'
 published: 2011-11-12T16:41:19Z
 categories: haskell,math,projects

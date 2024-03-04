@@ -1,4 +1,5 @@
 ---
+katex: true
 title: 'Competitive programming in Haskell: topsort via laziness'
 published: 2023-04-11T18:53:49Z
 categories: competitive programming,haskell
