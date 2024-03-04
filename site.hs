@@ -178,8 +178,8 @@ main = hakyllWith config $ do
   match "posts/**" $ do
     route $ setExtension "html"
     compile $ do
-      let prevPostID = lookupWithOffset (-1) postList . (==) . itemIdentifier
-          nextPostID = lookupWithOffset 1 postList . (==) . itemIdentifier
+      let prevPostID = lookupWithOffset 1 postList . (==) . itemIdentifier
+          nextPostID = lookupWithOffset (-1) postList . (==) . itemIdentifier
           idToURL :: Identifier -> Compiler String
           idToURL = fmap toUrl . maybeNoResult <=< getRoute
           idToTitle :: Identifier -> Compiler String
