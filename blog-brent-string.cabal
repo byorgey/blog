@@ -10,8 +10,7 @@ maintainer:          byorgey@gmail.com
 copyright:           Brent Yorgey
 category:            Web
 build-type:          Simple
-extra-source-files:  README.md
-                     CHANGELOG.md
+extra-source-files:  CHANGELOG.md
 cabal-version:       >=1.10
 
 executable blog-brent-string
