@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive Programming in Haskell: modular arithmetic, part 2</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2020/02/23/what-would-dijkstra-do-proving-the-associativity-of-min.html">« What would Dijkstra do? Proving the associativity of min</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot.html">» Data structure challenge: finding the rightmost empty slot</a>
+
+</span>
+
+
+<h1>Competitive Programming in Haskell: modular arithmetic, part 2</h1>
+
+<div class="info">
+  Posted on March  3, 2020
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'competitive'." href="../../../../tag/competitive.html" rel="tag">competitive</a>, <a title="All pages tagged 'number'." href="../../../../tag/number.html" rel="tag">number</a>, <a title="All pages tagged 'programming'." href="../../../../tag/programming.html" rel="tag">programming</a>, <a title="All pages tagged 'theory'." href="../../../../tag/theory.html" rel="tag">theory</a>
+  
+</div>
+
+<section>
+<p>
+In <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">my last post</a> I wrote about modular exponentiation and <code>egcd</code>. In this post, I consider the problem of solving modular equivalences, building on code from the previous post.
+</p>
+<h1 id="solving-linear-congruences">
+Solving linear congruences
+</h1>
+<p>
+A <em>linear congruence</em> is a modular equivalence of the form
+</p>
+<div style="text-align:center;">
+<p>
+<span class="math inline">\(ax \equiv b \pmod m\)</span>.
+</p>
+</div>
+<p>
+Let’s write a function to solve such equivalences for <span class="math inline">\(x\)</span>. We want a pair of integers <span class="math inline">\(y\)</span> and <span class="math inline">\(k\)</span> such that <span class="math inline">\(x\)</span> is a solution to <span class="math inline">\(ax \equiv b \pmod m\)</span> if and only if <span class="math inline">\(x \equiv y \pmod k\)</span>. This isn’t hard to write in the end, but takes a little bit of thought to do it properly.
+</p>
+<p>
+First of all, if <span class="math inline">\(a\)</span> and <span class="math inline">\(m\)</span> are relatively prime (that is, <span class="math inline">\(\gcd(a,m) = 1\)</span>) then we know from the last post that <span class="math inline">\(a\)</span> has an inverse modulo <span class="math inline">\(m\)</span>; multiplying both sides by <span class="math inline">\(a^{-1}\)</span> yields the solution <span class="math inline">\(x \equiv a^{-1} b \pmod m\)</span>.
+</p>
+<p>
+OK, but what if <span class="math inline">\(\gcd(a,m) &amp;gt; 1\)</span>? In this case there might not even be any solutions. For example, <span class="math inline">\(2x \equiv 3 \pmod 4\)</span> has no solutions: any even number will be equivalent to <span class="math inline">\(0\)</span> or <span class="math inline">\(2\)</span> modulo <span class="math inline">\(4\)</span>, so there is no value of <span class="math inline">\(x\)</span> such that double it will be equivalent to <span class="math inline">\(3\)</span>. On the other hand, <span class="math inline">\(2x \equiv 2 \pmod 4\)</span> is OK: this will be true for any odd value of <span class="math inline">\(x\)</span>, that is, <span class="math inline">\(x \equiv 1 \pmod 2\)</span>. In fact, it is easy to see that any common divisor of <span class="math inline">\(a\)</span> and <span class="math inline">\(m\)</span> must also divide <span class="math inline">\(b\)</span> in order to have any solutions. In case the GCD of <span class="math inline">\(a\)</span> and <span class="math inline">\(m\)</span> does divide <span class="math inline">\(b\)</span>, we can simply divide through by the GCD (<em>including</em> dividing the modulus <span class="math inline">\(m\)</span>!) and then solve the resulting equivalence.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">-- solveMod a b m solves ax = b (mod m), returning a pair (y,k) (with</span>
+<span style="color:green;">-- 0 &lt;= y &lt; k) such that x is a solution iff x = y (mod k).</span>
+<span>solveMod</span> <span style="color:red;">::</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span style="color:red;">(</span><span>Integer</span><span style="color:red;">,</span> <span>Integer</span><span style="color:red;">)</span>
+<span>solveMod</span> <span>a</span> <span>b</span> <span>m</span>
+  <span style="color:red;">|</span> <span>g</span> <span>==</span> <span class="hs-num">1</span>         <span style="color:red;">=</span> <span>Just</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>b</span> <span>*</span> <span>inverse</span> <span>m</span> <span>a</span><span style="color:red;">)</span> <span>`mod`</span> <span>m</span><span style="color:red;">,</span> <span>m</span><span style="color:red;">)</span>
+  <span style="color:red;">|</span> <span>b</span> <span>`mod`</span> <span>g</span> <span>==</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>solveMod</span> <span style="color:red;">(</span><span>a</span> <span>`div`</span> <span>g</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>b</span> <span>`div`</span> <span>g</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>m</span> <span>`div`</span> <span>g</span><span style="color:red;">)</span>
+  <span style="color:red;">|</span> <span>otherwise</span>      <span style="color:red;">=</span> <span>Nothing</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>g</span> <span style="color:red;">=</span> <span>gcd</span> <span>a</span> <span>m</span></code></pre>
+<h1 id="solving-systems-of-congruences-with-crt">
+Solving systems of congruences with CRT
+</h1>
+<p>
+In its most basic form, the <a href="https://mathlesstraveled.com/2019/04/05/more-words-about-pww-25-the-chinese-remainder-theorem/"><em>Chinese remainder theorem</em> (CRT)</a> says that if we have a system of two modular equations
+</p>
+<p>
+<span class="math inline">\(\begin{array}{rcl}x &amp;amp;\equiv&amp;amp; a \pmod m \\ x &amp;amp;\equiv&amp;amp; b \pmod n\end{array}\)</span>
+</p>
+<p>
+then as long as <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span> are relatively prime, there is a <em>unique</em> solution for <span class="math inline">\(x\)</span> modulo the product <span class="math inline">\(mn\)</span>; that is, the system of two equations is equivalent to a single equation of the form
+</p>
+<p>
+<span class="math inline">\(x \equiv c \pmod {mn}.\)</span>
+</p>
+<p>
+We first compute the Bézout coefficients <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> such that <span class="math inline">\(mu + nv = 1\)</span> <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">using <code>egcd</code></a>, and then compute the solution as <span class="math inline">\(c = anv + bmu\)</span>. Indeed,
+</p>
+<p>
+<span class="math inline">\(c = anv + bmu = a(1 - mu) + bmu = a - amu + bmu = a + (b-a)mu\)</span>
+</p>
+<p>
+and hence <span class="math inline">\(c \equiv a \pmod m\)</span>; similarly <span class="math inline">\(c \equiv b \pmod n\)</span>.
+</p>
+<p>
+However, this is not quite general enough: we want to still be able to say something useful even if <span class="math inline">\(\gcd(m,n) &amp;gt; 1\)</span>. I won’t go through the whole proof, but it turns out that there is a solution if and only if <span class="math inline">\(a \equiv b \pmod {\gcd(m,n)}\)</span>, and we can just divide everything through by <span class="math inline">\(g = \gcd(m,n)\)</span>, as we did for solving linear congruences. Here’s the code:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">-- gcrt2 (a,n) (b,m) solves the pair of modular equations</span>
+<span style="color:green;">--</span>
+<span style="color:green;">--   x = a (mod n)</span>
+<span style="color:green;">--   x = b (mod m)</span>
+<span style="color:green;">--</span>
+<span style="color:green;">-- It returns a pair (c, k) such that all solutions for x satisfy x =</span>
+<span style="color:green;">-- c (mod k), that is, solutions are of the form x = kt + c for</span>
+<span style="color:green;">-- integer t.</span>
+<span>gcrt2</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Integer</span><span style="color:red;">,</span> <span>Integer</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>Integer</span><span style="color:red;">,</span> <span>Integer</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span style="color:red;">(</span><span>Integer</span><span style="color:red;">,</span> <span>Integer</span><span style="color:red;">)</span>
+<span>gcrt2</span> <span style="color:red;">(</span><span>a</span><span style="color:red;">,</span><span>n</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>b</span><span style="color:red;">,</span><span>m</span><span style="color:red;">)</span>
+  <span style="color:red;">|</span> <span>a</span> <span>`mod`</span> <span>g</span> <span>==</span> <span>b</span> <span>`mod`</span> <span>g</span> <span style="color:red;">=</span> <span>Just</span> <span style="color:red;">(</span><span style="color:red;">(</span><span style="color:red;">(</span><span>a</span><span>*</span><span>v</span><span>*</span><span>m</span> <span>+</span> <span>b</span><span>*</span><span>u</span><span>*</span><span>n</span><span style="color:red;">)</span> <span>`div`</span> <span>g</span><span style="color:red;">)</span> <span>`mod`</span> <span>k</span><span style="color:red;">,</span> <span>k</span><span style="color:red;">)</span>
+  <span style="color:red;">|</span> <span>otherwise</span>              <span style="color:red;">=</span> <span>Nothing</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span style="color:red;">(</span><span>g</span><span style="color:red;">,</span><span>u</span><span style="color:red;">,</span><span>v</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>egcd</span> <span>n</span> <span>m</span>
+    <span>k</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>m</span><span>*</span><span>n</span><span style="color:red;">)</span> <span>`div`</span> <span>g</span></code></pre>
+<p>
+From here we can bootstrap ourselves into solving systems of more than two equations, by iteratively combining two equations into one.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">-- gcrt solves a system of modular equations.  Each equation x = a</span>
+<span style="color:green;">-- (mod n) is given as a pair (a,n).  Returns a pair (z, k) such that</span>
+<span style="color:green;">-- solutions for x satisfy x = z (mod k), that is, solutions are of</span>
+<span style="color:green;">-- the form x = kt + z for integer t.</span>
+<span>gcrt</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span style="color:red;">(</span><span>Integer</span><span style="color:red;">,</span> <span>Integer</span><span style="color:red;">)</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span style="color:red;">(</span><span>Integer</span><span style="color:red;">,</span> <span>Integer</span><span style="color:red;">)</span>
+<span>gcrt</span> <span>[]</span>         <span style="color:red;">=</span> <span>Nothing</span>
+<span>gcrt</span> <span style="color:red;">[</span><span>e</span><span style="color:red;">]</span>        <span style="color:red;">=</span> <span>Just</span> <span>e</span>
+<span>gcrt</span> <span style="color:red;">(</span><span>e1</span><span>:</span><span>e2</span><span>:</span><span>es</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>gcrt2</span> <span>e1</span> <span>e2</span> <span>&gt;&gt;=</span> <span style="color:red;">\</span><span>e</span> <span style="color:red;">-&gt;</span> <span>gcrt</span> <span style="color:red;">(</span><span>e</span><span>:</span><span>es</span><span style="color:red;">)</span></code></pre>
+<h1 id="practice-problems">
+Practice problems
+</h1>
+<p>
+And here are a bunch of problems for you to practice!
+</p>
+<ul>
+<li>
+<a href="http://open.kattis.com/problems/chineseremainder">Chinese Remainder</a>
+</li>
+<li>
+<a href="http://open.kattis.com/problems/generalchineseremainder">Chinese Remainder Theorem (non-relatively prime moduli)</a>
+</li>
+<li>
+<a href="http://open.kattis.com/problems/disgruntledjudge">Disgruntled Judge</a>
+</li>
+<li>
+<a href="http://open.kattis.com/problems/astro">Astro</a>
+</li>
+<li>
+<a href="http://open.kattis.com/problems/heliocentric">Heliocentric</a>
+</li>
+<li>
+<a href="http://open.kattis.com/problems/remainderreminder">Remainder Reminder</a>
+</li>
+<li>
+<a href="http://open.kattis.com/problems/dvdscreensaver">DVD Screensaver</a>
+</li>
+</ul>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

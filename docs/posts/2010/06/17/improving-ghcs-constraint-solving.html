@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Improving GHC's constraint solving</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2010/06/02/summer-in-cambridge.html">« Summer in Cambridge</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2010/06/29/typed-type-level-programming-in-haskell-part-i-functional-dependencies.html">» Typed type-level programming in Haskell, part I: functional dependencies</a>
+
+</span>
+
+
+<h1>Improving GHC's constraint solving</h1>
+
+<div class="info">
+  Posted on June 17, 2010
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'constraints'." href="../../../../tag/constraints.html" rel="tag">constraints</a>, <a title="All pages tagged 'GHC'." href="../../../../tag/GHC.html" rel="tag">GHC</a>, <a title="All pages tagged 'inference'." href="../../../../tag/inference.html" rel="tag">inference</a>, <a title="All pages tagged 'MSR'." href="../../../../tag/MSR.html" rel="tag">MSR</a>, <a title="All pages tagged 'type'." href="../../../../tag/type.html" rel="tag">type</a>
+  
+</div>
+
+<section>
+<p>So I’ve been here at <a href="http://research.microsoft.com/en-us/labs/cambridge/">MSR Cambridge</a> for almost two weeks now (!), working in the <a href="http://research.microsoft.com/en-us/groups/ppt/default.aspx">Programming Principles and Tools Group</a> with <a href="http://research.microsoft.com/en-us/people/simonpj/">Simon Peyton-Jones</a> and <a href="http://research.microsoft.com/en-us/people/dimitris/">Dimitrios Vytiniotis</a> — and also collaborating with <a href="http://www.cis.upenn.edu/~sweirich/">Stephanie Weirich</a> and <a href="http://www.cis.upenn.edu/~stevez/">Steve Zdancewic</a>, who are also in Cambridge. So, what have I been doing?</p>
+<p>This week, Simon, Dimitris, and I have been having a major GHC hacking session, implementing the new constraint-solving type inference engine described in their <a href="http://haskell.org/haskellwiki/Simonpj/Talk:OutsideIn">new OutsideIn(X) paper</a>. It’s been a lot of fun — I’ve never hacked on GHC before, and it’s quite a new experience hacking on such a large (and amazing) piece of software. I’ve been working on the <i>constraint canonicaliser</i>, which puts constraints into canonical forms appropriate for the constraint simplifier to work with. As a simple example, the equality constraint <code>(Int, a) ~ (b, Char)</code> gets decomposed into the primitive constraints <code>Int ~ b</code> and <code>a ~ Char</code>. It’s also responsible for flipping and flattening equality constraints so that type function applications only happen on the left-hand side: for example, the constraint <code>F a b ~ G Int</code> (where both <code>F</code> and <code>G</code> are type families), gets rewritten to a pair of constraints <code>F a b ~ c</code>, <code>G Int ~ c</code>, where <code>c</code> is a fresh variable. If we didn’t do this it would lead to problems with termination: for example, the constraint <code>a ~ [F a]</code> could lead to infinite rewriting of <code>a</code> to <code>[F a]</code> to <code>[F [F a]]</code> to… (And before you protest that we ought to just throw out <code>a ~ [F a]</code> on the grounds that it is recursive, note that <code>F a</code> may not mention <code>a</code> at all; for example, perhaps <code>F</code> is defined by <code>F [x] = Int</code>.)</p>
+<p>Constraints also include type class constraints and implicit parameter constraints, although there’s much less work to do with those as far as canonicalisation is concerned.</p>
+<p>Next week, I’ll likely get back to our other, more ambitious research project, but I’ll write more about that next time. In the meantime, if you’re in or near Cambridge and want to meet up, just drop me a note!</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

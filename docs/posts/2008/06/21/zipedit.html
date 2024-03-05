@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - ZipEdit</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2008/04/30/new-haskell-diagrams-library.html">« New Haskell diagrams library</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2008/07/15/icfp-programming-contest-reflections.html">» ICFP programming contest reflections</a>
+
+</span>
+
+
+<h1>ZipEdit</h1>
+
+<div class="info">
+  Posted on June 21, 2008
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'editing'." href="../../../../tag/editing.html" rel="tag">editing</a>, <a title="All pages tagged 'lists'." href="../../../../tag/lists.html" rel="tag">lists</a>, <a title="All pages tagged 'zipper'." href="../../../../tag/zipper.html" rel="tag">zipper</a>
+  
+</div>
+
+<section>
+<p>So I’ve <a href="http://sequence.complete.org/hwn/20080611">taken over the editorship</a> of the <a href="http://haskell.org/haskellwiki/Haskell_Weekly_News">Haskell Weekly News</a>, a job that would be completely insane without help from automated tools. Putting together an issue requires gathering information from a number of different sources, summarizing and compiling the information into a consistent, standard layout, and finally publishing the issue in several different formats.</p>
+<p>Thankfully, along with the editorship I inherited some nice tools built by my predecessors, including, in particular, a utility that generates all the different HWN formats (text, html, and pdf) from one text file in a standard format (essentially, the standard Show representation of a value of type HWN). This makes the task of creating and producing each issue much simpler; I have only to worry about the content, and the formatting is taken care of.</p>
+<p>However, there wasn’t anything in the way of automation for the process of gathering material in the first place. Of course, this can’t be completely automated—at some level a human still has to look through lists of emails and blog posts and the like, decide what to include, and summarize it appropriately. But there’s still quite a bit of tedium that can potentially be automated away. So, I set about writing myself some tools, hoping that the upfront investment of time will pay off in the long run.</p>
+<p>At the heart of several of these tools is a new library I created called <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/zipedit">zipedit</a>. It’s far from polished and elegant, and may not even be useful to anyone else, but I think it’s kind of cute. The idea is simple: given some sort of list, we want to be able to create a text interface which allows the user to ‘edit’ the list by moving back and forth within it and modifying, deleting, or inserting elements. It’s called ‘zipedit’ because, of course, it uses a <a href="http://haskell.org/haskellwiki/Zipper">list zipper</a> to keep track of the list context.</p>
+<p>What does this have to do with collecting material for the HWN? Well, here’s a motivating example: using this library, I wrote a little utility that gets the RSS feed from Planet Haskell, parses out the relevant information, and presents each item to me one-by-one. For each item I can choose whether I would like it to be included in the HWN. But since I am really editing a list of RSS items, I can move backwards as well as forwards through the items, change my mind, and so on. When I am finally done, those items which I chose to be included are output in a format appropriate for pasting into the issue I am editing. The great thing is that the zipedit library deals with all the icky IO bits—the actual utility just specifies an appropriate (pure, functional) configuration. Here are some relevant bits of code from the utility:</p>
+<pre>
+data FlaggedItem = FI { item :: RSSItem
+                      , use  :: Bool
+                      }
+
+mkItem :: RSSItem -&gt; FlaggedItem
+mkItem r = FI r False
+
+yes :: FlaggedItem -&gt; FlaggedItem
+yes (FI r _) = FI r True
+
+no :: FlaggedItem -&gt; FlaggedItem
+no (FI r _) = FI r False
+
+ec :: EditorConf FlaggedItem
+ec = EC { display = maybe "" (showItem 30)
+        , prompt  = maybe "" (\fi -&gt; (if use fi then "\n(Y/n)" else "\n(y/N)") ++ "? ")
+        , actions = [ ('y', Seq [Modify yes, Fwd])
+                    , ('n', Seq [Modify no, Fwd])
+                    , ('p', Output (showItem 100))
+                    ]
+                    ++ stdActions
+        }
+
+main = do
+  RSSFeed rss &lt;- (fromJust . parseFeedString) `fmap` openURL url
+  let items = map mkItem . rssItems . rssChannel $ rss
+  ml &lt;- edit ec items
+  case ml of
+    Nothing     -&gt; return ()
+    Just items' -&gt; do
+      f &lt;- openFile "blogs.wiki" WriteMode
+      hPutStr f . intercalate ",\n\n" . map (fmt.item) . filter use $ items'
+      hClose f
+</pre>
+<p>I’ve left out a few things that aren’t important for this discussion (such as the code that formats the RSS items for output); the full source code can be obtained from the <a href="http://code.haskell.org/~byorgey/code/hwn/">darcs repository</a>. The important part to note is the definition of <code>ec</code>, which gets passed to the <code>edit</code> function. To define a configuration for a list editor, you just need to specify three things: a display function, which tells the library how to display the elements of the list; a prompt function, which tells it how to display an input prompt; and a mapping from user inputs (single character commands) to actions that should be taken in response. In this case, you can see that I have defined ‘y’ and ‘n’ to mark the current item as used/unused and automatically move to the next item, and the ‘p’ command to print more context. I’ve also used a set of standard commands provided by the zipedit library (things like ‘q’ for canceling, ‘d’ for when you’re done, ‘j’ and ‘k’ for moving forwards and backwards, and so on).</p>
+<p>So, what does it look like? Here’s an example of the above utility in action:</p>
+<pre>
+[05:02:59 brent@xenophon:~/haskell/hwn]$ ./planethaskell 
+
+Andy Gill: Where is the call to $f4?
+In a previous blog, we saw that we have options for which version of core we examine. 
+We saw that we had a significant dictionary creation attributed cost, beneath unvector2D.
+(y/N)? n
+
+Bryan O'Sullivan: Disappointed by Thinkpad X60 thermal problems
+Ive had a Lenovo X60 for about 18 months. For almost a year, I was well pleased with 
+its combination of light weight and decent performance, but then it developed
+(y/N)? k
+
+Andy Gill: Where is the call to $f4?
+In a previous blog, we saw that we have options for which version of core we examine.
+We saw that we had a significant dictionary creation attributed cost, beneath unvector2D.
+(y/N)? y
+
+Bryan O'Sullivan: Disappointed by Thinkpad X60 thermal problems
+Ive had a Lenovo X60 for about 18 months. For almost a year, I was well pleased with 
+its combination of light weight and decent performance, but then it developed
+(y/N)? n
+
+Russell O'Connor: No-Good Ethical Funds
+I do not understand the motivation behind buying ethical funds. They seem like a bad idea. 
+By my understanding they Do not help ethical companies Do not hinder unethical companies
+(y/N)? d
+</pre>
+<p>As you can see, I rejected the first item, then changed my mind and went back, selected it, rejected the next item, and then decided that I was done. If you’ve used darcs, you may also realize at this point where I got my inspiration for this little project. =)</p>
+<p>Another slightly more sophisticated utility I’ve created is for gathering announcements and discussions from email traffic on various lists. Not only can I select or reject individual posts, but for those I select, I can interactively choose a title, and compose some summary text in my favorite editor (which is initially populated with the text of the post, so I can easily pick and choose sentences, phrases, or links to incorporate into my summary). I’ve even added a nifty feature where it only loads a certain number of posts at a time, and seamlessly fetches more over the network when I get to the end of the list. The source code for this utility (gmane.hs) is also available from the <a href="http://code.haskell.org/~byorgey/code/hwn/">HWN darcs repository</a>.</p>
+<p>The latest release of <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/zipedit">zipedit is available on Hackage</a>; there’s also a <a href="http://code.haskell.org/~byorgey/code/zipedit">darcs repository</a>. As always, comments, questions, and patches welcome! I’d be especially interested to hear if you actually find zipedit useful for something, and if so I imagine I would be very responsive to reasonable feature requests. =)</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

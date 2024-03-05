@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Primitive species and species operations</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2009/07/29/hac-phi-roundup.html">« Hac φ roundup</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2009/07/31/primitive-species-and-species-operations-part-ii.html">» Primitive species and species operations, part II</a>
+
+</span>
+
+
+<h1>Primitive species and species operations</h1>
+
+<div class="info">
+  Posted on July 30, 2009
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'combinatorial species'." href="../../../../tag/combinatorial%20species.html" rel="tag">combinatorial species</a>, <a title="All pages tagged 'DSL'." href="../../../../tag/DSL.html" rel="tag">DSL</a>, <a title="All pages tagged 'primitives'." href="../../../../tag/primitives.html" rel="tag">primitives</a>
+  
+</div>
+
+<section>
+<p>In this second post about my new <a href="http://hackage.haskell.org/package/species">combinatorial species library</a>, I plan to begin writing about the species DSL itself: what are the primitive combinatorial species and the primitive operations on species? (The <a href="http://byorgey.wordpress.com/2009/07/24/introducing-math-combinatorics-species/">first post described the concept of combinatorial species in general</a>. Also, for those following along at home, I’ve just uploaded version 0.2.1 of the species library, which is a vast improvement over 0.1, with many new features and a few bug fixes; just <code>cabal update &amp;&amp; cabal upgrade species</code>. Also also, note that it currently only builds on ghc 6.10.x.)</p>
+<h3>
+The Species type class
+</h3>
+<p>The central point of the combinatorial species formalism is that there is a deep and fruitful <i>analogy</i> between species and certain types of generating functions: every species corresponds to (several different types of) generating functions, and every species operation corresponds, in a fairly natural way, to operations on generating functions. For example, “adding” two species has the combinatorial interpretation of disjoint sum, but also corresponds to generating function addition—that is, the generating function of a sum of species is the sum of their generating functions. Like every good generating function, these generating functions encode various sorts of information about species (such as counting labelled or unlabelled structures), so once we have written down a description of a combinatorial structure using primitive species and species operations, we can use the generating function analogy to compute various properties of the species.</p>
+<p>So, how to represent combinatorial species in our library? With a <code>Species</code> type class, of course! The type class mechanism is perfectly suited to this situation—we have an abstract algebraic structure (species and species operations) which can be interpreted in several ways. So we can write down an expression of type <code>Species s =&gt; s</code>, and then choose to compute certain things about it simply by choosing what type it should be. Without further ado, let’s see (an idealized version of) the type class itself, defined in <code>Math.Combinatorics.Species.Class</code>:</p>
+<pre>
+class (Algebra.Differential.C s) =&gt; Species s where
+  singleton :: s
+  set       :: s
+  cycle     :: s
+
+  o         :: s -&gt; s -&gt; s
+  cartesian :: s -&gt; s -&gt; s
+  fcomp     :: s -&gt; s -&gt; s
+  ofSize    :: s -&gt; (Integer -&gt; Bool) -&gt; s
+</pre>
+<p>(I’ve actually left out a few methods, but they all share the property that they have default implementations in terms of the other methods, and are only in the class so they can be given specialized implementations in certain instances. I’ve left them out for now to simplify the discussion.)</p>
+<p>So we can now write expressions like</p>
+<p><code>(set <code>ofSize</code> (&gt;3)) <code>fcomp</code> (cycle <code>o</code> singleton) :: Species s =&gt; s</code></p>
+<p>but what does it mean? (Actually, this particular example is pretty meaningless. =) And what’s that <code>Algebra.Differential.C</code> constraint? Let’s start at the beginning.</p>
+<h3>
+0
+</h3>
+<p>The <code>Algebra.Differential.C</code> constraint requires any instance of <code>Species</code> to be a <i>differentiable ring</i>. In particular, it (transitively) implies the constraint <code>Algebra.Additive.C</code>, which means that instances of <code>Species</code> must form an additive group: there must be a species operation <code>(+)</code>, and a species <code>0</code> which is the identity for <code>(+)</code>. (It also requires an operation <code>negate</code> which produces additive inverses, but that isn’t implemented yet!) Let’s see what these correspond to.</p>
+<p>The species <span class="math inline">\(0\)</span> is the Scrooge of the species world: it refuses to create a single structure, no matter how many labels you give it!</p>
+<p>[caption id=“attachment_220” align=“aligncenter” width=“400” caption=“The species 0”]<img src="http://byorgey.files.wordpress.com/2009/07/zero.png" alt="The species 0" title="zero" width="400" height="92" class="size-full wp-image-220" />[/caption]</p>
+<p>Let’s see how to use this species with the library:
+<code>
+&gt; take 10 $ labelled 0
+[0,0,0,0,0,0,0,0,0,0]
+&gt; take 10 $ unlabelled 0
+[0,0,0,0,0,0,0,0,0,0]
+&gt; generate 0 ([1..3] :: [Int])
+[]
+</code></p>
+<p>Pretty boring, huh? Well, it’s supposed to be. <span class="math inline">\(0\)</span> doesn’t get explicitly used very much, but it’s nice to know it’s there.</p>
+<p>(Also, remember that to follow along, you’ll have to start ghci with the <code>-XNoImplicitPrelude</code> flag, then remove the loaded Prelude module with <code>:m -Prelude</code>, and then load <code>MyPrelude</code> (from the NumericPrelude library) and the species library: <code>:m +MyPrelude Math.Combinatorics.Species</code>.)</p>
+<h3>
+Species sum
+</h3>
+<p>And what about species addition? Addition just corresponds to disjoint (i.e. tagged) union: an <span class="math inline">\((F+G)\)</span>-structure is either an <span class="math inline">\(F\)</span>-structure or a <span class="math inline">\(G\)</span>-structure, along with a tag so you know which it is. If you have <span class="math inline">\(m\)</span> <span class="math inline">\(F\)</span>-structures and <span class="math inline">\(n\)</span> <span class="math inline">\(G\)</span>-structures, then you have <span class="math inline">\(m + n\)</span> <span class="math inline">\((F+G)\)</span>-structures.</p>
+<p><code>
+&gt; take 10 $ labelled lists
+[1,1,2,6,24,120,720,5040,40320,362880]
+&gt; take 10 $ labelled octopi
+[0,1,3,14,90,744,7560,91440,1285200,20603520]
+&gt; take 10 $ labelled (lists + octopi)
+[1,2,5,20,114,864,8280,96480,1325520,20966400]
+&gt; generate (lists + octopi) ([1,2] :: [Int])
+[inl([1,2]),inl([2,1]),inr(&lt;[1,2]&gt;),inr(&lt;[2,1]&gt;),
+inr(&lt;[1],[2]&gt;)]
+</code></p>
+<p>Do you see why the <span class="math inline">\(0\)</span> species is the identity element for species sum? If you have a structure of the species <span class="math inline">\(0 + F\)</span>, it must be either a <span class="math inline">\(0\)</span>-structure, or an <span class="math inline">\(F\)</span>-structure: but there <i>are</i> no <span class="math inline">\(0\)</span>-structures! Now, you may complain that <span class="math inline">\(0\)</span> is not really an <i>identity</i>, since the addition still introduces an extra tag:</p>
+<p><code>
+&gt; generate subsets ([1..3] :: [Int])
+[{1,2,3},{1,2},{1,3},{1},{2,3},{2},{3},{}]
+&gt; generate (0 + subsets) ([1..3] :: [Int])
+[inr({1,2,3}),inr({1,2}),inr({1,3}),inr({1}),
+inr({2,3}),inr({2}),inr({3}),inr({})]
+</code></p>
+<p>That’s true, but we really only care about species identity <i>up to isomorphism</i>, and the species <span class="math inline">\(F\)</span>, <span class="math inline">\(0 + F\)</span>, and <span class="math inline">\(F + 0\)</span> are clearly all isomorphic for any species <span class="math inline">\(F\)</span>, even if they are not identical.</p>
+<h3>
+1
+</h3>
+<p>The <code>Algebra.Differential.C</code> constraint also implies a <code>Algebra.Ring.C</code> constraint, which requires a multiplication operation <code>(*)</code> and identity element <code>1</code>.</p>
+<p>So, what is the species <span class="math inline">\(1\)</span>? It puts a singleton structure on the empty set of labels, but no structures on any nonempty label sets:</p>
+<p>[caption id=“attachment_223” align=“aligncenter” width=“400” caption=“The species 1”]<img src="http://byorgey.files.wordpress.com/2009/07/one.png" alt="The species 1" title="one" width="400" height="198" class="size-full wp-image-223" />[/caption]</p>
+<p><code>
+&gt; take 10 $ labelled 1
+[1,0,0,0,0,0,0,0,0,0]
+&gt; take 10 $ unlabelled 1
+[1,0,0,0,0,0,0,0,0,0]
+&gt; generate 1 ([] :: [Int])
+[1]
+&gt; generate 1 ([1..3] :: [Int])
+[]
+</code></p>
+<p>So you can see that on the empty set, <span class="math inline">\(1\)</span> generates a single structure which is also called 1 (although it could be called anything, really).</p>
+<h3>
+Species product
+</h3>
+<p>And species product? An <span class="math inline">\((F*G)\)</span>-structure on a set of labels is a pair consisting of an <span class="math inline">\(F\)</span>-structure on a subset of the labels, and a <span class="math inline">\(G\)</span>-structure on whatever labels are left over. In other words, to form all <span class="math inline">\((F*G)\)</span>-structures on a set of labels <span class="math inline">\(U\)</span>, we first partition <span class="math inline">\(U\)</span> into an ordered pair of subsets in all possible ways, and for each pair, take all possible combinations of an <span class="math inline">\(F\)</span>-structure on the first subset, and a <span class="math inline">\(G\)</span>-structure on the second subset. For example:</p>
+<p><code>
+&gt; generate (list * list) ([1..3] :: [Int])
+[([1,2,3],[]),([1,3,2],[]),([2,1,3],[]),([2,3,1],[]),([3,1,2],[]),([3,2,1],[]),([1,2],[3]),([2,1],[3]),([1,3],[2]),([3,1],[2]),([1],[2,3]),([1],[3,2]),([2,3],[1]),([3,2],[1]),([2],[1,3]),([2],[3,1]),([3],[1,2]),([3],[2,1]),([],[1,2,3]),([],[1,3,2]),([],[2,1,3]),([],[2,3,1]),([],[3,1,2]),([],[3,2,1])]
+</code></p>
+<p>Can you see why <span class="math inline">\(1\)</span> is the identity element for this operation? The only partition of the label set that will produce any <span class="math inline">\((1*F)\)</span>-structures is <span class="math inline">\((\emptyset, U)\)</span>: in any other case, <span class="math inline">\(1\)</span> produces no structures. But a <span class="math inline">\(1\)</span>-structure paired with an <span class="math inline">\(F\)</span>-structure on <span class="math inline">\(U\)</span> is really just an <span class="math inline">\(F\)</span>-structure on <span class="math inline">\(U\)</span>, since there is only one <span class="math inline">\(1\)</span>-structure.</p>
+<p>As an exercise, can you figure out what the species <span class="math inline">\(2\)</span>, <span class="math inline">\(3\)</span>, … ought to be?</p>
+<p>I think I’ll stop there for now. In my next post, I’ll talk about the other primitive species in the <code>Species</code> type class: singletons, sets, and cycles.</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

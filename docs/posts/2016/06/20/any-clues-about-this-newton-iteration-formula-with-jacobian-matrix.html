@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Any clues about this Newton iteration formula with Jacobian matrix?</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2016/05/23/towards-a-new-programming-languages-course-ideas-welcome.html">« Towards a new programming languages course: ideas welcome!</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2016/07/07/eastman-maximal-comma-free-codes-in-haskell.html">» Eastman maximal comma-free codes in Haskell</a>
+
+</span>
+
+
+<h1>Any clues about this Newton iteration formula with Jacobian matrix?</h1>
+
+<div class="info">
+  Posted on June 20, 2016
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'algorithm'." href="../../../../tag/algorithm.html" rel="tag">algorithm</a>, <a title="All pages tagged 'Boltzmann'." href="../../../../tag/Boltzmann.html" rel="tag">Boltzmann</a>, <a title="All pages tagged 'formula'." href="../../../../tag/formula.html" rel="tag">formula</a>, <a title="All pages tagged 'iteration'." href="../../../../tag/iteration.html" rel="tag">iteration</a>, <a title="All pages tagged 'Jacobian'." href="../../../../tag/Jacobian.html" rel="tag">Jacobian</a>, <a title="All pages tagged 'Newton'." href="../../../../tag/Newton.html" rel="tag">Newton</a>, <a title="All pages tagged 'sampling'." href="../../../../tag/sampling.html" rel="tag">sampling</a>
+  
+</div>
+
+<section>
+<p>
+<a href="https://byorgey.wordpress.com/2016/03/23/boltzmann-sampling-for-generic-arbitrary-instances/">A while ago I wrote about</a> using Boltzmann sampling to generate random instances of algebraic data types, and mentioned that I have some code I inherited for doing the core computations. There is <a href="https://github.com/byorgey/boltzmann/blob/master/gen/src/Oracle/Newton.hs#L52">one part of the code</a> that I still don’t understand, having to do with a variant of <a href="https://en.wikipedia.org/wiki/Newton's%20method">Newton’s method</a> for finding a fixed point of a mutually recursive system of equations. It seems to work, but I don’t like using code I don’t understand—for example, I’d like to be sure I understand the conditions under which it does work, to be sure I am not misusing it. I’m posting this in the hopes that someone reading this may have an idea.
+</p>
+<p>
+Let <span class="math inline">\(\Phi : \mathbb{R}^n \to \mathbb{R}^n\)</span> be a vector function, defined elementwise in terms of functions <span class="math inline">\(\Phi_1, \dots, \Phi_n : \mathbb{R}^n \to \mathbb{R}\)</span>:
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle \Phi(\mathbf{X}) = (\Phi_1(\mathbf{X}), \dots, \Phi_n(\mathbf{X}))\)</span></p>
+</div>
+</p>
+<p>
+where <span class="math inline">\(\mathbf{X} = (X_1, \dots, X_n)\)</span> is a vector in <span class="math inline">\(\mathbb{R}^n\)</span>. We want to find the fixed point <span class="math inline">\(\mathbf{Y}\)</span> such that <span class="math inline">\(\Phi(\mathbf{Y}) = \mathbf{Y}\)</span>.
+</p>
+<p>
+The algorithm (you can <a href="https://github.com/byorgey/boltzmann/blob/master/gen/src/Oracle/Newton.hs#L52">see the code here</a>) now works as follows. First, define <span class="math inline">\(\mathbf{J}\)</span> as the <span class="math inline">\(n \times n\)</span> <a href="https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian matrix</a> of partial derivatives of the <span class="math inline">\(\Phi_i\)</span>, that is,
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle \displaystyle \mathbf{J} = \begin{bmatrix} \frac{\partial}{\partial X_1} \Phi_1 &amp;amp; \dots &amp;amp; \frac{\partial}{\partial X_n} \Phi_1 \\ \vdots &amp;amp; \ddots &amp;amp; \vdots \\ \frac{\partial}{\partial X_1} \Phi_n &amp;amp; \dots &amp;amp; \frac{\partial}{\partial X_n} \Phi_n\end{bmatrix}\)</span></p>
+</div>
+</p>
+<p>
+Now let <span class="math inline">\(\mathbf{Y}_0 = (0, \dots, 0)\)</span> and let <span class="math inline">\(\mathbf{U}_0 = I_n\)</span> be the <span class="math inline">\(n \times n\)</span> identity matrix. Then for each <span class="math inline">\(i \geq 0\)</span> define
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle \mathbf{U}_{i+1} = \mathbf{U}_i + \mathbf{U}_i(\mathbf{J}(\mathbf{Y}_i)\mathbf{U}_i - (\mathbf{U}_i - I_n))\)</span></p>
+</div>
+</p>
+<p>
+and also
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle \mathbf{Y}_{i+1} = \mathbf{Y}_i + \mathbf{U}_{i+1}(\Phi(\mathbf{Y}_i) - \mathbf{Y}_i).\)</span></p>
+</div>
+</p>
+<p>
+Somehow, magically (under appropriate conditions on <span class="math inline">\(\Phi\)</span>, I presume), the sequence of <span class="math inline">\(\mathbf{Y}_i\)</span> converge to the fixed point <span class="math inline">\(\mathbf{Y}\)</span>. But I don’t understand where this is coming from, especially the equation for <span class="math inline">\(\mathbf{U}_{i+1}\)</span>. Most generalizations of Newton’s method that I can find seem to involve multiplying by the <em>inverse</em> of the Jacobian matrix. So what’s going on here? Any ideas/pointers to the literature/etc?
+</p>
+<div id="refs" class="references" role="list">
+
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

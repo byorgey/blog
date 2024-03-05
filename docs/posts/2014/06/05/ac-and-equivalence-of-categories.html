@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - AC and equivalence of categories</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2014/05/13/unique-isomorphism-and-generalized-the.html">« Unique isomorphism and generalized "the"</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2014/06/16/anafunctors.html">» Anafunctors</a>
+
+</span>
+
+
+<h1>AC and equivalence of categories</h1>
+
+<div class="info">
+  Posted on June  5, 2014
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'AC'." href="../../../../tag/AC.html" rel="tag">AC</a>, <a title="All pages tagged 'axiom of choice'." href="../../../../tag/axiom%20of%20choice.html" rel="tag">axiom of choice</a>, <a title="All pages tagged 'category'." href="../../../../tag/category.html" rel="tag">category</a>, <a title="All pages tagged 'constructive'." href="../../../../tag/constructive.html" rel="tag">constructive</a>, <a title="All pages tagged 'equivalence'." href="../../../../tag/equivalence.html" rel="tag">equivalence</a>, <a title="All pages tagged 'functor'." href="../../../../tag/functor.html" rel="tag">functor</a>, <a title="All pages tagged 'isomorphism'." href="../../../../tag/isomorphism.html" rel="tag">isomorphism</a>, <a title="All pages tagged 'theory'." href="../../../../tag/theory.html" rel="tag">theory</a>, <a title="All pages tagged 'types'." href="../../../../tag/types.html" rel="tag">types</a>, <a title="All pages tagged 'unique'." href="../../../../tag/unique.html" rel="tag">unique</a>
+  
+</div>
+
+<section>
+<p>
+This is part three in a series of posts on avoiding the axiom of choice (<a href="http://byorgey.wordpress.com/2014/05/08/avoiding-the-axiom-of-choice-part-i/">part one</a>, <a href="http://byorgey.wordpress.com/2014/05/13/unique-isomorphism-and-generalized-the/">part two</a>).
+</p>
+<p>
+In my <a href="http://byorgey.wordpress.com/2014/05/13/unique-isomorphism-and-generalized-the/">previous post</a>, I explained one place where the axiom of choice often shows up in category theory, namely, when defining certain functors whose action on objects is specified only up to unique isomorphism. In this post, I’ll explain another place AC shows up, when talking about <em>equivalence</em> of categories. (Actually, as we’ll see, it’s really the same underlying issue, of defining a functor defined only up to unique isomorphism; this is just a particularly important instantiation of that issue.)
+</p>
+<p>
+When are two categories “the same”? In traditional category theory, founded on set theory, there are quite a few different definitions of “sameness” for categories. Ultimately, this comes down to the fact that set theory does not make a very good foundation for category theory! There are lots of different ideas of equivalence, and they often do not correspond to the underlying equality on sets, so one must carefully pick and choose which notions of equality to use in which situations (and some choices might be better than others!). Every concept, it seems, comes with “strict” and “weak” variants, and often many others besides. Maintaining the principle of equivalence requires hard work and vigilence.
+</p>
+<p>
+As an example, consider the following definition, our first candidate for the definition of “sameness” of categories:
+</p>
+<blockquote>
+Two categories <span class="math inline">\(\mathbb{C}\)</span> and <span class="math inline">\(\mathbb{D}\)</span> are <em>isomorphic</em> if there are functors <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span> and <span class="math inline">\(G : \mathbb{D} \to \mathbb{C}\)</span> such that <span class="math inline">\(GF = 1_\mathbb{C}\)</span> and <span class="math inline">\(FG = 1_\mathbb{D}\)</span>.
+</blockquote>
+<p>
+Seems pretty straightforward, right? Well, this is the right idea in general, but it is subtly flawed. In fact, it is somewhat “evil”, in that it talks about <em>equality</em> of functors (<span class="math inline">\(GF\)</span> and <span class="math inline">\(FG\)</span> must be <em>equal to</em> the identity). However, two functors <span class="math inline">\(H\)</span> and <span class="math inline">\(J\)</span> can be <em>isomorphic</em> without being <em>equal</em>, if there is a natural isomorphism between them—that is, a pair of natural transformations <span class="math inline">\(\phi : H \to J\)</span> and <span class="math inline">\(\psi : J \to H\)</span> such that <span class="math inline">\(\phi \circ \psi\)</span> and <span class="math inline">\(\psi \circ \phi\)</span> are both equal to the identity natural transformation.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> For example, consider the Haskell functors given by
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>Rose</span> <span>a</span> <span style="color:red;">=</span> <span>Node</span> <span>a</span> <span style="color:red;">[</span><span>Rose</span> <span>a</span><span style="color:red;">]</span>
+<span style="color:blue;font-weight:bold;">data</span> <span>Fork</span> <span>a</span> <span style="color:red;">=</span> <span>Leaf</span> <span>a</span> <span style="color:red;">|</span> <span>Fork</span> <span style="color:red;">(</span><span>Fork</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>Fork</span> <span>a</span><span style="color:red;">)</span></code></pre>
+<p>
+These are obviously not <em>equal</em>, but they are isomorphic, in the sense that there are natural transformations (<em>i.e.</em> polymorphic functions) <code>rose2fork :: forall a. Rose a -&gt; Fork a</code> and <code>fork2rose :: forall a. Fork a -&gt; Rose a</code> such that <code>rose2fork . fork2rose === id</code> and <code>fork2rose . rose2fork === id</code> (showing this is left as an exercise for the interested reader).
+</p>
+<p>
+Here, then, is a better definition:
+</p>
+<blockquote>
+Categories <span class="math inline">\(\mathbb{C}\)</span> and <span class="math inline">\(\mathbb{D}\)</span> are <em>equivalent</em> if there are functors <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span> and <span class="math inline">\(G : \mathbb{D} \to \mathbb{C}\)</span> which are inverse <em>up to natural isomorphism</em>, that is, there are natural isomorphisms <span class="math inline">\(GF \cong 1_\mathbb{C}\)</span> and <span class="math inline">\(FG \cong 1_\mathbb{D}\)</span>.
+</blockquote>
+<p>
+So the compositions of the functors <span class="math inline">\(F\)</span> and <span class="math inline">\(G\)</span> do not <em>literally</em> have to be the identity functor, but only (naturally) <em>isomorphic</em> to it. This does turn out to be a well-behaved notion of sameness for categories (although you’ll have to take my word for it).
+</p>
+<p>
+The story doesn’t end here, however. In set theory, a function is a bijection—that is, an isomorphism of sets—if and only if it is both injective and surjective. By analogy, one might wonder what properties a functor <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span> must have in order to be one half of an equivalence. This leads to the following definition:
+</p>
+<blockquote>
+<span class="math inline">\(\mathbb{C}\)</span> is <em>proto-equivalent</em><a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a> to <span class="math inline">\(\mathbb{D}\)</span> if there is a functor <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span> which is full and faithful (<em>i.e.</em>, a bijection on each hom-set) as well as <em>essentially surjective</em>, that is, for every object <span class="math inline">\(D \in \mathbb{D}\)</span> there exists some object <span class="math inline">\(C \in \mathbb{C}\)</span> such that <span class="math inline">\(F\
+C \cong D\)</span>.
+</blockquote>
+<p>
+Intuitively, this says that <span class="math inline">\(F\)</span> “embeds” an entire copy of <span class="math inline">\(\mathbb{C}\)</span> into <span class="math inline">\(\mathbb{D}\)</span> (that’s the “full and faithful” part), and that every object of <span class="math inline">\(D\)</span> which is not directly in the image of <span class="math inline">\(F\)</span> is <em>isomorphic</em> to one that is. So every object of <span class="math inline">\(\mathbb{D}\)</span> is “included” in the image of <span class="math inline">\(\mathbb{C}\)</span>, at least up to isomorphism (which, remember, is supposed to be all that matters).
+</p>
+<p>
+So, are equivalence and protoequivalence the same thing? In one direction, it is not too hard to show that every equivalence is a protoequivalence: if <span class="math inline">\(F\)</span> and <span class="math inline">\(G\)</span> are inverse-up-to-natural-isomorphism, then they must be fully faithful and essentially surjective. It would be nice if the converse were also true: in that case, in order to prove two categories equivalent, it would suffice to construct a single functor <span class="math inline">\(F\)</span> from one to the other, and show that <span class="math inline">\(F\)</span> has the requisite properties. This often ends up being more convenient than explicitly constructing two functors and showing they are inverse. However, it turns out that the converse is provable <em>only</em> if one accepts the axiom of choice!
+</p>
+<p>
+To get an intuitive sense for why this is, suppose <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span> is fully faithful and essentially surjective. To construct an equivalence between <span class="math inline">\(\mathbb{C}\)</span> and <span class="math inline">\(\mathbb{D}\)</span>, we must define a functor <span class="math inline">\(G : \mathbb{D} \to \mathbb{C}\)</span> and show it is inverse to <span class="math inline">\(F\)</span> (up to natural isomorphism). However, to define <span class="math inline">\(G\)</span> we must give its action on each object <span class="math inline">\(D \in \mathbb{D}\)</span>, that is, we must exhibit a function <span class="math inline">\(\mathrm{Ob}\ \mathbb{D} \to \mathrm{Ob}\
+\mathbb{C}\)</span>. We know that for each <span class="math inline">\(D \in \mathbb{D}\)</span> there <em>exists</em> some object <span class="math inline">\(C \in \mathbb{C}\)</span> such that <span class="math inline">\(F\ C \cong D\)</span>. That is,
+</p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\{ \{ C \in \mathbb{C} \mid F\ C \cong D \} \mid D \in \mathbb{D} \}\)</span></p>
+</div>
+<p>
+<br />
+</p>
+<p>
+is a collection of non-empty sets. However, in a non-constructive logic, knowing these sets are nonempty does not actually give us any objects! Instead, we have to use the axiom of choice, which gives us a choice function <span class="math inline">\(\mathrm{Ob}\ \mathbb{D} \to \mathrm{Ob}\
+\mathbb{C}\)</span>, and we can use this function as the object mapping of the functor <span class="math inline">\(G\)</span>.
+</p>
+<p>
+So AC is required to prove that every protoequivalence is an equivalence. In fact, the association goes deeper yet: it turns out that the statement “every protoequivalence is an equivalence” (let’s call this the <em>Axiom of Protoequivalence</em>, or AP for short) not only requires AC, but is <em>equivalent</em> to it—that is, you can also derive AC given AP as an axiom!
+</p>
+<p>
+On purely intuitive grounds, however, I would wager that to (almost?) anyone with sufficient category theory experience, it “feels” like AP “ought to be” true. If there is a full, faithful, and essentially surjective functor <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span>, then <span class="math inline">\(\mathbb{C}\)</span> and <span class="math inline">\(\mathbb{D}\)</span> “ought to be” equivalent. The particular choice of functor <span class="math inline">\(G : \mathbb{D} \to \mathbb{C}\)</span> “doesn’t matter”, since it makes no difference up to isomorphism. On the other hand, we certainly don’t want to accept the axiom of choice. This puts us in the very awkward and inconsistent position of having two logically equivalent statements which we want to respectively affirm and reject. A fine pickle indeed! What to do?
+</p>
+<p>
+There are four options (that I know of, at least):
+</p>
+<ol style="list-style-type:decimal;">
+<li>
+If one is feeling particularly rational, one can simply say, “Well, since AC and AP are equivalent, and I reject AC, I must therefore reject AP as well; my <em>feelings</em> about it are irrelevant.”
+</li>
+</ol>
+<p>
+This is a perfectly sensible and workable approach. It’s important to highlight, therefore, that the “problem” is in some sense more a <em>philosophical</em> problem than a <em>technical</em> one. One can perfectly well adopt the above solution and continue to do category theory; it just may not be the “nicest” (a philosophical rather than technical notion!) way to do it.
+</p>
+<p>
+We can therefore also consider some more creative solutions!
+</p>
+<ol start="2" style="list-style-type:decimal;">
+<li>
+<p>
+In a classical setting, one can avoid AC and affirm (an analogue of) AP by generalizing the notion of functor to that of <em>anafunctor</em> <span class="citation">(Makkai 1996)</span>. Essentially, an anafunctor is a functor “defined only up to unique isomorphism”. It turns out that the appropriate analogue of AP, where “functor” has been replaced by “anafunctor”, is indeed true—and neither requires nor implies AC. Anafunctors “act like” functors in a sufficiently strong sense that one can simply do category theory using anafunctors in place of functors. However, one also has to replace natural transformations with “ananatural transformations”, <em>etc.</em>, and it quickly gets rather fiddly.
+</p>
+</li>
+<li>
+<p>
+In a constructive setting, a witness of essential surjectivity is necessarily a function which gives an <em>actual witness</em> <span class="math inline">\(C \in \mathbb{C}\)</span>, along with a proof that <span class="math inline">\(F\ C \cong D\)</span>, for each <span class="math inline">\(D \in \mathbb{D}\)</span>. In other words, a constructive witness of essential surjectivity is already a “choice function”, and an inverse functor <span class="math inline">\(G\)</span> can be defined directly, with no need to invoke AC and no need for anafunctors. So in constructive logic, AP is simply true. However, this version of “essential surjectivity” is rather strong, in that it forces you to make choices you might prefer not to make: for each <span class="math inline">\(D \in \mathbb{D}\)</span> there might be many isomorphic <span class="math inline">\(C \in \mathbb{C}\)</span> to choose from, with no “canonical” choice, and it is annoying (again, a philosophical rather than technical consideration!) to be forced to choose one.
+</p>
+</li>
+<li>
+<p>
+Instead of generalizing functors, a more direct solution is to <em>generalize the notion of equality</em>. After all, what really seems to be at the heart of all these problems is differing notions of equality (<em>i.e.</em> equality of sets <em>vs</em> isomorphism <em>vs</em> equivalence…). This is precisely what is done in <a href="http://homotopytypetheory.org/">homotopy type theory</a> <span class="citation">(<span>Univalent Foundations Program</span> 2013)</span>.<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a> It turns out that if one builds up suitable notions of category theory on top of HoTT instead of set theory, then (a) AP is true, (b) without the need for AC, (c) even with a <em>weaker</em> version of essential surjectivity that corresponds more closely to essential surjectivity in classical logic.<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a> This is explained in Chapter 9 of the <a href="http://homotopytypetheory.org/book/">HoTT book</a>.
+</p>
+</li>
+</ol>
+<p>
+I plan to continue writing about these things in upcoming posts, particularly items (2) and (4) above. (If you haven’t caught on by now, I’m essentially blogging parts of my dissertation; we’ll see how far I get before graduating!) In the meantime, feedback and discussion are very welcome!
+</p>
+<div class="references">
+<h1>
+References
+</h1>
+<p>
+Makkai, Michael. 1996. “Avoiding the Axiom of Choice in General Category Theory.” <em>Journal of Pure and Applied Algebra</em> 108 (2). Elsevier: 109–73.
+</p>
+<p>
+<span>Univalent Foundations Program</span>, The. 2013. <em>Homotopy Type Theory: Univalent Foundations of Mathematics</em>. Institute for Advanced Study: <a href="http://homotopytypetheory.org/book">http://homotopytypetheory.org/book</a>.
+</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+The astute reader may well ask: but how do we know <em>this</em> is a non-evil definition of isomorphism between <em>functors</em>? Is it turtles all the way down (up)? This is a subtle point, but it turns out that it is not evil to talk about equality of natural transformations, since for the usual notion of category there is no higher structure after natural transformations, <em>i.e.</em> no nontrivial morphisms (and hence no nontrivial isomorphisms) between natural transformations. (However, you can have <a href="http://ncatlab.org/nlab/show/%28infinity%2C1%29-category">turtles all the way up</a> if you really want.)<a href="#fnref1">↩︎</a>
+</p>
+</li>
+<li id="fn2">
+<p>
+I made this term up, since there is no term in standard use: of course, if you accept AC, there is no need for a separate term at all!<a href="#fnref2">↩︎</a>
+</p>
+</li>
+<li id="fn3">
+<p>
+As a <a href="http://byorgey.wordpress.com/2014/05/13/unique-isomorphism-and-generalized-the/#comment-13123">historical note</a>, it seems that the original work on anafunctors is part of the same intellectual thread that led to the development of HoTT.<a href="#fnref3">↩︎</a>
+</p>
+</li>
+<li id="fn4">
+<p>
+That is, using <em>propositional truncation</em> to encode the classical notion of “there exists”.<a href="#fnref4">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

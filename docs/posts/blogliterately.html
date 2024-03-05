@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - BlogLiterately</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../">Home</a> •
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../posts/2012/06/12/unsubscribing-from-wolfram-emails-rant.html">« Unsubscribing from Wolfram emails (rant)</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../posts/2012/07/02/blogliterately-0-4-release.html">» BlogLiterately 0.4 release</a>
+
+</span>
+
+
+<h1>BlogLiterately</h1>
+
+<div class="info">
+  Posted on July  2, 2012
+  
+  
+  <br />
+  Tagged 
+  
+</div>
+
+<section>
+<div id="TOC">
+<ul>
+<li>
+<a>Example usage</a>
+</li>
+<li>
+<a>Markdown and pandoc</a>
+</li>
+<li>
+<a>Determining input format</a>
+</li>
+<li>
+<a>Code blocks and syntax highlighting</a>
+</li>
+<li>
+<a>Citations</a>
+</li>
+<li>
+<a>LaTeX</a>
+</li>
+<li>
+<a>Special links</a>
+</li>
+<li>
+<a>Table of contents</a>
+</li>
+<li>
+<a><code>ghci</code> sessions</a>
+</li>
+<li>
+<a>Uploading embedded images</a>
+</li>
+<li>
+<a>Customization</a>
+</li>
+<li>
+<a>Command-line options</a>
+</li>
+<li>
+<a>Profiles</a>
+</li>
+<li>
+<a>Option blocks</a>
+</li>
+<li>
+<a>Pandoc titles</a>
+</li>
+<li>
+<a>Generating HTML only</a>
+</li>
+<li>
+<a>Getting Help</a>
+</li>
+</ul>
+</div>
+<p>
+<a href="http://hackage.haskell.org/package/BlogLiterately"><code>BlogLiterately</code></a> is a tool for uploading blog posts to servers that support the <a href="http://www.xmlrpc.com/metaWeblogApi">MetaWeblog API</a> (such as <a href="http://wordpress.org/">WordPress</a>-based blogs and many others). Blog posts to be published via <code>BlogLiterately</code> are written in <a href="http://daringfireball.net/projects/markdown/">markdown</a> or <a href="http://docutils.sourceforge.net/docs/user/rst/quickref.html">reStructuredText</a> format, with <a href="http://johnmacfarlane.net/pandoc/README.html#pandocs-markdown">extensions supported</a> by <a href="http://johnmacfarlane.net/pandoc/">pandoc</a>. Posts may be actual “bird-style” literate Haskell files, with commentary formatted using markdown or reStructuredText. Though <code>BlogLiterately</code> offers special support for literate Haskell in particular, it is also useful for writing posts including code written in other languages, or even no code at all. You may also be interested in the <a href="http://hackage.haskell.org/package/BlogLiterately%2Ddiagrams">BlogLiterately-diagrams</a> package, a plugin for <code>BlogLiterately</code> which allows embedding images in your posts defined using the <a href="http://projects.haskell.org/diagrams/">diagrams</a> vector graphics framework.
+</p>
+<p>
+<code>BlogLiterately</code> includes support for syntax highlighting, <span class="math inline">\(\LaTeX\)</span> (including special support for WordPress blogs), automatic image uploading, and automatic generation and formatting of <code>ghci</code> sessions. Each of these features is explained in more detail below.
+</p>
+<h2>
+Example usage
+</h2>
+<p>
+If you do not specify a blog URL, by default <code>BlogLiterately</code> simply prints the generated HTML to stdout. So, to preview the generated HTML before uploading requires merely something like
+</p>
+<pre><code>BlogLiterately Sample.lhs</code></pre>
+<p>
+To actually post to, say, a WordPress blog, a basic command line would be something like
+</p>
+<pre><code>BlogLiterately --blog http://blogurl.example.com/xmlrpc.php \
+    --user myname --password mypasswd --title "Sample" Sample.lhs</code></pre>
+<p>
+(which creates a new post). You can also omit the <code>–password</code> option, in which case <code>BlogLiterately</code> will prompt you for your password.
+</p>
+<p>
+If the post ID of that post (which <code>BlogLiterately</code> prints when it uploads a new post) is ‘37’, then to update the post, the command would be something like
+</p>
+<pre><code>BlogLiterately --postid 37 --blog http://blogurl.example.com/xmlrpc.php \
+    --user myname --password mypasswd --title "Sample" Sample.lhs</code></pre>
+<p>
+and the post will be updated with the new text. In both cases the post is uploaded as a draft. To publish the post, you can pass the <code>–publish</code> option (or, of course, you can flip the publish bit manually on the server).
+</p>
+<p>
+The above examples only show the most basic usage. In particular, the pain of constructing long command lines like the above is unnecessary, and can be replaced by the use of profiles and embedding options within the source file itself; these features are explained below.
+</p>
+<h2>
+Markdown and pandoc
+</h2>
+<p>
+<code>BlogLiterately</code> can take as input files written using the <a href="http://daringfireball.net/projects/markdown/">markdown</a> format (as well as <a href="http://docutils.sourceforge.net/docs/user/rst/quickref.html">reStructuredText</a>). See the <a href="http://daringfireball.net/projects/markdown/">markdown website</a> for detailed documentation. <code>BlogLiterately</code> uses <a href="http://johnmacfarlane.net/pandoc/">pandoc</a> for reading markdown, which also <a href="http://johnmacfarlane.net/pandoc/README.html#pandocs-markdown">supports a few extensions</a> to the basic format.
+</p>
+<p>
+By default, <code>BlogLiterately</code> assumes that markdown files should be parsed as if they contain literate Haskell code. To disable processing of markdown files with literate Haskell extensions, use the <code>–no-lit-haskell</code> command-line argument. This makes a difference, for example, when processing paragraphs set off by “bird tracks” (<em>i.e.</em> leading <code>&gt;</code> characters): in literate Haskell, these are code blocks, whereas in plain markdown they are blockquotes. In addition, section headings beginning with hash signs (<code>#</code>, <code>##</code>, etc.) cannot be used in literate Haskell mode; only section headings underlined with hyphens or equals signs are supported.
+</p>
+<h2>
+Determining input format
+</h2>
+<p>
+<code>BlogLiterately</code> takes the following steps to determine whether an input file is in markdown or reStructuredText format:
+</p>
+<ol>
+<li>
+<p>
+If the format is explicitly specified on the command line with <code>–format=markdown</code> or <code>–format=rst</code>, the specified format will be used regardless of the file name.
+</p>
+</li>
+<li>
+<p>
+Otherwise, the filename extension is consulted: if it is <code>.rst</code>, <code>.rest</code>, or <code>.txt</code>, reStructuredText will be assumed; otherwise, markdown is assumed.
+</p>
+</li>
+</ol>
+<h2>
+Code blocks and syntax highlighting
+</h2>
+<p>
+Code segments (including actual source lines from literate haskell files, as well as markdown or reStructuredText code blocks) may be syntax highlighted. Two different syntax highlighting libraries are supported:
+</p>
+<ul>
+<li>
+<a href="http://www.cs.york.ac.uk/fp/darcs/hscolour/">hscolour</a> is specifically for syntax highlighting of Haskell code, and is the standard highlighter used on <a href="http://hackage.haskell.org/">Hackage</a> and elsewhere.
+</li>
+<li>
+<a href="http://johnmacfarlane.net/highlighting-kate/">highlighting-kate</a> is a general syntax highlighting library that can be used for highlighting a wide range of languages (including Haskell).
+</li>
+</ul>
+<p>
+You may independently specify whether to use <code>hscolour</code> or <code>highlighting-kate</code> to highlight Haskell code; other languages will be highlighted with <code>highlighting-kate</code>.
+</p>
+<p>
+In basic markdown, a generic code block is set off from normal text by indenting at least four spaces:
+</p>
+<pre><code>    -- This is a code segment, but what language is it?
+    foo :: String -&gt; String</code></pre>
+<p>
+Similarly, in reStructuredText, a code block is constructed by a double colon followed by an indented block:
+</p>
+<pre><code>::
+
+  -- This is a code segment, but what language is it?
+  foo :: String -&gt; String</code></pre>
+<p>
+However, markdown does not have a way of specifying the language used in a code block, making support for syntax highlighting problematic. Pandoc offers <a href="http://johnmacfarlane.net/pandoc/README.html#pandocs-markdown">an alternative syntax</a> for code segments which does allow specifying the language:
+</p>
+<pre><code>~~~~ { .haskell }
+-- This is a Haskell code segment!
+foo :: String -&gt; String
+~~~~</code></pre>
+<p>
+The above syntax works only with markdown. <code>BlogLiterately</code> also supports one additional style which works with both markdown and reStructuredText, consisting of a normal code block (indented and/or preceded by a double colon) with an extra tag at the top, enclosed in square brackets:
+</p>
+<pre><code>    [haskell]
+    -- This is also a Haskell code segment!
+    foo :: String -&gt; String</code></pre>
+<p>
+Of course, languages other than Haskell may be specified as well.
+</p>
+<p>
+By default, <code>hscolour</code> will be used for highlighting Haskell code, using “inline” CSS style attributes. The default styling is similar to that used for source code in documentation on <a href="http://hackage.haskell.org/">Hackage</a>. You can also specify a configuration file containing a Haskell value of type <code>[(String,String)]</code> which specifies a CSS style for each syntax class. An example (corresponding to the default configuration) is provided in the package archive (<code>hs-style</code>).
+</p>
+<p>
+With <code>highlighting-kate</code>, the style for syntax segments is specified using “class” attributes, so the stylesheet must be provided separately. You may optionally use a similar scheme with <code>hscolour</code>. Sample stylesheets are provided in the package archive file (<code>kate.css</code>, <code>hscolour.css</code>).
+</p>
+<h2>
+Citations
+</h2>
+<p>
+<code>BlogLiterately</code> can take advantage of <code>pandoc</code>’s ability to process and typeset citations. To include citations in your blog post:
+</p>
+<ol>
+<li>
+<p>
+Specify a bibliography—either the name of a bibliography file, or an explicit list of references—as metadata in your document. With Markdown, this is accomplished with a YAML document enclosed by <code>—</code> at the beginning of the file (see the Pandoc documentation on <a href="http://johnmacfarlane.net/pandoc/demo/example9/pandocs-markdown.html#yaml-metadata-block">YAML metadata blocks</a>). For example,
+</p>
+<pre><code>  ---
+  title: My Blog Post
+  bibliography: references.bib
+  ---
+  Foo bar [@doe2006].</code></pre>
+<p>
+(There is no support yet for citations if you are using reStructuredText; yell if you want it.) You can specify the name of a file containing a bibliography, as in the example above; here is <a href="https://github.com/jgm/pandoc-citeproc/blob/master/README.md">a list of the bibliography formats that are accepted</a>. Alternately, you can <a href="http://johnmacfarlane.net/pandoc/README.html#citations">give an explicit list of references</a>.
+</p>
+</li>
+<li>
+<p>
+Include citations, formatted like <code><span class="citation" data-cites="doe2006">[@doe2006]</span></code> for a normal citation like (Doe, 2006); <code><span class="citation" data-cites="doe2006">@doe2006</span></code> for a text citation like Doe (2006), or <code><span class="citation" data-cites="doe2006">[-@doe2006]</span></code> for a citation without the name (for situations when the name already occurred elsewhere in the sentence). See the <a href="http://johnmacfarlane.net/pandoc/README.html#citations">pandoc documentation for more details and examples</a>.
+</p>
+</li>
+<li>
+<p>
+Simply run <code>BlogLiterately</code>; citation processing is on by default. (You can explicitly turn it on with the <code>–citations</code> flag; to turn it off, use <code>–no-citations</code>.) Citations will be typeset and a bibliography will be appended at the end. You may want to include a section heading like <code># References</code> or <code># Bibliography</code> at the end of your post, to go above the generated bibliography.
+</p>
+</li>
+</ol>
+<h2>
+LaTeX
+</h2>
+<p>
+LaTeX can be included in documents using single dollar signs to enclose inline LaTeX, and double dollar signs to enclose “display-style” LaTeX. For example, <code><span class="math inline">\(\pi^2 / 6\)</span></code> produces <span class="math inline">\(\pi^2 / 6\)</span>, and <code>$$_{k=0}<sup>/k</sup>2$$</code> (when put by itself in its own paragraph) produces
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle \sum_{k=0}^\infty 1/k^2.\)</span></p>
+</div>
+</p>
+<p>
+Using the <code>–math</code> option, any <a href="http://johnmacfarlane.net/pandoc/README.html#math-rendering-in-html">Pandoc math rendering method may be chosen</a>, including MathML, jsMath, MathJax, and others. Note that for some methods to work properly, you may need to ensure that the generated HTML ends up in the proper CSS or JavaScript environment. (What that means depends on the method used.)
+</p>
+<p>
+Alternatively, blogs hosted on <a href="http://www.wordpress.com">wordpress.com</a> have built-in support for LaTeX, compiling LaTeX expressions to embedded images on-the-fly. Passing the <code>–wplatex</code> option to <code>BlogLiterately</code> causes any embedded LaTeX to be output in the format expected by WordPress. Note that an extra <code>$latex…</code> won’t be added to the beginning of LaTeX expressions which already appear to be in WordPress format.
+</p>
+<p>
+Finally, to simply pass LaTeX math through unchanged (for example, if your blog hosting software will do LaTeX processing), you can use the <code>–rawlatex</code> option.
+</p>
+<h2>
+Special links
+</h2>
+<p>
+Certain special link types can be replaced with appropriate URLs. A special link is one where the URL is of the form <code>&lt;name&gt;::&lt;text&gt;</code> where <code>&lt;name&gt;</code> is used to identify the special link type, and <code>&lt;text&gt;</code> is passed as a parameter to a function which can use it to generate a URL. Currently, four types of special links are supported by default (and you can easily add your own):
+</p>
+<p>
+<code>lucky::&lt;search&gt;</code>
+</p>
+<p>
+: The first Google result for <code>&lt;search&gt;</code>.
+</p>
+<p>
+<code>wiki::&lt;title&gt;</code>
+</p>
+<p>
+: The Wikipedia page for <code>&lt;title&gt;</code>. (Note that the page is not checked for existence.)
+</p>
+<p>
+<code>post::nnnn</code>
+</p>
+<p>
+: Link to the blog post on your blog with post ID <code>nnnn</code>. Note that this form of special link is invoked when <code>nnnn</code> consists of all digits, so it only works on blogs which use numerical identifiers for post IDs (as Wordpress does).
+</p>
+<p>
+<code>post::&lt;search&gt;</code>
+</p>
+<p>
+: Link to the most recent blog post (among the 20 most recent posts) containing <code>&lt;search&gt;</code> in its title.
+</p>
+<p>
+For example, a post written in Markdown format containing
+</p>
+<p>
+<code>This is a post about the game of <a href="wiki::Go%20(game)">Go</a>.</code>
+</p>
+<p>
+will be formatted in HTML as
+</p>
+<p>
+<code>&lt;p&gt;This is a post about the game of &lt;a href="https://en.wikipedia.org/wiki/Go%20(game)"&gt;Go&lt;/a&gt;.&lt;/p&gt;</code>
+</p>
+<p>
+You can easily add your own new types of special links. See the <code>SpecialLink</code> type and the <code>mkSpecialLinksXF</code> function.
+</p>
+<h2>
+Table of contents
+</h2>
+<p>
+<code>BlogLiterately</code> can also take advantage of pandoc’s ability to generate a table of contents. Just pass the <code>–toc</code> option to <code>BlogLiterately</code> and a table of contents will be added to the top of your post. See this documentation itself for an example of the output.
+</p>
+<h2>
+<code>ghci</code> sessions
+</h2>
+<p>
+When writing literate Haskell documents, it is often useful to show a sample <code>ghci</code> session illustrating the behavior of the code being described. However, manually pasting in the results of sample sessions is tedious and error-prone, and it can be difficult keeping sample sessions “in sync” when making changes to the code.
+</p>
+<p>
+For these reasons, <code>BlogLiterately</code> supports special <code>[ghci]</code> code blocks, consisting of a list of Haskell expressions (or, more generally, arbitrary <code>ghci</code> commands), one per line. These expressions/commands are evaluated using <code>ghci</code>, and the results typeset along with the original expressions in the output document. The entire literate Haskell document itself will be loaded into <code>ghci</code> before evaluating the expressions, so expressions may reference anything in scope. Note also that all expressions in the entire document will be evaluated in the <em>same</em> <code>ghci</code> session, so names bound with <code>let</code> or <code>&lt;-</code> will also be in scope in subsequent expressions, even across multiple <code>[ghci]</code> blocks.
+</p>
+<p>
+For example, consider the following definition:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span>hailstone</span> <span>x</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>even</span> <span>x</span>    <span style="color:red;">=</span> <span>x</span> <span>`div`</span> <span class="hs-num">2</span>
+<span>&gt;</span>   <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span class="hs-num">3</span><span>*</span><span>x</span> <span>+</span> <span class="hs-num">1</span>
+</code></pre>
+<p>
+Now, given the input
+</p>
+<pre><code>    [ghci]
+    :t hailstone
+    hailstone 15
+    takeWhile (/= 1) . iterate hailstone $ 7
+    txt &lt;- readFile &quot;BlogLiteratelyDoc.lhs&quot;
+    length txt</code></pre>
+<p>
+<code>BlogLiterately</code> generates the following output:
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>:t hailstone
+  hailstone :: Integral a =&gt; a -&gt; a
+
+<span style="color:gray;">ghci&gt; </span>hailstone 15
+  46
+
+<span style="color:gray;">ghci&gt; </span>takeWhile (/= 1) . iterate hailstone $ 7
+  [7,22,11,34,17,52,26,13,40,20,10,5,16,8,4,2]
+
+<span style="color:gray;">ghci&gt; </span>txt &lt;- readFile "BlogLiteratelyDoc.lhs"
+<span style="color:gray;">ghci&gt; </span>length txt
+  24540
+</code></pre>
+<p>
+(And yes, of course, the above output really <em>was</em> generated by <code>BlogLiterately</code>!) Additionally, lines indented by one or more spaces are interpreted as <em>expected outputs</em> instead of inputs. Consecutive indented lines are interpreted as one multi-line expected output, with a number of spaces removed from the beginning of each line equal to the number of spaces at the start of the first indented line.
+</p>
+<p>
+If the output for a given input is the same as the expected output (or if no expected output is given), the result is typeset normally. If the actual and expected outputs differ, the actual output is typeset first in red, then the expected output in blue. For example,
+</p>
+<pre><code>    [ghci]
+    reverse "kayak"
+    7+18
+      25
+    hailstone 15
+      107834</code></pre>
+<p>
+produces
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>reverse "kayak"
+  "kayak"
+
+<span style="color:gray;">ghci&gt; </span>7+18
+  25
+
+<span style="color:gray;">ghci&gt; </span>hailstone 15
+  <span style="color:red;">46</span>
+  <span style="color:blue;">107834</span>
+</code></pre>
+<p>
+There are currently a few known limitations of this feature:
+</p>
+<ul>
+<li>
+<p>
+The code for interfacing with <code>ghci</code> is not very robust. In particular, expressions which generate an error (<em>e.g.</em> ones which refer to an out-of-scope name, or do not typecheck) will simply lack any accompanying output; it would be much more useful to display the accompanying error message.
+</p>
+</li>
+<li>
+<p>
+If the literate document itself fails to load (<em>e.g.</em> due to improper formatting) <code>BlogLiterately</code> may hang.
+</p>
+</li>
+<li>
+<p>
+The formatting of <code>ghci</code> sessions currently cannot be customized. Suggestions for customizations to allow are welcome.
+</p>
+</li>
+<li>
+<p>
+Due to the very hacky way that <code>ghci</code> interaction is implemented, the usual <code>it</code> variable bound to the result of the previous expression is not available (well, to be more precise, it <em>is</em> available… but is always equal to <code>()</code>).
+</p>
+</li>
+</ul>
+<h2>
+Uploading embedded images
+</h2>
+<p>
+When passed the <code>–upload-images</code> option, <code>BlogLiterately</code> can take any images referenced locally and automatically upload them to the server, replacing the local references with appropriate URLs.
+</p>
+<p>
+To include images in blog posts, use the Markdown syntax
+</p>
+<pre><code>![alt text](URL "title")</code></pre>
+<p>
+(or the corresponding reStructuredText syntax).
+</p>
+<p>
+The URL determines whether the image will be uploaded. A <em>remote</em> URL is any beginning with <code>http</code> or a forward slash (interpreted as a URL relative to the server root). In all other cases it is assumed that the URL in fact represents a relative path on the local file system. Such images, if they exist, will be uploaded to the server (using the <code>metaWeblog.newMediaObject</code> RPC call), and the local file name replaced with the URL returned by the server.
+</p>
+<p>
+Uploaded images, and their associated server URLs, will be tracked in a file called <code>.BlogLiterately-uploaded-images</code>. A given image will only be uploaded once, even across multiple runs of <code>BlogLiterately</code>. In practice, this means that the <code>–upload-images</code> option can be left on while uploading multiple draft versions of a post, and only new images will be uploaded each time. Note, however, that images are tracked by <em>file name</em>, not contents, so modifications to an image (while leaving the name the same) will be ignored. As a workaround, delete <code>.BlogLiterately-uploaded-images</code> (or just the entry for the modified image), or give the modified image a different name.
+</p>
+<p>
+A few caveats:
+</p>
+<ul>
+<li>
+The <code>newMediaObject</code> call has an optional <code>replace</code> parameter, but <code>BlogLiterately</code> does not use it, since it’s too dangerous: if <code>replace</code> is set and you happen to use the same file name as some other image file that already exists on your blog, the old image would be deleted. However, this means that if you upload an image multiple times you will get multiple copies on your blog. (Although this is mitigated somewhat by the mechanism to cache uploaded image URLs.)
+</li>
+</ul>
+<h2>
+Customization
+</h2>
+<p>
+It is possible to create your own variants of <code>BlogLiterately</code> which include custom processing steps. See the <a href="http://hackage.haskell.org/packages/archive/BlogLiterately/latest/doc/html/Text-BlogLiterately-Run.html"><code>Text.BlogLiterately.Run</code> module</a> to get started.
+</p>
+<h2>
+Command-line options
+</h2>
+<p>
+Most of the command-line options for <code>BlogLiterately</code> are hopefully self-explanatory, given the above background:
+</p>
+<pre><code>BlogLierately v0.7, (c) Robert Greayer 2008-2010, Brent Yorgey 2012-2013
+For help, see http://byorgey.wordpress.com/blogliterately/
+
+BlogLiterately [OPTIONS] FILE
+
+Common flags:
+  -s --style=FILE         style specification (for --hscolour-icss)
+     --hscolour-icss      highlight haskell: hscolour, inline style (default)
+     --hscolour-css       highlight haskell: hscolour, separate stylesheet
+     --hs-nohighlight     no haskell highlighting
+     --hs-kate            highlight haskell with highlighting-kate
+     --kate               highlight non-Haskell code with highlighting-kate
+                          (default)
+     --no-kate            don't highlight non-Haskell code
+     --lit-haskell        parse as literate Haskell (default)
+     --no-lit-haskell     do not parse as literate Haskell
+     --no-toc             don't generate a table of contents (default)
+     --toc                generate a table of contents
+  -r --rawlatex           pass inline/display LaTeX through unchanged
+  -w --wplatex            reformat inline LaTeX the way WordPress expects
+  -m --math=ITEM          how to layout math, where
+                          --math=[=URL]
+  -g --ghci               run [ghci] blocks through ghci and include output
+  -I --upload-images      upload local images
+  -C --category=ITEM      post category (can specify more than one)
+  -T --tag=ITEM ---tags   tag (can specify more than one)
+     --blogid=ID          Blog specific identifier
+  -P --profile=STRING     profile to use
+  -b --blog=URL           blog XML-RPC url (if omitted, HTML goes to stdout)
+  -u --user=USER          user name
+  -p --password=PASSWORD  password
+  -t --title=TITLE        post title
+  -f --format=FORMAT      input format: markdown or rst
+  -i --postid=ID          Post to replace (if any)
+     --page               create a "page" instead of a post (WordPress only)
+     --publish            publish post (otherwise it's uploaded as a draft)
+  -h --html-only          don't upload anything; output HTML to stdout
+     --citations          process citations (default)
+     --no-citations       do not process citations
+  -x --xtra=ITEM          extension arguments, for use with custom extensions
+  -? --help               Display help message
+  -V --version            Print version information
+     --numeric-version    Print just the version number</code></pre>
+<h2>
+Profiles
+</h2>
+<p>
+Certain options, such as <code>–blog</code>, <code>–user</code>, and <code>–wplatex</code>, may be the same for all your posts. You can create one or more <em>profiles</em> specifying a set of options, which can then be specified simply by referencing the profile, using the command-line option <code>–profile</code>/<code>-P</code>. For example, to use the profile named <code>foo</code> you would invoke
+</p>
+<pre><code>BlogLiterately -P foo ...</code></pre>
+<p>
+(Alternately, you can also specify <code>profile = foo</code> within a <code>[BLOpts]</code> block in the source file itself; see the next section.)
+</p>
+<p>
+The profile <em>foo</em> should be stored in a file named <code>foo.cfg</code>, and placed in the application directory for <code>BlogLiterately</code>: on POSIX systems, this means <code>$HOME/.BlogLiterately/foo.cfg</code>; on Windows, it typically means something like <code>C:/Documents And Settings/user/Application Data/BlogLiterately/foo.cfg</code>.
+</p>
+<p>
+The profile should consist of a number of options, listed one per line, in the form
+</p>
+<pre><code>optionname = value</code></pre>
+<p>
+Boolean options are specified by <code>true</code>, <code>on</code>, <code>false</code>, or <code>off</code>. String values use normal Haskell syntax for strings, surrounded by double quotes. Optionally, the double quotes may be omitted for strings which do not contain spaces, double quotes, commas, or square brackets. Lists also use Haskell list syntax, with comma-separated items surrounded by square brackets, except that the square brackets may be omitted. For example, <code>myblog.cfg</code> might look like this:
+</p>
+<pre><code>blog       = http://some.url/xmlrpc.php
+user       = joebloggs
+password   = f7430nvj!$4
+wplatex    = true
+ghci       = on
+categories = foo, bar, "some really long category"</code></pre>
+<p>
+The list of options which are currently supported are: <code>style</code>, <code>lit-haskell</code>, <code>wplatex</code>, <code>math</code>, <code>ghci</code>, <code>upload-images</code>, <code>categories</code>, <code>tags</code>, <code>blogid</code>, <code>profile</code>, <code>blog</code>, <code>user</code>, <code>password</code>, <code>title</code>, <code>postid</code>, <code>page</code>, <code>publish</code>, <code>xtras</code>.
+</p>
+<h2>
+Option blocks
+</h2>
+<p>
+In addition, options may be specified inline, using a code block marked with the <code>[BLOpts]</code>. For example,
+</p>
+<pre><code>    [BLOpts]
+    profile = foo
+    title = "My awesome blog post!"
+    postid = 2000
+    tags = [awesome, stuff, blogging]
+    categories = [Writing, Stuff]
+
+This is my awesome blog post. Here is some math: $\pi$, which will
+get formatted for WordPress because I chose the `foo` profile
+above, which includes `wplatex = true`.</code></pre>
+<p>
+Such inline options use the same syntax as profiles, as described in the previous section.
+</p>
+<h2>
+Pandoc titles
+</h2>
+<p>
+Pandoc supports a special syntax for specifying the title, placing the title on the first line marked with <code>%</code>. <code>BlogLiterately</code> supports this format too, so the above example could also have been written as:
+</p>
+<pre><code>% My awesome blog post!
+
+    [BLOpts]
+    profile = foo
+    postid = 2000
+...</code></pre>
+<h2>
+Generating HTML only
+</h2>
+<p>
+In the past, to get a “preview” version of the HTML output written to stdout, all you had to do was omit a <code>–blog</code> option. However, if you specify a profile with a <code>blog</code> field, this is more problematic. For this reason, a new option <code>–html-only</code> has been added. When this option is specified, nothing is uploaded, and the HTML output is written to stdout.
+</p>
+<h2>
+Getting Help
+</h2>
+<p>
+For questions, support, feature suggestions, etc., feel free to contact me (Brent Yorgey): <code>byorgey</code> on IRC (freenode), or <code>byorgey</code> at gmail. There is also a <a href="http://github.com/byorgey/BlogLiterately/issues">bug tracker</a> where you can file bugs and feature requests.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

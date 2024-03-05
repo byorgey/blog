@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Sum of heights in a binary tree</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2017/09/21/new-baby-and-haskell-alphabet.html">« New baby, and Haskell Alphabet</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2018/01/21/off-the-beaten-track-explaining-type-errors.html">» Off the Beaten Track: Explaining Type Errors</a>
+
+</span>
+
+
+<h1>Sum of heights in a binary tree</h1>
+
+<div class="info">
+  Posted on November  3, 2017
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'amortized'." href="../../../../tag/amortized.html" rel="tag">amortized</a>, <a title="All pages tagged 'analysis'." href="../../../../tag/analysis.html" rel="tag">analysis</a>, <a title="All pages tagged 'binary'." href="../../../../tag/binary.html" rel="tag">binary</a>, <a title="All pages tagged 'build'." href="../../../../tag/build.html" rel="tag">build</a>, <a title="All pages tagged 'heap'." href="../../../../tag/heap.html" rel="tag">heap</a>, <a title="All pages tagged 'height'." href="../../../../tag/height.html" rel="tag">height</a>, <a title="All pages tagged 'linear'." href="../../../../tag/linear.html" rel="tag">linear</a>, <a title="All pages tagged 'log'." href="../../../../tag/log.html" rel="tag">log</a>
+  
+</div>
+
+<section>
+<p>
+<em>Executive summary: every year when teaching data structures I always forget how to analyze the cost of building a binary heap, which amounts to summing the heights of all the nodes in a full binary tree. So I’m writing down the (lovely) proof here in the hopes that I will remember it next time.</em>
+</p>
+<p>
+Suppose you have a full binary tree and you do an operation on every node, where the cost of the operation is proportional to the height of that node. That is, the cost for each of the <span class="math inline">\(n/2\)</span> leaves is <span class="math inline">\(0\)</span>, for each of the <span class="math inline">\(n/4\)</span> nodes in the next level up the cost is <span class="math inline">\(1\)</span>, and so on. We can visualize the scenario like this:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2017/11/163d289d2af7bf4f.png" />
+</p>
+</div>
+<p>
+As a function of the total number of nodes <span class="math inline">\(n\)</span>, how expensive is this? We can see that <span class="math inline">\(O(n \lg n)\)</span> is an upper bound, since there are <span class="math inline">\(n\)</span> nodes and the height of each node is at most <span class="math inline">\(\lg n\)</span>. But it seems like it might actually be faster than this in reality, since, intuitively, <em>most</em> of the nodes have a height which is much smaller than <span class="math inline">\(\lg n\)</span>.
+</p>
+<p>
+(One specific motivation for this scenario is that we can build a <a href="https://en.wikipedia.org/wiki/binary%20heap">binary heap</a> from an arbitrary set of data by looping over the nodes from the bottom up and calling <code>reheapDown</code> on each; in the worst case <code>reheapDown</code> takes time proportional to the height of the node, as in this scenario. But it doesn’t matter if you don’t know about binary heaps.)
+</p>
+<p>
+Let’s take the same tree and put a dollar at every node, for a total of <span class="math inline">\(\$n\)</span>:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2017/11/e06819c343da6ed3.png" />
+</p>
+</div>
+<p>
+Now imagine sliding all the money as far up and to the right as it will go. That is, we take each dollar, and keep moving it up as long as it is a left child. As soon as we reach a node which is a right child we stop. The tree ends up looking like this:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2017/11/e3505964e049eb59.png" />
+</p>
+</div>
+<p>
+Now take each pile of money and move it up one step to its parent, except the money at the root of the tree, which you can put in your pocket.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2017/11/3571afa7a86984a0.png" />
+</p>
+</div>
+<p>
+And voilà! We now have exactly enough money at each node to pay for the cost of the operations, and we even have a bit left over (which we can use to buy coffee). But we started with <span class="math inline">\(\$n\)</span> and only shuffled money around; this shows that the total cost is actually <span class="math inline">\(O(n)\)</span>.
+</p>
+<p>
+Exercise for the reader: what does this have to do with the number of bit flips needed to count from <span class="math inline">\(1\)</span> to <span class="math inline">\(n\)</span> with a binary counter?
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

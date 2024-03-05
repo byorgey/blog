@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: permutations</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2020/05/22/competitive-programming-in-haskell-building-unordered-trees.html">« Competitive programming in Haskell: building unordered trees</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2020/06/09/anyone-willing-to-help-me-get-set-up-with-something-like-miso.html">» Anyone willing to help me get set up with something like miso?</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: permutations</h1>
+
+<div class="info">
+  Posted on May 30, 2020
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'cipher'." href="../../../../tag/cipher.html" rel="tag">cipher</a>, <a title="All pages tagged 'cycle'." href="../../../../tag/cycle.html" rel="tag">cycle</a>, <a title="All pages tagged 'decomposition'." href="../../../../tag/decomposition.html" rel="tag">decomposition</a>, <a title="All pages tagged 'GCRT'." href="../../../../tag/GCRT.html" rel="tag">GCRT</a>, <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'permutation'." href="../../../../tag/permutation.html" rel="tag">permutation</a>, <a title="All pages tagged 'substitution'." href="../../../../tag/substitution.html" rel="tag">substitution</a>
+  
+</div>
+
+<section>
+<p>
+In my previous post I challenged you to solve <a href="https://open.kattis.com/problems/substitution">The Power of Substitution</a>. This problem presents us with a substitution cipher, and asks how many times we would have to iterate the encoding process in order to turn a given message into a given encryption.
+</p>
+<h2 id="a-non-solution">
+A non-solution
+</h2>
+<p>
+Several commenters mentioned that they tried some sort of straightforward brute force approach: just iterate the encoding process and count how many iterations are needed to reach the specified encryption. This certainly works for the provided sample inputs. However, I hinted that this approach likely wouldn’t fit within Kattis’s time limit for the other, secret, test cases.
+</p>
+<p>
+How did I know this solution would exceed the time limit? It is <em>not</em> just an issue of using efficient data structures! Even if someone told me they coded this straightforward solution in C++, I would have the same reaction. The problem specifies that the answer should be at most <span class="math inline">\(10^9\)</span>—and, as we will see, it is not hard to come up with test cases where the answer is indeed that large—and the simple fact is that counting to <span class="math inline">\(10^9\)</span> and applying the encryption at each step (which requires iterating through a list of length 200) is definitely going to take more than 1 second. A useful rule of thumb that I learned from <a href="https://cpbook.net/">Competitive Programming 3</a> is <span class="math inline">\(10^8\)</span> operations per second. (Of course your processor can carry out much more than <span class="math inline">\(10^8\)</span> <em>instructions</em> per second, but in practice this rule of thumb seems to work remarkably well for predicting run times up to the right order of magnitude.)
+</p>
+<h2 id="cycle-decomposition-of-permutations">
+Cycle decomposition of permutations
+</h2>
+<p>
+The given encoding, of course, is a <em>permutation</em> (the problem specifies only that it will be <em>one-to-one</em>, but <a href="https://mathlesstraveled.com/2020/03/17/ways-to-prove-a-bijection/">any one-to-one endofunction on a finite set must in fact be a permtuation</a>). Let’s call it <span class="math inline">\(p\)</span>. If we start with an arbitrary <span class="math inline">\(m\)</span> and repeatedly apply <span class="math inline">\(p\)</span>—that is, <span class="math inline">\(m, p(m), p^2(m), p^3(m), \dots\)</span>—what happens? Of course, because of the pigeonhole principle, the sequence must eventually repeat. But actually, something stronger is true: because <span class="math inline">\(p\)</span> is a permutation, the first repeated value must be <span class="math inline">\(m\)</span> itself. For suppose that <span class="math inline">\(p^i(m) = p^j(m)\)</span> was the first repeated value in the sequence. But then since <span class="math inline">\(p\)</span> is one-to-one, it must be the case that <span class="math inline">\(p^{i-1}(m) = p^{j-1}(m)\)</span> as well, which means <span class="math inline">\(p^{i-2}(m) = p^{j-2}(m)\)</span>, and so on up to <span class="math inline">\(m = p^0(m) = p^{j-i}(m)\)</span>.
+</p>
+<p>
+So in fact if we start at an arbitrary <span class="math inline">\(m\)</span> and iterate <span class="math inline">\(p\)</span>, we will find a cycle that includes <span class="math inline">\(m\)</span> (including the possibility of a trivial length-1 cycle if <span class="math inline">\(p(m) = m\)</span>). If there are other elements not included in <span class="math inline">\(m\)</span>’s cycle, we can pick any one of them and repeat the process to find another cycle (which can’t possibly overlap at all with <span class="math inline">\(m\)</span>’s cycle—do you see why?). In general, any permutation can be decomposed in this way into a collection of disjoint cycles.
+</p>
+<h2 id="crt-to-the-rescue">
+CRT to the rescue
+</h2>
+<p>
+This idea of cycle decomposition is the key to unlocking the problem. Think about what happens to a particular letter <span class="math inline">\(m_i\)</span> in the message, which we eventually want to become <span class="math inline">\(c_i\)</span>. This will happen after applying the permutation some small number of times <span class="math inline">\(j\)</span>, such that <span class="math inline">\(p^j(m_i) = c_i\)</span>. (In general, of course, it would be quite possible that <span class="math inline">\(m_i\)</span> and <span class="math inline">\(c_i\)</span> are not in the same cycle at all, and so <span class="math inline">\(m_i\)</span> will never turn into <span class="math inline">\(c_i\)</span> no matter how many times we apply <span class="math inline">\(p\)</span>; but the problem statement guarantees that this will not be the case.)
+</p>
+<p>
+The problem, of course, is that all the other letters may not be encrypted properly after only <span class="math inline">\(j\)</span> encryption steps, in which case we need to keep going until all the cycles line up. Suppose <span class="math inline">\(m_i\)</span> and <span class="math inline">\(c_i\)</span> are in a cycle of length <span class="math inline">\(n\)</span>. That means applying the encryption <span class="math inline">\(n\)</span> times to <span class="math inline">\(c_i\)</span> will result in <span class="math inline">\(c_i\)</span> again (and not before). Thus, we will get <span class="math inline">\(c_i\)</span> after <span class="math inline">\(j\)</span> steps and then every <span class="math inline">\(n\)</span> steps thereafter (<span class="math inline">\(j, j+n, j+2n, \dots\)</span>); in other words, the number of encryption steps must be equivalent to <span class="math inline">\(j \pmod n\)</span>.
+</p>
+<p>
+Every position in the message yields a similar modular equivalence, giving us a system of up to 200 simultaneous modular equivalences which we can solve using the <a href="https://byorgey.wordpress.com/2020/03/03/competitive-programming-in-haskell-modular-arithmetic-part-2/">generalized Chinese Remainder Theorem</a>. Incidentally, this is why the solution can be so large—if we have cycles of sizes <span class="math inline">\(n_1, n_2, \dots, n_q\)</span>, then it could take up to <span class="math inline">\(\mathrm{lcm}(n_1, n_2, \dots, n_q)\)</span> iterations for them to all line up. In the special case that all the cycle sizes are relatively prime, this is just their product. So for example we could have cycles of sizes <span class="math inline">\(2, 3, 5, 7, 11, 13, 17, 19, 23\)</span>, which add up to exactly <span class="math inline">\(100\)</span>; the product of these is the <a href="https://en.wikipedia.org/wiki/Primorial">primorial</a> <span class="math inline">\(23\# = 223\,092\,870\)</span>.
+</p>
+<h2 id="my-solution">
+My solution
+</h2>
+<p>
+Here is my solution. We’re going to use an <a href="https://hackage.haskell.org/package/array-0.5.4.0/docs/Data-Array-Unboxed.html">unboxed array</a> to represent the permutation, and <a href="https://github.com/byorgey/comprog-hs/blob/master/NumberTheory.hs">the implementation of GCRT</a> from a <a href="https://byorgey.wordpress.com/2020/03/03/competitive-programming-in-haskell-modular-arithmetic-part-2/">previous post</a>.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">{-# LANGUAGE RecordWildCards #-}</span>
+
+<span style="color:blue;font-weight:bold;">import</span>           <span>Control.Arrow</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Data.Array.Unboxed</span>
+
+<span style="color:blue;font-weight:bold;">import</span>           <span>NumberTheory</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Scanner</span></code></pre>
+<p>
+Here’s <code>main</code>, along with a data type to represent a single test case and a <code>Scanner</code> for reading one in. I like using record syntax to help me remember which field is which, combined with the <a href="https://ocharles.org.uk/posts/2014-12-04-record-wildcards.html"><code>RecordWildCards</code> extension</a> to unpack the data structure and get the field names as local variables.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>main</span> <span style="color:red;">=</span> <span>interact</span> <span>$</span>
+  <span>runScanner</span> <span style="color:red;">(</span><span>numberOf</span> <span>tc</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>solve</span> <span>&gt;&gt;&gt;</span> <span>show</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>unlines</span>
+
+<span style="color:blue;font-weight:bold;">data</span> <span>TC</span> <span style="color:red;">=</span> <span>TC</span> <span style="color:red;">{</span> <span>message</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span><span style="color:red;">,</span> <span>crypt</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span><span style="color:red;">,</span> <span>subst</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span> <span style="color:red;">}</span>
+  <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span>
+
+<span>tc</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+  <span>l</span> <span style="color:red;">&lt;-</span> <span>int</span>
+  <span>TC</span> <span>&lt;$&gt;</span> <span>l</span> <span>`times`</span> <span>int</span> <span>&lt;*&gt;</span> <span>l</span> <span>`times`</span> <span>int</span> <span>&lt;*&gt;</span> <span class="hs-num">100</span> <span>`times`</span> <span>int</span></code></pre>
+<p>
+We’re going to represent a permutation as an unboxed array, which gives us nice constant-time lookup. I often use <code>Data.Array</code> or <code>Data.Array.Unboxed</code> to represent read-only information (which comes up a lot more than you might think!), giving all the benefits of fast array access with none of the complications of mutability.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">type</span> <span>Perm</span> <span style="color:red;">=</span> <span>UArray</span> <span>Int</span> <span>Int</span></code></pre>
+<p>
+The <em>distance</em> between <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> is simply the number of times we have to apply <span class="math inline">\(p\)</span> to get from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span>. Of course this definition would hang if <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> are not part of the same cycle, but we know they will be. Given <code>dist</code>, we can also find the length of a cycle containing <span class="math inline">\(i\)</span> as one more than the distance from <span class="math inline">\(p(i)\)</span> to <span class="math inline">\(i\)</span>. (We can’t just ask for the distance from <span class="math inline">\(i\)</span> to itself since that would return <span class="math inline">\(0\)</span>.)
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>dist</span> <span style="color:red;">::</span> <span>Perm</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>dist</span> <span>p</span> <span>i</span> <span>j</span> <span style="color:red;">=</span> <span>length</span> <span>$</span> <span>takeWhile</span> <span style="color:red;">(</span><span>/=</span> <span>j</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>iterate</span> <span style="color:red;">(</span><span>p</span><span>!</span><span style="color:red;">)</span> <span>i</span><span style="color:red;">)</span>
+
+<span>cycleLen</span> <span style="color:red;">::</span> <span>Perm</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>cycleLen</span> <span>p</span> <span>i</span> <span style="color:red;">=</span> <span>succ</span> <span>$</span> <span>dist</span> <span>p</span> <span style="color:red;">(</span><span>p</span><span>!</span><span>i</span><span style="color:red;">)</span> <span>i</span></code></pre>
+<p>
+Finally, we can put these pieces together: create an array for the permutation, zip together the message and desired encryption, generating a modular equivalence for each, and solve the resulting system using <code>gcrt</code>.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color:red;">::</span> <span>TC</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>solve</span> <span style="color:red;">(</span><span>TC</span><span style="color:red;">{</span><span style="color:red;">..</span><span style="color:red;">}</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>pick</span> <span>.</span> <span>gcrt</span> <span>$</span> <span>zipWith</span> <span>modEqn</span> <span>message</span> <span>crypt</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>p</span> <span style="color:red;">::</span> <span>UArray</span> <span>Int</span> <span>Int</span>
+    <span>p</span> <span style="color:red;">=</span> <span>listArray</span> <span style="color:red;">(</span><span class="hs-num">1</span><span style="color:red;">,</span><span class="hs-num">100</span><span style="color:red;">)</span> <span>subst</span>
+
+    <span>modEqn</span> <span>m</span> <span>c</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>fromIntegral</span> <span style="color:red;">(</span><span>dist</span> <span>p</span> <span>m</span> <span>c</span><span style="color:red;">)</span><span style="color:red;">,</span> <span>fromIntegral</span> <span style="color:red;">(</span><span>cycleLen</span> <span>p</span> <span>m</span><span style="color:red;">)</span><span style="color:red;">)</span>
+    <span>pick</span> <span style="color:red;">(</span><span>Just</span> <span style="color:red;">(</span><span>z</span><span style="color:red;">,</span><span>k</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>fromIntegral</span> <span style="color:red;">(</span><span>z</span> <span>`mod`</span> <span>k</span><span style="color:red;">)</span></code></pre>
+<p>
+Incidentally, this code inspired me to create a <a href="https://github.com/byorgey/comprog-hs/blob/master/Util.hs"><code>Util.hs</code> in my <code>comprog-hs</code> repository</a> containing (for now) <code>fi</code> as an alias for <code>fromIntegral</code>, and <code>both</code> to apply a function to both elements of a tuple (sadly <code>lens</code> is not available in the Kattis environment). Then we can just write <code>modEqn m c = both fi (dist p m c, cycleLen p m)</code>.
+</p>
+<h2 id="solving-bigger-instances">
+Solving bigger instances
+</h2>
+<p>
+The above solution works because the alphabet is quite small (only <span class="math inline">\(100\)</span>). However, it’s actually quite wasteful. For example, suppose that the given message consists of <span class="math inline">\(200\)</span> copies of the number <span class="math inline">\(1\)</span>; then we will recompute the length of <span class="math inline">\(1\)</span>’s cycle <span class="math inline">\(200\)</span> times. It’s easy to imagine a variant of this problem where both the message length and the alphabet size could be much larger. Then my solution above would be too slow. For example, suppose the permutation consists of one giant cycle of length <span class="math inline">\(10^5\)</span>, and the message also has length <span class="math inline">\(10^5\)</span>. We would traverse the entire cycle for every single character in the message, for a total of about <span class="math inline">\(10^{10}\)</span> operations—much too slow. This post has gotten long enough, but in another post I will show an alternative solution which I believe would work quickly enough even for such large inputs (assuming that the input was restricted such that the answer was still of a reasonable size!). The idea is to precompute the cycle decomposition of the permutation (in time proportional to the size of the alphabet), storing the information in such a way that for each pair of letters in the message and desired encryption, we can find the distance between them and the length of their cycle in constant time.
+</p>
+<h2 id="next-up-geometry">
+Next up: geometry
+</h2>
+<p>
+Next, I’d like to spend a few posts on the topic of geometry. I find that geometry problems work particularly well in Haskell (I don’t think I’ve solved a single geometry problem in Java). Let’s kick things off with a problem on the easier side:
+</p>
+<div style="text-align:center;">
+<p>
+<a href="https://open.kattis.com/problems/vacuumba">Vacuumba</a>
+</p>
+</div>
+<p>
+Have fun!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

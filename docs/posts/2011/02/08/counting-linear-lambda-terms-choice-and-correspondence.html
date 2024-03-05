@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Counting linear lambda terms: choice and correspondence</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2011/02/04/counting-linear-lambda-terms-mersenne-numbers.html">« Counting linear lambda terms: Mersenne numbers</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2011/02/24/enumerating-linear-inhabitants.html">» Enumerating linear inhabitants</a>
+
+</span>
+
+
+<h1>Counting linear lambda terms: choice and correspondence</h1>
+
+<div class="info">
+  Posted on February  9, 2011
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'choice'." href="../../../../tag/choice.html" rel="tag">choice</a>, <a title="All pages tagged 'inhabitation'." href="../../../../tag/inhabitation.html" rel="tag">inhabitation</a>, <a title="All pages tagged 'isomorphism'." href="../../../../tag/isomorphism.html" rel="tag">isomorphism</a>, <a title="All pages tagged 'lambda'." href="../../../../tag/lambda.html" rel="tag">lambda</a>, <a title="All pages tagged 'linear'." href="../../../../tag/linear.html" rel="tag">linear</a>
+  
+</div>
+
+<section>
+<p>In <a href="http://byorgey.wordpress.com/2011/02/04/counting-linear-lambda-terms-mersenne-numbers/">my last post</a>, I showed how to write down polymorphic types with numbers of linear inhabitants given by products of factorials and Mersenne numbers, but left open the question of types with five linear inhabitants in particular, and whether in general it is possible to write down a type with any number of linear inhabitants. The reason I was skeptical about the ability to have five inhabitants is that I didn’t know of a straightforward way to encode <i>choice</i> – the Mersenne and factorial constructions of course encoded some rather complicated choices.</p>
+<p>However, in <a href="http://byorgey.wordpress.com/2011/02/04/counting-linear-lambda-terms-mersenne-numbers/#comment-8258">a comment on that post</a>, <a href="http://www.mathematik.uni-marburg.de/~rendel/">Tillmann Rendel</a> solved the remaining open questions by showing that straightforward choice is indeed possible. Despite first appearances, it is possible to write down a polymorphic type with any desired number of linear inhabitants, in a completely uniform way. Here is Tillmann’s solution:</p>
+<p><span class="math inline">\(\forall a. (a \to a) \to (a \to a, a \to a, \dots, a \to a)\)</span></p>
+<p>The number of linear inhabitants of this type is precisely the number of components in the output tuple. Why is that? Well, the input function must be put in one of the <span class="math inline">\(n\)</span> output slots (there’s nothing else to do with it, since we have no values of type <span class="math inline">\(a\)</span> lying around to apply it to), and we must somehow fabricate functions of type <span class="math inline">\((a \to a)\)</span> to go in the remaining slots. By parametricity – intuitively, since we know nothing about the type <span class="math inline">\(a\)</span> – the only possibility is to use the identity function. However, the input function itself need not be the identity, since the caller gets to choose the type <span class="math inline">\(a\)</span>; hence the caller can observe where we choose to route the input function.</p>
+<p>Tillmann <a href="http://byorgey.wordpress.com/2011/02/04/counting-linear-lambda-terms-mersenne-numbers/#comment-8261">went on to remark</a>:</p>
+<blockquote>
+<p>So it seems that</p>
+<p><span class="math inline">\(\varphi = \forall a. (a,a) \to a\)</span></p>
+<p>corresponds to</p>
+<p><span class="math inline">\(\psi = \forall a. (a \to a) \to (a \to a, a \to a)\)</span></p>
+<p>in the sense that there is an isomorphism between the linear inhabitants of <span class="math inline">\(\psi\)</span> and the usual inhabitants of <span class="math inline">\(\varphi\)</span>. This isomorphism is witnessed by the <span class="math inline">\(\Lambda\)</span>-terms</p>
+<p><span class="math inline">\(\lambda t. \lambda f. (t (f, \lambda x. x), t (\lambda x. x, f)) : \varphi \to \psi\)</span></p>
+<p>and</p>
+<p><span class="math inline">\(\lambda t. \lambda (x,y). (\lambda(f,g). f x) (t (\lambda x. y)) : \psi \to \varphi.\)</span></p>
+<p>Can this observation be extended to yield an encoding of structural typing in linear typing and/or the other way around?</p>
+Such an encoding could play a similar role as double negation for classical and intuitionistic logics: <span class="math inline">\(\tau\)</span> has a classical proof if and only if <span class="math inline">\(\neg (\neg \tau)\)</span> has an intuitionistic proof.
+</blockquote>
+<p>So we are looking for some sort of mapping from types to types such that there is an isomorphism between the linear inhabitants of one and the usual inhabitants of the other. Actually, an <i>isomorphism</i> is rather strong: of course it makes sense to talk about isomorphisms since we have been talking about <i>counting</i>, but it would still be interesting even to have a mapping from types to types such that one is linearly inhabited (i.e. has at least one linear inhabitant) if and only if the other is inhabited in the usual way. This would correspond more closely to the situation Tillmann alludes to with classical and intuitionistic logic, where we are usually unconcerned with the <i>number</i> of distinct proofs of a proposition, only whether or not it is provable.</p>
+<p>The “obvious” transformation that suggests itself from Tillmann’s solution (swap inputs for outputs and turn every occurrence of <span class="math inline">\(a\)</span> into <span class="math inline">\((a \to a)\)</span>) quickly disappoints as a candidate for inducing precise isomorphisms between linear and regular inhabitants. For example, if we start with</p>
+<p><span class="math inline">\(\forall a. a \to (a,a)\)</span></p>
+<p>(one usual inhabitant), we end up with</p>
+<p><span class="math inline">\(\forall a. (a \to a, a \to a) \to (a \to a)\)</span></p>
+<p>which has two linear inhabitants (we can compose the functions in either order). It doesn’t even work in the more restricted sense explained above (simply preserving inhabitation):</p>
+<p><span class="math inline">\(\forall a b. a \to (a,b \to b)\)</span></p>
+<p>has one inhabitant, but</p>
+<p><span class="math inline">\(\forall a b. (a \to a, (b \to b) \to (b \to b)) \to (a \to a)\)</span></p>
+<p>has no linear inhabitants (since there is no way to use the input function involving <span class="math inline">\(b\)</span>s). But perhaps some variation on this theme will work.</p>
+<p>Unfortunately, I don’t know enough about the literature in this area to know whether anything like this has ever been explored before. I’d be grateful for any pointers.</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

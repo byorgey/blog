@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - BlogLiterately 0.5 release</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2012/07/07/new-haxr-release.html">« New haxr release</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2012/07/09/diagrams-mentoring-at-hac-phi.html">» Diagrams mentoring at Hac Phi</a>
+
+</span>
+
+
+<h1>BlogLiterately 0.5 release</h1>
+
+<div class="info">
+  Posted on July  7, 2012
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'blogging'." href="../../../../tag/blogging.html" rel="tag">blogging</a>, <a title="All pages tagged 'BlogLiterately'." href="../../../../tag/BlogLiterately.html" rel="tag">BlogLiterately</a>, <a title="All pages tagged 'ghci'." href="../../../../tag/ghci.html" rel="tag">ghci</a>, <a title="All pages tagged 'images'." href="../../../../tag/images.html" rel="tag">images</a>, <a title="All pages tagged 'release'." href="../../../../tag/release.html" rel="tag">release</a>, <a title="All pages tagged 'upload'." href="../../../../tag/upload.html" rel="tag">upload</a>
+  
+</div>
+
+<section>
+<p>
+I have now released version 0.5 of <a href="http://hackage.haskell.org/package/BlogLiterately"><code>BlogLiterately</code></a>. (You can <a href="http://byorgey.wordpress.com/2012/07/02/blogliterately-0-4-release/">read about the 0.4 release here</a>.) This version does uploading of images! Here is proof:
+</p>
+<div style="text-align:center;">
+<p><img src="http://byorgey.files.wordpress.com/2012/07/puppy-small.jpg" /></p>
+</div>
+<p>
+d’awww.
+</p>
+<p>
+(<a href="http://byorgey.wordpress.com/2012/07/07/new-haxr-release/">My previous post</a> explains the problem and solution with image uploads.)
+</p>
+<p>
+It also allows you to specify <em>expected outputs</em> in a <code>ghci</code> session (a feature <a href="http://www.reddit.com/r/haskell/comments/vz5vn/blogliterately_04_brent_yorgeys_tool_for/c5936th">suggested by Dan Burton</a>). This block
+</p>
+<pre><code>    [ghci]
+    7+6
+      13
+    9+4
+      12</code></pre>
+<p>
+now produces
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>7+6
+  13
+
+<span style="color:gray;">ghci&gt; </span>9+4
+  <span style="color:red;">13</span>
+  <span style="color:blue;">12</span>
+</code></pre>
+<p>
+Outputs that match the expected output are shown normally; outputs that don’t match the expected output are shown with the actual output in red and expected in blue. The idea is that this helps you catch errors in your code before uploading the post. (Of course, you don’t have to specify expected outputs if you don’t want to.)
+</p>
+<p>
+Another new feature is that <code>BlogLiterately</code> will prompt you for your password if you don’t specify it on the command line (another feature requested by Dan).
+</p>
+<p>
+Finally, one of the coolest new features (in my opinion) is that the internals are now <a href="http://hackage.haskell.org/package/BlogLiterately">exposed as a library</a>, and in particular you can <a href="http://hackage.haskell.org/packages/archive/BlogLiterately/0.5/doc/html/Text-BlogLiterately-Run.html">easily add your own custom transformation passes</a> (of type <code>Pandoc -&gt; IO Pandoc</code>) to the existing ones. So, for example, you could do something particular with your own specially tagged blocks (like <code>[ghci]</code> blocks), or wrap images in some fancy HTML to produce frames and captions, or automatically turn certain things into links, or whatever you can dream up. If you come up with any transformations you think might be more generally useful, please send them to me so I can include them in future releases for others to use.
+</p>
+<p>
+Happy blogging!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

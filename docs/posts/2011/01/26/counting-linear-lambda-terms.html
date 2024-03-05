@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Counting linear lambda terms</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2010/12/04/math-oeis-needs-a-new-maintainer.html">« Math.OEIS needs a new maintainer</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2011/02/04/counting-linear-lambda-terms-mersenne-numbers.html">» Counting linear lambda terms: Mersenne numbers</a>
+
+</span>
+
+
+<h1>Counting linear lambda terms</h1>
+
+<div class="info">
+  Posted on January 26, 2011
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'lambda'." href="../../../../tag/lambda.html" rel="tag">lambda</a>, <a title="All pages tagged 'linear'." href="../../../../tag/linear.html" rel="tag">linear</a>, <a title="All pages tagged 'polymorphism'." href="../../../../tag/polymorphism.html" rel="tag">polymorphism</a>, <a title="All pages tagged 'System F'." href="../../../../tag/System%20F.html" rel="tag">System F</a>, <a title="All pages tagged 'terms'." href="../../../../tag/terms.html" rel="tag">terms</a>
+  
+</div>
+
+<section>
+<p>Just a little something with which I’ve been idly occupying spare brain cycles lately… read on for an interesting puzzle.</p>
+<h3>
+Warm up: counting lambda terms
+</h3>
+<p>Consider a stripped-down version of Haskell’s type system with only natural numbers, polymorphism, functions, and tuples: no type classes, no algebraic data types, no base types other than Nat, and no bottom/undefined. (For those versed in the PL lingo, I mean System F extended with pairs – or we could even Church-encode the pairs, it doesn’t matter.)</p>
+<p>Now for an easy warm-up exercise: for each of the following types, how <i>many different</i> terms are there with the given type? By <i>different</i> I mean <i>observably different</i>; two terms are different if and only if there exist inputs for which they produce different outputs. For example, <span class="math inline">\(\lambda f. \lambda x. f x\)</span> and <span class="math inline">\(\lambda f. \lambda x. f (f x)\)</span> are different, since they can be distinguished by passing them the arguments (say) <span class="math inline">\(\lambda y. y + 1\)</span> and <span class="math inline">\(0\)</span>. However, <span class="math inline">\(\lambda a. a\)</span> and <span class="math inline">\(\lambda b. (\lambda c. c) b\)</span> are indistinguishable.</p>
+<p>Remember, you can only use lambda, function application, and tupling. Using <code>undefined</code> in particular does not count.</p>
+<ol>
+<li>
+<span class="math inline">\(\forall a. a \to a\)</span>
+<li>
+<span class="math inline">\(\forall a. a \to a \to a\)</span>
+<li>
+<span class="math inline">\(\forall a. (a,a) \to (a,a)\)</span>
+<li>
+<span class="math inline">\(\forall a b. (a \to b) \to (a \to b) \to a \to a \to (b,b)\)</span>
+<li>
+<span class="math inline">\(\forall a. (a \to a) \to a \to a\)</span>
+</ol>
+<p>The answers (stop reading if you want to work out the answers for yourself):</p>
+<ol>
+<li>
+One (the identity function).
+</li>
+<li>
+Two: we can return either the first or the second argument. (This is the type of Church-encoded booleans.)
+</li>
+<li>
+Four: return the first value twice, or the second value twice, or both in either order.
+</li>
+<li>
+<strike>Eight: there are four ways to apply the two functions to the two values of type <span class="math inline">\(a\)</span> (apply one of them to both, or match them up one-to-one), and then two ways to order the results.</strike> Whoops, even I found this one tricky. Thanks to gasche for the correct answer (sixteen); see the comments.
+</li>
+<li>
+Omega: we can apply the function to the second argument any natural number of times.
+</li>
+</ol>
+<p>Hopefully you didn’t find that too hard (although perhaps you found the fourth one a bit tricky). Now for a few more (easy) warm-up questions (I won’t bother giving the answers):</p>
+<ol>
+<li>
+Can you write down a type with exactly <i>three</i> different inhabitants?
+</li>
+<li>
+Can you come up with a scheme for constructing types inhabited by <i>any given natural number</i> of different terms?
+</li>
+</ol>
+<h3>
+Counting linear lambda terms
+</h3>
+<p>And now for the interesting twist. We will now restrict ourselves to only <i>linear</i> lambda terms. By a “linear” term I mean, intuitively, one in which every input is used exactly once: inputs may be neither ignored nor duplicated. Put another way, every time we see <span class="math inline">\(\lambda x.t\)</span>, <span class="math inline">\(x\)</span> must occur free in <span class="math inline">\(t\)</span> exactly once. (Note, however, that <i>type</i> arguments may be used multiple times.) For example, <span class="math inline">\(\lambda x. \lambda f. f x\)</span> is linear, but <span class="math inline">\(\lambda x. \lambda f. f (f x)\)</span> is not (since <span class="math inline">\(f\)</span> is used twice), nor is <span class="math inline">\(\lambda x. \lambda f. x\)</span> (since <span class="math inline">\(f\)</span> is ignored). For dealing with tuples, assume there are no projection functions like <code>fst</code> or <code>snd</code>, only pattern-matching like <span class="math inline">\(\lambda (x,y). (y,x)\)</span>; hence, using a tuple linearly simply means using each of its components exactly once. We could make all of this fully precise with a suitable type system, of course, but I hope this intuitive explanation will suffice.</p>
+<p>Now go back and look at the four types listed above. How many <i>linear</i> inhabitants does each type have?</p>
+<p>OK, that’s slightly more interesting but still not that hard; hopefully you came up with one, zero, two, four, and one. But now for the fun:</p>
+<ol>
+<li>
+Can you write down a type with exactly <i>three</i> different linear inhabitants?
+</li>
+<li>
+Can you come up with a scheme for constructing types inhabited by <i>any given natural number</i> of different linear terms? If not, can you characterize the natural numbers for which such types do exist?
+</li>
+</ol>
+<p>I’ll write more in a future post. For now, have fun, and feel free to post discussions, questions, solutions, etc. in the comments.</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

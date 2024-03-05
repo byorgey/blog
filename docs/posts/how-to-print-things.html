@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - How to print things</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../">Home</a> •
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../posts/2016/05/17/in-praise-of-beeminder.html">« In praise of Beeminder</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../posts/2016/05/19/how-to-print-things.html">» How to print things</a>
+
+</span>
+
+
+<h1>How to print things</h1>
+
+<div class="info">
+  Posted on May 19, 2016
+  
+  
+  <br />
+  Tagged 
+  
+</div>
+
+<section>
+<div id="TOC">
+<ul>
+<li>
+<a href="#purpose">Purpose</a>
+</li>
+<li>
+<a href="#terminology">Terminology</a>
+</li>
+<li>
+<a href="#single-sided">Single-sided</a>
+</li>
+<li>
+<a href="#standard-double-sided">Standard double-sided</a>
+</li>
+<li>
+<a href="#möbius-double-sided">Möbius double-sided</a>
+</li>
+<li>
+<a href="#two-way-double-sided">Two-way double-sided</a>
+</li>
+</ul>
+</div>
+<h1 id="purpose">
+Purpose
+</h1>
+<p>
+The purpose of this page is to collect and summarize concise explanations of the pros and cons of different methods for printing and reading loose-leaf documents, including single-sided, standard double-sided, Möbius double-sided, and two-way double-sided—the last two of which in particular are the most interesting. (If you know of other methods, or have anything to add, please contact me!)
+</p>
+<p>
+The methods on this page are explicitly for <em>loose-leaf</em> documents. In particular, they do not apply if the paper is <em>bound</em> in any way, <em>e.g.</em> stapled or in a 3-ring binder. This is of particular relevance to academics, who often print journal articles or other documents in order to read or edit them, but it may certainly be relevant to many others as well.
+</p>
+<p>
+Questions, comments, feedback, alternative methods, pros and cons not listed here, <em>etc.</em> are all most welcome!
+</p>
+<h1 id="terminology">
+Terminology
+</h1>
+<p>
+To avoid confusion, I have tried to be careful with my use of the following terminology:
+</p>
+<ul>
+<li>
+A <em>sheet</em> is a physical piece of paper, which has two <em>sides</em>.
+</li>
+<li>
+A <em>page</em> is a single, numbered unit of printed matter. Usually, one page is printed on one side of a sheet. One can, of course, print multiple pages on one side of a sheet, but we will not consider such printing schemes. Note that a blank side of a sheet is not a page, since it has nothing printed on it.
+</li>
+<li>
+A <em>stack</em> is a sequence of sheets, with a <em>front</em> (the side that is read) and a <em>back</em>. (Sometimes <em>top</em> and <em>bottom</em> are used synonymously with <em>front</em> and <em>back</em>.)
+</li>
+<li>
+To <em>flip</em> a sheet is to turn it over, exchanging front and back. Similarly, an entire stack may be flipped as a unit.
+</li>
+<li>
+To <em>shift</em> a sheet is to move it (<em>e.g.</em> from the front to the back of a stack) without flipping it.
+</li>
+</ul>
+<h1 id="single-sided">
+Single-sided
+</h1>
+<p>
+In this printing method, pages are only printed on one side of each sheet, leaving the other side blank.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/3c53a88589084cc0.png" />
+</p>
+</div>
+<p>
+<strong>Pros</strong>
+</p>
+<p>
+There are many advantages to printing one-sided:
+</p>
+<ul>
+<li>
+It is easy to jump ahead in the document by more than one page at a time, by shifting multiple sheets of paper together.
+</li>
+<li>
+The document can easily be split into subsections (<em>e.g.</em> if multiple people need to refer to different parts of the document) by splitting the stack into substacks.
+</li>
+<li>
+It is easy to extend the document after it has already been printed, simply by adding more pages to the end.
+</li>
+<li>
+The physical process of reading the document is simple and requires no memory (see the algorithms below).
+</li>
+<li>
+It is easy to simultaneously refer to multiple pages, since each page is on a separate sheet.
+</li>
+<li>
+There is ample space for writing notes. For example, notes related to page <span class="math inline">\(n\)</span> can be written on the back of the sheet containing page <span class="math inline">\(n-1\)</span>; see the “book” algorithm below.
+</li>
+<li>
+Printing one-sided is supported by every printer ever.
+</li>
+</ul>
+<p>
+<strong>Cons</strong>
+</p>
+<p>
+There is one obvious downside to printing single-sided: as compared to double-sided printing, the resulting document uses twice as much paper, which can be significant when considering either the cost of paper or the thickness and weight of printed documents.
+</p>
+<p>
+<strong>Algorithms for reading</strong>
+</p>
+<ul>
+<li>
+<em>Loop</em>: After reading each sheet, shift it to the back.
+</li>
+<li>
+<p>
+<em>Book</em>: Maintain two stacks, the already-read pages face down on the left, and the yet-to-be-read pages face up on the right:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/919ce1a8aa01d12d.png" />
+</p>
+</div>
+<p>
+After reading a sheet, flip it over and shift it from the top of the right stack to the top of the left, just as if turning the page of a book. For example, after reading page 3 above, the situation becomes
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/ecd64a9cf2366c39.png" />
+</p>
+</div>
+<p>
+The book algorithm particularly facilitates note-taking (notes related to the right-hand page being read can be written on the blank side of the left-hand page), but requires a flat surface on which to put the stacks.
+</p>
+</li>
+</ul>
+<p>
+<strong>How to print</strong>
+</p>
+<p>
+Just print (single-sided).
+</p>
+<h1 id="standard-double-sided">
+Standard double-sided
+</h1>
+<p>
+In this method, the first two pages are printed on the front and back of the first sheet, the next two pages on the second sheet, and so on.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/f1c161dee89ed913.png" />
+</p>
+</div>
+<p>
+<strong>Pros</strong>
+</p>
+<ul>
+<li>
+Several advantages are shared with single-sided printing: it is easy to jump ahead in the document by more than one page, by moving multiple sheets of paper together; the document can be easily split into subsections; and it is easy to extend the document after it has already been printed.
+</li>
+<li>
+Usually requires little effort to print: many printers natively support this method of double-sided printing.
+</li>
+<li>
+Saves paper compared to single-sided printing.
+</li>
+</ul>
+<p>
+<strong>Cons</strong>
+</p>
+<ul>
+<li>
+Half the time, consecutive pages are on opposite sides of the same sheet of paper. This often makes it difficult to simultaneously refer to multiple places in the document (<em>e.g.</em> to refer back to a previous definition, figure, <em>etc.</em> on the previous page), requiring much tedious flipping back and forth.
+</li>
+<li>
+Reading <em>loose-leaf</em> documents printed in this way can be confusing and error-prone. The “book” method is the only reading method that does not require keeping track of some state (see the algorithms below).
+</li>
+</ul>
+<p>
+<strong>Algorithms for reading</strong>
+</p>
+<ul>
+<li>
+<em>Page at a time</em>:
+<ul>
+<li>
+After reading an odd-numbered page, flip the sheet over.
+</li>
+<li>
+After reading an even-numbered page, flip the sheet over and shift it to the back.
+</li>
+</ul>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/02721a5c954ca1e8.png" />
+</p>
+</div>
+<p>
+This is in some sense the most “obvious” algorithm. A disadvantage is that it requires remembering whether to flip or to shift after reading each page. And because page numbering can vary, one cannot actually rely on the parity of the page number (that is, one must remember for <em>each individual document</em> which parity corresponds to which action).
+</p>
+<p>
+A small advantage (?) is that the entire stack always maintains the same orientation.
+</p>
+</li>
+<li>
+<em>Spiral bound</em>: Treat the stack <em>as if</em> it was bound with a spiral binding. That is:
+<ul>
+<li>
+After reading an odd page, shift it to the back, and flip the entire stack.
+</li>
+<li>
+After reading an even page, flip the entire stack.
+</li>
+</ul>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/4e0209d00e8ac8c2.png" />
+</p>
+</div>
+<p>
+Just like the page-at-a-time method, this requires remembering which of two actions to take after completing a page. However, the advantages are that individual sheets never need to be flipped (which can be physically cumbersome), and the orientation of the entire stack can be used to help remember which action to perform.
+</p>
+<p>
+The basic idea is to use some physical method of marking one side of the stack (<em>e.g.</em> a sticky note, putting a dogear on one page, or fanning the stack and making a mark along one edge) and treating that side as if it were a spiral binding. This lends itself to the mnemonic “left leaf, right reverse”—that is, when the mark/“spiral binding” is on the left side, you move a leaf (sheet) from the front to the back; when it is on the right, you reverse (flip) the entire stack. See <a href="https://mathlesstraveled.com/2016/01/04/john-conways-algorithms-for-counting-stairs-and-reading-double-sided-paper/">the comments on this post</a> for a discussion.
+</p>
+</li>
+<li>
+<p>
+<em>Book</em>: Of course, the book method can also be used. Put the sheets into two stacks, and treat them as if they were actually bound in a book. This is the simplest algorithm: unlike the page-at-a-time or spiral bound algorithms, it does not require keeping track of any state. However, it does require a sufficiently large, flat surface.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/64fd06af1bd3e3d2.png" />
+</p>
+</div>
+</li>
+</ul>
+<p>
+<strong>How to print</strong>
+</p>
+<p>
+Simply use a printer that supports double-sided printing, and choose the double-sided option.
+</p>
+<h1 id="möbius-double-sided">
+Möbius double-sided
+</h1>
+<p>
+With an <span class="math inline">\(n\)</span>-page document, put pages <span class="math inline">\(1\)</span> through <span class="math inline">\(\lceil n/2 \rceil\)</span> on the fronts of the sheets, and then put the remaining pages on the backs (in the same order), as in the illustration below.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/143246e209e17410.png" />
+</p>
+</div>
+<p>
+This method was originally <a href="https://mathlesstraveled.com/2016/01/08/a-new-way-to-read-and-print-double-sided-paper/">described here</a>. This can very accurately be described as a Möbius band (as <a href="https://mathlesstraveled.com/2016/01/08/a-new-way-to-read-and-print-double-sided-paper/#comment-26590">first observed by a commenter</a>), since the front and back are connected by a half-twist (<em>i.e.</em> a flip).
+</p>
+<p>
+<strong>Pros</strong>
+</p>
+<ul>
+<li>
+There is a particularly simple algorithm for reading a document printed using this method (see below), which does not require making separate stacks and hence does not require a flat surface. There is no state to remember; the same action is done at the end of each page.
+</li>
+<li>
+Consecutive pages are always on different sheets, so one can always simultaneously refer to the current page and the previous page without confusion or flipping back and forth. In fact, <em>any</em> sequence of consecutive pages (not exceeding the number of sheets) is always on separarate sheets. For example, in a <span class="math inline">\(10\)</span>-page document printed on <span class="math inline">\(5\)</span> sheets, pages 2–6 are all on separate sheets, as are pages 3–7, 4–8, and so on. Thus, it is easy to simultaneously reference any pages which are not too far apart in the document.
+</li>
+<li>
+Still saves paper as compared to single-sided printing.
+</li>
+</ul>
+<p>
+<strong>Cons</strong>
+</p>
+<ul>
+<li>
+The pages must be turned one at a time; there is no easy way to jump ahead multiple pages. For many, this is a major downside. In technical terms, seeking to an arbitrary page is <span class="math inline">\(O(n)\)</span>.
+</li>
+<li>
+The document cannot be easily split into subsections, since each sheet contains two pages which are far apart in the document.
+</li>
+<li>
+If you hand a document printed in this manner to someone else, they are likely to be confused.
+</li>
+<li>
+Printing documents in this manner requires more effort (although it is not hard; see below).
+</li>
+</ul>
+<p>
+<strong>Algorithms for reading</strong>
+</p>
+<ul>
+<li>
+<p>
+<em>Möbius band</em>: after reading each page, flip the sheet over and shift it to the bottom of the stack, as illustrated below:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/83a75288d1eea532.png" />
+</p>
+</div>
+</li>
+</ul>
+<p>
+<strong>How to print</strong>
+</p>
+<p>
+This is a bit tricker: I do not know of any printers that natively support this printing method. However, there are two good methods to print documents in this format.
+</p>
+<ul>
+<li>
+<p>
+<em>Double-print</em>: This method works with most printers that can print double-sided. Print the first half (rounded up) of the document <em>single</em>-sided. Then take the resulting stack of paper and put it back in the printer, with page 1 facing up and the top towards you. Then print the second half of the document single-sided. It just so happens that this works out nicely with most printers, so that you don’t need to reverse all the sheets before putting them back in the printer. However, this method does not work with some simpler printers, especially those that can only print one-sided. The key property is whether documents with multiple pages come out of your printer in the correct order, or in reversed order. If they come out in reversed order, then you will need to reverse them before putting them back through to print the back sides.
+</p>
+</li>
+<li>
+<p>
+<em>Pre-collate</em>: The slightly more high-tech method is to first reorder the pages of a PDF so that they will come out in Möbius order when printed using conventional double-sided printing. Specifically, the pages must be in the order
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle 1, \lceil n/2 \rceil, 2, \lceil n/2 \rceil + 1, \dots\)</span></p>
+</div>
+</p>
+<p>
+(Note that <span class="math inline">\(\lceil n/2 \rceil\)</span> correctly handles documents with an odd number of pages, ensuring that the blank page is on the back of the last sheet.) This can be accomplished by splitting the document in half and then interleaving the halves. For example, the <a href="https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/"><code>pdftk</code></a> tool can be used to perform this operation, using a command line like
+</p>
+<pre><code>pdftk &lt;input.pdf&gt; shuffle 1-&lt;m&gt; &lt;m+1&gt;-end output &lt;output.pdf&gt;</code></pre>
+<p>
+where <code>&lt;input.pdf&gt;</code> and <code>&lt;output.pdf&gt;</code> should be replaced by appropriate file names, and <code>&lt;m&gt;</code> and <code>&lt;m+1&gt;</code> should be replaced by <span class="math inline">\(\lceil n/2 \rceil\)</span> and one more, respectively. For example, to turn the 11-page document <code>foo.pdf</code> into <code>foo-mobius.pdf</code>, one would write
+</p>
+<pre><code>pdftk foo.pdf shuffle 1-6 7-end output foo-mobius.pdf</code></pre>
+<p>
+Here is a <a href="https://github.com/byorgey/bin/blob/master/spliff">zsh script</a> I use which handles this automatically:
+</p>
+<pre class="zsh"><code>#!/bin/zsh
+
+PDF=$1
+OUTPUT=&quot;${PDF:r}-spliff.pdf&quot;
+N=`pdftk $1 dump_data | grep NumberOfPages | head -n 1 | cut -d &quot; &quot; -f 2`
+pdftk $1 shuffle 1-$(((N+1)/2)) $(((N+1)/2 + 1))-end output $OUTPUT</code></pre>
+</li>
+</ul>
+<h1 id="two-way-double-sided">
+Two-way double-sided
+</h1>
+<p>
+With an <span class="math inline">\(n\)</span>-page document, put pages <span class="math inline">\(1\)</span> through <span class="math inline">\(\lceil n/2 \rceil\)</span> on the fronts of the sheets, just as in the Möbius method, but then put the remaining pages on the backs of the sheets in the <em>opposite</em> order, as in the illustration below. If there are an odd number of pages, leave the back of the first sheet blank.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/c69e92db12f79907.png" />
+</p>
+</div>
+<p>
+This method was suggested to me independently by <a href="https://news.ycombinator.com/user?id=audeyisaacs">audeyisaacs</a> in a <a href="https://news.ycombinator.com/item?id=11805571">comment on Hacker News</a>, and by Shachaf Ben-Kiki via IRC.
+</p>
+<p>
+<strong>Pros</strong>
+</p>
+<ul>
+<li>
+Like Möbius double-sided, there is a very simple algorithm for reading two-way double-sided documents, requiring (almost) no memory—see below.
+</li>
+<li>
+A major benefit as compared to Möbius printing is that it is possible to skip multiple pages just by shifting multiple sheets to the top or bottom all together as a group. This makes it easy to quickly move to an arbitrary point in the document (in essentially <span class="math inline">\(O(\log n)\)</span> time).
+</li>
+<li>
+<p>
+Two consecutive pages are <em>almost</em> always on different sheets—except for the two middle pages. If desired, this can even be remedied by inserting two extra blank pages, like this:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/05/5f5dcf692c0abf5d.png" />
+</p>
+</div>
+</li>
+<li>
+<p>
+Of course, it still saves paper over single-sided printing.
+</p>
+</li>
+</ul>
+<p>
+<strong>Cons</strong>
+</p>
+<ul>
+<li>
+The document still cannot be easily split into subsections; the front and back of each sheet tend to contain pages far away from each other in the document.
+</li>
+<li>
+It also has a high confusion factor: other people will have no idea what to do with such a document without some explanation, though subjectively I think this scheme is slightly easier to explain than Möbius.
+</li>
+<li>
+Printing documents in this manner requires effort, either manually reversing the sheets between printing the fronts and backs or preprocessing a PDF.
+</li>
+</ul>
+<p>
+<strong>Algorithms for reading</strong>
+</p>
+<ul>
+<li>
+<p>
+<em>Two-way</em>: After reading each page, shift it to bottom of the stack (without flipping). Upon returning to the first page (it should usually be very easy to tell!), simply flip the whole stack and then continue reading and shifting pages to the bottom. When finished, shift the final page to the bottom and then flip the whole stack again to return it to its original state.
+</p>
+<p>
+Although this technically requires a bit of memory, it is something you are likely to remember anyway—you have to recognize when you have returned to the first page. Otherwise, this algorithm is simple and consistent for every page.
+</p>
+</li>
+</ul>
+<p>
+<strong>How to print</strong>
+</p>
+<ul>
+<li>
+<p>
+<em>Double-print</em>: you can start by printing the first <span class="math inline">\(\lceil n/2 \rceil\)</span> pages single-sided. Unfortunately, with most printers, you will then have to manually reverse the sheets before putting them back in the tray to print the remaining pages. See the discussion of double-printing Möbius documents above.
+</p>
+</li>
+<li>
+<p>
+<em>Pre-collate</em>: fortunately this is not too much harder than for Möbius printing. Using <code>pdftk</code> again, you can simply reverse the order of the endpoints of a page range to reverse the pages. So one would use a command line like
+</p>
+<pre><code>pdftk &lt;input.pdf&gt; shuffle 1-&lt;m&gt; end-&lt;m+1&gt; output &lt;output.pdf&gt;</code></pre>
+<p>
+where <code>&lt;input.pdf&gt;</code> and <code>&lt;output.pdf&gt;</code> should be replaced by appropriate file names, and <code>&lt;m&gt;</code> and <code>&lt;m+1&gt;</code> should be replaced by <span class="math inline">\(\lceil n/2 \rceil\)</span> and one more, respectively.
+</p>
+<p>
+This works perfectly when there are an even number of pages. Unfortunately, when the number of pages is odd, this does not quite do the right thing with blank pages (although this is not a huge deal). I do not know of a way to use <code>pdftk</code> to insert blank pages at appropriate points. If you know of an easy way to do this properly, I would love to update this page to include your solution.
+</p>
+</li>
+</ul>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

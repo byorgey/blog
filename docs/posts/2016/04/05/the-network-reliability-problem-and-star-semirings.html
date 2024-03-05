@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - The network reliability problem and star semirings</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2016/04/02/ccsc-midsouth-conference-and-programming-contest.html">« CCSC-Midsouth conference and programming contest</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2016/05/17/in-praise-of-beeminder.html">» In praise of Beeminder</a>
+
+</span>
+
+
+<h1>The network reliability problem and star semirings</h1>
+
+<div class="info">
+  Posted on April  6, 2016
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'graph'." href="../../../../tag/graph.html" rel="tag">graph</a>, <a title="All pages tagged 'network'." href="../../../../tag/network.html" rel="tag">network</a>, <a title="All pages tagged 'probability'." href="../../../../tag/probability.html" rel="tag">probability</a>, <a title="All pages tagged 'reliability'." href="../../../../tag/reliability.html" rel="tag">reliability</a>, <a title="All pages tagged 'semiring'." href="../../../../tag/semiring.html" rel="tag">semiring</a>, <a title="All pages tagged 'star'." href="../../../../tag/star.html" rel="tag">star</a>
+  
+</div>
+
+<section>
+<p>
+In a <a href="https://byorgey.wordpress.com/2016/02/19/the-network-reliability-problem/">previous post</a> I defined the <em>network reliability</em> problem. Briefly, we are given a directed graph whose edges are labelled with probabilities, which we can think of as giving the likelihood of a message successfully traversing a link in a network. The problem is then to compute the probability that a message will successfully traverse the network from a given source node to a given target node.
+</p>
+<p>
+Several commenters pointed out the connection to <a href="https://en.wikipedia.org/wiki/Bayesian_network">Bayesian networks</a>. I think they are right, and the network reliability problem is a very special case of Bayesian inference. However, so far this hasn’t seemed to help very much, since the things I can find about algorithms for Bayesian inference are either too general (<em>e.g.</em> allowing arbitrary functions at nodes) or too specific (<em>e.g.</em> only working for certain kinds of trees). So I’m going to put aside Bayesian inference for now; perhaps later I can come back to it.
+</p>
+<p>
+In any case, <a href="https://byorgey.wordpress.com/2016/02/19/the-network-reliability-problem/#comment-15064">Derek Elkins also made a comment</a> which pointed to exactly what I wanted to talk about next.
+</p>
+<h1 id="star-semirings-and-path-independence">
+Star semirings and path independence
+</h1>
+<p>
+Consider the related problem of computing the reliability of the <em>single most reliable path</em> from <span class="math inline">\(s\)</span> to <span class="math inline">\(t\)</span> in a network. This is really just a disguised version of the shortest path problem, so one can solve it using <a href="https://en.wikipedia.org/wiki/Dijkstra's_algorithm">Dijkstra’s algorithm</a>. But I want to discuss a more general way to think about solving it, using the theory of star semirings. Recall that a <em>semiring</em> is a set with two associative binary operations, “addition” and “multiplication”, which is a commutative monoid under addition, a monoid under multiplication, and where multiplication distributes over addition and <span class="math inline">\(0a = a0 = 0\)</span>. A <em>star semiring</em> is a semiring with an additional operation <span class="math inline">\((-)^*\)</span> satisfying <span class="math inline">\(a^* = 1 + aa^* = 1 + a^*a\)</span>. Intuitively, <span class="math inline">\(a^* = 1 + a + a^2 + a^3 + \dots\)</span> (though <span class="math inline">\(a^*\)</span> can still be well-defined even when this infinite sum is not; we can at least say that <em>if</em> the infinite sum is defined, they must be equal). If <span class="math inline">\(S\)</span> is a star semiring, then the semiring of <span class="math inline">\(n \times n\)</span> matrices over <span class="math inline">\(S\)</span> is also a star semiring; for details see <span class="citation">Dolan (2013)</span>, <span class="citation">O’Connor (2011)</span>, <span class="citation">Penaloza (2005)</span>, and <span class="citation">Lehmann (1977)</span>. In particular, there is a very nice functional algorithm for computing <span class="math inline">\(M^*\)</span>, with time complexity <span class="math inline">\(O(n^3)\)</span> <span class="citation">(Dolan 2013)</span>. (Of course, this is slower than Dijkstra’s algorithm, but unlike Dijkstra’s algorithm it also works for finding shortest paths in the presence of negative edge weights—in which case it is essentially the <a href="https://en.wikipedia.org/wiki/Floyd-Warshall_algorithm">Floyd-Warshall algorithm</a>.)
+</p>
+<p>
+Now, given a graph <span class="math inline">\(G = (V,E)\)</span> and labelling <span class="math inline">\(\varphi : E \to \mathbb{P}\)</span>, define the <span class="math inline">\(|V| \times |V|\)</span> adjacency matrix <span class="math inline">\(M_G\)</span> to be the matrix of edge probabilities, that is, <span class="math inline">\((M_G)_{uv} = \varphi(u,v)\)</span>. Let <span class="math inline">\((\mathbb{P}, \max, 0, \times, 1)\)</span> be the star semiring of probabilities under maximum and multiplication (where <span class="math inline">\(a^* = 1\)</span>, since <span class="math inline">\(1 = \max(1,a \times 1)\)</span>). Then we can solve the single most reliable path problem by computing <span class="math inline">\(M_G^*\)</span> over this semiring, and finding the largest entry. If we want to find the actual most reliable path, and not just its reliability, we can instead work over the semiring <span class="math inline">\(\mathbb{P} \times E^*\)</span>, <em>i.e.</em> probabilities paired with paths. You might enjoy working out what the addition, multiplication, and star operations should be, or see <span class="citation">O’Connor (2011)</span>.
+</p>
+<p>
+In fact, as shown by O’Connor and Dolan, there are many algorithms that can be recast as computing the star of a matrix, for an appropriate choice of semiring: for example, (reflexive-)transitive closure; all-pairs shortest paths; Gaussian elimination; dataflow analysis; and solving certain knapsack problems. One might hope that there is similarly an appropriate semiring for the network reliability problem. But I have spent some time thinking about this and I do not know of one.
+</p>
+<p>
+Consider again the simple example given at the start of the <a href="https://byorgey.wordpress.com/2016/02/19/the-network-reliability-problem/">previous post</a>:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/04/0c0251dc858b7992.png" />
+</p>
+</div>
+<p>
+For this example, we computed the reliability of the network to be <span class="math inline">\(0.835\)</span>, by computing the probability of the upper path, <span class="math inline">\(p = 0.45\)</span>, and the lower path, <span class="math inline">\(q = 0.7\)</span>, and then combining them as <span class="math inline">\(p + q - pq\)</span>, the probability of success on either path less the double-counted probability of simultaneous success on both.
+</p>
+<p>
+Inspired by this example, one thing we might try would be to define operations <span class="math inline">\(p \land q = pq\)</span> and <span class="math inline">\(p \lor q = p + q - pq\)</span>. But when we go to check the semiring laws, we run into a problem: distributivity does not hold! <span class="math inline">\(p \land (q \lor r) = p(q + r - qr) = pq + pr - pqr\)</span>, but <span class="math inline">\((p \land q) \lor (p \land r) = pq \lor pr = pq + pr - p^2qr\)</span>. The problem is that the addition operation <span class="math inline">\(p \lor q = p + q - pq\)</span> implicitly assumes that the events with probabilities <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> are <em>independent</em>: otherwise the probability that they both happen is not actually equal to <span class="math inline">\(pq\)</span>. The events with probabilities <span class="math inline">\(pq\)</span> and <span class="math inline">\(pr\)</span>, however, are <em>not</em> independent. In graph terms, they represent two paths with a shared subpath. In fact, our example computation at the beginning of the post was only correct since the two paths from <span class="math inline">\(s\)</span> to <span class="math inline">\(t\)</span> were completely independent.
+</p>
+<h1 id="graph-reduction">
+Graph reduction
+</h1>
+<p>
+We can at least compute the reliability of <a href="https://en.wikipedia.org/wiki/Series-parallel_graph">series-parallel graphs</a> whose terminals correspond with <span class="math inline">\(s\)</span> and <span class="math inline">\(t\)</span>:
+</p>
+<ul>
+<li>
+If <span class="math inline">\(G\)</span> consists of a single edge, return that edge’s probability.
+</li>
+<li>
+Otherwise, <span class="math inline">\(G\)</span> is a composition of two subgraphs, whose reliabilities we recursively compute. Then:
+<ul>
+<li>
+If <span class="math inline">\(G\)</span> is a sequential composition of graphs, return the product of their reliabilities.
+</li>
+<li>
+If <span class="math inline">\(G\)</span> is a parallel composition of two graphs with reliabilities <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span>, return <span class="math inline">\(p + q - pq\)</span>.
+</li>
+</ul>
+</li>
+</ul>
+<p>
+In the second case, having a parallel composition of graphs ensures that there are no shared edges between them, so <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> are indeed independent.
+</p>
+<p>
+Of course, many interesting graphs are not series-parallel. The simplest graph for which the above does not work looks like this:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/04/25b7575a4c860ccd.png" />
+</p>
+</div>
+<p>
+Suppose all the edges have probability <span class="math inline">\(1/3\)</span>. Can you find the reliability of this network?
+</p>
+<p>
+More in a future post!
+</p>
+<h1 id="references" class="unnumbered">
+References
+</h1>
+<div id="refs" class="references" role="list">
+<div id="ref-dolan2013fun">
+<p>
+Dolan, Stephen. 2013. “Fun with Semirings: A Functional Pearl on the Abuse of Linear Algebra.” In <em>ACM SIGPLAN Notices</em>, 48:101–10. 9. ACM.
+</p>
+</div>
+<div id="ref-lehmann1977algebraic">
+<p>
+Lehmann, Daniel J. 1977. “Algebraic Structures for Transitive Closure.” <em>Theoretical Computer Science</em> 4 (1). Elsevier: 59–76.
+</p>
+</div>
+<div id="ref-oconnor2011shortestpaths">
+<p>
+O’Connor, Russell. 2011. “A Very General Method for Computing Shortest Paths.” <a href="http://r6.ca/blog/20110808T035622Z.html" class="uri">http://r6.ca/blog/20110808T035622Z.html</a>.
+</p>
+</div>
+<div id="ref-penaloza2005transitive">
+<p>
+Penaloza, Rafael. 2005. “Algebraic Structures for Transitive Closure.” <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.71.7650" class="uri">http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.71.7650</a>.
+</p>
+</div>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

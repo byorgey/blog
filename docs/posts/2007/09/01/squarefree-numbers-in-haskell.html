@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Squarefree numbers in Haskell</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2007/08/23/draft-of-my-tmr-article-on-multiset-partitions.html">« Draft of my TMR article on multiset partitions</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2007/09/28/monadreader-article-multiset-partitions.html">» Monad.Reader article (Multiset partitions)</a>
+
+</span>
+
+
+<h1>Squarefree numbers in Haskell</h1>
+
+<div class="info">
+  Posted on September  2, 2007
+  
+  
+  <br />
+  Tagged 
+  
+</div>
+
+<section>
+<p>A <em>squarefree</em> number is one which is not divisible by any perfect squares. Put another way, the prime factorization of a squarefree number includes at most one copy of any given prime. So, the first few squarefree numbers are</p>
+<p>1,2,3,5,6,7,10,11,13,14,15,…</p>
+<p>How can we generate these in Haskell? In particular, we want to define the infinite sorted list of squarefree numbers, to be lazily computed on demand. We could implement a brute-force method where we simply factor every positive integer and only keep those which don’t have repeated factors. But that would be awfully slow. This is Haskell we’re talking about, there must be a better way!</p>
+<p>There are better ways, of course; here’s one. Suppose that (somehow) we have computed the list <span class="math inline">\(L_n\)</span>, which contains all the squarefree numbers with prime factors up to and including <span class="math inline">\(p_n\)</span>, the nth prime number. For example, <span class="math inline">\(L_1 = [1,2]\)</span>; <span class="math inline">\(L_2 = [1,2,3,6]\)</span>; and so on. Given <span class="math inline">\(L_n\)</span>, we can compute <span class="math inline">\(L_{n+1}\)</span> as follows: multiply every element of <span class="math inline">\(L_n\)</span> by <span class="math inline">\(p_{n+1}\)</span> to produce a new list <span class="math inline">\(L_{n+1}'\)</span>; this list contains all those squarefree numbers with prime factors up to <span class="math inline">\(p_{n+1}\)</span>, which are divisible by <span class="math inline">\(p_{n+1}\)</span>. Then we just merge <span class="math inline">\(L_n\)</span> with <span class="math inline">\(L_{n+1}'\)</span> to produce <span class="math inline">\(L_{n+1}\)</span>.</p>
+<p>Let’s try it: we start with <span class="math inline">\(L_0 = [1]\)</span>, the list of all squarefree numbers with no prime factors. Then we compute <span class="math inline">\(L_1 = [1,2]\)</span>. Multiplying by 3 gives <span class="math inline">\(L_2' = [3,6]\)</span>, and merging yields <span class="math inline">\(L_2 = [1,2,3,6]\)</span>. Multiplying by 5 gives <span class="math inline">\(L_3' = [5,10,15,30]\)</span>; merging again gives us <span class="math inline">\(L_3 = [1,2,3,5,6,10,15,30]\)</span>. And so on.</p>
+<p>So, how do we translate this into a definition of the infinite list of squarefree numbers? It’s not quite as straightforward as it seems. First of all, we can’t just say the equivalent of “compute <span class="math inline">\(L_{\infty}\)</span>”; nothing would ever get generated that way, since everything in <span class="math inline">\(L_{n+1}\)</span> depends on everything in <span class="math inline">\(L_{n}\)</span>. There’s nothing inherent in the above method that indicates which part of the list isn’t going to change on the next iteration. And we can’t do something like lazily merge all the lists in <span class="math inline">\(L_1, L_2, L_3\dots\)</span>; the problem is that every squarefree number occurs infinitely often in such a list.</p>
+<p>The key is to note that the “intermediate” lists <span class="math inline">\(L_n'\)</span> are more important than we might have thought. The infinite sequence of lists <span class="math inline">\(L_1', L_2', L_3',\dots\)</span> in fact contains every squarefree number exactly once (except 1); moreover, they are ordered by their first elements in addition to being ordered themselves, which gives us just enough information to implement an infinite merge that will actually get around to producing something in a finite amount of time!</p>
+The <code>primeStep</code> function below takes the prime <span class="math inline">\(p_{n+1}\)</span> and the list <span class="math inline">\(L_n\)</span>, and produces the pair <span class="math inline">\((L_{n+1}, L_{n+1}')\)</span>. <code>mapAccumL</code> (one of those higher-order functions which isn’t used much but comes in very handy every once in a while) is used to carry along the current list <span class="math inline">\(L_n\)</span> in an accumulator while simultaneously producing the list ${[L_1’, L_2’, L_3’, ]} $. Finally <code>mergeAll</code> performs a lazy infinite merge, giving us the infinite list of squarefree numbers.
+<pre>
+import Data.List (mapAccumL)
+
+sieve (x:xs) = x : sieve (filter (n -&gt; n `mod` x /= 0) xs)
+primes = sieve [2..]
+
+-- merge two nondecreasing lists.
+(#) :: (Ord a) =&gt; [a] -&gt; [a] -&gt; [a]
+[] # ys = ys
+xs # [] = xs
+xs@(x:xt) # ys@(y:yt) | x &lt; y = x : (xt # ys)
+                       | x &gt; y = y : (xs # yt)
+                       | otherwise = x : (xt # yt)
+
+-- merge an infinite list of lists, assuming that each list
+-- is nondecreasing and the lists occur in order of their first
+-- element.
+mergeAll :: (Ord a) =&gt; [[a]] -&gt; [a]
+mergeAll ([] : zs) = mergeAll zs
+mergeAll (xxs@(x:xs) : yys@(y:ys) : zs)
+    | x &lt; y = x : mergeAll (xs : yys : zs)
+    | otherwise = mergeAll ((xxs # yys) : zs)
+
+-- given a list of all squarefree numbers with factors up to
+-- but not including p, produce (a,b), where a is all squarefree
+-- numbers with factors up to p, and b only includes those which
+-- are multiples of p.
+primeStep xs p = (xs # pxs, pxs)
+  where pxs = map (p*) xs
+
+-- the nth element of primeLists is a sorted list of squarefree
+-- numbers with factors up to p_n, which are all multiples of p_n.
+-- Therefore every squarefree number occurs exactly once in (concat
+-- primeLists), and the lists in primeLists are sorted by first element.
+primeLists = snd $ mapAccumL primeStep [1] primes
+
+-- to get a sorted list of squarefree numbers, just merge primeLists.
+squarefree = 1 : mergeAll primeLists</pre>
+It seems to work:
+<pre>
+*Main&gt; take 20 $ squarefree
+[1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23,26,29,30,31]</pre>
+<p>Neat!</p>
+At the beginning, I said there <em>are</em> better ways; here’s another! It makes use of the beautiful theory of Dirichlet generating functions, and in particular, the fact that <span class="math inline">\(\zeta(s)/\zeta(2s)\)</span> is the DGF for the squarefree numbers. Using David Amos’ <a href="http://www.polyomino.f2s.com/david/haskell/main.html">fantastic mathematics library</a>, this is a piece of cake:
+<pre>
+import DirichletSeries
+import Data.Maybe
+
+bitToMaybe :: Int -&gt; a -&gt; Maybe a
+bitToMaybe 1 = Just
+bitToMaybe _ = const Nothing
+
+squarefree = catMaybes $ zipWith bitToMaybe (coeffsDS squarefreeDGF) [1..]</pre>
+<p>Can you come up with another way?</p>
+<p>(Thanks to chessguy, nasa_, olsner, and oerjan from #haskell for suggestions and ideas!)</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

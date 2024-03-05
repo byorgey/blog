@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Enumerating linear inhabitants</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2011/02/08/counting-linear-lambda-terms-choice-and-correspondence.html">« Counting linear lambda terms: choice and correspondence</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2011/03/28/binders-unbound.html">» Binders Unbound</a>
+
+</span>
+
+
+<h1>Enumerating linear inhabitants</h1>
+
+<div class="info">
+  Posted on February 24, 2011
+  
+  
+  <br />
+  Tagged 
+  
+</div>
+
+<section>
+<p>
+This is post number four in an ongoing series (<a href="http://byorgey.wordpress.com/2011/01/26/counting-linear-lambda-terms/">#1</a>, <a href="http://byorgey.wordpress.com/2011/02/04/counting-linear-lambda-terms-mersenne-numbers/">#2</a>, <a href="http://byorgey.wordpress.com/2011/02/08/counting-linear-lambda-terms-choice-and-correspondence/">#3</a>) exploring the combinatorics of linear lambda calculus. In this <a href="http://www.haskell.org/haskellwiki/Literate_programming">literate Haskell</a> post, I exhibit some code for <em>enumerating</em> all possible linear inhabitants of a given type, making use of the <code>Logic</code> monad from the <a href="http://hackage.haskell.org/package/logict"><code>logict</code> package</a>. It ended up quite a bit shorter and more elegant than I was expecting. To be fair, however, I haven’t proved it correct, but it seems to work on all the examples I’ve tried so far.
+</p>
+<div id="preliminaries">
+<h2>
+Preliminaries
+</h2>
+<p>
+We start with some imports. We’ll be using the <code>State</code> and <code>Logic</code> monads, as well as some <code>Set</code>s to represent contexts.
+</p>
+<pre><code><span>&gt;</span> <span style="color:green;">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Applicative</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>&lt;$&gt;</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Monad</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Monad</span><span>.</span><span>State</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Monad</span><span>.</span><span>Logic</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data</span><span>.</span><span>Set</span> <span style="color:blue;font-weight:bold;">as</span> <span>S</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data</span><span>.</span><span>Foldable</span> <span style="color:blue;font-weight:bold;">as</span> <span>F</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>Char</span>
+</code></pre>
+<p>
+To start out, I’m going to simplify things in several ways (more general versions perhaps to follow in some future posts). First, we restrict ourselves to <em>type schemes</em>, that is, polymorphic types where all the quantifiers are at the very beginning. In other words, we rule out higher-rank types. This simplifies things because we won’t have to explicitly represent quantifiers; every type variable will be implicitly quantified. (Also, higher-rank types are scary.) This is not a huge restriction, however, since most of the types we have been considering (with the notable exception of some of <a href="http://byorgey.wordpress.com/2011/02/04/counting-linear-lambda-terms-mersenne-numbers/#comment-8245">gasche’s ideas</a>) have been type schemes.
+</p>
+<p>
+Second, for now we’ll leave out pairs. This does greatly restrict what we can do; most of the interesting types we’ve explored involved tupling. But we have to start somewhere! I hope to show how to extend this program to pairs in a future post.
+</p>
+</div>
+<div id="types-and-terms">
+<h2>
+Types and Terms
+</h2>
+<p>
+We start out with a representation of types. Due to our simplifications, we have only type variables (represented by <code>Int</code>) and arrow types. We also define a few abbreviations which we can use to help make examples more readable.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Ty</span>  <span style="color:red;">=</span> <span>TyVar</span> <span>Int</span>
+<span>&gt;</span>          <span style="color:red;">|</span> <span>Arr</span> <span>Ty</span> <span>Ty</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Show</span><span style="color:red;">,</span> <span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">,</span> <span>b</span><span style="color:red;">,</span> <span>c</span><span style="color:red;">,</span> <span>d</span><span style="color:red;">]</span> <span style="color:red;">=</span> <span>map</span> <span>TyVar</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">..</span> <span class="hs-num">3</span><span style="color:red;">]</span>
+<span>&gt;</span> <span style="color:red;">(</span><span>--&gt;</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Arr</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">infixr</span> <span class="hs-num">1</span> <span>--&gt;</span>
+</code></pre>
+<p>
+We’ll need a few utility functions for manipulating types. <code>result</code> extracts the final result of a type; for example, the result of <span class="math inline">\((a \to a) \to b \to c\)</span> is <span class="math inline">\(c\)</span>. <code>args</code> extracts a list of the argument types of an arrow type. For example, the arguments of <span class="math inline">\((a \to a) \to b \to c\)</span> are <span class="math inline">\([a \to a, b]\)</span>.
+</p>
+<pre><code><span>&gt;</span> <span>result</span> <span style="color:red;">::</span> <span>Ty</span> <span style="color:red;">-&gt;</span> <span>Ty</span>
+<span>&gt;</span> <span>result</span> <span style="color:red;">(</span><span>Arr</span> <span style="color:blue;font-weight:bold;">_</span> <span>t2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>result</span> <span>t2</span>
+<span>&gt;</span> <span>result</span> <span>t</span>          <span style="color:red;">=</span> <span>t</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>args</span> <span style="color:red;">::</span> <span>Ty</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Ty</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>args</span> <span style="color:red;">(</span><span>Arr</span> <span>t1</span> <span>t2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>t1</span> <span>:</span> <span>args</span> <span>t2</span>
+<span>&gt;</span> <span>args</span> <span style="color:blue;font-weight:bold;">_</span>           <span style="color:red;">=</span> <span>[]</span>
+</code></pre>
+<p>
+And now for terms: we have term variables (again represented by <code>Int</code>), lambda abstraction, and application. (As a side note if you’ve ever played with these sorts of first-order term representations with binding: since we’re not going to do any reduction or substitution, just building terms, we won’t need to be particularly sophisticated about names or alpha-equivalence or anything of that sort.)
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Tm</span> <span style="color:red;">=</span> <span>Var</span> <span>Int</span>
+<span>&gt;</span>         <span style="color:red;">|</span> <span>Lam</span> <span>Int</span> <span>Tm</span>
+<span>&gt;</span>         <span style="color:red;">|</span> <span>App</span> <span>Tm</span> <span>Tm</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Show</span><span style="color:red;">,</span> <span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+We’ll need one utility function on terms, to build up the nested application resulting from applying a term to a list of arguments. We also implement a quick and dirty pretty-printer for terms.
+</p>
+<pre><code><span>&gt;</span> <span>apply</span> <span style="color:red;">::</span> <span>Tm</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tm</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Tm</span>
+<span>&gt;</span> <span>apply</span> <span style="color:red;">=</span> <span>foldl</span> <span>App</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>ppr</span> <span style="color:red;">::</span> <span>Tm</span> <span style="color:red;">-&gt;</span> <span>String</span>
+<span>&gt;</span> <span>ppr</span> <span>t</span> <span style="color:red;">=</span> <span>ppr'</span> <span class="hs-num">0</span> <span>t</span> <span style="color:teal;">""</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>ppr'</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">(</span><span>Var</span> <span>x</span><span style="color:red;">)</span>     <span style="color:red;">=</span> <span>pprv</span> <span>x</span>
+<span>&gt;</span>         <span>ppr'</span> <span>p</span> <span style="color:red;">(</span><span>Lam</span> <span>x</span> <span>t</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>showParen</span> <span style="color:red;">(</span><span>p</span> <span>&gt;</span> <span class="hs-num">0</span><span style="color:red;">)</span> <span>$</span> 
+<span>&gt;</span>           <span>showChar</span> <span style="color:teal;">'\\'</span> <span>.</span> <span>pprv</span> <span>x</span> <span>.</span> <span>showString</span> <span style="color:teal;">". "</span> <span>.</span> <span>ppr'</span> <span class="hs-num">1</span> <span>t</span>
+<span>&gt;</span>         <span>ppr'</span> <span>p</span> <span style="color:red;">(</span><span>App</span> <span>t1</span> <span>t2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>showParen</span> <span style="color:red;">(</span><span>p</span> <span>&gt;</span> <span class="hs-num">1</span><span style="color:red;">)</span> <span>$</span>
+<span>&gt;</span>           <span>ppr'</span> <span class="hs-num">1</span> <span>t1</span> <span>.</span> <span>showChar</span> <span style="color:teal;">' '</span> <span>.</span> <span>ppr'</span> <span class="hs-num">2</span> <span>t2</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>pprv</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>ShowS</span>
+<span>&gt;</span> <span>pprv</span> <span style="color:red;">=</span> <span>showChar</span> <span>.</span> <span>chr</span> <span>.</span> <span style="color:red;">(</span><span>+</span> <span>ord</span> <span style="color:teal;">'a'</span><span style="color:red;">)</span>
+</code></pre>
+</div>
+<div id="contexts-and-the-Logic-monad">
+<h2>
+Contexts and the <code>Logic</code> monad
+</h2>
+<p>
+As we’re going about our search for linear inhabitants, we’ll need to keep track of a <em>context</em> which contains the variables available for our use, together with their types. We can represent this as a simple set of pairs. We don’t use a <code>Map</code> because we never need to look up variables by name, instead we will be looking at the <em>types</em> in order to pick out an appropriate variable to use.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>Context</span> <span style="color:red;">=</span> <span>S</span><span>.</span><span>Set</span> <span style="color:red;">(</span><span>Int</span><span style="color:red;">,</span> <span>Ty</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+Now for the declaration of our custom monad, using some <code>GeneralizedNewtypeDeriving</code> goodness:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">newtype</span> <span>M</span> <span>a</span> <span style="color:red;">=</span> <span>M</span> <span style="color:red;">{</span> <span>unM</span> <span style="color:red;">::</span> <span>StateT</span> <span>Context</span> <span>Logic</span> <span>a</span> <span style="color:red;">}</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Functor</span><span style="color:red;">,</span> <span>Monad</span><span style="color:red;">,</span> <span>MonadState</span> <span>Context</span><span style="color:red;">,</span> <span>MonadLogic</span><span style="color:red;">,</span> <span>MonadPlus</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+What’s the <a href="http://hackage.haskell.org/packages/archive/logict/0.4.2/doc/html/Control-Monad-Logic.html"><code>Logic</code> monad</a>? Essentially, it lets us write <em>backtracking searches</em> in a very nice way, and even has combinators for doing fair (interleaved) searches among several alternatives, although we won’t need that facility here. We use <code>return</code> to indicate a successful answer and <code>mzero</code> and <code>mplus</code> (from the <code>MonadPlus</code> class) to indicate failure and choice, respectively. Think of it as a very efficient list monad on steroids. (For further reading on <code>MonadPlus</code>, try reading Doug Auclair’s article in <a href="http://www.haskell.org/wikiupload/6/6a/TMR-Issue11.pdf">Issue 11 of the Monad.Reader</a>; for more on the <code>Logic</code> monad, see Edward Yang’s article in <a href="http://themonadreader.files.wordpress.com/2010/01/issue15.pdf">Issue 15</a>.)
+</p>
+<p>
+What about that <code>StateT Context</code> bit? Well, while we’re searching for terms we need to keep track of the variables which are available to be used (and their types). When we use a variable, we’ll delete it from the context so that it’s no longer available to be used as we continue our search. And at the end of our search we’ll just require the context to be empty, to ensure that no variables go unused.
+</p>
+<p>
+Why <code>StateT Context Logic</code> as opposed to <code>LogicT (State Context)</code>? Does it matter? Yes, it matters quite a bit! Monad transformers do not, in general, commute. The <code>LogicT (State Context)</code> monad has a single context that gets threaded around the entire backtracking search; changes to the context are permanent. In contrast, with <code>StateT Context Logic</code>, changes to the context get "rolled back" whenever the search backtracks. Put another way, each alternative search path forks off a "local copy" of the state that doesn’t affect other search paths. It’s this second semantics that we want: if we try something that doesn’t end up working out, we want restore the context to the same state it was in before, and try something else. If you’re wondering how I knew which was which, the honest truth is that I just made up a simple example and tried both! But you can also figure it out by staring at types for a bit: "running" a <code>LogicT (State Context) a</code> computation (using <code>runStateT</code> and <code>observeAll</code>) yields something like <code>([a],s)</code>, whereas running a <code>StateT Context Logic a</code> computation yields <code>[(a,s)]</code>.
+</p>
+<p>
+OK, with that out of the way, we have a few utility functions to define. First, a function to run an <code>M</code> computation by starting it in the empty state and observing all possible results:
+</p>
+<pre><code><span>&gt;</span> <span>runM</span> <span style="color:red;">::</span> <span>M</span> <span>a</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>runM</span> <span style="color:red;">=</span> <span>observeAll</span> <span>.</span> <span>flip</span> <span>evalStateT</span> <span>S</span><span>.</span><span>empty</span> <span>.</span> <span>unM</span>
+</code></pre>
+<p>
+Next, some functions for making up new variables that don’t conflict with anything in the context. We don’t need to do anything fancier than this, since the only time we need to make up a new variable is when we are creating a new lambda abstraction, and the only things that could go inside it are the things currently in the context, or more lambda abstractions.
+</p>
+<pre><code><span>&gt;</span> <span>freshFor</span> <span style="color:red;">::</span> <span>Context</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>&gt;</span> <span>freshFor</span> <span>ctx</span> <span style="color:red;">|</span> <span>S</span><span>.</span><span>null</span> <span>ctx</span>  <span style="color:red;">=</span> <span class="hs-num">0</span>
+<span>&gt;</span>              <span style="color:red;">|</span> <span>otherwise</span>   <span style="color:red;">=</span> <span class="hs-num">1</span> <span>+</span> <span>F</span><span>.</span><span>maximum</span> <span style="color:red;">(</span><span>S</span><span>.</span><span>map</span> <span>fst</span> <span>ctx</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>fresh</span> <span style="color:red;">::</span> <span>M</span> <span>Int</span>
+<span>&gt;</span> <span>fresh</span> <span style="color:red;">=</span> <span>gets</span> <span>freshFor</span>
+</code></pre>
+<p>
+Here are functions for extending the context with a new variable and its type, and ensuring that a context is empty. Note how we use <code>guard</code> to ensure the context is empty, so that the whole computation will fail if it is not. The effect is that we can simply state "<code>ctxEmpty</code>" at a certain point in order to require the context to be empty. If it is, the search proceeds; if not, the search backtracks to the last choice point and tries something else.
+</p>
+<pre><code><span>&gt;</span> <span>extendCtx</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Ty</span> <span style="color:red;">-&gt;</span> <span>M</span> <span>()</span>
+<span>&gt;</span> <span>extendCtx</span> <span>x</span> <span>ty</span> <span style="color:red;">=</span> <span>modify</span> <span style="color:red;">(</span><span>S</span><span>.</span><span>insert</span> <span style="color:red;">(</span><span>x</span><span style="color:red;">,</span><span>ty</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>ctxEmpty</span> <span style="color:red;">::</span> <span>M</span> <span>()</span>
+<span>&gt;</span> <span>ctxEmpty</span> <span style="color:red;">=</span> <span>get</span> <span>&gt;&gt;=</span> <span>guard</span> <span>.</span> <span>S</span><span>.</span><span>null</span>
+</code></pre>
+<p>
+The last utility function we will need is <code>chooseBinding</code>, which really forms the heart of the search procedure. It has the effect of nondeterministically choosing and deleting one of the bindings from the current context. To see how it works, first note what the locally defined <code>choose</code> function does: given a binding (that is, a pair of a variable and a type), it deletes that binding from the context and returns the binding. So, <code>chooseBinding</code> gets the context, converts it to a list, and maps <code>choose</code> over it, resulting in a list of actions, each of which will "choose" one of the bindings from the context by deleting and returning it. We then use <code>msum</code> (which simply combines all the elements of a list with <code>mplus</code>) to offer all these actions as independent choices.
+</p>
+<pre><code><span>&gt;</span> <span>chooseBinding</span> <span style="color:red;">::</span> <span>M</span> <span style="color:red;">(</span><span>Int</span><span style="color:red;">,</span> <span>Ty</span><span style="color:red;">)</span>
+<span>&gt;</span> <span>chooseBinding</span> <span style="color:red;">=</span> <span>msum</span> <span>.</span> <span>map</span> <span>choose</span> <span>=&lt;&lt;</span> <span>gets</span> <span>S</span><span>.</span><span>toList</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>choose</span> <span>bind</span> <span style="color:red;">=</span> <span>modify</span> <span style="color:red;">(</span><span>S</span><span>.</span><span>delete</span> <span>bind</span><span style="color:red;">)</span> <span>&gt;&gt;</span> <span>return</span> <span>bind</span>
+</code></pre>
+</div>
+<div id="finding-inhabitants">
+<h2>
+Finding inhabitants
+</h2>
+<p>
+And now for the main enumeration procedure. We run the <code>linearInhabitant</code> computation, which gives us all the solutions. <code>linearInhabitant</code>, in turn, calls <code>inhabitant</code> to generate some inhabitant, and then requires the context to be empty.
+</p>
+<pre><code><span>&gt;</span> <span>linearInhabitants</span> <span style="color:red;">::</span> <span>Ty</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tm</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>linearInhabitants</span> <span>ty</span> <span style="color:red;">=</span> <span>runM</span> <span>linearInhabitant</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span> <span>linearInhabitant</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+<span>&gt;</span>           <span>inh</span> <span style="color:red;">&lt;-</span> <span>inhabitant</span> <span>ty</span>
+<span>&gt;</span>           <span>ctxEmpty</span>
+<span>&gt;</span>           <span>return</span> <span>inh</span>
+</code></pre>
+<p>
+And now for <code>inhabitant</code>. Given a type, how do we generate an inhabitant of that type? Doing this turns out to be surprisingly easy, given our custom monad and the simple tools we have built up.
+</p>
+<p>
+First, every inhabitant of an arrow type must be a lambda abstraction. Actually, this isn’t precisely true – for example, if there is a variable of type <span class="math inline">\(a \to b\)</span> in the context and we want an inhabitant of <span class="math inline">\(a \to b\)</span>, we could just use that variable. What I really mean is that it <em>doesn’t hurt</em> to always generate a lambda abstraction for arrow types. Essentially it means we will always generate fully eta-expanded terms, e.g. <span class="math inline">\(\lambda a. f a\)</span> instead of just <span class="math inline">\(f\)</span>. We could "optimize" things so we generate nicely eta-reduced terms when possible, but I leave this extension as an exercise. For now, if we see an arrow type <span class="math inline">\(\tau_1 \to \tau_2\)</span>, we generate a fresh variable <span class="math inline">\(x\)</span>, put it in the context with type <span class="math inline">\(\tau_1\)</span>, and generate the term <span class="math inline">\(\lambda x. t\)</span> where <span class="math inline">\(t\)</span> is an inhabitant of <span class="math inline">\(\tau_2\)</span>.
+</p>
+<pre><code><span>&gt;</span> <span>inhabitant</span> <span style="color:red;">::</span> <span>Ty</span> <span style="color:red;">-&gt;</span> <span>M</span> <span>Tm</span>
+<span>&gt;</span> <span>inhabitant</span> <span style="color:red;">(</span><span>Arr</span> <span>ty1</span> <span>ty2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+<span>&gt;</span>   <span>x</span> <span style="color:red;">&lt;-</span> <span>fresh</span>
+<span>&gt;</span>   <span>extendCtx</span> <span>x</span> <span>ty1</span>
+<span>&gt;</span>   <span>Lam</span> <span>x</span> <span>&lt;$&gt;</span> <span>inhabitant</span> <span>ty2</span>
+</code></pre>
+<p>
+The other case is when we want an inhabitant of a type variable <span class="math inline">\(a\)</span>. At this point you might (as I did at first) start thinking about two cases, one where there is a variable of type <span class="math inline">\(a\)</span> in the context and one where there isn’t. But it turns out we only need one general rule. The only way to get something of type <span class="math inline">\(a\)</span> is to find something in the context whose <em>result type</em> is <span class="math inline">\(a\)</span>, and apply it to some arguments of the right types. This neatly encompasses the degenerate case where something of type <span class="math inline">\(a\)</span> is already in the context: we just apply it to zero arguments! (If you are at all familiar with the Coq proof assistant, this is essentially the <code>apply</code> tactic.)
+</p>
+<p>
+So, we nondeterministically choose something from the context and require its result to be the type we are looking for. We then try to generate inhabitants for each of its argument types, and apply it to the generated terms. Notice how we use <code>mapM</code> (as opposed to <code>map</code> and <code>msum</code>) to generate inhabitants for the argument types, which sequences all the computations together. This ensures that the changes each computation makes to the context will be seen by the rest, since we don’t want any of the arguments re-using variables that were already used by previous ones.
+</p>
+<pre><code><span>&gt;</span> <span>inhabitant</span> <span>a</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+<span>&gt;</span>   <span style="color:red;">(</span><span>f</span><span style="color:red;">,</span><span>ty</span><span style="color:red;">)</span> <span style="color:red;">&lt;-</span> <span>chooseBinding</span>
+<span>&gt;</span>   <span>guard</span> <span>$</span> <span>result</span> <span>ty</span> <span>==</span> <span>a</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">as</span> <span style="color:red;">&lt;-</span> <span>mapM</span> <span>inhabitant</span> <span style="color:red;">(</span><span>args</span> <span>ty</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span>return</span> <span>$</span> <span>apply</span> <span style="color:red;">(</span><span>Var</span> <span>f</span><span style="color:red;">)</span> <span style="color:blue;font-weight:bold;">as</span>
+</code></pre>
+</div>
+<div id="examples">
+<h2>
+Examples
+</h2>
+<p>
+That’s all! Let’s try it out.
+</p>
+<pre><code><span>&gt;</span> <span>printInhabitants</span> <span style="color:red;">::</span> <span>Ty</span> <span style="color:red;">-&gt;</span> <span>IO</span> <span>()</span>
+<span>&gt;</span> <span>printInhabitants</span> <span style="color:red;">=</span> <span>mapM_</span> <span style="color:red;">(</span><span>putStrLn</span> <span>.</span> <span>ppr</span><span style="color:red;">)</span> <span>.</span> <span>linearInhabitants</span>
+</code></pre>
+<p>
+First we’ll try generating some identity functions:
+</p>
+<pre><code>*Main&gt; printInhabitants $ a --&gt; a
+\a. a
+*Main&gt; printInhabitants $ (a --&gt; b) --&gt; (a --&gt; b)
+\a. (\b. a b)</code></pre>
+<p>
+What about something with more than one inhabitant?
+</p>
+<pre><code>*Main&gt; let aa = a --&gt; a in printInhabitants $ aa --&gt; aa --&gt; aa --&gt; aa
+\a. (\b. (\c. (\d. a (b (c d)))))
+\a. (\b. (\c. (\d. a (c (b d)))))
+\a. (\b. (\c. (\d. b (a (c d)))))
+\a. (\b. (\c. (\d. b (c (a d)))))
+\a. (\b. (\c. (\d. c (a (b d)))))
+\a. (\b. (\c. (\d. c (b (a d)))))</code></pre>
+<p>
+And here’s something a bit fancier, with some sort of continuation mumbo-jumbo:
+</p>
+<pre><code>*Main&gt; printInhabitants $ (((a --&gt; b) --&gt; b) --&gt; c) --&gt; a --&gt; c
+\a. (\b. a (\c. c b))</code></pre>
+<p>
+Cool, it seems to work! Next time I’ll show how to extend this to handle pairs as well (but of course, feel free to save this post into an <code>.lhs</code> file and try extending it to handle pairs yourself).
+</p>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

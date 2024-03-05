@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Patch theory, part II: some basics</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2008/02/10/fringedc-informal-meeting.html">« FringeDC informal meeting</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2008/03/14/philadelphia-here-we-come.html">» Philadelphia, here we come!</a>
+
+</span>
+
+
+<h1>Patch theory, part II: some basics</h1>
+
+<div class="info">
+  Posted on February 13, 2008
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'category theory'." href="../../../../tag/category%20theory.html" rel="tag">category theory</a>, <a title="All pages tagged 'collaborative editing'." href="../../../../tag/collaborative%20editing.html" rel="tag">collaborative editing</a>, <a title="All pages tagged 'groupoid'." href="../../../../tag/groupoid.html" rel="tag">groupoid</a>, <a title="All pages tagged 'merge'." href="../../../../tag/merge.html" rel="tag">merge</a>, <a title="All pages tagged 'patch theory'." href="../../../../tag/patch%20theory.html" rel="tag">patch theory</a>
+  
+</div>
+
+<section>
+<p>(Previous posts <a href="http://byorgey.wordpress.com/2008/02/04/gobby-haskell-and-patch-theory/">here</a>, and <a href="http://byorgey.wordpress.com/2008/02/07/patch-theory-thoughts-part-i/">here</a>.)</p>
+<p>So, let’s talk about patch theory! I should start by saying that I have obviously drawn a lot of ideas and inspiration from <a href="http://darcs.net/">darcs</a>, and especially from the <a href="http://en.wikibooks.org/wiki/Understanding_darcs">wikibook explanation</a> of darcs patch theory, but I do think there might be some nuggets of original contributions here (in subsequent posts at least), but I’m not yet familiar enough with the literature to really say.</p>
+<p>In this post I’d like to start off by giving an overview of the basics of patch theory, to lay a foundation for the things I plan to talk about in future posts.</p>
+<h3>
+Patches and documents
+</h3>
+<p>A <i>patch</i> is essentially a function which takes a <i>document</i> as input and produces another document. A “document” is just any sort of thing that we might wish to modify. In the context of darcs, a “document” is an entire directory tree; in a collaborative editor it would be just a single file.</p>
+<p>Note, however, that patches are <i>partial</i> functions: not every patch can be applied to every document! For example, a patch which (to use a darcs example) makes a modification to file X cannot be applied in a context in which there is no file X. As another example, a patch to delete the character ‘z’ from the first position in a file cannot be applied to a file which begins with the character ‘y’. But thinking of patches as partial functions is not a very useful point of view. The main point is that the <i>context</i> of a patch matters—both the context to which it is applied, and the context which it produces. We will write <span class="math inline">\(P : x \to y\)</span> to denote a patch <span class="math inline">\(P\)</span> which, when applied to document <span class="math inline">\(x\)</span>, produces document <span class="math inline">\(y\)</span>. We say that <span class="math inline">\(x\)</span> is the domain of <span class="math inline">\(P\)</span>, and <span class="math inline">\(y\)</span> is its codomain.</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/patch.png" alt="A patch" /></p>
+</div>
+<p>Of course, this immediately suggests…</p>
+<h3>
+The category of patches
+</h3>
+<p>Patches can be most usefully viewed as morphisms in a category with documents as objects. (If you don’t know any <a href="http://en.wikibooks.org/wiki/Haskell/Category_theory">category theory</a>, don’t worry: the rest of this post doesn’t particularly depend on any background knowledge.) To wit: given two patches <span class="math inline">\(P : x \to y\)</span> and <span class="math inline">\(Q : y \to z\)</span>, we can compose them to form the composite patch <span class="math inline">\(PQ : x \to z\)</span>, which has the same overall effect as applying first <span class="math inline">\(P\)</span>, then <span class="math inline">\(Q\)</span>. (Of course, there are good arguments for writing this composition in the other order, like <span class="math inline">\(QP\)</span>—function composition and all that—but this is the way I’ve been writing it, so get used to it. =)</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/compose.png" alt="Patch composition" /></p>
+</div>
+<p>Since patches can be viewed as functions from one document to another, and function composition is associative, patch composition is obviously associative as well. Finally, for every document <span class="math inline">\(d\)</span>, we will have a null patch <span class="math inline">\(id_d\)</span> which sends <span class="math inline">\(d\)</span> to itself.</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/identity.png" alt="The identity patch for document d" /></p>
+</div>
+<p>Since we’re very interested in the “undo” operation, we also require that every patch must be invertible—that is, for every patch <span class="math inline">\(P : x \to y\)</span> there must be a corresponding patch <span class="math inline">\(P^{-1} : y \to x\)</span>, such that <span class="math inline">\(P P^{-1} = id_x\)</span> and <span class="math inline">\(P^{-1} P = id_y\)</span>. Of course, this also means that <span class="math inline">\((P^{-1})^{-1} = P\)</span>.</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/inverse.png" alt="The inverse of a patch" /></p>
+</div>
+<p>So, the category of patches is actually a <i><a href="https://secure.wikimedia.org/wikipedia/en/wiki/Groupoid">groupoid</a></i>. A groupoid can be viewed as a set with inverses and a <i>partial</i> binary operation—here, the partiality comes from the fact that not all patches can be composed—but I prefer the category-theoretical view of a groupoid as a category with all morphisms invertible. Because really, who likes partial functions?</p>
+<p>(A quick note: I’m playing a little fast and loose with patch equality here; when I say that two patches are equal, what I <i>really</i> mean is that they are observationally equivalent. So technically, the morphisms in the category of patches are <i>equivalence classes</i> of patches; in a particular implementation there may be patches with distinguishable representations which nevertheless have the same effect – that is, they produce the same output document given the same input document.)</p>
+<h3>
+Commutation
+</h3>
+<p>The other central operation on patches is that of <i>commutation</i>. As a motivating example, let’s consider the problem of undo in a text editor. Suppose, starting from a blank document, you sequentially apply the five patches <span class="math inline">\(A\)</span> through <span class="math inline">\(E\)</span>. Therefore, the current document state can be described by the composite patch</p>
+<div data-align="center">
+<p><span class="math inline">\(ABCDE\)</span></p>
+</div>
+<p>Now suppose you want to undo your last change. This is easy: since every patch has an inverse, you can just apply <span class="math inline">\(E^{-1}\)</span> to obtain</p>
+<div data-align="center">
+<p><span class="math inline">\(ABCDEE^{-1} = ABCD\)</span></p>
+</div>
+<p>(In practice, to remember the fact that you performed an undo, and to allow the possibility of redo in the future, an editor would retain the patches <span class="math inline">\(E\)</span> and <span class="math inline">\(E^{-1}\)</span> rather than deleting them. But the overall effect is the same.)</p>
+<p>Nice. But what if you are using a collaborative editor, and changes <span class="math inline">\(D\)</span> and <span class="math inline">\(E\)</span> were made by a different user (perhaps you are not even aware of their changes, if they were made in a different part of the document)? You want to undo patch <span class="math inline">\(C\)</span>, which is the last change that you made, but simply applying <span class="math inline">\(C^{-1}\)</span> doesn’t work anymore, since <span class="math inline">\(C^{-1}\)</span> cannot be composed with <span class="math inline">\(E\)</span> (the codomain of <span class="math inline">\(E\)</span> does not match the domain of <span class="math inline">\(C^{-1}\)</span>)!</p>
+<p>We need a way to “move” <span class="math inline">\(C\)</span> to the end of the patch sequence, like this:</p>
+<div data-align="center">
+<p><span class="math inline">\(ABCDE \Rightarrow ABD'C'E \Rightarrow ABD'E'C''\)</span></p>
+</div>
+<p>Now we can simply apply the inverse patch <span class="math inline">\(C''^{-1}\)</span> to undo.</p>
+<p>This process of reordering patches is referred to as <i>commutation</i>. The composite patch <span class="math inline">\(PQ\)</span> commutes to the composite patch <span class="math inline">\(Q'P'\)</span> (written <span class="math inline">\(PQ \leftrightarrow Q'P'\)</span>) if <span class="math inline">\(PQ = Q'P'\)</span>, and <span class="math inline">\(P\)</span> represents “the same change” as <span class="math inline">\(P'\)</span>, and similarly for <span class="math inline">\(Q\)</span> and <span class="math inline">\(Q'\)</span>.</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/commute.png" alt="Commuting patches" /></p>
+</div>
+<p>Of course, “the same change” is quite vague, but it’s a necessary restriction; just requiring that <span class="math inline">\(PQ = Q'P'\)</span> is not enough, since in that case we could, for example, choose <span class="math inline">\(Q'=P\)</span> and <span class="math inline">\(P'=Q\)</span>—obviously not what we want. I’ve wondered whether there is a formal way to pin this down, although I think it might depend on the particular document type being used. However, for now a simple example should suffice.</p>
+<p>Suppose Alice and Bob are editing a document together, which contains the word “cap”. First, Alice inserts the letter “m” at position 2 (positions are zero-indexed), to produce the word “camp”; call this patch <span class="math inline">\(A\)</span>. Next, Bob inserts the letter “r” at position 1, producing the word “cramp”; call this patch <span class="math inline">\(B\)</span>. Now Alice decides that she wishes to undo her change, since “crap” is a much better word than “cramp”. In order to do this, the patches <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> must first be commuted: we want to find patches <span class="math inline">\(B'\)</span> and <span class="math inline">\(A'\)</span> such that <span class="math inline">\(B'\)</span> adds the letter “r”, <span class="math inline">\(A'\)</span> adds the letter “m”, and when composed, <span class="math inline">\(B'A'\)</span> still sends the document “cap” to the document “cramp”. In this case, it’s not too hard to see that <span class="math inline">\(B'\)</span> should still insert “r” at position 1, but now <span class="math inline">\(A'\)</span> should insert “m” at position 3 instead of position 2, since the location in the document where <span class="math inline">\(A\)</span> inserted an “m” has been “shifted over” by the patch <span class="math inline">\(B'\)</span>.</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/alice-bob-commute.png" alt="Alice and Bob commute their patches." /></p>
+</div>
+<p>After commuting <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>, the patch <span class="math inline">\(A'^{-1}\)</span> can now be applied to undo Alice’s change.</p>
+<p>Now, the big question: does every pair of patches commute? In the case of a version control system like darcs, the answer is definitely “no”. For example, suppose <span class="math inline">\(P\)</span> creates file X, and <span class="math inline">\(Q\)</span> adds some content to file X. There is no way we can meaningfully reorder the two patches—content cannot be added to file X before it has been created! In the case of a collaborative editor, on the other hand, the answer is… maybe? This is one of the central questions I plan to address in later posts.</p>
+<p>If the patches <span class="math inline">\(P\)</span> and <span class="math inline">\(Q\)</span> commute, a nice property that we’d like to have hold in all cases is</p>
+<div data-align="center">
+<p><span class="math inline">\(PQ \leftrightarrow Q'P' \leftrightarrow PQ\)</span>,</p>
+</div>
+<p>that is, we want the commute operation to be an involution, so applying it twice is the identity. This also has some interesting implications for the theory of a collaborative editor, and it will come up again in later posts, too!</p>
+<h3>
+Merging
+</h3>
+<p>The other fundamental operation on patches, of course, is <i>merging</i>: taking two patches made to the same document in parallel, and merging them into a sequence of patches that performs both changes. In a version control system, this happens all the time, when two people have the same source and start making changes to it at the same time, and later want to get the other’s changes as well. It happens in a collaborative editor, too, because of network latency. When you start typing something, someone else may have already typed some things that have not yet propagated to you over the network; when you finally receive the propagated changes, they will have to be merged with the changes you have made.</p>
+<p>It turns out, however, that merging is really not a fundamental operation at all! It can be implemented very simply in terms of commutation and inverses. Here’s the situation: suppose we have two patches, <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>, made in parallel to the same document, <span class="math inline">\(x\)</span>. We want to find a patch <span class="math inline">\(B'\)</span> which performs the “same change” as <span class="math inline">\(B\)</span>, but which can be composed with <span class="math inline">\(A\)</span>.</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/merge1.png" alt="Merging two patches" /></p>
+</div>
+<p>How can we find <span class="math inline">\(B'\)</span>? The key is to note that if we invert <span class="math inline">\(A\)</span>, this looks just like the diagram for commuting two patches, but on its side!</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/merge2.png" alt="Implementing merge" /></p>
+</div>
+<p>In other words, to merge patches <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>, we first commute <span class="math inline">\(A^{-1}B\)</span> to obtain <span class="math inline">\(B'(A^{-1})'\)</span>. Then we can simply discard <span class="math inline">\((A^{-1})'\)</span>. (Of course, this sounds like wasted computation, but supposing we were to use some sort of lazy language… =) Let’s illustrate this with a simple example. Alice and Bob are at it again; this time, they are editing a document containing the word “hat”. Alice adds the letter “c” to create the word “chat” (patch <span class="math inline">\(A\)</span>). At the same time, Bob adds the letter “s” to create the word “hats” (patch <span class="math inline">\(B\)</span>). Now Alice’s editor gets Bob’s patch, and needs to merge it with Alice’s. Commuting <span class="math inline">\(A^{-1}B\)</span> yields <span class="math inline">\(B' (A^{-1})'\)</span>, as shown in the diagram, and Alice’s editor applies patch <span class="math inline">\(B'\)</span>, producing the document “chats”.</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/alice-bob-merge.png" alt="Alice merges Bob’s change" /></p>
+</div>
+<p>Of course, at the same time, Bob’s editor receives Alice’s patch, and performs the dual merge shown below.</p>
+<div data-align="center">
+<p><img src="http://byorgey.files.wordpress.com/2008/02/bob-alice-merge.png" alt="Bob merges Alice’s change" /></p>
+</div>
+<p>This illustrates an obvious and important property that must hold: merging must be symmetric! From the above two diagrams, we must have <span class="math inline">\(AB' = BA'\)</span>.</p>
+<h3>
+Onward
+</h3>
+<p>Alright, enough for today! Next time: some actual Haskell code implementing all of this for a simple document type!</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

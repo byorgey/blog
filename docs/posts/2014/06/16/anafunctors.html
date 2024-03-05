@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Anafunctors</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2014/06/05/ac-and-equivalence-of-categories.html">« AC and equivalence of categories</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2014/08/04/maniac-week.html">» Maniac week</a>
+
+</span>
+
+
+<h1>Anafunctors</h1>
+
+<div class="info">
+  Posted on June 16, 2014
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'AC'." href="../../../../tag/AC.html" rel="tag">AC</a>, <a title="All pages tagged 'anafunctor'." href="../../../../tag/anafunctor.html" rel="tag">anafunctor</a>, <a title="All pages tagged 'axiom of choice'." href="../../../../tag/axiom%20of%20choice.html" rel="tag">axiom of choice</a>, <a title="All pages tagged 'category'." href="../../../../tag/category.html" rel="tag">category</a>, <a title="All pages tagged 'constructive'." href="../../../../tag/constructive.html" rel="tag">constructive</a>, <a title="All pages tagged 'equivalence'." href="../../../../tag/equivalence.html" rel="tag">equivalence</a>, <a title="All pages tagged 'functor'." href="../../../../tag/functor.html" rel="tag">functor</a>, <a title="All pages tagged 'isomorphism'." href="../../../../tag/isomorphism.html" rel="tag">isomorphism</a>, <a title="All pages tagged 'theory'." href="../../../../tag/theory.html" rel="tag">theory</a>, <a title="All pages tagged 'types'." href="../../../../tag/types.html" rel="tag">types</a>, <a title="All pages tagged 'unique'." href="../../../../tag/unique.html" rel="tag">unique</a>
+  
+</div>
+
+<section>
+<p>
+This is part four in a series of posts on avoiding the axiom of choice (<a href="http://byorgey.wordpress.com/2014/05/08/avoiding-the-axiom-of-choice-part-i/">part one</a>, <a href="http://byorgey.wordpress.com/2014/05/13/unique-isomorphism-and-generalized-the/">part two</a>, <a href="http://byorgey.wordpress.com/2014/06/05/ac-and-equivalence-of-categories/">part three</a>).
+</p>
+<p>
+In my <a href="http://byorgey.wordpress.com/2014/06/05/ac-and-equivalence-of-categories/">previous post</a>, we considered the “Axiom of Protoequivalence”—that is, the statement that every fully faithful, essentially surjective functor (<em>i.e.</em> every <em>protoequivalence</em>) is an equivalance—and I claimed that in a traditional setting this is equivalent to the axiom of choice. However, intuitively it feels like AP “ought to” be true, whereas AC must be rejected in constructive logic.
+</p>
+<p>
+One way around this is by generalizing functors to <em>anafunctors</em>, which were introduced by <span class="citation">Makkai (1996)</span>. The original paper is difficult going, since it is full of tons of detail, poorly typeset, and can only be <a href="http://www.math.mcgill.ca/makkai/anafun/">downloaded as seven separate postscript files</a>. There is also quite a lot of legitimate depth to the paper, which requires significant categorical sophistication (more than I possess) to fully understand. However, the basic ideas are not too hard to grok, and that’s what I will present here.
+</p>
+<p>
+It’s important to note at the outset that anafunctors are much more than just a technical device enabling the Axiom of Protoequivalence. More generally, if everything in category theory is supposed to be done “up to isomorphism”, it is a bit suspect that functors have to be defined for objects <em>on the nose</em>. Anafunctors can be seen as a generalization of functors, where each object in the source category is sent not just to a single object, but to an entire <em>isomorphism class</em> of objects, without privileging any particular object in the class. In other words, anafunctors are functors whose “values are specified only up to unique isomorphism”.
+</p>
+<p>
+Such functors represent a many-to-many relationship between objects of <span class="math inline">\(\mathbb{C}\)</span> and objects of <span class="math inline">\(\mathbb{D}\)</span>. Normal functors, as with any function, may of course map multiple objects of <span class="math inline">\(\mathbb{C}\)</span> to the same object in <span class="math inline">\(\mathbb{D}\)</span>. The novel aspect is the ability to have a single object of <span class="math inline">\(\mathbb{C}\)</span> correspond to multiple objects of <span class="math inline">\(\mathbb{D}\)</span>. The key idea is to add a class of “specifications” which mediate the relationship between objects in the source and target categories, in exactly the same way that a “junction table” must be added to support a many-to-many relationship in a database schema, as illustrated below:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2014/06/f19b088cf62e288e.png" />
+</p>
+</div>
+<p>
+On the left is a many-to-many relation between a set of shapes and a set of numbers. On the right, this relation has been mediated by a “junction table” containing a set of “specifications”—in this case, each specification is simply a pair of a shape and a number—together with two mappings (one-to-many relations) from the specifications to both of the original sets, such that a specification maps to a shape <span class="math inline">\(s\)</span> and number <span class="math inline">\(n\)</span> if and only if <span class="math inline">\(s\)</span> and <span class="math inline">\(n\)</span> were originally related.
+</p>
+<p>
+In particular, an <em>anafunctor</em> <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span> is defined as follows.
+</p>
+<ul>
+<li>
+There is a class <span class="math inline">\(S\)</span> of <em>specifications</em>.
+</li>
+<li>
+There are two functions <span class="math inline">\(\mathrm{Ob}\ \mathbb{C} \stackrel{\overleftarrow{F}}{\longleftarrow} S \stackrel{\overrightarrow{F}}{\longrightarrow} \mathrm{Ob}\ \mathbb{D}\)</span> mapping specifications to objects of <span class="math inline">\(\mathbb{C}\)</span> and <span class="math inline">\(\mathbb{D}\)</span>.
+</li>
+</ul>
+<p>
+<span class="math inline">\(S\)</span>, <span class="math inline">\(\overleftarrow{F}\)</span>, and <span class="math inline">\(\overrightarrow{F}\)</span> together define a many-to-many relationship between objects of <span class="math inline">\(\mathbb{C}\)</span> and objects of <span class="math inline">\(\mathbb{D}\)</span>. <span class="math inline">\(D \in \mathbb{D}\)</span> is called a <em>specified value of <span class="math inline">\(F\)</span> at <span class="math inline">\(C\)</span></em> if there is some specification <span class="math inline">\(s \in S\)</span> such that <span class="math inline">\(\overleftarrow{F}(s) = C\)</span> and <span class="math inline">\(\overrightarrow{F}(s) = D\)</span>, in which case we write <span class="math inline">\(F_s(C) = D\)</span>. Moreover, <span class="math inline">\(D\)</span> is <em>a value of <span class="math inline">\(F\)</span> at <span class="math inline">\(C\)</span></em> (not necessarily a <em>specified</em> one) if there is some <span class="math inline">\(s\)</span> for which <span class="math inline">\(D \cong F_s(C)\)</span>.
+</p>
+<p>
+The idea now is to impose additional conditions which ensure that <span class="math inline">\(F\)</span> “acts like” a regular functor <span class="math inline">\(\mathbb{C} \to \mathbb{D}\)</span>.
+</p>
+<ul>
+<li>
+Functors are defined on all objects; so we require each object of <span class="math inline">\(\mathbb{C}\)</span> to have at least one specification <span class="math inline">\(s\)</span> which corresponds to it—that is, <span class="math inline">\(\overleftarrow{F}\)</span> must be surjective.
+</li>
+<li>
+Functors transport morphisms as well as objects. For each <span class="math inline">\(s,t \in S\)</span> (the middle of the below diagram) and each <span class="math inline">\(f : \overleftarrow{F}(s) \to \overleftarrow{F}(t)\)</span> in <span class="math inline">\(\mathbb{C}\)</span> (the left-hand side below), there must be a morphism <span class="math inline">\(F_{s,t}(f) : \overrightarrow{F}(s) \to \overrightarrow{F}(t)\)</span> in <span class="math inline">\(\mathbb{D}\)</span> (the right-hand side):
+</li>
+</ul>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2014/06/959dc11fe357b271.png" />
+</p>
+</div>
+<ul>
+<li>
+Functors preserve identities: for each <span class="math inline">\(s \in S\)</span> we should have <span class="math inline">\(F_{s,s}(\mathit{id}_{\overleftarrow{F}(s)}) = \mathit{id}_{\overrightarrow{F}(s)}\)</span>.
+</li>
+<li>
+Finally, functors preserve composition: for all <span class="math inline">\(s,t,u \in S\)</span> (in the middle below), <span class="math inline">\(f : \overleftarrow{F}(s) \to \overleftarrow{F}(t)\)</span>, and <span class="math inline">\(g : \overleftarrow{F}(t) \to \overleftarrow{F}(u)\)</span> (the left side below), it must be the case that <span class="math inline">\(F_{s,u}(f ; g) = F_{s,t}(f) ; F_{t,u}(g)\)</span>:
+</li>
+</ul>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2014/06/e85fe8007b58880c.png" />
+</p>
+</div>
+<p>
+Our initial intuition was that an anafunctor should map objects of <span class="math inline">\(\mathbb{C}\)</span> to isomorphism classes of objects in <span class="math inline">\(\mathbb{D}\)</span>. This may not be immediately apparent from the definition, but is in fact the case. In particular, the identity morphism <span class="math inline">\(\mathit{id}_C\)</span> maps to isomorphisms between specified values of <span class="math inline">\(C\)</span>; that is, under the action of an anafunctor, an object <span class="math inline">\(C\)</span> together with its identity morphism “blow up” into an isomorphism class (aka a <em>clique</em>). To see this, let <span class="math inline">\(s,t \in S\)</span> be two different specifications corresponding to <span class="math inline">\(C\)</span>, that is, <span class="math inline">\(\overleftarrow{F}(s) = \overleftarrow{F}(t) = C\)</span>. Then by preservation of composition and identities, we have <span class="math inline">\(F_{s,t}(\mathit{id}_C) ; F_{t,s}(\mathit{id}_C) = F_{s,s}(\mathit{id}_C ; \mathit{id}_C) = F_{s,s}(\mathit{id}_C) = \mathit{id}_{\overrightarrow{F}(s)}\)</span>, so <span class="math inline">\(F_{s,t}(\mathit{id}_C)\)</span> and <span class="math inline">\(F_{t,s}(\mathit{id}_C)\)</span> constitute an isomorphism between <span class="math inline">\(F_s(C)\)</span> and <span class="math inline">\(F_t(C)\)</span>.
+</p>
+<p>
+There is an alternative, equivalent definition of anafunctors, which is somewhat less intuitive but usually more convenient to work with: an anafunctor <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span> is a <em>category</em> of specifications <span class="math inline">\(\mathbb{S}\)</span> together with a span of <em>functors</em> <span class="math inline">\(\mathbb{C} \stackrel{\overleftarrow{F}}{\longleftarrow} \mathbb{S} \stackrel{\overrightarrow{F}}{\longrightarrow} \mathbb{D}\)</span> where <span class="math inline">\(\overleftarrow{F}\)</span> is fully faithful and (strictly) surjective on objects.
+</p>
+<p>
+Note that in this definition, <span class="math inline">\(\overleftarrow{F}\)</span> must be <em>strictly</em> (as opposed to <em>essentially</em>) surjective on objects, that is, for every <span class="math inline">\(C \in \mathbb{C}\)</span> there is some <span class="math inline">\(S \in \mathbb{S}\)</span> such that <span class="math inline">\(\overleftarrow{F}(S) = C\)</span>, rather than only requiring <span class="math inline">\(\overleftarrow{F}(S) \cong C\)</span>. Given this strict surjectivity on objects, it is equivalent to require <span class="math inline">\(\overleftarrow F\)</span> to be full, as in the definition above, or to be (strictly) surjective on the class of all morphisms.
+</p>
+<p>
+We are punning on notation a bit here: in the original definition of anafunctor, <span class="math inline">\(S\)</span> is a set and <span class="math inline">\(\overleftarrow{F}\)</span> and <span class="math inline">\(\overrightarrow{F}\)</span> are functions on objects, whereas in this more abstract definition <span class="math inline">\(\mathbb{S}\)</span> is a category and <span class="math inline">\(\overleftarrow{F}\)</span> and <span class="math inline">\(\overrightarrow{F}\)</span> are functors. Of course, the two are closely related: given a span of functors <span class="math inline">\(\mathbb{C} \stackrel{\overleftarrow{F}}{\longleftarrow} \mathbb{S} \stackrel{\overrightarrow{F}}{\longrightarrow} \mathbb{D}\)</span>, we may simply take the objects of <span class="math inline">\(\mathbb{S}\)</span> as the class of specifications <span class="math inline">\(S\)</span>, and the actions of the functors <span class="math inline">\(\overleftarrow{F}\)</span> and <span class="math inline">\(\overrightarrow{F}\)</span> on objects as the functions from specifications to objects of <span class="math inline">\(\mathbb{C}\)</span> and <span class="math inline">\(\mathbb{D}\)</span>. Conversely, given a class of specifications <span class="math inline">\(S\)</span> and functions <span class="math inline">\(\overleftarrow{F}\)</span> and <span class="math inline">\(\overrightarrow{F}\)</span>, we may construct the category <span class="math inline">\(\mathbb{S}\)</span> with <span class="math inline">\(\mathrm{Ob}\ \mathbb{S} = S\)</span> and with morphisms <span class="math inline">\(\overleftarrow{F}(s) \to \overleftarrow{F}(t)\)</span> in <span class="math inline">\(\mathbb{C}\)</span> acting as morphisms <span class="math inline">\(s \to t\)</span> in <span class="math inline">\(\mathbb{S}\)</span>. From <span class="math inline">\(\mathbb{S}\)</span> to <span class="math inline">\(\mathbb{C}\)</span>, we construct the functor given by <span class="math inline">\(\overleftarrow{F}\)</span> on objects and the identity on morphisms, and the other functor maps <span class="math inline">\(f : s \to t\)</span> in <span class="math inline">\(\mathbb{S}\)</span> to <span class="math inline">\(F_{s,t}(f) : \overrightarrow{F}(s) \to \overrightarrow{F}(t)\)</span> in <span class="math inline">\(\mathbb{D}\)</span>.
+</p>
+<p>
+Every functor <span class="math inline">\(F : \mathbb{C} \to \mathbb{D}\)</span> can be trivially turned into an anafunctor <span class="math inline">\(\mathbb{C} \stackrel{\mathit{Id}}{\longleftarrow} \mathbb{C} \stackrel{F}{\longrightarrow} \mathbb{D}\)</span>. Anafunctors also compose. Given compatible anafunctors <span class="math inline">\(F : \mathbb{C} \stackrel{\overleftarrow F}{\longleftarrow} S \stackrel{\overrightarrow F}{\longrightarrow} \mathbb{D}\)</span> and <span class="math inline">\(G : \mathbb{D} \stackrel{\overleftarrow G}{\longleftarrow} T \stackrel{\overrightarrow G}{\longrightarrow} \mathbb{E}\)</span>, consider the action of their composite on objects: each object of <span class="math inline">\(\mathbb{C}\)</span> may map to multiple objects of <span class="math inline">\(\mathbb{E}\)</span>, via objects of <span class="math inline">\(\mathbb{D}\)</span>. Each such mapping corresponds to a zig-zag path <span class="math inline">\(C \longleftarrow s \longrightarrow D \longleftarrow t \longrightarrow E\)</span>. In order to <em>specify</em> such a path it suffices to give the pair <span class="math inline">\((s,t)\)</span>, which determines <span class="math inline">\(C\)</span>, <span class="math inline">\(D\)</span>, and <span class="math inline">\(E\)</span>. Note, however, that not every pair in <span class="math inline">\(S \times T\)</span> corresponds to a valid path, but only those which agree on the middle object <span class="math inline">\(D \in \mathbb{D}\)</span>. Thus, we may take <span class="math inline">\(\{ (s,t) \mid s \in S, t \in T, \overrightarrow{F}(s) = \overleftarrow{G}(t) \}\)</span> as the set of specifications for the composite <span class="math inline">\(F ; G\)</span>, with <span class="math inline">\(\overleftarrow{F ; G}(s,t) = \overleftarrow{F}(s)\)</span> and <span class="math inline">\(\overrightarrow{F ; G}(s,t) = \overrightarrow{G}(t)\)</span>. On morphisms, <span class="math inline">\((F ; G)_{(s,t),(u,v)}(f) = G_{t,v}(F_{s,u}(f))\)</span>. It is not hard to check that this satisfies the anafunctor laws.
+</p>
+<p>
+If you know what a pullback is, note that the same thing can also be defined at a higher level in terms of spans. <span class="math inline">\(\mathbf{Cat}\)</span>, the category of all (small) categories, is complete, and in particular has pullbacks, so we may construct a new anafunctor from <span class="math inline">\(\mathbb{C}\)</span> to <span class="math inline">\(\mathbb{E}\)</span> by taking a pullback of <span class="math inline">\(\overrightarrow F\)</span> and <span class="math inline">\(\overleftarrow G\)</span> and then composing appropriately.
+</p>
+<p>
+One can go on to define ananatural transformations between anafunctors, and show that together these constitute a <span class="math inline">\(2\)</span>-category <span class="math inline">\(\mathbf{AnaCat}\)</span> which is analogous to the usual <span class="math inline">\(2\)</span>-category of (small) categories, functors, and natural transformations; in particular, there is a fully faithful embedding of <span class="math inline">\(\mathbf{Cat}\)</span> into <span class="math inline">\(\mathbf{AnaCat}\)</span>, which moreover is an equivalence if AC holds.
+</p>
+<p>
+To work in category theory based on set theory and classical logic, while avoiding AC, one is therefore justified in “mixing and matching” functors and anafunctors as convenient, but discussing them all as if they were regular functors (except when defining a particular anafunctor). Such usage can be formalized by turning everything into an anafunctor, and translating functor operations and properties into corresponding operations and properties of anafunctors.
+</p>
+<p>
+However, as I will argue in some future posts, there is a better solution, which is to throw out set theory as a foundation of category theory and start over with homotopy type theory. In that case, thanks to a generalized notion of equality, regular functors act like anafunctors, and in particular AP holds.
+</p>
+<div class="references">
+<h1>
+References
+</h1>
+<p>
+Makkai, Michael. 1996. “Avoiding the Axiom of Choice in General Category Theory.” <em>Journal of Pure and Applied Algebra</em> 108 (2). Elsevier: 109–73.
+</p>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

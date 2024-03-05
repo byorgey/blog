@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Collecting attributes</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2009/10/20/typeclassopedia-in-japanese.html">« Typeclassopedia in Japanese!</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2009/12/11/mgus-and-universal-properties.html">» Mgu's and universal properties</a>
+
+</span>
+
+
+<h1>Collecting attributes</h1>
+
+<div class="info">
+  Posted on October 28, 2009
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'attributes'." href="../../../../tag/attributes.html" rel="tag">attributes</a>, <a title="All pages tagged 'diagrams'." href="../../../../tag/diagrams.html" rel="tag">diagrams</a>, <a title="All pages tagged 'monoid'." href="../../../../tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged 'overriding'." href="../../../../tag/overriding.html" rel="tag">overriding</a>, <a title="All pages tagged 'priority'." href="../../../../tag/priority.html" rel="tag">priority</a>
+  
+</div>
+
+<section>
+<p>I’m proceeding with the <a href="http://byorgey.wordpress.com/2009/09/24/diagrams-0-2-1-and-future-plans/">redesign of my diagrams library</a> slowly but surely. I don’t have a lot of time to work on it, hence the “slowly”. But progress is being made. It’s still very much in the design phase, which makes it difficult for others to help, but <a href="http://www.haskell.org/haskellwiki/User:Lenny222">Lennart</a> has created a <a href="http://www.haskell.org/haskellwiki/Diagrams">diagrams page</a> on the Haskell wiki which I hope can be a good way to have an open design process and get input from the community. There’s a lot of stuff I have written down that I haven’t gotten around to putting on that page yet, but I hope to do that soon.</p>
+<p>Occasionally I plan to write some blog posts about interesting issues that arise in the design; today is the first.</p>
+<p>Here’s the background: a diagram is essentially a tree of sub-diagrams (although there will be a principled way to refer to subdiagrams in other parts of the tree; more on this in a future post), with leaves corresponding to atomic primitives. Every node in the tree can (optionally) have some associated style attributes, such as stroke width and color, fill color, font, and other such things. When we encounter a primitive at a leaf, how do we know what attributes to use when rendering it? It may have some associated attributes, but its parent node might also have some associated attributes, and other ancestor nodes higher up the tree might have attributes as well.</p>
+<p>What we’d really like to do is have a <code>Style</code> data type which has a <code>Monoid</code> instance:</p>
+<pre>
+data Style = Style { strokeWidth :: Double
+                   , strokeColour :: Colour
+                   ... }
+
+instance Monoid Style where
+  ...
+</pre>
+<p>Then to determine the style to use for a leaf, we just combine the styles of all its ancestors using the monoid.</p>
+<p>So, how to implement this <code>Monoid</code> instance? Well, first of all, what I wrote above is slightly bogus; at the very least each particular attribute ought to be optional, so it should look something more like this:</p>
+<pre>
+data Style = Style { strokeWidth :: Maybe Double
+                   , strokeColour :: Maybe Colour
+                   ... }
+</pre>
+<p>To combine two <code>Style</code> records, we match them up field-by-field, and <code>Just</code> trumps <code>Nothing</code>.</p>
+<p>So far, so good. But how do we combine two fields containing <code>Just</code>? It seems we have two choices: we can be biased towards the top of the tree (i.e. parent attributes override child attributes) or towards the bottom (i.e. child attributes override parent attributes). Indeed, <code>Data.Monoid</code> contains two newtypes, <code>First</code> and <code>Last</code>, whose <code>Monoid</code> instances exhibit exactly this behavior.</p>
+<p>But here’s the problem: in this application, one of these choices isn’t obviously better than the other. In fact, it’s easy to imagine situations where each would be the desired behavior. For example, imagine that we have created a subdiagram that we want to use many times throughout a larger diagram. Most of the time it will be blue, so it makes sense to specify that attribute as part of the subdiagram itself. However, in one place we want it to be red, so we’d like to be able to override its attributes with parent attributes. On the other hand, imagine a situation where a diagram is going to be composed of many different subdiagrams, which all share the property that they are blue. To avoid repeating ourselves, it makes sense to specify “blueness” as an attribute of the parent diagram and have all the subdiagrams inherit it. However, one subdiagram should be red, so we’d like to be able to override the parent attribute in this particular child.</p>
+<p>What to do? A first cut might look something like this:</p>
+<pre>
+data Override a = Default | OverrideUp a | OverrideDown a
+
+data Style = Style { strokeWidth :: Override Double
+                   , strokeColour :: Override Colour
+                   ... }
+</pre>
+<p>The intention is that <code>OverrideUp a</code> overrides any attributes above/before it, and <code>OverrideDown a</code> overrides any attributes below/after it. However, there’s a problem: what should</p>
+<p><code>(OverrideDown a) <code>mappend</code> (OverrideUp b)</code></p>
+<p>be? The <code>OverrideDown a</code> claims to override the <code>OverrideUp b</code>… and vice versa! So this doesn’t really work. We need a way to specify relative priorities. So, another solution would just be to assign each attribute with a priority:</p>
+<pre>
+data Prioritized a = Default | Priority Double a
+
+data Style = Style { strokeWidth :: Prioritized Double
+                   , strokeColour :: Prioritized Colour
+                   ... }
+</pre>
+<p>For the <code>Monoid</code> instance, we just take the value with maximum priority. This allows us to do what we wanted—overriding parent or child attributes is done simply by assigning a higher priority. However, I <i>really</i> dislike this solution. Having to specify a priority is annoying—but not only that, figuring out what priority to use to achieve your desired effect requires global knowledge about the value of the priorities used elsewhere. One improvement we could make is to adopt the solution used by CSS: attributes are leaf-biased by default, but assigning a priority can override this. That is,</p>
+<pre>
+data Prioritized a = Default | Priority (Maybe Double) a
+</pre>
+<p>where the <code>Monoid</code> instance chooses the value with the highest priority, or the right/leaf-most value if no priorities are specified. This might be the best option—but it’s still somewhat unsatisfactory.</p>
+<p>I wonder about a solution that allows you to say, “I want to override the attribute on THAT node”—where “THAT” represents some way to refer to a particular node by name (what these names look like will be the subject of another post). This might solve the problem of arbitrariness with the numerical priorities, but might also be veering into the realm of the overengineered…</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

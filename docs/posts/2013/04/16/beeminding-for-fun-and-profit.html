@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Beeminding for fun and profit</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2013/03/23/introducing-diagrams-haddock.html">« Introducing diagrams-haddock</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2013/04/25/random-binary-trees-with-a-size-limited-critical-boltzmann-sampler-2.html">» Random binary trees with a size-limited critical Boltzmann sampler</a>
+
+</span>
+
+
+<h1>Beeminding for fun and profit</h1>
+
+<div class="info">
+  Posted on April 17, 2013
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Beeminder'." href="../../../../tag/Beeminder.html" rel="tag">Beeminder</a>, <a title="All pages tagged 'data'." href="../../../../tag/data.html" rel="tag">data</a>, <a title="All pages tagged 'goals'." href="../../../../tag/goals.html" rel="tag">goals</a>, <a title="All pages tagged 'productivity'." href="../../../../tag/productivity.html" rel="tag">productivity</a>
+  
+</div>
+
+<section>
+<p>
+<!-- -*- compile-command: "BlogLiterately beeminder.markdown &gt; beeminder.html" -*- -->
+</p>
+<p>
+I’ve been using <a href="https://www.beeminder.com/">Beeminder</a> (which I’ve <a href="http://byorgey.wordpress.com/2012/10/13/fogbugz-beeminder-and-pure-functions-in-the-cloud/">mentioned once before</a>) for a little over six months now. The verdict?
+</p>
+<div style="text-align:center;">
+<p><strong>Beeminder has changed my life.</strong></p>
+</div>
+<p>
+<br />
+</p>
+<p>
+That sounds dramatic, but I’m not kidding. I am far more productive than I’ve ever been. I’m taking better care of myself. I’m finally taking the initiative to act on various long-held intentions (<em>e.g.</em> learning Hebrew). And I no longer have a constant nagging sense of guilt over all the big goals and projects that I <em>ought</em> to be working on more. It’s not for everyone, but I’m sure there are many others for whom it could be similarly transformative.
+</p>
+<div style="text-align:center;">
+<div class="figure">
+<p><img width="400" src="https://www.beeminder.com/images/logo_hi.png" /></p>
+</div>
+</div>
+<p>
+So, what is Beeminder? The basic idea is that it helps you keep track of progress on any quantifiable goals, and gives you short-term incentive to stay on track: if you don’t, Beeminder takes your money. But it’s not just about the fear of losing money. Shiny graphs tracking your progress coupled with helpfully concrete short-term goals (“today you need to write 1.3 pages of that paper”) make for excellent positive motivation, too. Another somewhat intangible but important reason it works is that the Beeminder developers are really awesome and responsive, and are sincerely dedicated to helping their users meet goals, not just to making money. (They recently introduced some <a href="http://blog.beeminder.com/premium/">paid premium plans</a> which I happily signed up for, not because I need the premium features, but because I want to support continued development—in fact, I’ve otherwise paid Beeminder only $5 over the past six months!) If you want to know more, I encourage you to <a href="https://www.beeminder.com/overview">read Beeminder’s own overview</a>, which does a much better job of explaining how and why it works.
+</p>
+<p>
+Six months: quite long enough for the initial “shiny new toy” enthusiasm to wear off, and long enough, I think, to get a good sense of what works for me and what doesn’t. So I’m writing this post in the hope that my experience will be useful or inspiring to others.
+</p>
+<p>
+So here are some of the ways I’m using it, which I have found to work well. (You can <a href="https://www.beeminder.com/byorgey">see all my beeminder goals here</a>.<sup><a href="#fn1" class="footnoteRef" id="fnref1">1</a></sup>) I hope some of these may inspire you with ways to make yourself more productive, whether you use Beeminder or not.
+</p>
+<ul>
+<li>
+<p>
+<strong>Big projects</strong>
+</p>
+<p>
+Consistently spending time on big, long-term projects is really hard—at least, it <em>was</em> hard before I started using Beeminder! Now I just make a goal for each project requiring me to spend a certain amount of time on it each week. This helps me stay on track and also gets rid of that nagging guilt—once I’ve done enough to stay on track, I can stop and do other things and not feel guilty about it! I’ve used this to spend a certain amount of time preparing for courses I’m going to teach; I use it for <a href="https://www.beeminder.com/byorgey/goals/research">getting research done</a>, and for <a href="https://www.beeminder.com/byorgey/goals/diagrams">working on diagrams</a>. A year or so ago I posted on Google+ complaining that I needed a <a href="https://plus.google.com/106370345151235486956/posts/5i67T33arE9">scheduling algorithm for my life</a>, and in many ways Beeminder has filled that role. It’s also a great way to get some cold, hard data on how much time I actually spend on various projects (you can start with a “flat” goal and just record data for a while if you don’t know what a reasonable rate for the goal is).
+</p>
+</li>
+<li>
+<p>
+<strong>Reading and writing projects</strong>
+</p>
+<p>
+There’s no way I ever would have gotten my <a href="https://www.beeminder.com/byorgey/goals/thesis-proposal">thesis proposal</a> written without Beeminder. The important thing to note is that the goal was based on <em>page count</em> rather than time spent. (The “Odometer” goal type is useful for this sort of thing.) This forced me to actually get real writing done, rather than frittering time away adjusting the kerning or whatever. Interestingly, it also forced me to get creative about padding the page count, by pasting in text I’d already written before (from blog posts, grant proposals, <em>etc.</em>). In the end, reusing text I’d written before and then editing it was a much better use of my time than writing everything from scratch, but for whatever reason I’m not sure my perfectionist self would have done it without the pressure of “you have to write two pages in the next three hours OR ELSE”.
+</p>
+<p>
+I’ve also made goals for reviews I’ve been asked to do, again using an “Odometer” goal to track page numbers.
+</p>
+<p>
+I also have a <a href="https://www.beeminder.com/byorgey/goals/blogging">goal to write blog posts</a> with a certain frequency on either of my <a href="http://byorgey.wordpress.com">two</a> <a href="http://mathlesstraveled.com">blogs</a>. (In fact, I’m finally finishing this blog post because otherwise in about an hour I’m going to owe Beeminder $5!)
+</p>
+</li>
+<li>
+<p>
+<strong>Learning</strong>
+</p>
+<p>
+I have long intended to learn to read Hebrew, but it never seemed like the “right time”. I finally admitted that there will never be a “right time”, and just started<sup><a href="#fn2" class="footnoteRef" id="fnref2">2</a></sup>. Starting is one thing; continuing to regularly study after the initial excitement has worn off is only possible because of my <a href="https://www.beeminder.com/byorgey/goals/heb">Beeminder goal</a>, which also serves as a check on discouragement. It will be a long time before I am any good at reading Hebrew; but in the meantime I am motivated by logging time on my goal.
+</p>
+<p>
+I use <a href="http://ankisrs.net/">anki</a> for memorizing all sorts of things—ancient Greek and Hebrew vocabulary, recipes, emacs commands, and names and faces of students. To help me stay on track reviewing flash cards, I have a <a href="https://www.beeminder.com/byorgey/goals/anki">Beeminder goal to review 100 Anki cards a day</a>. Recently, the number of cards coming due each day started dropping significantly below 100, so instead of lessening the Beeminder goal I decided to start learning some geography (flags, countries, capitals, <em>etc.</em>) which has been a lot of fun.
+</p>
+</li>
+<li>
+<p>
+<strong>Productivity</strong>
+</p>
+<p>
+I have a number of goals directly intended to increase my productivity.
+</p>
+<ul>
+<li>
+<p>
+I use <a href="http://www.fogcreek.com/fogbugz/">FogBugz</a> to keep track of all my tasks and todos. I use three different Beeminder goals in relation to FogBugz:
+</p>
+<ul>
+<li>
+As <a href="http://byorgey.wordpress.com/2012/10/13/fogbugz-beeminder-and-pure-functions-in-the-cloud/">described in previous blog post</a>, I have one goal to close a certain number of cases per day (currently 4 per day, which is historically about average for me). This goal is automatically updated every time I close a case in FogBugz.
+</li>
+<li>
+When I get an email requiring me to act or respond in some way, I very often just forward it to FogBugz to deal with later. So I have <a href="https://www.beeminder.com/byorgey/goals/fb-inbox">a goal to spend a certain amount of time</a> dealing with cases in my FogBugz inbox; otherwise it’s too easy to just let these rot.
+</li>
+<li>
+It’s way too easy to ignore todo items which have no real deadline and are somehow distasteful, intimidating, or both. To help overcome this inertia, I’ve come up with something that works fairly well. I have a <a href="https://www.beeminder.com/byorgey/goals/fogbugz-review">Beeminder goal to spend a certain amount of time doing “FogBugz review”</a>. It works like this: I have a certain query defined in FogBugz which shows me the five <em>least recently edited</em> open tickets. When working on review, I must pick one of these five cases and make <em>some sort of progress</em> on it (it’s perfectly fine if I don’t complete it). After making some progress I add a note to the ticket explaining what I did. This both helps me pick up where I left off next time I come to work on the ticket, and makes the ticket automatically drop out of the review query, since it has now been edited. I then look at the top five tickets again (including some new ticket that has now moved into the top five), choose one, and repeat.
+</li>
+</ul>
+</li>
+<li>
+<p>
+I have found that I am much more productive if at the start of each day I intentionally plan out the rest of the day, recalling the things I have scheduled and deciding how to spend the remaining unscheduled time—consulting FogBugz and Beeminder to decide what my priorities should be for the day and how much time to spend on each. To force myself to do this consistently, I of course made a <a href="https://www.beeminder.com/byorgey/goals/plan">Beeminder goal</a> to do this planning a certain number of days each week. The catch is that I have to do the planning <em>before</em> checking email, Facebook, or IRC, or else the planning only counts for half a day.<sup><a href="#fn3" class="footnoteRef" id="fnref3">3</a></sup>
+</p>
+</li>
+<li>
+<p>
+Another thing which I’ve found helps my productivity is to <em>turn off my computer before going to bed</em>. The choices I make when I first get up tend to have a ripple effect on the rest of the day. If my computer is on when I first get up, it’s very tempting to immediately start aimlessly checking email; if it’s off, it’s that much easier to make deliberate choices about how to begin my day. The important point here is that I’ve made a <a href="https://www.beeminder.com/byorgey/goals/shutdown"><em>positive</em> goal (to turn off my computer)</a> instead of <em>negative</em> goal (to spend less than X amount of time checking email, <em>etc.</em>, in the morning). I’ve found that negative goals don’t work nearly as well: they are far less motivating, and psychologically speaking it’s too easy to lie to Beeminder by <em>neglecting to report</em> data—by contrast, actively lying by <em>submitting false data</em> is much more difficult.
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p>
+<strong>Personal goals</strong>
+</p>
+<p>
+Last but not least, I now take better care of myself and my stuff in some simple but important ways. I have <a href="https://www.beeminder.com/byorgey/goals/floss">flossed</a> more in the last six months than the rest of my life put together. I trim <a href="https://www.beeminder.com/byorgey/goals/beard">my beard</a> and my <a href="https://www.beeminder.com/byorgey/goals/toenails">toenails</a> more regularly, <a href="https://www.beeminder.com/byorgey/goals/allergy-meds">take allergy medication</a> almost every day, <a href="https://www.beeminder.com/byorgey/goals/bike-care">take care of my bike</a> by inflating the tires and greasing the chain, and <a href="https://www.beeminder.com/byorgey/goals/clean">clean around</a> <a href="https://www.beeminder.com/byorgey/goals/clean-the-shower">the house</a> (which my wife loves).
+</p>
+</li>
+</ul>
+<p>
+So there you have it. If you end up trying Beeminder, or come up with some cool goal-based life hacks, or just have questions, I’d love to hear from you!
+</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+You’ll notice that some of my goals are private/hidden. Mostly these are personal or relate to religious commitments, and for various reasons I’d rather not broadcast them to the whole Internet—but at the same time, I have no secrets and would be glad to discuss them with anyone who’s interested.<a href="#fnref1">↩︎</a>
+</p>
+</li>
+<li id="fn2">
+<p>
+Well, at the time it was a way of <a href="http://www.structuredprocrastination.com/">procrastinating from working on my thesis proposal</a><a href="#fnref2">↩︎</a>
+</p>
+</li>
+<li id="fn3">
+<p>
+This is completely self-enforced, of course, but it’s ten times harder to actively choose to lie to Beeminder (which I have never done) than it was to “just check a few emails first” before I had any sort of external accountability.<a href="#fnref3">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Polynomial Functors Constrained by Regular Expressions</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2015/03/31/blogging-again-some-major-life-events.html">« Blogging again, &amp; some major life events</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2015/05/12/pan-galactic-division-in-haskell.html">» Pan-Galactic Division in Haskell</a>
+
+</span>
+
+
+<h1>Polynomial Functors Constrained by Regular Expressions</h1>
+
+<div class="info">
+  Posted on April 15, 2015
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'differentiation'." href="../../../../tag/differentiation.html" rel="tag">differentiation</a>, <a title="All pages tagged 'dissection'." href="../../../../tag/dissection.html" rel="tag">dissection</a>, <a title="All pages tagged 'functor'." href="../../../../tag/functor.html" rel="tag">functor</a>, <a title="All pages tagged 'matrices'." href="../../../../tag/matrices.html" rel="tag">matrices</a>, <a title="All pages tagged 'polynomial'." href="../../../../tag/polynomial.html" rel="tag">polynomial</a>, <a title="All pages tagged 'regular expression'." href="../../../../tag/regular%20expression.html" rel="tag">regular expression</a>, <a title="All pages tagged 'semirings'." href="../../../../tag/semirings.html" rel="tag">semirings</a>
+  
+</div>
+
+<section>
+<p>I’ve now finished revising the paper that Dan Piponi and I had accepted to <a href="http://www.cs.ox.ac.uk/conferences/MPC2015/">MPC 2015</a>; you can find a PDF here:</p>
+<p><a href="http://www.cs.williams.edu/~byorgey/pub/type-matrices.pdf">Polynomial Functors Constrained by Regular Expressions</a></p>
+<p>Here’s the 2-minute version: certain operations or restrictions on functors can be described by regular expressions, where the elements of the alphabet correspond to type arguments. The idea is to restrict to only those structures for which an inorder traversal yields a sequence of types matching the regular expression. For example, <span class="math inline">\((aa)^*\)</span> gives you even-size things; <span class="math inline">\(a^*ha^*\)</span> gives you the <a href="http://strictlypositive.org/diff.pdf">derivative</a> (the structure has a bunch of values of type <span class="math inline">\(a\)</span>, a single hole of type <span class="math inline">\(h\)</span>, and then more values of type <span class="math inline">\(a\)</span>), and <span class="math inline">\(b^*ha^*\)</span> the <a href="http://strictlypositive.org/CJ.pdf">dissection</a>.</p>
+<p><a href="https://byorgey.files.wordpress.com/2015/04/dissected-tree.png"><img src="https://byorgey.files.wordpress.com/2015/04/dissected-tree.png?w=300" alt="dissected-tree" width="300" height="183" class="aligncenter size-medium wp-image-1431" /></a></p>
+<p>The punchline is that we show how to use the machinery of semirings, finite automata, and some basic matrix algebra to automatically derive an algebraic description of any functor constrained by any regular expression. This gives a nice unified way to view differentiation and dissection; we also draw some connections to the theory of divided differences.</p>
+<p>I’m still open to discussion, suggestions, typo fixes, etc., though at this point they won’t make it into the proceedings. There’s certainly a lot more that could be said or ways this could be extended further.</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

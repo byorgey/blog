@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - The Species of Bracelets</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2015/06/10/ally-skills-tutorial-at-icfp.html">« Ally Skills Tutorial at ICFP</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2015/08/11/catsters-guide-is-complete.html">» Catsters guide is complete!</a>
+
+</span>
+
+
+<h1>The Species of Bracelets</h1>
+
+<div class="info">
+  Posted on July 10, 2015
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'bracelets'." href="../../../../tag/bracelets.html" rel="tag">bracelets</a>, <a title="All pages tagged 'generating functions'." href="../../../../tag/generating%20functions.html" rel="tag">generating functions</a>, <a title="All pages tagged 'species'." href="../../../../tag/species.html" rel="tag">species</a>
+  
+</div>
+
+<section>
+<p>
+<em>Summary</em>: The <a href="http://hackage.haskell.org/package/species"><code>species</code> package</a> now has support for <em>bracelets</em>, <em>i.e.</em> equivalence classes of lists up to rotation and reversal. I show some examples of their use and then explain the (very interesting!) mathematics behind their implementation.
+</p>
+<hr />
+<p>
+I recently released a new version of my <a href="http://hackage.haskell.org/package/species"><code>species</code> package</a> which adds support for the species of <em>bracelets</em>. A bracelet is a (nonempty) sequence of items which is considered equivalent up to rotation and reversal. For example, the two structures illustrated below are considered equivalent as bracelets, since you can transform one into the other by a rotation and a flip:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2015/07/684db889ed37c01d.png" alt />
+</p>
+</div>
+<p>
+In other words, a bracelet has the same symmetry as a regular polygon—that is, its symmetry group is the <a href="https://en.wikipedia.org/wiki/Dihedral_group">dihedral group</a> <span class="math inline">\(D_{2n}\)</span>. (Actually, this is only true for <span class="math inline">\(n \geq 3\)</span>—I’ll say more about this later.)
+</p>
+<p>
+Bracelets came up for me recently in relation to a fun side project (more on that soon), and I am told they also show up in applications in biology and chemistry (for example, bracelet symmetry shows up in molecules with cycles, which are common in organic chemistry). There was no way to derive the species of bracelets from what was already in the library, so I added them as a new primitive.
+</p>
+<p>
+Let’s see some examples (later I discuss how they work). First, we set some options and imports.
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>:set -XNoImplicitPrelude
+<span style="color:gray;">ghci&gt; </span>:m +NumericPrelude
+<span style="color:gray;">ghci&gt; </span>:m +Math.Combinatorics.Species</code></pre>
+<p>
+Unlabelled bracelets, by themselves, are completely uninteresting: there is only a single unlabelled bracelet shape of any positive size. (Unlabelled species <em>built using</em> bracelets can be interesting, however; we’ll see an example in just a bit). We can ask the library to tell us how many distinct size-<span class="math inline">\(n\)</span> unlabelled bracelets there are for <span class="math inline">\(n \in \{0, \dots, 9\}\)</span>:
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>take 10 $ unlabelled bracelets
+  [0,1,1,1,1,1,1,1,1,1]
+</code></pre>
+<p>
+Labelled bracelets are a bit more interesting. For <span class="math inline">\(n \geq 3\)</span> there are <span class="math inline">\((n-1)!/2\)</span> labelled bracelets of size <span class="math inline">\(n\)</span>: there are <span class="math inline">\((n-1)!\)</span> cycles of size <span class="math inline">\(n\)</span> (there are <span class="math inline">\(n!\)</span> lists, which counts each cycle <span class="math inline">\(n\)</span> times, once for each rotation), and counting cycles exactly double counts bracelets, since each bracelet can be flipped in one of two ways. For example, there are <span class="math inline">\((5-1)!/2 = 24/2 = 12\)</span> labelled bracelets of size <span class="math inline">\(5\)</span>.
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>take 10 $ labelled bracelets
+  [0,1,1,1,3,12,60,360,2520,20160]
+</code></pre>
+<p>
+In addition to counting these, we can exhaustively generate them (this is a bit annoying with the current API; I hope to improve it):
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>enumerate bracelets [0,1] :: [Bracelet Int]
+  [&lt;&lt;0,1&gt;&gt;]
+
+<span style="color:gray;">ghci&gt; </span>enumerate bracelets [0..2] :: [Bracelet Int]
+  [&lt;&lt;0,1,2&gt;&gt;]
+
+<span style="color:gray;">ghci&gt; </span>enumerate bracelets [0..3] :: [Bracelet Int]
+  [&lt;&lt;0,1,2,3&gt;&gt;,&lt;&lt;0,1,3,2&gt;&gt;,&lt;&lt;0,2,1,3&gt;&gt;]
+</code></pre>
+<p>
+And here are all <span class="math inline">\(12\)</span> of the size-<span class="math inline">\(5\)</span> bracelets, where I’ve used a different color to represent each label (<a href="http://hub.darcs.net/byorgey/byorgey-wordpress/browse/2015-06-bracelets/bracelets.markdown">see here</a> for the code used to generate them):
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2015/07/9bf376e5e3d8e6ab.png" alt />
+</p>
+</div>
+<p>
+As a final example, consider the species <span class="math inline">\(B \times E^2\)</span>, the Cartesian product of bracelets with ordered pairs of sets. That is, given a set of labels, we <em>simultaneously</em> give the labels a bracelet structure and <em>also</em> partition them into two (distinguishable) sets. Considering <em>unlabelled</em> structures of this species—that is, equivalence classes of labelled structures under relabelling—means that we can’t tell the labels apart, other than the fact that we can still tell which are in the first set and which are in the second. So, if we call the first set “purple” and the second “green”, we are counting the number of bracelets made from (otherwise indistinguishable) purple and green beads. Let’s call these <em>binary bracelets</em>. Here’s how many there are of sizes <span class="math inline">\(0\)</span> through <span class="math inline">\(14\)</span>:
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>let biBracelets = bracelet &gt;&lt; (set * set)
+<span style="color:gray;">ghci&gt; </span>take 15 $ unlabelled biBracelets
+  [0,2,3,4,6,8,13,18,30,46,78,126,224,380,687]
+</code></pre>
+<p>
+Let’s use the <a href="https://oeis.org/">OEIS</a> to check that we’re on the right track:
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>:m +Math.OEIS
+<span style="color:gray;">ghci&gt; </span>let res = lookupSequence (drop 1 . take 10 $ unlabelled biBracelets)
+<span style="color:gray;">ghci&gt; </span>fmap description res
+  Just "Number of necklaces with n beads of 2 colors, allowing turning over."
+</code></pre>
+<p>
+Unfortunately the <code>species</code> library can’t currently enumerate unlabelled structures of species involving Cartesian product, though I hope to fix that. But for now we can draw these purple-green bracelets with some <a href="http://hub.darcs.net/byorgey/byorgey-wordpress/browse/2015-06-bracelets/Bracelets.hs">custom enumeration code</a>. You can see the numbers <span class="math inline">\(2, 3, 4, 6, 8, 13\)</span> show up here, and it’s not too hard to convince yourself that each row contains all possible binary bracelets of a given size.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2015/07/1fbe9a0e3687665b.png" alt />
+</p>
+</div>
+<p>
+If you’re just interested in <em>what you can do with</em> bracelets, you can stop reading now. If you’re interested in the mathematical and algorithmic details of how they are implemented, read on!
+</p>
+<h2 id="exponential-generating-functions">
+Exponential generating functions
+</h2>
+<p>
+The <em>exponential generating function</em> (egf) associated to a combinatorial species <span class="math inline">\(F\)</span> is defined by
+</p>
+<p>
+<span class="math inline">\(\displaystyle F(x) = \sum_{n \geq 0} |F[n]| \frac{x^n}{n!}.\)</span>
+</p>
+<p>
+That is, the egf is an (infinite) formal power series where the coefficient of <span class="math inline">\(x^n/n!\)</span> is the number of distinct labelled <span class="math inline">\(F\)</span>-structures on <span class="math inline">\(n\)</span> labels. We saw above that for <span class="math inline">\(n \geq 3\)</span> there are <span class="math inline">\((n-1)!/2\)</span> labelled bracelets of size <span class="math inline">\(n\)</span>, and there is one bracelet each of sizes <span class="math inline">\(1\)</span> and <span class="math inline">\(2\)</span>. The egf for bracelets is thus:
+</p>
+<p>
+<span class="math inline">\(\displaystyle B(x) = x + \frac{x^2}{2} + \sum_{n \geq 3} \frac{(n-1)!}{2} \frac{x^n}{n!} = x + \frac{x^2}{2} + \sum_{n \geq 3} \frac{x^n}{2n}.\)</span>
+</p>
+<p>
+(Challenge: show this is also equivalent to <span class="math inline">\(\frac{1}{2}(x + x^2/2 - \ln(1-x))\)</span>.) This egf is <a href="https://github.com/byorgey/species/blob/master/Math/Combinatorics/Species/Labeled.hs#L51">directly encoded in the species library</a>, and this is what is being used to evaluate <code>labelled bracelets</code> in the example above.
+</p>
+<p>
+Incidentally, the reason <span class="math inline">\((n-1)!/2\)</span> only works for <span class="math inline">\(n \geq 3\)</span> is in some sense due to the fact that the <a href="https://en.wikipedia.org/wiki/Dihedral_group">dihedral groups</a> <span class="math inline">\(D_2 = Z_2\)</span> and <span class="math inline">\(D_4 = K_4\)</span> are a bit weird: every dihedral group <span class="math inline">\(D_{2n}\)</span> is a subgroup of the symmetric group <span class="math inline">\(\mathcal{S}_n\)</span> except for <span class="math inline">\(D_2\)</span> and <span class="math inline">\(D_4\)</span>. The problem is that for <span class="math inline">\(n &amp;lt; 3\)</span>, “flips” actually have no effect, as you can see below:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2015/07/10af4bdaed76ca0f.png" alt />
+</p>
+</div>
+<p>
+So, for example, <span class="math inline">\(D_4\)</span> has <span class="math inline">\(4\)</span> elements, corresponding to the identity, a 180 degree rotation, a flip, and a rotation + flip; but the symmetric group <span class="math inline">\(\mathcal{S}_2\)</span> only has two elements, in this case corresponding to the identity and a 180 degree rotation. The reason <span class="math inline">\((n-1)!/2\)</span> doesn’t work, then, is that the division by two is superfluous: for <span class="math inline">\(n &amp;lt; 3\)</span>, counting cycles doesn’t actually overcount bracelets, because every cycle is already a flipped version of itself. So it would also be correct (if rather baroque) to say that for <span class="math inline">\(n &amp;lt; 3\)</span> there are actually <span class="math inline">\((n-1)!\)</span> bracelets.
+</p>
+<p>
+I find this fascinating; it’s almost as if for bigger <span class="math inline">\(n\)</span> the dihedral symmetry has “enough room to breathe” whereas for small <span class="math inline">\(n\)</span> it doesn’t have enough space and gets crushed and folded in on itself, causing weird things to happen. It makes me wonder whether there are other sorts of symmetry with a transition from irregularity to regularity at even bigger <span class="math inline">\(n\)</span>. Probably this is an easy question for a group theorist to answer but I’ve never thought about it before.
+</p>
+<h2 id="ordinary-generating-functions">
+Ordinary generating functions
+</h2>
+<p>
+The <em>ordinary generating function</em> (ogf) associated to a species <span class="math inline">\(F\)</span> is defined by
+</p>
+<p>
+<span class="math inline">\(\displaystyle \tilde F(x) = \sum_{n \geq 0} |F[n]/\mathord{\sim}| x^n\)</span>
+</p>
+<p>
+where <span class="math inline">\(\sim\)</span> is the equivalence relation on <span class="math inline">\(F\)</span>-structures induced by permuting the labels. That is, the coefficient of <span class="math inline">\(x^n\)</span> is the number of <em>equivalence classes</em> of <span class="math inline">\(F\)</span>-structures on <span class="math inline">\(n\)</span> labels up to relabelling. There is only one unlabelled bracelet of any size <span class="math inline">\(n \geq 1\)</span>, that is, any bracelet of size <span class="math inline">\(n\)</span> can be transformed into any other just by switching labels around. The unique unlabelled bracelet of a given size can be visualized as a bracelet of uniform beads:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2015/07/1dcdf822337298cd.png" alt />
+</p>
+</div>
+<p>
+though it’s occasionally important to keep in mind the more formal definition as an equivalence class of labelled bracelets. Since there’s just one unlabelled bracelet of each size, the ogf for bracelets is rather boring:
+</p>
+<p>
+<span class="math inline">\(\displaystyle \tilde B(x) = x + x^2 + x^3 + \dots = \frac{x}{x - 1}\)</span>.
+</p>
+<p>
+This is <a href="https://github.com/byorgey/species/blob/master/Math/Combinatorics/Species/Unlabeled.hs#L45">encoded in the <code>species</code> library too</a>, and was used to compute <code>unlabelled bracelets</code> above.
+</p>
+<h2 id="egfs-ogfs-and-homomorphisms">
+egfs, ogfs, and homomorphisms
+</h2>
+<p>
+egfs are quite natural (in fact, species can be seen as a <a href="https://en.wikipedia.org/wiki/Categorification">categorification</a> of egfs), and the mapping from species to their associated egf is a homomorphism that preserves many operations such as sum, product, Cartesian product, composition, and derivative. ogfs, however, are not as nice. The mapping from species to ogfs preserves sum and product but does not, in general, preserve other operations like Cartesian product, composition or derivative. In some sense ogfs throw away too much information. Here’s a simple example to illustrate this: although the ogfs for bracelets and cycles are the same, namely, <span class="math inline">\(x/(1-x)\)</span> (there is only one unlabelled bracelet or cycle of each size), the ogfs for binary bracelets and binary cycles are different:
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>-- recall biBracelets = bracelet &gt;&lt; (set * set)
+<span style="color:gray;">ghci&gt; </span>let biCycles = cycles &gt;&lt; (set * set)
+<span style="color:gray;">ghci&gt; </span>take 15 $ unlabelled biBracelets
+  [0,2,3,4,6,8,13,18,30,46,78,126,224,380,687]
+
+<span style="color:gray;">ghci&gt; </span>take 15 $ unlabelled biCycles
+  [0,2,3,4,6,8,14,20,36,60,108,188,352,632,1182]
+</code></pre>
+<p>
+(Puzzle: why are these the same up through <span class="math inline">\(n=5\)</span>? Find the unique pair of distinct binary <span class="math inline">\(6\)</span>-cycles which are equivalent as bracelets.)
+</p>
+<p>
+Clearly, there is no way to take equal ogfs, apply the same operation to both, and get different results out. So the <code>species</code> library cannot be working directly with ogfs in the example above—something else must be going on. That something else is <em>cycle index series</em>, which generalize both egfs and ogfs, and retain enough information that they once again preserve many of the operations we care about.
+</p>
+<h2 id="cycle-index-series">
+Cycle index series
+</h2>
+<p>
+Let <span class="math inline">\(\mathcal{S}_n\)</span> denote the symmetric group of order <span class="math inline">\(n\)</span>, that is, the group of permutations on <span class="math inline">\(\{1, \dots, n\}\)</span> under composition. It is well-known that every permutation <span class="math inline">\(\sigma \in \mathcal{S}_n\)</span> can be uniquely decomposed as a product of disjoint cycles. The <em>cycle type</em> of <span class="math inline">\(\sigma\)</span> is the sequence of natural numbers <span class="math inline">\(\sigma_1, \sigma_2, \sigma_3, \dots\)</span> where <span class="math inline">\(\sigma_i\)</span> is the number of <span class="math inline">\(i\)</span>-cycles in the cycle decomposition of <span class="math inline">\(\sigma\)</span>. For example, the permutation <span class="math inline">\((132)(45)(78)(6)\)</span> has cycle type <span class="math inline">\(1,2,1,0,0,0,\dots\)</span> since it has one <span class="math inline">\(1\)</span>-cycle, two <span class="math inline">\(2\)</span>-cycles, and one <span class="math inline">\(3\)</span>-cycle.
+</p>
+<p>
+For a species <span class="math inline">\(F\)</span> and a permutation <span class="math inline">\(\sigma \in \mathcal{S}_n\)</span>, let <span class="math inline">\(\mathrm{fix}\ F[\sigma]\)</span> denote the number of <span class="math inline">\(F\)</span>-structures that are fixed by the action of <span class="math inline">\(\sigma\)</span>, that is,
+</p>
+<p>
+<span class="math inline">\(\displaystyle \mathrm{fix}\ F[\sigma] = \#\{ f \in F[n] \mid F[\sigma] f = f \}.\)</span>
+</p>
+<p>
+The <em>cycle index series</em> of a combinatorial species <span class="math inline">\(F\)</span> is a formal power series in an infinite set of variables <span class="math inline">\(x_1, x_2, x_3, \dots\)</span> defined by
+</p>
+<p>
+<span class="math inline">\(\displaystyle Z_F(x_1, x_2, x_3, \dots) = \sum_{n \geq 0} \frac{1}{n!} \sum_{\sigma \in \mathcal{S}_n} \mathrm{fix}\ F[\sigma] x_1^{\sigma_1} x_2^{\sigma_2} x_3^{\sigma_3} \dots\)</span>
+</p>
+<p>
+We also sometimes write <span class="math inline">\(x^\sigma\)</span> as an abbreviation for <span class="math inline">\(x_1^{\sigma_1} x_2^{\sigma_2} x_3^{\sigma_3} \dots\)</span>. As a simple example, consider the species of lists, <em>i.e.</em> linear orderings. For each <span class="math inline">\(n\)</span>, the identity permutation (with cycle type <span class="math inline">\(n,0,0,\dots\)</span>) fixes all <span class="math inline">\(n!\)</span> lists of length <span class="math inline">\(n\)</span>, whereas all other permutations do not fix any lists. Therefore
+</p>
+<p>
+<span class="math inline">\(\displaystyle Z_L(x_1, x_2, x_3, \dots) = \sum_{n \geq 0} \frac{1}{n!} n! x_1^n = \sum_{n \geq 0} x_1^n = \frac{1}{1 - x_1}.\)</span>
+</p>
+<p>
+(This is not really that great of an example, though—since lists are regular species, that is, they have no nontrivial symmetry, their cycle index series, egf, and ogf are all essentially the same.)
+</p>
+<p>
+Cycle index series are linked to both egfs and ogfs by the identities
+</p>
+<p>
+<span class="math inline">\(\displaystyle \begin{array}{rcl}F(x) &amp;amp;=&amp;amp; Z_F(x,0,0,\dots) \\ \tilde F(x) &amp;amp;=&amp;amp; Z_F(x,x^2,x^3, \dots)\end{array}\)</span>
+</p>
+<p>
+To show the first, note that setting all <span class="math inline">\(x_i\)</span> to <span class="math inline">\(0\)</span> other than <span class="math inline">\(x_1\)</span> means that the only terms that survive are terms with only <span class="math inline">\(x_1\)</span> raised to some power. These correspond to permutations with only <span class="math inline">\(1\)</span>-cycles, that is, identity permutations. Identity permutations fix <em>all</em> <span class="math inline">\(F\)</span>-structures of a given size, so we have
+</p>
+<p>
+<span class="math inline">\(\begin{array}{rcl} Z_F(x,0,0,\dots) &amp;amp;=&amp;amp; \displaystyle \sum_{n \geq 0} \frac{1}{n!} \mathrm{fix}\ F[\mathit{id}] x^n \\ &amp;amp;=&amp;amp; \displaystyle \sum_{n \geq 0} |F[n]| \frac{x^n}{n!}. \end{array}\)</span>
+</p>
+<p>
+To prove the link to ogfs, note first that for any permutation <span class="math inline">\(\sigma \in \mathcal{S}_n\)</span> with cycle type <span class="math inline">\(\sigma_1,\sigma_2,\sigma_3,\dots\)</span> we have <span class="math inline">\(\sigma_1 + 2\sigma_2 + 3\sigma_3 + \dots = n\)</span>. Thus:
+</p>
+<p>
+<span class="math inline">\(\begin{array}{rcl} Z_F(x,x^2,x^3,\dots) &amp;amp;=&amp;amp; \displaystyle \sum_{n \geq 0} \frac{1}{n!} \sum_{\sigma \in \mathcal{S}_n} \mathrm{fix}\ F[\sigma] x^{\sigma_1}x^{2\sigma_2}x^{3\sigma_3}\dots \\ &amp;amp;=&amp;amp; \displaystyle \sum_{n \geq 0} \frac{1}{n!} \sum_{\sigma \in \mathcal{S}_n} \mathrm{fix}\ F[\sigma] x^n \\ &amp;amp;=&amp;amp; \displaystyle \sum_{n \geq 0} |F[n]/\mathord{\sim}| x^n \end{array}\)</span>
+</p>
+<p>
+where the final step is an application of <a href="https://en.wikipedia.org/?title=Burnside%27s_lemma">Burnside’s Lemma</a>.
+</p>
+<p>
+The important point is that the mapping from species to cycle index series is again a homomorphism for many of the operations we care about, including Cartesian product and composition. So in order to compute an ogf for some species defined in terms of operations that are not compatible with ogfs, one can start out computing with cycle index series and then project down to an ogf at the end.
+</p>
+<h2 id="cycle-index-series-for-bracelets">
+Cycle index series for bracelets
+</h2>
+<p>
+Let’s now see how to work out the cycle index series for the species of bracelets. For <span class="math inline">\(n=1\)</span>, the single bracelet is fixed by the only element of <span class="math inline">\(\mathcal{S}_1\)</span>, giving a term of <span class="math inline">\(x_1\)</span>. For <span class="math inline">\(n=2\)</span>, the single bracelet is fixed by both elements of <span class="math inline">\(\mathcal{S}_2\)</span>, one of which has cycle type <span class="math inline">\(2,0,0,\dots\)</span> and the other <span class="math inline">\(0,1,0,\dots\)</span>. Bracelets of size <span class="math inline">\(n \geq 3\)</span>, as discussed previously, have the dihedral group <span class="math inline">\(D_{2n}\)</span> as their symmetry group. That is, every one of the <span class="math inline">\((n-1)!/2\)</span> size-<span class="math inline">\(n\)</span> bracelets is fixed by the action of each element of <span class="math inline">\(D_{2n}\)</span>, and no bracelets are fixed by the action of any other permutation. Putting this all together, we obtain
+</p>
+<p>
+<span class="math inline">\(\begin{array}{rcl} Z_B(x_1, x_2, x_3, \dots) &amp;amp;=&amp;amp; \displaystyle \sum_{n \geq 0} \frac{1}{n!} \sum_{\sigma \in \mathcal{S}_n} \mathrm{fix}\ B[\sigma] x_1^{\sigma_1}x_2^{\sigma_2}x_3^{\sigma_3}\dots \\ &amp;amp;=&amp;amp; \displaystyle x_1 + \frac{1}{2}(x_1^2 + x_2) + \sum_{n \geq 3} \frac{1}{n!} \sum_{\sigma \in D_{2n}} \frac{(n-1)!}{2} x^\sigma \\ &amp;amp;=&amp;amp; \displaystyle x_1 + \frac{1}{2}(x_1^2 + x_2) + \sum_{n \geq 3} \frac{1}{2n} \sum_{\sigma \in D_{2n}} x^\sigma. \end{array}\)</span>
+</p>
+<p>
+Our remaining task is thus to compute <span class="math inline">\(\sum_{\sigma \in D_{2n}} x^\sigma\)</span>, that is, to compute the cycle types of elements of <span class="math inline">\(D_{2n}\)</span> for <span class="math inline">\(n \geq 3\)</span>. I don’t know whether there’s a nice closed form for <span class="math inline">\(Z_B\)</span>, but for our purposes it doesn’t matter: it suffices to come up with a finite algorithm to generate all its terms with their coefficients. A closed form might be important if we want to compute with <span class="math inline">\(Z_B\)</span> symbolically, but if we just want to generate coefficients, an algorithm is good enough.
+</p>
+<p>
+In general, <span class="math inline">\(D_{2n}\)</span> has <span class="math inline">\(n\)</span> elements corresponding to rotations (including the identity element, which we think of as a rotation by <span class="math inline">\(0\)</span> degrees) and <span class="math inline">\(n\)</span> elements corresponding to reflections across some axis. Below I’ve drawn illustrations showing the symmetries of bracelets of size <span class="math inline">\(5\)</span> and <span class="math inline">\(6\)</span>; each symmetry corresponds to an element of <span class="math inline">\(D_{2n}\)</span>.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2015/07/8977083873494c44.png" alt />
+</p>
+</div>
+<p>
+The lines indicate reflections. You can see that in general there are <span class="math inline">\(n\)</span> lines of reflection. The curved arrows indicate clockwise rotations; taking any number of consecutive arrows from <span class="math inline">\(0\)</span> to <span class="math inline">\(n-1\)</span> gives a distinct rotational symmetry. Let’s label the rotations <span class="math inline">\(R_k\)</span> (for <span class="math inline">\(k \in \{0, \dots, n-1\}\)</span>), where <span class="math inline">\(R_k\)</span> indicates a rotation by <span class="math inline">\(k/n\)</span> of a turn (so <span class="math inline">\(R_0\)</span> is the identity element). We won’t bother labelling the reflections since it’s not clear how we would choose canonical names for them, and in any case (as we’ll see) we don’t have as much of a need to give them names as we do for the rotations. The only thing we will note is that for even <span class="math inline">\(n\)</span> there are two distinct types of reflections, as illustrated by the dark and light blue lines on the right: the dark blue lines pass through two vertices, and the light blue ones pass through two edges. In the odd case, on the other hand, every line of reflection passes through one vertex and one edge. If you haven’t studied dihedral groups before, you might want to take a minute to convince yourself that this covers all the possible symmetries. It’s clear that a rotation followed by a rotation is again a rotation; what may be less intuitively clear is that a reflection followed by a reflection is a rotation, and that a rotation followed by a reflection is a reflection.
+</p>
+<p>
+So the name of the game is to consider each group element as a permutation of the labels, and compute the cycle type of the permutation. Let’s tackle the reflections first; we have to separately consider the cases when <span class="math inline">\(n\)</span> is odd and even. We saw above that when <span class="math inline">\(n = 2m+1\)</span> is odd, each line of reflection passes through exactly one vertex. As a permutation, that means the reflection will fix the label at the vertex it passes through, and swap the labels on other vertices in pairs, as shown in the leftmost diagram below:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2015/07/24f22b9afa9d6f81.png" alt />
+</p>
+</div>
+<p>
+So the permutation has cycle type <span class="math inline">\(1,m,0,0,\dots\)</span>. There is one <span class="math inline">\(1\)</span>-cycle, and the remaining <span class="math inline">\(n-1 = 2m\)</span> elements are paired off in <span class="math inline">\(2\)</span>-cycles. There are <span class="math inline">\(n\)</span> of these reflections in total, yielding a term of <span class="math inline">\(nx_1x_2^m\)</span> (where <span class="math inline">\(m = \lfloor n/2 \rfloor\)</span>).
+</p>
+<p>
+When <span class="math inline">\(n = 2m\)</span> is even, half of the reflections (the light blue ones) have no fixed points, as in the middle diagram above; they put everything in <span class="math inline">\(2\)</span>-cycles. The other half of the even reflections fix two vertices, with the rest in <span class="math inline">\(2\)</span>-cycles, as in the rightmost diagram above. In all, this yields terms <span class="math inline">\(mx_1^2x_2^{m-1} + mx_2^m\)</span>.
+</p>
+<p>
+Now let’s tackle the rotations. One could be forgiven for initially assuming that each rotation will just yield one big <span class="math inline">\(n\)</span>-cycle… a rotation is just cycling the vertices, right? But it is a bit more subtle than that. Let’s look at some examples. In each example below, the green curved arrow indicates a rotation <span class="math inline">\(R_k\)</span> applied to the bracelet. As you can check, the other arrows show the resulting permutation on the labels, that is, each arrow points from one node to the node where it ends up under the action of the rotation.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2015/07/c325b280c626b005.png" alt />
+</p>
+</div>
+<p>
+Do you see the pattern? In the case when <span class="math inline">\(k=1\)</span> (the first example above), or more generally when <span class="math inline">\(n\)</span> and <span class="math inline">\(k\)</span> are relatively prime (the second example above, with <span class="math inline">\(n=5\)</span> and <span class="math inline">\(k=2\)</span>), <span class="math inline">\(R_k\)</span> indeed generates a single <span class="math inline">\(n\)</span>-cycle. But when <span class="math inline">\(n\)</span> and <span class="math inline">\(k\)</span> are not relatively prime, it generates multiple cycles. By symmetry the cycles must all be the same size; in general, the rotation <span class="math inline">\(R_k\)</span> generates <span class="math inline">\((n,k)\)</span> cycles of size <span class="math inline">\(n/(n,k)\)</span> (where <span class="math inline">\((n,k)\)</span> denotes the greatest common divisor of <span class="math inline">\(n\)</span> and <span class="math inline">\(k\)</span>). So, for example, <span class="math inline">\(2\)</span> cycles are generated when <span class="math inline">\(n=6\)</span> and <span class="math inline">\(k=2\)</span> or <span class="math inline">\(k=4\)</span> (the next two examples above). The last example shows <span class="math inline">\(n=12\)</span> and <span class="math inline">\(k=3\)</span>; we can see that three <span class="math inline">\(4\)</span>-cycles are generated. Note this even works when <span class="math inline">\(k=0\)</span>: we have <span class="math inline">\((n,0) = n\)</span>, so we get <span class="math inline">\(n\)</span> cycles of size <span class="math inline">\(n/n = 1\)</span>, <em>i.e.</em> the identity permutation.
+</p>
+<p>
+So <span class="math inline">\(R_k\)</span> contributes a term <span class="math inline">\(x_{n/(n,k)}^{(n,k)}\)</span>. However, we can say something a bit more concise than this. Note, for example, when <span class="math inline">\(n=12\)</span>, as the contribution of all the <span class="math inline">\(R_k\)</span> we get
+</p>
+<p>
+<span class="math inline">\(x_1^{12} + x_{12} + x_6^2 + x_4^3 + x_3^4 + x_{12} + x_2^6 + x_{12} + x_3^4 + x_4^3 + x_6^2 + x_{12}\)</span>
+</p>
+<p>
+but we can collect like terms to get
+</p>
+<p>
+<span class="math inline">\(x_1^{12} + x_2^6 + 2x_3^4 + 2x_4^3 + 2x_6^2 + 4x_{12}\)</span>
+</p>
+<p>
+For a given divisor <span class="math inline">\(d \mid n\)</span>, the coefficient of <span class="math inline">\(x_{n/d}^d\)</span> is the number of nonnegative integers less than <span class="math inline">\(n\)</span> whose <span class="math inline">\(\gcd\)</span> with <span class="math inline">\(n\)</span> is equal to <span class="math inline">\(d\)</span>. For example, the coefficient of <span class="math inline">\(x_{6}^2\)</span> is <span class="math inline">\(2\)</span>, since there are two values of <span class="math inline">\(k\)</span> for which <span class="math inline">\((n,k) = 12/6 = 2\)</span> and hence generate a six-cycle, namely, <span class="math inline">\(2\)</span> and <span class="math inline">\(10\)</span>. So as the contribution of the <span class="math inline">\(R_k\)</span> we could write something like
+</p>
+<p>
+<span class="math inline">\(\displaystyle \sum_{d \mid n} \left( \#\{ 1 \leq k \leq n \mid (k,n) = d \} \right) x_{n/d}^d\)</span>
+</p>
+<p>
+but there is a better way. Note that
+</p>
+<p>
+<span class="math inline">\(\displaystyle \#\{ 1 \leq k \leq n \mid (k,n) = d \} = \#\{ 1 \leq j \leq n/d \mid (j,n/d) = 1 \}\)</span>
+</p>
+<p>
+since multiplying and dividing by <span class="math inline">\(d\)</span> establishes a bijection between the two sets. For example, we saw that <span class="math inline">\(2\)</span> and <span class="math inline">\(10\)</span> are the two numbers whose <span class="math inline">\(\gcd\)</span> with <span class="math inline">\(12\)</span> is <span class="math inline">\(2\)</span>; this corresponds to the fact that <span class="math inline">\(2/2 = 1\)</span> and <span class="math inline">\(10/2 = 5\)</span> are relatively prime to <span class="math inline">\(12/2 = 6\)</span>.
+</p>
+<p>
+But counting relatively prime numbers is precisely what Euler’s totient function (usually written <span class="math inline">\(\varphi\)</span>) does. So we can rewrite the coefficient of <span class="math inline">\(x_{n/d}^d\)</span> as
+</p>
+<p>
+<span class="math inline">\(\displaystyle \varphi(n/d) x_{n/d}^d\)</span>.
+</p>
+<p>
+Finally, since we are adding up these terms for all divisors <span class="math inline">\(d \mid n\)</span>, we can swap <span class="math inline">\(d\)</span> and <span class="math inline">\(n/d\)</span> (divisors of <span class="math inline">\(n\)</span> always come in pairs whose product is <span class="math inline">\(n\)</span>), and rewrite this as
+</p>
+<p>
+<span class="math inline">\(\displaystyle \varphi(d) x_d^{n/d}\)</span>.
+</p>
+<p>
+To sum up, then, we have for each <span class="math inline">\(n \geq 3\)</span>:
+</p>
+<ol style="list-style-type:decimal;">
+<li>
+When <span class="math inline">\(n\)</span> is odd, <span class="math inline">\(n x_1 x_2^{\lfloor n/2 \rfloor}\)</span>.
+</li>
+<li>
+When <span class="math inline">\(n\)</span> is even, <span class="math inline">\((n/2) x_1^2 x_2^{n/2 - 1} + (n/2)x_2^{n/2}\)</span>.
+</li>
+<li>
+For each <span class="math inline">\(d \mid n\)</span>, we have <span class="math inline">\(\varphi(d) x_d^{n/d}\)</span>.
+</li>
+</ol>
+<p>
+The only overlap is between (2) and (3): when <span class="math inline">\(d = 2\)</span> both generate <span class="math inline">\(x_2^{n/2}\)</span> terms. Using <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson brackets</a> (the notation <span class="math inline">\([P]\)</span> is equal to <span class="math inline">\(1\)</span> if the predicate <span class="math inline">\(P\)</span> is true, and <span class="math inline">\(0\)</span> if it is false), we can thus write the sum of the above for a particular <span class="math inline">\(n\)</span> as
+</p>
+<p>
+<span class="math inline">\(\displaystyle [n\text{ odd}](n x_1 x_2^{\lfloor n/2 \rfloor}) + [n\text{ even}]\left(\frac n 2 x_1^2 x_2^{n/2 - 1}\right) + \sum_{d \mid n} \left(\varphi(d) + [d = 2]\frac n 2\right) x_d^{n/d}\)</span>.
+</p>
+<p>
+Substituting this for <span class="math inline">\(\displaystyle \sum_{\sigma \in D_{2n}} x^\sigma\)</span> yields a full definition of <span class="math inline">\(Z_B\)</span>. You can see the result <a href="https://github.com/byorgey/species/blob/master/Math/Combinatorics/Species/CycleIndex.hs#L136-L151">encoded in the species library here</a>. Here’s the beginning of the full expanded series:
+</p>
+<pre><code><span style="color:gray;">ghci&gt; </span>:m +Math.Combinatorics.Species.Types
+<span style="color:gray;">ghci&gt; </span>take 107 $ show (bracelets :: CycleIndex)
+  "CI x1 + 1 % 2 x2 + 1 % 2 x1^2 + 1 % 3 x3 + 1 % 2 x1 x2 + 1 % 6 x1^3 + 1 % 4 x4 + 3 % 8 x2^2 + 1 % 4 x1^2 x2"
+</code></pre>
+<p>
+This, then, is how <code>unlabelled biBracelets</code> (for example) is calculated, where <code>biBracelets = bracelet &gt;&lt; (set * set)</code>. The cycle index series for <code>bracelet</code> and <code>set</code> are combined according to the operations on cycle index series corresponding to <code>*</code> and <code>&gt;&lt;</code>, and then the resulting cycle index series is mapped down to an ogf by substituting <span class="math inline">\(x^k\)</span> for each <span class="math inline">\(x_k\)</span>.
+</p>
+<h2 id="bracelet-generation">
+Bracelet generation
+</h2>
+<p>
+The final thing to mention is how bracelet <em>generation</em> works. Of course we can’t really generate actual bracelets, but only lists. Since bracelets can be thought of as equivalence classes of lists (under rotation and reversal), the idea is to pick a canonical representative element of each equivalence class, and generate those. A natural candidate is the <em>lexicographically smallest</em> among all rotations and reversals (assuming the labels have an ordering; if they don’t we can pick an ordering arbitrarily). One easy solution would be to generate all possible lists and throw out the redundant ones, but that would be rather inefficient. It is surprisingly tricky to do this efficiently. Fortunately, there is a series of papers by Joe Sawada (<a href="http://www.cis.uoguelph.ca/~sawada/papers/fix-brace.pdf">Generating bracelets with fixed content</a>; <a href="http://www.cis.uoguelph.ca/~sawada/papers/alph.pdf">A fast algorithm to generate necklaces with fixed content</a>; <a href="http://www.cis.uoguelph.ca/~sawada/papers/brace.pdf">Generating bracelets in constant amortized time</a>) describing (and proving correct) some efficient algorithms for generating things like cycles and bracelets. In fact, they are as efficient as possible, theoretically speaking: they do only <span class="math inline">\(O(1)\)</span> work per cycle or bracelet generated. One problem is that the algorithms are very imperative, so they cannot be directly transcribed into Haskell. But I played around with benchmarking various formulations in Haskell and got it as fast as I could. (Interestingly, using <code>STUArray</code> was a lot slower in practice than a simple functional implementation, even though the imperative solution is asymptotically faster in theory—my functional implementation is at least <span class="math inline">\(O(\lg n)\)</span> per bracelet, and quite possibly <span class="math inline">\(O(n)\)</span>, though since <span class="math inline">\(n\)</span> is typically quite small it doesn’t really matter very much. Of course it’s also quite possible that there are tricks to make the array version go faster that I don’t know about.) The result is released in the <a href="http://hackage.haskell.org/package/multiset%2Dcomb">multiset-comb package</a>; you can see the <a href="http://hub.darcs.net/byorgey/multiset-comb/browse/Math/Combinatorics/Multiset.hs#449">bracelet generation code here</a>.
+</p>
+<div class="references">
+
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

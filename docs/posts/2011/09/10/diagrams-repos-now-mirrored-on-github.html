@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - diagrams repos now mirrored on github!</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2011/09/09/math-tau.html">« Math.Tau</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2011/10/11/effective-parse-tree-support-for-the-working-semanticist.html">» Effective parse tree support for the working semanticist</a>
+
+</span>
+
+
+<h1>diagrams repos now mirrored on github!</h1>
+
+<div class="info">
+  Posted on September 11, 2011
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'bridge'." href="../../../../tag/bridge.html" rel="tag">bridge</a>, <a title="All pages tagged 'darcs'." href="../../../../tag/darcs.html" rel="tag">darcs</a>, <a title="All pages tagged 'diagrams'." href="../../../../tag/diagrams.html" rel="tag">diagrams</a>, <a title="All pages tagged 'git'." href="../../../../tag/git.html" rel="tag">git</a>
+  
+</div>
+
+<section>
+<p>I was quite excited when I learned that <a href="http://www.owenstephens.co.uk/" title="Owen Stephens">Owen Stephens</a> was working on a two-way darcs-git bridge for his Google Summer of Code project. You see, I’m one of those holdouts who, despite acknowledging that <a href="http://github.com" title="GitHub">github</a> is pretty cool and a lot of people in the Haskell community are using it these days, still really loves <a href="http://darcs.net" title="darcs">darcs</a> and refuses to give it up. Well, thanks to <a href="http://blog.owenstephens.co.uk/201109/gsoc-darcs-bridge-%E2%80%93-results" title="GSoC: Darcs Bridge - Results">Owen’s great work</a>, it looks like I can now have my cake and eat it too.</p>
+<p>I’ve now mirrored four <a href="http://projects.haskell.org/diagrams" title="diagrams">diagrams</a> repositories on github:</p>
+<ul>
+<li>
+<a href="https://github.com/byorgey/diagrams-core" title="diagrams-core">diagrams-core</a> - core library
+</li>
+<li>
+<a href="https://github.com/byorgey/diagrams-lib" title="diagrams-lib">diagrams-lib</a> - standard library of primitives and combinators built on top of diagrams-core
+</li>
+<li>
+<a href="https://github.com/byorgey/diagrams-cairo" title="diagrams-cairo">diagrams-cairo</a> - rendering backend using cairo
+</li>
+<pre><code>&lt;li&gt;&lt;a href=&quot;https://github.com/byorgey/diagrams-doc&quot; title=&quot;diagrams-doc&quot;&gt;diagrams-doc&lt;/a&gt; - documentation for the project, including source code for the &lt;a href=&quot;http://projects.haskell.org/diagrams&quot; title=&quot;Diagrams&quot;&gt;website&lt;/a&gt;, tutorial, user manual, IRC logs, etc.&lt;/li&gt;</code></pre>
+</ul>
+<p>I will continue to use darcs as my primary VCS, and of course I will still accept darcs patches (the darcs repos are <a href="http://patch-tag.com/r/byorgey/">hosted on patch-tag.com</a>). But I can now accept pull requests on github, for contributors who prefer using git/github. It will probably take a while to get the kinks worked out and figure out how to manage everything properly. But I’m excited by the opportunity to encourage more collaboration.</p>
+<p>Oh yes, and the user manual is coming along nicely! You can see a <a href="http://www.cis.upenn.edu/~byorgey/diagrams-manual/diagrams-manual.html" title="Diagrams user manual (preview)">preview version here</a>. Comments and patches (via either darcs or git!) welcome. There have also been quite a few cool features added since the 0.3 release, and we hope to have an 0.4 release out soon.</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

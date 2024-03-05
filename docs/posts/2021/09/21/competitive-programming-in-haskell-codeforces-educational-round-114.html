@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: Codeforces Educational Round 114</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2021/09/17/automatically-updated-cached-views-with-lens.html">« Automatically updated, cached views with lens</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2021/09/23/swarm-preview-and-call-for-collaboration.html">» Swarm: preview and call for collaboration</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: Codeforces Educational Round 114</h1>
+
+<div class="info">
+  Posted on September 22, 2021
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Codeforces'." href="../../../../tag/Codeforces.html" rel="tag">Codeforces</a>, <a title="All pages tagged 'solutions'." href="../../../../tag/solutions.html" rel="tag">solutions</a>
+  
+</div>
+
+<section>
+<p>
+Yesterday morning I competed in <a href="https://codeforces.com/contest/1574">Educational Round 114</a> on <a href="http://codeforces.com/">codeforces.com</a>, using only Haskell. It is somewhat annoying since it does not support as many Haskell libraries as <a href="http://open.kattis.com">Open Kattis</a> (<em>e.g.</em> no <code>unordered-containers</code>, <code>split</code>, or <code>vector</code>); but on the other hand, a lot of really top competitive programmers are active there, and I enjoy occasionally participating in a timed contest like this when I am able.
+</p>
+<p>
+<strong>WARNING</strong>: here be spoilers! Stop reading now if you’d like to try solving the contest problems yourself. (However, Codeforces has an <a href="https://codeforces.com/blog/entry/95188">editorial with explanations and solutions</a> already posted, so I’m not giving anything away that isn’t already public.) I’m going to post my (unedited) code for each problem, but without all the imports and <code>LANGUAGE</code> extensions and whatnot; hopefully that stuff should be easy to infer.
+</p>
+<h2 id="problem-a---regular-bracket-sequences">
+Problem A - Regular Bracket Sequences
+</h2>
+<p>
+In <a href="https://codeforces.com/contest/1574/problem/A">this problem</a>, we are given a number <span class="math inline">\(n\)</span> and asked to produce any <span class="math inline">\(n\)</span> distinct balanced bracket sequences of length <span class="math inline">\(2n\)</span>. I immediately just coded up a simple recursive function to generate all possible bracket sequences of length <span class="math inline">\(2n\)</span>, and then called <code>take n</code> on it. Thanks to laziness this works great. I missed that there is an even simpler solution: just generate the list <code>()()()()…</code>, <code>(())()()…</code>, <code>((()))()…</code>, <em>i.e.</em> where the <span class="math inline">\(k\)</span>th bracket sequence starts with <span class="math inline">\(k\)</span> nested pairs of brackets followed by <span class="math inline">\(n-k\)</span> singleton pairs. However, I solved it in only four minutes anyway so it didn’t really matter!
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>readB</span> <span style="color:red;">=</span> <span>C.unpack</span> <span>&gt;&gt;&gt;</span> <span>read</span>
+
+<span>main</span> <span style="color:red;">=</span> <span>C.interact</span> <span>$</span>
+  <span>C.lines</span> <span>&gt;&gt;&gt;</span> <span>drop</span> <span class="hs-num">1</span> <span>&gt;&gt;&gt;</span> <span>concatMap</span> <span style="color:red;">(</span><span>readB</span> <span>&gt;&gt;&gt;</span> <span>solve</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>C.unlines</span>
+
+<span>bracketSeqs</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span style="color:teal;">""</span><span style="color:red;">]</span>
+<span>bracketSeqs</span> <span>n</span> <span style="color:red;">=</span>
+  <span style="color:red;">[</span> <span style="color:teal;">"("</span> <span>++</span> <span>s1</span> <span>++</span> <span style="color:teal;">")"</span> <span>++</span> <span>s2</span>
+  <span style="color:red;">|</span> <span>k</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">..</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">]</span>
+  <span style="color:red;">,</span> <span>s1</span> <span style="color:red;">&lt;-</span> <span>bracketSeqs</span> <span>k</span>
+  <span style="color:red;">,</span> <span>s2</span> <span style="color:red;">&lt;-</span> <span>bracketSeqs</span> <span style="color:red;">(</span><span>n</span> <span style="color:green;">-</span> <span>k</span> <span style="color:green;">-</span> <span class="hs-num">1</span><span style="color:red;">)</span>
+  <span style="color:red;">]</span>
+
+<span>solve</span> <span>n</span> <span style="color:red;">=</span> <span>map</span> <span>C.pack</span> <span>.</span> <span>take</span> <span>n</span> <span>$</span> <span>bracketSeqs</span> <span>n</span></code></pre>
+<h2 id="problem-b---combinatorics-homework">
+Problem B - Combinatorics Homework
+</h2>
+<p>
+In <a href="https://codeforces.com/contest/1574/problem/B">this problem</a>, we are given numbers <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, <span class="math inline">\(c\)</span>, and <span class="math inline">\(m\)</span>, and asked whether it is possible to create a string of <span class="math inline">\(a\)</span> <code>A</code>’s, <span class="math inline">\(b\)</span> <code>B</code>’s, and <span class="math inline">\(c\)</span> <code>C</code>’s, such that there are exactly <span class="math inline">\(m\)</span> adjacent pairs of equal letters. This problem requires doing a little bit of combinatorial analysis to come up with a simple Boolean expression in terms of <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, <span class="math inline">\(c\)</span>, and <span class="math inline">\(m\)</span>; there’s not much to say about it from a Haskell point of view. You can refer to the <a href="https://codeforces.com/blog/entry/95188">editorial posted on Codeforces</a> if you want to understand the solution.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>readB</span> <span style="color:red;">=</span> <span>C.unpack</span> <span>&gt;&gt;&gt;</span> <span>read</span>
+
+<span>main</span> <span style="color:red;">=</span> <span>C.interact</span> <span>$</span>
+  <span>C.lines</span> <span>&gt;&gt;&gt;</span> <span>drop</span> <span class="hs-num">1</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>C.words</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span>readB</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>bool</span> <span style="color:teal;">"NO"</span> <span style="color:teal;">"YES"</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>C.unlines</span>
+
+<span>solve</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Bool</span>
+<span>solve</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">,</span><span>b</span><span style="color:red;">,</span><span>c</span><span style="color:red;">,</span><span>m</span><span style="color:red;">]</span> <span style="color:red;">=</span> <span>a</span> <span>+</span> <span>b</span> <span>+</span> <span>c</span> <span style="color:green;">-</span> <span>m</span> <span>&gt;=</span> <span class="hs-num">3</span> <span>&amp;&amp;</span> <span>m</span> <span>&gt;=</span> <span>z</span> <span style="color:green;">-</span> <span style="color:red;">(</span><span>x</span><span>+</span><span>y</span><span style="color:red;">)</span> <span style="color:green;">-</span> <span class="hs-num">1</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span style="color:red;">[</span><span>x</span><span style="color:red;">,</span><span>y</span><span style="color:red;">,</span><span>z</span><span style="color:red;">]</span> <span style="color:red;">=</span> <span>sort</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">,</span><span>b</span><span style="color:red;">,</span><span>c</span><span style="color:red;">]</span></code></pre>
+<h2 id="problem-c---slay-the-dragon">
+Problem C - Slay the Dragon
+</h2>
+<p>
+<a href="https://codeforces.com/contest/1574/problem/C">This problem</a> was super annoying and I <em>still</em> haven’t solved it. The idea is that you have a bunch of “heroes”, each with a numeric strength, and there is a dragon described by two numbers: its attack level and its defense level. You have to pick one hero to fight the dragon, whose strength must be greater than or equal to the dragon’s defense; all the rest of the heroes will stay behind to defend your castle, and their combined strength must be greater than the dragon’s attack. This might not be possible, of course, so you can first spend money to level up any of your heroes, at a rate of one coin per strength point; the task is to find the minimum amount of money you must spend.
+</p>
+<p>
+The problem hinges on doing some case analysis. It took me a good while to come up with something that I think is correct. I spent too long trying to solve it just by thinking hard; I really should have tried <a href="https://en.wikipedia.org/wiki/Bird%E2%80%93Meertens_formalism">formal program derivation</a> much earlier. It’s easy to write down a formal specification of the correct answer which involves looping over every hero and taking a minimum, and this can be manipulated into a form that doesn’t need to do any looping.
+</p>
+<p>
+In the end it comes down to (for example) finding the hero with the smallest strength greater than or equal to the dragon’s defense, and the hero with the largest strength less than or equal to it (though one of these may not exist). The intended way to solve the problem is to sort the heroes by strength and use binary search; instead, I put all the heroes in an <code>IntSet</code> and used the <a href="https://hackage.haskell.org/package/containers-0.6.5.1/docs/Data-IntSet.html#v:lookupGE"><code>lookupGE</code> and <code>lookupLE</code> functions</a>.
+</p>
+<p>
+However, besides my floundering around getting the case analysis wrong at first, I got tripped up by two other things: first, it turns out that on the Codeforces judging hardware, <code>Int</code> is only 32 bits, which is not big enough for this problem! I know this because my code was failing on the third test case, and when I changed it to use <code>Int64</code> instead of <code>Int</code> (which means I also had to switch to <code>Data.Set</code> instead of <code>Data.IntSet</code>), it failed on the sixth test case instead. The other problem is that my code was too slow: in fact, it <em>timed out</em> on the sixth test case rather than getting it wrong per se. I guess <code>Data.Set</code> and <code>Int64</code> just have too much overhead.
+</p>
+<p>
+Anyway, here is my code, which I <em>think</em> is correct, but is too slow.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>TC</span> <span style="color:red;">=</span> <span>TC</span> <span style="color:red;">{</span> <span>heroes</span> <span style="color:red;">::</span> <span>!</span><span style="color:red;">[</span><span>Int64</span><span style="color:red;">]</span><span style="color:red;">,</span> <span>dragons</span> <span style="color:red;">::</span> <span>!</span><span style="color:red;">[</span><span>Dragon</span><span style="color:red;">]</span> <span style="color:red;">}</span>
+<span style="color:blue;font-weight:bold;">data</span> <span>Dragon</span> <span style="color:red;">=</span> <span>Dragon</span> <span style="color:red;">{</span> <span>defense</span> <span style="color:red;">::</span> <span>!</span><span>Int64</span><span style="color:red;">,</span> <span>attack</span> <span style="color:red;">::</span> <span>!</span><span>Int64</span> <span style="color:red;">}</span>
+
+<span>main</span> <span style="color:red;">=</span> <span>C.interact</span> <span>$</span>
+  <span>runScanner</span> <span>tc</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>show</span> <span>&gt;&gt;&gt;</span> <span>C.pack</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>C.unlines</span>
+
+<span>tc</span> <span style="color:red;">::</span> <span>Scanner</span> <span>TC</span>
+<span>tc</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+  <span>hs</span> <span style="color:red;">&lt;-</span> <span>numberOf</span> <span>int64</span>
+  <span>ds</span> <span style="color:red;">&lt;-</span> <span>numberOf</span> <span style="color:red;">(</span><span>Dragon</span> <span>&lt;$&gt;</span> <span>int64</span> <span>&lt;*&gt;</span> <span>int64</span><span style="color:red;">)</span>
+  <span>return</span> <span>$</span> <span>TC</span> <span>hs</span> <span>ds</span>
+
+<span>solve</span> <span style="color:red;">::</span> <span>TC</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Int64</span><span style="color:red;">]</span>
+<span>solve</span> <span style="color:red;">(</span><span>TC</span> <span>hs</span> <span>ds</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>map</span> <span>fight</span> <span>ds</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>heroSet</span> <span style="color:red;">=</span> <span>S.fromList</span> <span>hs</span>
+    <span>total</span> <span style="color:red;">=</span> <span>foldl'</span> <span style="color:red;">(</span><span>+</span><span style="color:red;">)</span> <span class="hs-num">0</span> <span>hs</span>
+    <span>fight</span> <span style="color:red;">(</span><span>Dragon</span> <span>df</span> <span>atk</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>minimum</span> <span>$</span>
+      <span style="color:red;">[</span> <span>max</span> <span class="hs-num">0</span> <span style="color:red;">(</span><span>atk</span> <span style="color:green;">-</span> <span style="color:red;">(</span><span>total</span> <span style="color:green;">-</span> <span>hero</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">|</span> <span>Just</span> <span>hero</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span>mheroGE</span><span style="color:red;">]</span> <span style="color:red;">]</span>
+      <span>++</span>
+      <span style="color:red;">[</span> <span>df</span> <span style="color:green;">-</span> <span>hero</span> <span>+</span> <span>max</span> <span class="hs-num">0</span> <span style="color:red;">(</span><span>atk</span> <span style="color:green;">-</span> <span style="color:red;">(</span><span>total</span> <span style="color:green;">-</span> <span>hero</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">|</span> <span>Just</span> <span>hero</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span>mheroLE</span><span style="color:red;">]</span><span style="color:red;">]</span>
+      <span style="color:blue;font-weight:bold;">where</span>
+        <span>mheroGE</span> <span style="color:red;">=</span> <span>S.lookupGE</span> <span>df</span> <span>heroSet</span>
+        <span>mheroLE</span> <span style="color:red;">=</span> <span>S.lookupLE</span> <span>df</span> <span>heroSet</span></code></pre>
+<p>
+I’d like to come back to this later. Using something like <code>vector</code> to sort and then do binary search on the heroes would probably be faster, but <code>vector</code> is not supported on Codeforces. I’ll probably end up manually implementing binary search on top of something like <code>Data.Array.Unboxed</code>. Doing a binary search on an array also means we can get away with doing only a single search, since the two heroes we are looking for must be right next to each other in the array.
+</p>
+<p>
+<em>Edited to add</em>: I tried creating an unboxed array and implementing my own binary search over it; however, my solution is still too slow. At this point I think the problem is the sorting. Instead of calling <code>sort</code> on the list of heroes, we probably need to implement our own quicksort or something like that over a mutable array. That doesn’t really sound like much fun so I’m probably going to forget about it for now.
+</p>
+<h2 id="problem-d---the-strongest-build">
+Problem D - The Strongest Build
+</h2>
+<p>
+In <a href="https://codeforces.com/contest/1574/problem/D">this problem</a>, we consider a set of <span class="math inline">\(k\)</span>-tuples, where the value for each slot in a tuple is chosen from among a list of possible values unique to that slot (the values for a slot are given to us in sorted order). For example, perhaps the first slot has the possible values <span class="math inline">\(1, 2, 3\)</span>, the second slot has possible values <span class="math inline">\(5, 8\)</span>, and the third slot has possible values <span class="math inline">\(4, 7, 16\)</span>. In this case there would be <span class="math inline">\(3 \times 2 \times 3\)</span> possible tuples, ranging from <span class="math inline">\((1,5,4)\)</span> up to <span class="math inline">\((3,8,16)\)</span>. We are also given a list of forbidden tuples, and then asked to find a non-forbidden tuple with the largest possible sum.
+</p>
+<p>
+If the list of slot options is represented as a list of lists, with the first list representing the choices for the first slot, and so on, then we could use <code>sequence</code> to turn this into the list of all possible tuples. Hence, a naive solution could look like this:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color:red;">::</span> <span>Set</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span>
+<span>solve</span> <span>forbidden</span> <span style="color:red;">=</span>
+  <span>head</span> <span>.</span> <span>filter</span> <span style="color:red;">(</span><span>`S.notMember`</span> <span>forbidden</span><span style="color:red;">)</span> <span>.</span> <span>sortOn</span> <span style="color:red;">(</span><span>Down</span> <span>.</span> <span>sum</span><span style="color:red;">)</span> <span>.</span> <span>sequence</span></code></pre>
+<p>
+Of course, this is much too slow. The problem is that although <span class="math inline">\(k\)</span> (the size of the tuples) is limited to at most <span class="math inline">\(10\)</span>, there can be up to <span class="math inline">\(2 \cdot 10^5\)</span> choices for each slot (the choices themselves can be up to <span class="math inline">\(10^8\)</span>). The list of all possible tuples could thus be truly enormous; in theory, there could be up to <span class="math inline">\((2 \cdot 10^5)^{10} \approx 10^{53}\)</span>), and generating then sorting them all is out of the question.
+</p>
+<p>
+We can think of the tuples as forming a lattice, where the children of a tuple <span class="math inline">\(t\)</span> are all the tuples obtained by downgrading exactly one slot of <span class="math inline">\(t\)</span> to the next smaller choice. Then the intended solution is to realize that the largest non-forbidden tuple must either be the top element of the lattice (the tuple with the maximum possible value for every slot), OR a child of one of the forbidden tuples (it is easy to see this by contradiction—any tuple which is not the child of a forbidden tuple has at least one parent which has a greater total value). So we can just iterate over all the forbidden tuples (there are at most <span class="math inline">\(10^5\)</span>), generate all possible children (at most 10) for each one, and take the maximum.
+</p>
+<p>
+However, that’s not how I solved it! I started thinking from the naive solution above, and wondered whether there is a way to do <code>sortOn (Down . sum) . sequence</code> more efficiently, by interleaving the sorting and the generation. If it can be done lazily enough, then we could just search through the beginning of the generated ordered list of tuples for the first non-forbidden one, without having to actually generate the entire list. Indeed, this reminded me very much of <a href="https://www.cs.hmc.edu/~oneill/papers/Sieve-JFP.pdf">Richard Bird’s implementation of the Sieve of Eratosthenes</a> (see p. 11 of that PDF). The basic idea is to make a function which takes a list of choices for a slot, and a (recursively generated) list of tuples sorted by decreasing sum, and combines each choice with every tuple, merging the results so they are still sorted. However, the key is that when combining the best possible choice for the slot with the largest tuple in the list, we can just immediately return the resulting tuple as the first (best) tuple in the output list, without needing to involve it in any merging operation. This affords just enough laziness to get the whole thing off the ground. I’m not going to explain it in more detail than that; you can study the code below if you like.
+</p>
+<p>
+I’m quite pleased that this worked, though it’s definitely an instance of me making things more complicated than necessary.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">
+<span style="color:blue;font-weight:bold;">data</span> <span>TC</span> <span style="color:red;">=</span> <span>TC</span> <span style="color:red;">{</span> <span>slots</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span style="color:red;">[</span><span>Choice</span><span style="color:red;">]</span><span style="color:red;">]</span><span style="color:red;">,</span> <span>banned</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span><span style="color:red;">]</span> <span style="color:red;">}</span>
+
+<span>tc</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+  <span>n</span> <span style="color:red;">&lt;-</span> <span>int</span>
+  <span>TC</span> <span>&lt;$&gt;</span> <span style="color:red;">(</span><span>n</span> <span>&gt;&lt;</span> <span style="color:red;">(</span><span>zipWith</span> <span>Choice</span> <span style="color:red;">[</span><span class="hs-num">1</span> <span style="color:red;">..</span><span style="color:red;">]</span> <span>&lt;$&gt;</span> <span>numberOf</span> <span>int</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>&lt;*&gt;</span> <span>numberOf</span> <span style="color:red;">(</span><span>n</span> <span>&gt;&lt;</span> <span>int</span><span style="color:red;">)</span>
+
+<span>main</span> <span style="color:red;">=</span> <span>C.interact</span> <span>$</span>
+  <span>runScanner</span> <span>tc</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>show</span> <span>&gt;&gt;&gt;</span> <span>C.pack</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>C.unwords</span>
+
+<span>solve</span> <span style="color:red;">::</span> <span>TC</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span>
+<span>solve</span> <span>TC</span><span style="color:red;">{</span><span style="color:red;">..</span><span style="color:red;">}</span> <span style="color:red;">=</span> <span>choices</span> <span>.</span> <span>fromJust</span> <span>$</span> <span>find</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>`S.notMember`</span> <span>bannedSet</span><span style="color:red;">)</span> <span>.</span> <span>choices</span><span style="color:red;">)</span> <span>bs</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>bannedSet</span> <span style="color:red;">=</span> <span>S.fromList</span> <span>banned</span>
+    <span>revSlots</span> <span style="color:red;">=</span> <span>map</span> <span>reverse</span> <span>slots</span>
+    <span>bs</span> <span style="color:red;">=</span> <span>builds</span> <span>revSlots</span>
+
+<span style="color:blue;font-weight:bold;">data</span> <span>Choice</span> <span style="color:red;">=</span> <span>Choice</span> <span style="color:red;">{</span> <span>index</span> <span style="color:red;">::</span> <span>!</span><span>Int</span><span style="color:red;">,</span> <span>value</span> <span style="color:red;">::</span> <span>!</span><span>Int</span> <span style="color:red;">}</span>
+
+<span style="color:blue;font-weight:bold;">data</span> <span>Build</span> <span style="color:red;">=</span> <span>Build</span> <span style="color:red;">{</span> <span>strength</span> <span style="color:red;">::</span> <span>!</span><span>Int</span><span style="color:red;">,</span> <span>choices</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span> <span style="color:red;">}</span>
+  <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Eq</span><span style="color:red;">,</span> <span>Show</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">)</span>
+
+<span>singletonBuild</span> <span style="color:red;">::</span> <span>Choice</span> <span style="color:red;">-&gt;</span> <span>Build</span>
+<span>singletonBuild</span> <span style="color:red;">(</span><span>Choice</span> <span>i</span> <span>v</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Build</span> <span>v</span> <span style="color:red;">[</span><span>i</span><span style="color:red;">]</span>
+
+<span>mkBuild</span> <span>xs</span> <span style="color:red;">=</span> <span>Build</span> <span style="color:red;">(</span><span>sum</span> <span>xs</span><span style="color:red;">)</span> <span>xs</span>
+
+<span style="color:green;">-- Pre: all input lists are sorted descending.</span>
+<span style="color:green;">-- All possible builds, sorted in descending order of strength.</span>
+<span>builds</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span style="color:red;">[</span><span>Choice</span><span style="color:red;">]</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Build</span><span style="color:red;">]</span>
+<span>builds</span> <span>[]</span>     <span style="color:red;">=</span> <span>[]</span>
+<span>builds</span> <span style="color:red;">(</span><span>i</span><span>:</span><span>is</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>chooseFrom</span> <span>i</span> <span style="color:red;">(</span><span>builds</span> <span>is</span><span style="color:red;">)</span>
+
+<span>chooseFrom</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Choice</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Build</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Build</span><span style="color:red;">]</span>
+<span>chooseFrom</span> <span>[]</span> <span style="color:blue;font-weight:bold;">_</span>  <span style="color:red;">=</span> <span>[]</span>
+<span>chooseFrom</span> <span>xs</span> <span>[]</span> <span style="color:red;">=</span> <span>map</span> <span>singletonBuild</span> <span>xs</span>
+<span>chooseFrom</span> <span style="color:red;">(</span><span>x</span><span>:</span><span>xs</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>b</span><span>:</span><span>bs</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>addToBuild</span> <span>x</span> <span>b</span> <span>:</span> <span>mergeBuilds</span> <span style="color:red;">(</span><span>map</span> <span style="color:red;">(</span><span>addToBuild</span> <span>x</span><span style="color:red;">)</span> <span>bs</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>chooseFrom</span> <span>xs</span> <span style="color:red;">(</span><span>b</span><span>:</span><span>bs</span><span style="color:red;">)</span><span style="color:red;">)</span>
+
+<span>addToBuild</span> <span style="color:red;">::</span> <span>Choice</span> <span style="color:red;">-&gt;</span> <span>Build</span> <span style="color:red;">-&gt;</span> <span>Build</span>
+<span>addToBuild</span> <span style="color:red;">(</span><span>Choice</span> <span>i</span> <span>v</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>Build</span> <span>s</span> <span>xs</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Build</span> <span style="color:red;">(</span><span>v</span><span>+</span><span>s</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>i</span><span>:</span><span>xs</span><span style="color:red;">)</span>
+
+<span>mergeBuilds</span> <span>xs</span> <span>[]</span> <span style="color:red;">=</span> <span>xs</span>
+<span>mergeBuilds</span> <span>[]</span> <span>ys</span> <span style="color:red;">=</span> <span>ys</span>
+<span>mergeBuilds</span> <span style="color:red;">(</span><span>x</span><span>:</span><span>xs</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>y</span><span>:</span><span>ys</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">case</span> <span>compare</span> <span style="color:red;">(</span><span>strength</span> <span>x</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>strength</span> <span>y</span><span style="color:red;">)</span> <span style="color:blue;font-weight:bold;">of</span>
+  <span>GT</span> <span style="color:red;">-&gt;</span> <span>x</span> <span>:</span> <span>mergeBuilds</span> <span>xs</span> <span style="color:red;">(</span><span>y</span><span>:</span><span>ys</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">_</span>  <span style="color:red;">-&gt;</span> <span>y</span> <span>:</span> <span>mergeBuilds</span> <span style="color:red;">(</span><span>x</span><span>:</span><span>xs</span><span style="color:red;">)</span> <span>ys</span></code></pre>
+<h2 id="problems-e-and-f">
+Problems E and F
+</h2>
+<p>
+I didn’t even get to <a href="https://codeforces.com/contest/1574/problem/E">these</a> <a href="https://codeforces.com/contest/1574/problem/F">problems</a> during the contest; I spent too long fighting with problem C and implementing my overly complicated solution to problem D. I might attempt to solve them in Haskell too; if I do, I’ll write about them in another blog post!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

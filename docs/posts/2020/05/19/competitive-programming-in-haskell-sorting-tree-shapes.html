@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: sorting tree shapes</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2020/05/16/competitive-programming-in-haskell-summer-series.html">« Competitive programming in Haskell: summer series</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2020/05/22/competitive-programming-in-haskell-building-unordered-trees.html">» Competitive programming in Haskell: building unordered trees</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: sorting tree shapes</h1>
+
+<div class="info">
+  Posted on May 19, 2020
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'ceiling'." href="../../../../tag/ceiling.html" rel="tag">ceiling</a>, <a title="All pages tagged 'functor'." href="../../../../tag/functor.html" rel="tag">functor</a>, <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'set'." href="../../../../tag/set.html" rel="tag">set</a>, <a title="All pages tagged 'shape'." href="../../../../tag/shape.html" rel="tag">shape</a>, <a title="All pages tagged 'sort'." href="../../../../tag/sort.html" rel="tag">sort</a>, <a title="All pages tagged 'tree'." href="../../../../tag/tree.html" rel="tag">tree</a>
+  
+</div>
+
+<section>
+<p>
+In my previous post I challenged you to solve this problem, which essentially asks how many distinct binary tree shapes are created when we take lists of numbers and build a tree from each by repeated binary search tree insertion.
+</p>
+<div style="text-align:center;">
+<p>
+<a href="https://open.kattis.com/problems/ceiling">Ceiling Function</a>
+</p>
+</div>
+<p>
+Incidentally, this problem was from the 2016 ICPC world finals (probably one of the easiest ICPC world finals problems ever!).
+</p>
+<p>
+Several commenters solved it, and all with essentially the same solution. First we need to build some binary search trees by repeated insertion, which we can do by creating a binary tree type and insertion function and then doing some left folds over the input lists. Next, we need to classify the resulting trees by their <em>shape</em>. One obvious method would be to write a function which compares two binary trees to see if they have the same shape; use <code>nubBy</code> to remove duplicates; then count how many trees remain. This would take <span class="math inline">\(O(n^2)\)</span> time, but since there are only at most <span class="math inline">\(50\)</span> trees, with at most <span class="math inline">\(20\)</span> values in each, this should easily fit within the very geneous time limit of 5 seconds. (This is an understatement; my implementation of this approach runs in 0.01s.)
+</p>
+<p>
+However, there’s a different solution which is both asymptotically faster <em>and</em> less code! The key idea is that if we make the <code>Tree</code> type polymorphic, and an instance of <code>Functor</code> (by writing our own instance, or, even better, using the <code>DeriveFunctor</code> extension), then after building the trees we can turn them into literal tree <em>shapes</em> by replacing the values they contain with <code>()</code>. Moreover, since GHC can also derive an <code>Ord</code> instance for our <code>Tree</code> type, we can then count the distinct tree shapes in <span class="math inline">\(O(n \lg n)\)</span> time, either using a combination of <code>sort</code>, <code>group</code>, and <code>length</code>, or by throwing them all into a <code>Set</code> and asking for its <code>size</code>.
+</p>
+<p>
+Here’s my solution:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">{-# LANGUAGE DeriveFunctor #-}</span>
+
+<span style="color:blue;font-weight:bold;">import</span> <span>Control.Arrow</span>
+<span style="color:blue;font-weight:bold;">import</span> <span>Data.List</span>
+
+<span>main</span> <span style="color:red;">=</span> <span>interact</span> <span>$</span>
+  <span>lines</span> <span>&gt;&gt;&gt;</span> <span>drop</span> <span class="hs-num">1</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>words</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span>read</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>show</span>
+
+<span>solve</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>solve</span> <span style="color:red;">=</span> <span>map</span> <span style="color:red;">(</span><span>foldl'</span> <span style="color:red;">(</span><span>flip</span> <span>ins</span><span style="color:red;">)</span> <span>Empty</span> <span>&gt;&gt;&gt;</span> <span style="color:red;">(</span><span>()</span> <span>&lt;$</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>sort</span> <span>&gt;&gt;&gt;</span> <span>group</span> <span>&gt;&gt;&gt;</span> <span>length</span>
+                                           <span style="color:green;">-- or: &gt;&gt;&gt; S.fromList &gt;&gt;&gt; S.size</span>
+
+<span style="color:blue;font-weight:bold;">data</span> <span>Tree</span> <span>a</span> <span style="color:red;">=</span> <span>Empty</span> <span style="color:red;">|</span> <span>Node</span> <span>a</span> <span style="color:red;">(</span><span>Tree</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>Tree</span> <span>a</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Show</span><span style="color:red;">,</span> <span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">,</span> <span>Functor</span><span style="color:red;">)</span>
+
+<span>ins</span> <span style="color:red;">::</span> <span>Ord</span> <span>a</span> <span style="color:red;">=&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span>a</span>
+<span>ins</span> <span>a</span> <span>Empty</span> <span style="color:red;">=</span> <span>Node</span> <span>a</span> <span>Empty</span> <span>Empty</span>
+<span>ins</span> <span>a</span> <span style="color:red;">(</span><span>Node</span> <span>x</span> <span>l</span> <span>r</span><span style="color:red;">)</span>
+  <span style="color:red;">|</span> <span>a</span> <span>&lt;</span> <span>x</span>     <span style="color:red;">=</span> <span>Node</span> <span>x</span> <span style="color:red;">(</span><span>ins</span> <span>a</span> <span>l</span><span style="color:red;">)</span> <span>r</span>
+  <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span>Node</span> <span>x</span> <span>l</span> <span style="color:red;">(</span><span>ins</span> <span>a</span> <span>r</span><span style="color:red;">)</span></code></pre>
+<p>
+Honestly I’m not sure what the nicest way to solve this problem in something like Java or C++ would be. In Java, I suppose we would have to make a class for trees, implement <code>equals</code> and <code>compareTo</code> methods which compare trees by shape, and then put all the trees in a <code>TreeSet</code>; or else we could implement <code>hashCode</code> instead of <code>compareTo</code> and use a <code>HashSet</code>. The thing that makes the Haskell solution so much nicer is that the compiler writes some of the code for us, in the form of derived <code>Functor</code> and <code>Ord</code> instances.
+</p>
+<p>
+For Friday, I invite you to solve <a href="https://open.kattis.com/problems/subway">Subway Tree System</a>, a nifty problem which is more difficult but has some similar features!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - MonadRandom 0.5 released</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2016/11/16/monadrandom-0-5-and-mwc-random-feedback-wanted.html">« MonadRandom 0.5 and mwc-random: feedback wanted</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2017/01/13/my-new-programming-languages-course.html">» My new programming languages course</a>
+
+</span>
+
+
+<h1>MonadRandom 0.5 released</h1>
+
+<div class="info">
+  Posted on January  3, 2017
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'monad'." href="../../../../tag/monad.html" rel="tag">monad</a>, <a title="All pages tagged 'random'." href="../../../../tag/random.html" rel="tag">random</a>, <a title="All pages tagged 'release'." href="../../../../tag/release.html" rel="tag">release</a>
+  
+</div>
+
+<section>
+<p>
+I’m happy to announce the release of <a href="http://hackage.haskell.org/package/MonadRandom"><code>MonadRandom-0.5</code></a>, a package which provides a convenient monadic interface for random number generation in the style of <code>transformers</code> and <code>mtl</code>: a <code>Rand</code> monad (essentially a state monad that threads through a generator), a monad transformer variant called <code>RandT</code>, and a <code>RandomMonad</code> class allowing the use of random generation operations in monad stacks containing <code>RandT</code>.
+</p>
+<p>
+This release has quite a few small additions as well as a big module reorganization. However, thanks to module re-exports, most existing code using the library should continue to work with no changes; the major version bump reflects the large reorganization and my resultant inability to 100% guarantee that existing user code will not break. If your code does break, please let me know—I would be happy to help you fix it, or simply to know about it so I can help other users.
+</p>
+<p>
+Here are a few of the biggest changes that may be of interest to users of the library:
+</p>
+<ul>
+<li>
+<p>
+A new <code>MonadInterleave</code> class (see <a href="https://github.com/byorgey/MonadRandom/issues/20">#20</a>), which is a big improvement over <code>MonadSplit</code>. It provides a method <code>interleave :: m a -&gt; m a</code>, which works by splitting the generator, running its argument using one half of the generator, and using the other half as the final state of the resulting action (replacing whatever the final generator state otherwise would have been). This can be used, for example, to allow random computations to run in parallel, or to create lazy infinite structures of random values. In the example below, the infinite tree <code>randTree</code> cannot be evaluated lazily: even though it is cut off at two levels deep by <code>hew 2</code>, the random value in the right subtree still depends on generation of all the random values in the (infinite) left subtree, even though they are ultimately unneeded. Inserting a call to <code>interleave</code>, as in <code>randTreeI</code>, solves the problem: the generator splits at each <code>Node</code>, so random values in the left and right subtrees are generated independently.
+</p>
+<pre class="sourceCode literate haskell"><code>data Tree = Leaf | Node Int Tree Tree deriving Show
+
+hew :: Int -&gt; Tree -&gt; Tree
+hew 0 _    = Leaf
+hew _ Leaf = Leaf
+hew n (Node x l r) = Node x (hew (n-1) l) (hew (n-1) r)
+
+randTree :: Rand StdGen Tree
+randTree = Node &lt;$&gt; getRandom &lt;*&gt; randTree &lt;*&gt; randTree
+
+randTreeI :: Rand StdGen Tree
+randTreeI = interleave $ Node &lt;$&gt; getRandom &lt;*&gt; randTreeI &lt;*&gt; randTreeI
+
+&gt;&gt;&gt; hew 2 &lt;$&gt; evalRandIO randTree
+Node 2168685089479838995 (Node (-1040559818952481847) Leaf Leaf) (Node ^CInterrupted.
+&gt;&gt;&gt; hew 2 &lt;$&gt; evalRandIO randTreeI
+Node 8243316398511136358 (Node 4139784028141790719 Leaf Leaf) (Node 4473998613878251948 Leaf Leaf)</code></pre>
+</li>
+<li>
+<p>
+A new <code>PrimMonad</code> instance for <code>RandT</code> (<a href="https://github.com/byorgey/MonadRandom/pull/30">thanks to Koz Ross</a>), allowing it to be used in conjunction with <em>e.g.</em> mutable vectors.
+</p>
+</li>
+<li>
+New and improved random selection functions:
+<ul>
+<li>
+<code>fromList</code> now raises an error when the total weight of elements is zero.
+</li>
+<li>
+The type of <code>uniform</code> is generalized to work over any <code>Foldable</code>.
+</li>
+<li>
+New operations <code>weighted</code>, <code>weightedMay</code>, <code>fromListMay</code>, and <code>uniformMay</code> have been added. <code>weighted</code> is like <code>fromList</code> but generalized to work over any <code>Foldable</code>. The <code>May</code> variants, of course, return a <code>Maybe</code> result instead of raising an error.
+</li>
+</ul>
+</li>
+<li>
+<p>
+New lazy vs strict variants of the <code>Rand</code> monad. If you import <code>Control.Monad.Random</code> or <code>Control.Monad.Trans.Random</code> you get the <code>Lazy</code> variant re-exported by default, but you can explicitly import <code>.Lazy</code> or <code>.Strict</code> if you want. They provide the exact same API, but <code>Lazy</code> is implemented with a lazy state monad and <code>Strict</code> with a strict one. To be honest it’s not clear what difference this might make, but since the distinction is already there with the underlying state monad for free, why not provide it?
+</p>
+</li>
+</ul>
+<p>
+Although there was some discussion of generalizing <code>MonadRandom</code> to work for a wider range of underlying generators (see the <a href="https://byorgey.wordpress.com/2016/11/16/monadrandom-0-5-and-mwc-random-feedback-wanted/">comments on my previous blog post</a> and the <a href="https://github.com/byorgey/MonadRandom/issues/26">discussion on issue #26</a>), I decided to punt on that for now. It seems rather complicated, and that there are already good alternatives like the very nice <a href="http://hackage.haskell.org/package/random-fu"><code>random-fu</code> package</a>, so I decided to keep things simple for this release. I’m still open to proposals for generalizing future releases.
+</p>
+<p>
+For a full rundown of changes in 0.5, see <a href="https://github.com/byorgey/MonadRandom/blob/master/CHANGES.markdown">the change log</a>. Comments, questions, and bug reports are always welcome either as a comment on this blog post or on the <a href="https://github.com/byorgey/MonadRandom/issues">GitHub issue tracker</a>.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

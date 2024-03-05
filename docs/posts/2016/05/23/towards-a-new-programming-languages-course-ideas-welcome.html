@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Towards a new programming languages course: ideas welcome!</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2016/05/19/how-to-print-things.html">« How to print things</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2016/06/20/any-clues-about-this-newton-iteration-formula-with-jacobian-matrix.html">» Any clues about this Newton iteration formula with Jacobian matrix?</a>
+
+</span>
+
+
+<h1>Towards a new programming languages course: ideas welcome!</h1>
+
+<div class="info">
+  Posted on May 23, 2016
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'course'." href="../../../../tag/course.html" rel="tag">course</a>, <a title="All pages tagged 'design'." href="../../../../tag/design.html" rel="tag">design</a>, <a title="All pages tagged 'languages'." href="../../../../tag/languages.html" rel="tag">languages</a>, <a title="All pages tagged 'programming'." href="../../../../tag/programming.html" rel="tag">programming</a>
+  
+</div>
+
+<section>
+<p>
+<strong>tl;dr</strong>: <em>This fall, I will be teaching an undergraduate PL course, with a focus on practical language design principles and tools. Feedback, questions, assignments you can share with me, etc. are all most welcome!</em>
+</p>
+<p>
+This fall, I will be teaching an undergraduate course on programming languages. It’s eminently sensible to ask a new hire to take on a course in their specialty, and one might think I would be thrilled. But in a way, I am dreading it.
+</p>
+<p>
+It’s my own fault, really. In my hubris, I have decided that I don’t like the ways that PL courses are typically taught. So this summer I have to buckle down and actually design the course I <em>do</em> want to teach. It’s not that I’m dreading the course itself, but rather the amount of work it will take to create it!
+</p>
+<p>
+I’m not a big fan of the sort of “survey of programming languages” course that gets taught a lot, where you spend three or four weeks on each of three or four different languages. I am not sure that students really learn much from the experience (though I would be happy to hear any reports to the contrary). At best it feels sort of like making students “eat their vegetables”—it’s not much fun but it will make them grow big and strong in some general sense.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> It’s unlikely that students will ever use the surveyed languages again. You might hope that students will think to use the surveyed languages later in their career <em>because</em> they were exposed to them in the course; but I doubt it, because three or four weeks is hardly enough to get any real sense for a language and where it might be useful. I think the only real argument for this sort of course is that it “exposes students to new ways of thinking”. While that is certainly true, and exposing students to new ways of thinking is important—essentially every class should be doing it, in one way or another—I think there are better ways to go about it.
+</p>
+<p>
+In short, I want to design a course that will <em>not only</em> expose students to new ideas and ways of thinking, but will <em>also</em> give them some practical skills that they might actually use in their career. I started by considering the question: what does the field of programming languages uniquely have to offer to students that is both intellecually worthwhile (by my own standards) and valuable to them? Specifically, I want to consider students who go on to do something <em>other</em> than be an academic in PL: what do I want the next generation of software developers and academics in other fields to understand about programming languages?
+</p>
+<p>
+A lightbulb finally turned on for me when I realized that while the average software developer will probably never use, say, Prolog, they almost certainly <em>will</em> develop a domain-specific language at some point—quite possibly without even realizing they are doing it! In fact, if we include <em>embedded</em> domain-specific languages, then in essence, anyone <em>developing any API at all</em> is creating a language. Even if you don’t want to extend the idea of “embedded domain-specific language” quite that far, the point is that <strong>the tools and ideas of language design are widely applicable</strong>. Giving students practice designing and implementing languages will make them better programmers.
+</p>
+<p>
+So I want my course to focus on language design, encompassing both big ideas (type systems, semantics) as well as concrete tools (parsing, ASTs, type checking, interpreters). We will use a functional programming language (specifically, Haskell) for several reasons: to expose the students to a programming paradigm very different from the languages they already know (mainly Java and Python); because FP languages make a great platform for starting to talk about types; and because FP languages also make a great platform for building language-related tools like parsers, type checkers, <em>etc.</em> and for building embedded domain-specific languages. Notably, however, we will <em>only</em> use Haskell: though we will probably <em>study</em> other types of languages, we will ues Haskell as a medium for our study, <em>e.g.</em> by implementing simplified versions of them in Haskell. So while the students will be exposed to a number of <em>ideas</em> there is really only one concrete <em>language</em> they will be exposed to. The hope is that by working in a single language all semester, the students may actually end up with enough experience in the language that they really do go on to use it again later.
+</p>
+<p>
+As an aside, an interesting challenge/opportunity comes from the fact that approximately half the students in the class will have already taken my functional programming class this past spring, and will therefore be familiar with Haskell. On the challenge side, how do I teach Haskell to the other half of the class without boring the half that already knows it? Part of the answer might lie in emphasis: I will be highlighting very different aspects of the language from those I covered in my FP course, though of course there will necessarily be overlap. On the opportunity side, however, I can also ask: how can I take advantage of the fact that half the class will already know Haskell? For example, can I design things in such a way that they help the other half of the class get up to speed more quickly?
+</p>
+<p>
+In any case, here’s my current (very!) rough outline for the semester:
+</p>
+<ol style="list-style-type:decimal;">
+<li>
+Introduction to FP (Haskell) (3 weeks)
+</li>
+<li>
+Type systems &amp; foundations (2-3 weeks)
+<ul>
+<li>
+lambda calculus
+</li>
+<li>
+type systems
+</li>
+</ul>
+</li>
+<li>
+Tools for language design and implementation (4 weeks)
+<ul>
+<li>
+(lexing &amp;) parsing, ASTs
+</li>
+<li>
+typechecking
+</li>
+<li>
+interpreters
+</li>
+<li>
+(very very basics of) compilers (this is not a compilers course!)
+</li>
+</ul>
+</li>
+<li>
+Domain-specific languages (3 weeks)
+</li>
+<li>
+Social aspects? (1 week)
+<ul>
+<li>
+language communities
+</li>
+<li>
+language adoption
+</li>
+</ul>
+</li>
+</ol>
+<p>
+My task for the rest of the summer is to develop a more concrete curriculum, and to design some projects. This will likely be a project-based course, where the majority of the points will be concentrated in a few big projects—partly because the nature of the course lends itself well to larger projects, and partly to keep me sane (I will be teaching two other courses at the same time, and having lots of small assignments constantly due is like death by a thousand cuts).
+</p>
+<p>
+I would love feedback of any kind. Do you think this is a great idea, or a terrible one? Have you, or anyone you know of, ever run a similar course? Do you have any appropriate assignments you’d like to share with me?
+</p>
+<div id="refs" class="references" role="list">
+
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+Actually, I love vegetables, but anyway.<a href="#fnref1">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

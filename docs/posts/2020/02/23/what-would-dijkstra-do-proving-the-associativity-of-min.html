@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - What would Dijkstra do? Proving the associativity of min</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1.html">« Competitive Programming in Haskell: modular arithmetic, part 1</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2020/03/03/competitive-programming-in-haskell-modular-arithmetic-part-2.html">» Competitive Programming in Haskell: modular arithmetic, part 2</a>
+
+</span>
+
+
+<h1>What would Dijkstra do? Proving the associativity of min</h1>
+
+<div class="info">
+  Posted on February 23, 2020
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'associativity'." href="../../../../tag/associativity.html" rel="tag">associativity</a>, <a title="All pages tagged 'calculation'." href="../../../../tag/calculation.html" rel="tag">calculation</a>, <a title="All pages tagged 'Dijkstra'." href="../../../../tag/Dijkstra.html" rel="tag">Dijkstra</a>, <a title="All pages tagged 'meet'." href="../../../../tag/meet.html" rel="tag">meet</a>, <a title="All pages tagged 'min'." href="../../../../tag/min.html" rel="tag">min</a>, <a title="All pages tagged 'poset'." href="../../../../tag/poset.html" rel="tag">poset</a>, <a title="All pages tagged 'proof'." href="../../../../tag/proof.html" rel="tag">proof</a>
+  
+</div>
+
+<section>
+<p>
+This semester I’m teaching a Discrete Mathematics course. Recently, I assigned them a homework problem from the textbook that asked them to prove that the binary <span class="math inline">\(\min\)</span> operator on the real numbers is associative, that is, for all real numbers <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, and <span class="math inline">\(c\)</span>,
+</p>
+<div style="text-align:center;">
+<p>
+<span class="math inline">\(\min(a, \min(b,c)) = \min(\min(a,b), c)\)</span>.
+</p>
+</div>
+<p>
+You might like to pause for a minute to think about how you would prove this! Of course, how you prove it depends on how you define <span class="math inline">\(\min\)</span>, so you might like to think about that too.
+</p>
+<p>
+The book expected them to do a proof by cases, with some sort of case split on the order of <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, and <span class="math inline">\(c\)</span>. What they turned in was mostly pretty good, actually, but while grading it I became disgusted with the whole thing and thought there has to be a better way.
+</p>
+<p>
+I was reminded of an example of Dijkstra’s that I remember reading. So I asked myself—what would Dijkstra do? The thing I remember reading may have, in fact, been this exact proof, but I couldn’t remember any details and I still can’t find it now, so I had to (re-)work out the details, guided only by some vague intuitions.
+</p>
+<p>
+Dijkstra would certainly advocate proving associativity of <span class="math inline">\(\min\)</span> using a calculational approach. Dijkstra would also advocate using a symmetric infix operator symbol for a commutative and associative operation, so let’s adopt the symbol <span class="math inline">\(\downarrow\)</span> for <span class="math inline">\(\min\)</span>. (<span class="math inline">\(\sqcap\)</span> would also be a reasonable choice, though I find it less mnemonic.)
+</p>
+<p>
+How can we calculate with <span class="math inline">\(\downarrow\)</span>? We have to come up with some way to characterize it that allows us to transform expressions involving <span class="math inline">\(\downarrow\)</span> into something else more fundamental. The most obvious definition would be “<span class="math inline">\(a \downarrow b = a\)</span> if <span class="math inline">\(a \leq b\)</span>, and <span class="math inline">\(b\)</span> otherwise”. However, although this is a fantastic <em>implementation</em> of <span class="math inline">\(\downarrow\)</span> if you actually want to run it, it is not so great for reasoning about <span class="math inline">\(\downarrow\)</span>, precisely because it involves doing a case split on whether <span class="math inline">\(a \leq b\)</span>. This is the definition that leads to the ugly proof by cases.
+</p>
+<p>
+How else could we define it? The usual more mathematically sophisticated way to define it would be as a greatest lower bound, that is, “<span class="math inline">\(x = a \downarrow b\)</span> if and only if <span class="math inline">\(x \leq a\)</span> and <span class="math inline">\(x \leq b\)</span> and <span class="math inline">\(x\)</span> is the greatest such number, that is, for any other <span class="math inline">\(y\)</span> such that <span class="math inline">\(y \leq a\)</span> and <span class="math inline">\(y \leq b\)</span>, we have <span class="math inline">\(y \leq x\)</span>.” However, this is a bit roundabout and also not so conducive to calculation.
+</p>
+<p>
+My first epiphany was that the best way to characterize <span class="math inline">\(\downarrow\)</span> is by its relationship to <span class="math inline">\(\leq\)</span>. After one or two abortive attempts, I hit upon the right idea:
+</p>
+<p>
+<span class="math inline">\((a \leq b \downarrow c) \leftrightarrow (a \leq b \land a \leq c)\)</span>
+</p>
+<p>
+That is, an arbitrary <span class="math inline">\(a\)</span> is less than or equal to the minimum of <span class="math inline">\(b\)</span> and <span class="math inline">\(c\)</span> precisely when it is less than or equal to both. In fact, this completely characterizes <span class="math inline">\(\downarrow\)</span>, and is equivalent to the second definition given above.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> (You should try convincing yourself of this!)
+</p>
+<p>
+But how do we get anywhere from <span class="math inline">\(a \downarrow (b \downarrow c)\)</span> by itself? We need to somehow introduce a thing which is less than or equal to it, so we can apply our characterization. My second epiphany was that equality of real numbers can also be characterized by having the same “downsets”, <em>i.e.</em> two real numbers are equal if and only if the sets of real numbers less than or equal to them are the same. That is,
+</p>
+<p>
+<span class="math inline">\((x = y) \leftrightarrow (\forall z.\; (z \leq x) \leftrightarrow (z \leq y))\)</span>
+</p>
+<p>
+Now the proof almost writes itself. Let <span class="math inline">\(z \in \mathbb{R}\)</span> be arbitrary; we calculate as follows:
+</p>
+<p>
+<span class="math inline">\(\begin{array}{cl} &amp;amp; z \leq a \downarrow (b \downarrow c) \\ \leftrightarrow &amp;amp; \\ &amp;amp; z \leq a \land (z \leq b \downarrow c) \\ \leftrightarrow &amp;amp; \\ &amp;amp; z \leq a \land (z \leq b \land z \leq c) \\ \leftrightarrow &amp;amp; \\ &amp;amp; (z \leq a \land z \leq b) \land z \leq c \\ \leftrightarrow &amp;amp; \\ &amp;amp; (z \leq a \downarrow b) \land z \leq c \\ \leftrightarrow &amp;amp; \\ &amp;amp; z \leq (a \downarrow b) \downarrow c \end{array}\)</span>
+</p>
+<p>
+Of course this uses our characterization of <span class="math inline">\(\downarrow\)</span> via its relationship to <span class="math inline">\(\leq\)</span>, along with the fact that <span class="math inline">\(\land\)</span> is associative. Since we have proven that <span class="math inline">\(z \leq a \downarrow (b \downarrow c)\)</span> if and only if <span class="math inline">\(z \leq (a \downarrow b) \downarrow c\)</span> for arbitrary <span class="math inline">\(z\)</span>, therefore <span class="math inline">\(a \downarrow (b \downarrow c) = (a \downarrow b) \downarrow c\)</span>.
+</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+Thinking about it later, I realized that this should not be surprising: it’s just characterizing <span class="math inline">\(\downarrow\)</span> as the categorical product, <em>i.e.</em> meet, <em>i.e.</em> greatest lower bound, in the poset of real numbers ordered by the usual <span class="math inline">\(\leq\)</span>.<a href="#fnref1" class="footnote-back">↩︎</a>
+</p>
+</li>
+</ol>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

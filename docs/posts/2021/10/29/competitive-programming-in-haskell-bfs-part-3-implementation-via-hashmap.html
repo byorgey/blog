@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: BFS, part 3 (implementation via HashMap)</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2021/10/18/competitive-programming-in-haskell-bfs-part-2-alternative-apis.html">« Competitive programming in Haskell: BFS, part 2 (alternative APIs)</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2021/11/15/competitive-programming-in-haskell-enumeration.html">» Competitive programming in Haskell: Enumeration</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: BFS, part 3 (implementation via HashMap)</h1>
+
+<div class="info">
+  Posted on October 29, 2021
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'BFS'." href="../../../../tag/BFS.html" rel="tag">BFS</a>, <a title="All pages tagged 'graph'." href="../../../../tag/graph.html" rel="tag">graph</a>, <a title="All pages tagged 'HashMap'." href="../../../../tag/HashMap.html" rel="tag">HashMap</a>, <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'search'." href="../../../../tag/search.html" rel="tag">search</a>
+  
+</div>
+
+<section>
+<p>
+In <a href="https://byorgey.wordpress.com/2021/10/14/competitive-programming-in-haskell-bfs-part-1/">a previous post</a>, I showed how we can solve <a href="https://open.kattis.com/problems/modulosolitaire">Modulo Solitaire</a> (and hopefully other BFS problems as well) using a certain API for BFS, and we also <a href="https://byorgey.wordpress.com/2021/10/18/competitive-programming-in-haskell-bfs-part-2-alternative-apis/">explored some alternatives</a>. I had a very interesting discussion with <a href="https://blogs.ncl.ac.uk/andreymokhov/about/">Andrey Mokhov</a> in the comments about potential designs for an even more general API; more on that in a future post, perhaps!
+</p>
+<p>
+For today, though, I want to finally show one way to implement this API efficiently. Spoiler alert: this implementation ultimately won’t be fast enough for us, but it will be a helpful stepping stone on our way to a yet faster implementation (which will of course get its own post in due time).
+</p>
+<p>
+This post is literate Haskell; you can <a href="https://hub.darcs.net/byorgey/byorgey-wordpress/browse/comprog-hs/22-BFS-impl-HashMap.lhs">obtain the source from the darcs repo</a>. We begin with a few <code>LANGUAGE</code> pragmas and imports.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: green">{-# LANGUAGE RecordWildCards            #-}</span>
+<span style="color: green">{-# LANGUAGE ScopedTypeVariables        #-}</span>
+<span style="color: green">{-# LANGUAGE TupleSections              #-}</span>
+
+<span style="color: blue;font-weight: bold">module</span> <span>BFS</span> <span style="color: blue;font-weight: bold">where</span>
+
+<span style="color: blue;font-weight: bold">import</span>           <span>Control.Arrow</span>               <span style="color: red">(</span><span style="color: red">(</span><span>&gt;&gt;&gt;</span><span style="color: red">)</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span>           <span>Data.Hashable</span>               <span style="color: red">(</span><span>Hashable</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span>           <span>Data.HashMap.Strict</span>         <span style="color: red">(</span><span>HashMap</span><span style="color: red">,</span> <span style="color: red">(</span><span>!</span><span style="color: red">)</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span> <span style="color: blue;font-weight: bold">qualified</span> <span>Data.HashMap.Strict</span>         <span style="color: blue;font-weight: bold">as</span> <span>HM</span>
+<span style="color: blue;font-weight: bold">import</span>           <span>Data.List</span>                   <span style="color: red">(</span><span>foldl'</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span>           <span>Data.Sequence</span>               <span style="color: red">(</span><span>Seq</span> <span style="color: red">(</span><span style="color: red">..</span><span style="color: red">)</span><span style="color: red">,</span> <span>ViewL</span> <span style="color: red">(</span><span style="color: red">..</span><span style="color: red">)</span><span style="color: red">,</span> <span style="color: red">(</span><span>|&gt;</span><span style="color: red">)</span><span style="color: red">)</span>
+<span style="color: blue;font-weight: bold">import</span> <span style="color: blue;font-weight: bold">qualified</span> <span>Data.Sequence</span>               <span style="color: blue;font-weight: bold">as</span> <span>Seq</span></code></pre>
+<p>
+<p>Now a couple utility functions: <code>(&gt;<span class="math inline">\(&amp;gt;)&lt;/code&gt; is just flipped function application, and &lt;code&gt;exhaust&lt;/code&gt; iterates an &lt;code&gt;(a -&amp;gt; Maybe a)&lt;/code&gt; function as many times as possible, returning the last non-&lt;code&gt;Nothing&lt;/code&gt; value.&lt;/p&gt; &lt;pre class=&quot;sourceCode haskell&quot;&gt;&lt;code class=&quot;sourceCode haskell&quot;&gt;&lt;span style=&quot;color: blue;font-weight: bold&quot;&gt;infixl&lt;/span&gt; &lt;span class=&quot;hs-num&quot;&gt;0&lt;/span&gt; &lt;span&gt;&amp;gt;\)</span>&gt;</span>
+<span style="color: red">(</span><span>&gt;<span class="math inline">\(&amp;gt;&lt;/span&gt;&lt;span style=&quot;color: red&quot;&gt;)&lt;/span&gt; &lt;span style=&quot;color: red&quot;&gt;::&lt;/span&gt; &lt;span&gt;a&lt;/span&gt; &lt;span style=&quot;color: red&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span style=&quot;color: red&quot;&gt;(&lt;/span&gt;&lt;span&gt;a&lt;/span&gt; &lt;span style=&quot;color: red&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span&gt;b&lt;/span&gt;&lt;span style=&quot;color: red&quot;&gt;)&lt;/span&gt; &lt;span style=&quot;color: red&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span&gt;b&lt;/span&gt; &lt;span style=&quot;color: red&quot;&gt;(&lt;/span&gt;&lt;span&gt;&amp;gt;\)</span>&gt;</span><span style="color: red">)</span> <span style="color: red">=</span> <span>flip</span> <span style="color: red">(</span><span><span class="math inline">\(&lt;/span&gt;&lt;span style=&quot;color: red&quot;&gt;)&lt;/span&gt; &lt;span style=&quot;color: green&quot;&gt;{-# INLINE (&amp;gt;\)</span>&gt;) #-}</span></p>
+<span>exhaust</span> <span style="color: red">::</span> <span style="color: red">(</span><span>a</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span>a</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>a</span> <span style="color: red">-&gt;</span> <span>a</span>
+<span>exhaust</span> <span>f</span> <span style="color: red">=</span> <span>go</span>
+<span style="color: blue;font-weight: bold">where</span>
+<span>go</span> <span>a</span> <span style="color: red">=</span> <span>maybe</span> <span>a</span> <span>go</span> <span style="color: red">(</span><span>f</span> <span>a</span><span style="color: red">)</span></code>
+</pre>
+<p>
+Here is the <code>BFSResult</code> record that we ultimately want to produce; it should be familiar from previous posts.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>BFSResult</span> <span>v</span> <span style="color: red">=</span>
+  <span>BFSR</span> <span style="color: red">{</span> <span>getLevel</span> <span style="color: red">::</span> <span>v</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span>Int</span><span style="color: red">,</span> <span>getParent</span> <span style="color: red">::</span> <span>v</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span>v</span> <span style="color: red">}</span></code></pre>
+<p>
+While running our BFS, we’ll keep track of three things: the level of each vertex that has been encountered; a mapping from each encountered vertex to its parent; and a queue of vertices that have been encountered but yet to be processed. We use a <code>Seq</code> from <a href="https://hackage.haskell.org/package/containers-0.6.5.1/docs/Data-Sequence.html"><code>Data.Sequence</code></a> to represent the queue, since it supports efficient (amortized constant-time) insertion and removal from either end of the sequence. There are certainly other potential ways to represent a queue in Haskell (and this probably deserves its own blog post) but <code>Data.Sequence</code> seems to give good performance for minimal effort (and in any case, as we’ll see, it’s not the performance bottleneck here). We use a pair of <code>HashMap</code>s to represent the <code>level</code> and <code>parent</code> maps.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>BFSState</span> <span>v</span> <span style="color: red">=</span>
+  <span>BS</span> <span style="color: red">{</span> <span>level</span> <span style="color: red">::</span> <span>HashMap</span> <span>v</span> <span>Int</span><span style="color: red">,</span> <span>parent</span> <span style="color: red">::</span> <span>HashMap</span> <span>v</span> <span>v</span><span style="color: red">,</span> <span>queue</span> <span style="color: red">::</span> <span>Seq</span> <span>v</span> <span style="color: red">}</span></code></pre>
+<p>
+Given a list of starting vertices, we can create an initial state, with a queue containing the starting vertices and all of them set to level 0.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>initBFSState</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Eq</span> <span>v</span><span style="color: red">,</span> <span>Hashable</span> <span>v</span><span style="color: red">)</span> <span style="color: red">=&gt;</span> <span style="color: red">[</span><span>v</span><span style="color: red">]</span> <span style="color: red">-&gt;</span> <span>BFSState</span> <span>v</span>
+<span>initBFSState</span> <span>vs</span> <span style="color: red">=</span> <span>BS</span> <span style="color: red">(</span><span>HM.fromList</span> <span style="color: red">(</span><span>map</span> <span style="color: red">(</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span> <span>vs</span><span style="color: red">)</span><span style="color: red">)</span> <span>HM.empty</span> <span style="color: red">(</span><span>Seq.fromList</span> <span>vs</span><span style="color: red">)</span></code></pre>
+<p>
+Now, here is our imeplementation of BFS, using the API discussed previously: it takes a list of starting vertices, a function giving the neighbors of each vertex, and a function identifying “target vertices” (so we can stop early), and returns a <code>BFSResult</code> record. We create an initial state, run <code>bfsStep</code> as much as possible, and convert the end state into a result.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>bfs</span> <span style="color: red">::</span> <span style="color: blue;font-weight: bold">forall</span> <span>v</span><span>.</span> <span style="color: red">(</span><span>Eq</span> <span>v</span><span style="color: red">,</span> <span>Hashable</span> <span>v</span><span style="color: red">)</span> <span style="color: red">=&gt;</span> <span style="color: red">[</span><span>v</span><span style="color: red">]</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>v</span> <span style="color: red">-&gt;</span> <span style="color: red">[</span><span>v</span><span style="color: red">]</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>v</span> <span style="color: red">-&gt;</span> <span>Bool</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>BFSResult</span> <span>v</span>
+<span>bfs</span> <span>vs</span> <span>next</span> <span>goal</span> <span style="color: red">=</span> <span>toResult</span> <span>$</span> <span>exhaust</span> <span>bfsStep</span> <span style="color: red">(</span><span>initBFSState</span> <span>vs</span><span style="color: red">)</span>
+  <span style="color: blue;font-weight: bold">where</span></code></pre>
+<p>
+Converting the final <code>BFSState</code> into a <code>BFSResult</code> is easy: just return functions that do a <code>lookup</code> into the relevant map.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>toResult</span> <span>BS</span><span style="color: red">{</span><span style="color: red">..</span><span style="color: red">}</span> <span style="color: red">=</span> <span>BFSR</span> <span style="color: red">(</span><span>`HM.lookup`</span> <span>level</span><span style="color: red">)</span> <span style="color: red">(</span><span>`HM.lookup`</span> <span>parent</span><span style="color: red">)</span></code></pre>
+<p>
+To do a single step of BFS, try to remove the next vertex <code>v</code> from the queue. If the queue is empty, or the next vertex is a goal vertex, return <code>Nothing</code> to signal that we are done.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>bfsStep</span> <span>st</span><span style="color: red">@</span><span>BS</span><span style="color: red">{</span><span style="color: red">..</span><span style="color: red">}</span> <span style="color: red">=</span> <span style="color: blue;font-weight: bold">case</span> <span>Seq.viewl</span> <span>queue</span> <span style="color: blue;font-weight: bold">of</span>
+      <span>EmptyL</span> <span style="color: red">-&gt;</span> <span>Nothing</span>
+      <span>v</span> <span>:&lt;</span> <span>q'</span>
+        <span style="color: red">|</span> <span>goal</span> <span>v</span>    <span style="color: red">-&gt;</span> <span>Nothing</span></code></pre>
+<p>
+Otherwise, use the <code>next</code> function to find the neighbors of <code>v</code>, keep only those we haven’t encountered before (<em>i.e.</em> those which are not keys in the <code>level</code> map), and use each one to update the BFS state (being sure to first set the queue to the new one with <code>v</code> removed).
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">        <span style="color: red">|</span> <span>otherwise</span> <span style="color: red">-&gt;</span>
+          <span>v</span> <span>&gt;$&gt;</span> <span>next</span> <span>&gt;&gt;&gt;</span> <span>filter</span> <span style="color: red">(</span><span>not</span> <span>.</span> <span style="color: red">(</span><span>`HM.member`</span> <span>level</span><span style="color: red">)</span><span style="color: red">)</span> <span>&gt;&gt;&gt;</span>
+            <span>foldl'</span> <span style="color: red">(</span><span>upd</span> <span>v</span><span style="color: red">)</span> <span style="color: red">(</span><span>st</span><span style="color: red">{</span><span>queue</span><span style="color: red">=</span><span>q'</span><span style="color: red">}</span><span style="color: red">)</span> <span>&gt;&gt;&gt;</span> <span>Just</span></code></pre>
+<p>
+To update the BFS state based on a newly visited vertex, we record its parent, insert it into the <code>level</code> map with a level one greater than its parent, and add it to the end of the queue.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>upd</span> <span>p</span> <span>BS</span><span style="color: red">{</span><span style="color: red">..</span><span style="color: red">}</span> <span>v</span> <span style="color: red">=</span> <span>BS</span>
+      <span style="color: red">(</span><span>HM.insert</span> <span>v</span> <span>l</span> <span>level</span><span style="color: red">)</span>
+      <span style="color: red">(</span><span>HM.insert</span> <span>v</span> <span>p</span> <span>parent</span><span style="color: red">)</span>
+      <span style="color: red">(</span><span>queue</span> <span>|&gt;</span> <span>v</span><span style="color: red">)</span>
+      <span style="color: blue;font-weight: bold">where</span>
+        <span>l</span> <span style="color: red">=</span> <span>level</span><span>!</span><span>p</span> <span>+</span> <span class="hs-num">1</span></code></pre>
+<p>
+And that’s it! This is good enough to solve many BFS problems on Open Kattis, such as <a href="https://open.kattis.com/problems/breakingbad">Breaking Bad</a>, <a href="https://open.kattis.com/problems/armpitcomputations">ARMPIT Computations</a>, and <a href="https://open.kattis.com/problems/foldingacube">Folding a Cube</a>. (I will leave you the pleasure of solving these problems yourself; I am especially fond of my Haskell solution to Folding a Cube.)
+</p>
+<p>
+Unfortunately, it is not fast enough to solve Modulo Solitaire, which I picked specifically because it seems to be one of the most computationally demanding BFS problems I’ve seen. My solution using this <code>HashMap</code>-based implementation solves a bunch of initial test cases, but exceeds the 2 second time limit on one of the later test cases. Next time, I’ll show how to adapt this into an even faster implementation which is actually fast enough to solve Modulo Solitaire.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

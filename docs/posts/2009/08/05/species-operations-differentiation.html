@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Species operations: differentiation</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2009/07/31/primitive-species-and-species-operations-part-ii.html">« Primitive species and species operations, part II</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2009/08/09/going-on-vacation.html">» Going on vacation</a>
+
+</span>
+
+
+<h1>Species operations: differentiation</h1>
+
+<div class="info">
+  Posted on August  6, 2009
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'combinatorial species'." href="../../../../tag/combinatorial%20species.html" rel="tag">combinatorial species</a>, <a title="All pages tagged 'differentiation'." href="../../../../tag/differentiation.html" rel="tag">differentiation</a>
+  
+</div>
+
+<section>
+<p>Continuing my series describing my new <a href="http://hackage.haskell.org/package/species">combinatorial species library</a>, today we’ll take a look at the operation of <i>differentiation</i>.</p>
+<p>You may remember that the <code>Species</code> type class has an <code>Algebra.Differential</code> constraint, which, <a href="http://byorgey.wordpress.com/2009/07/30/primitive-species-and-species-operations/">as I previously explained</a>, transitively implies an <code>Algebra.Ring</code> constraint. But we haven’t yet talked about the <code>Differential</code> contraint itself, which requires a method <code>differentiate :: Species s =&gt; s -&gt; s</code> (which I will abbreviate using the standard “prime” notation), which should satisfy</p>
+<p><span class="math inline">\((x * y)' \equiv x' * y + x * y'\)</span></p>
+<p>(up to isomorphism). Okay, this is just the normal product rule for differentiation, from calculus—but what on earth could such a thing mean <i>combinatorially</i>?</p>
+<p>There is actually a nice, simple answer: an <span class="math inline">\(F'\)</span>-structure on the underlying set <span class="math inline">\(U\)</span> consists of an <span class="math inline">\(F\)</span>-structure on <span class="math inline">\(U \cup \{*\}\)</span>, where <span class="math inline">\(*\)</span> is a distinguished element distinct from all the elements of <span class="math inline">\(U\)</span>. To make the connection to <a href="http://en.wikibooks.org/wiki/Haskell/Zippers#Differentiation_of_data_types">data type differentiation</a>, we can also think of <span class="math inline">\(*\)</span> as a “hole”.</p>
+<p>[caption id=“attachment_271” align=“aligncenter” width=“400” caption=“Species differentiation”]<img src="http://byorgey.files.wordpress.com/2009/08/diff.png" alt="Species differentiation" title="diff" width="400" height="92" class="size-full wp-image-271" />[/caption]</p>
+<p>The above diagram illustrates the situation: an <span class="math inline">\(F'\)</span>-structure on <span class="math inline">\(\{1,2,3,4,5\}\)</span> is an <span class="math inline">\(F\)</span>-structure on <span class="math inline">\(\{1,2,3,4,5,*\}\)</span>.</p>
+<p>And how about the law <span class="math inline">\((F * G)' \equiv F' * G + F * G'\)</span>? Does this make combinatorial sense? (You may want to stop and think about it before reading on!)</p>
+<p>By definition, an <span class="math inline">\((F * G)'\)</span>-structure on <span class="math inline">\(U\)</span> is an <span class="math inline">\((F*G)\)</span>-structure on <span class="math inline">\(U \cup \{*\}\)</span>, which is a pair of an <span class="math inline">\(F\)</span>-structure and a <span class="math inline">\(G\)</span>-structure on a splitting (a two-partition) of <span class="math inline">\(U \cup \{*\}\)</span>. The distinguished <span class="math inline">\(*\)</span> label must end up on one side or the other, so an <span class="math inline">\((F*G)'\)</span>-structure can arise in one of two ways: it is either an <span class="math inline">\(F'\)</span>-structure paired with a <span class="math inline">\(G\)</span>-structure, or an <span class="math inline">\(F\)</span>-structure paired with a <span class="math inline">\(G'\)</span>-structure, depending on where the <span class="math inline">\(*\)</span> ends up. But this is precisely saying that <span class="math inline">\((F * G)' \equiv F' * G + F * G'\)</span>!</p>
+<p>Where does species differentiation show up? The most well-known place is in defining the species <span class="math inline">\(L\)</span> of <i>lists</i> (linear orderings). In fact,</p>
+<p><span class="math inline">\(L = C'\)</span>,</p>
+<p>that is, the species <span class="math inline">\(L\)</span> is the derivative of the <a href="http://byorgey.wordpress.com/2009/07/31/primitive-species-and-species-operations-part-ii/">species <span class="math inline">\(C\)</span> of cycles</a>. A cycle defines an ordering, but there is no distinguished beginning or end; by making a cycle out of some elements with a distinguished extra element <span class="math inline">\(*\)</span>, we uniquely identify a beginning/end of the ordering on the original elements: a list!</p>
+<p>[caption id=“attachment_274” align=“aligncenter” width=“400” caption=“Differentiating a cycle to get a list”]<img src="http://byorgey.files.wordpress.com/2009/08/cyclediff.png" alt="Differentiating a cycle to get a list" title="cyclediff" width="400" height="137" class="size-full wp-image-274" />[/caption]</p>
+<p><code>
+&gt; take 10 . labelled $ lists
+[1,1,2,6,24,120,720,5040,40320,362880]
+&gt; take 10 . labelled $ oneHole cycles
+[1,1,2,6,24,120,720,5040,40320,362880]
+&gt; generate lists ([1..3] :: [Int])
+[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+&gt; generate (oneHole cycles) ([1..3] :: [Int])
+[&lt;<em>,1,2,3&gt;,&lt;</em>,1,3,2&gt;,&lt;<em>,2,1,3&gt;,&lt;</em>,2,3,1&gt;,&lt;<em>,3,1,2&gt;,&lt;</em>,3,2,1&gt;]
+</code></p>
+<p>Here’s an example of differentiation in action. In the species library, the function <code>oneHole</code> is provided as a synonym for <code>differentiate</code>. The session above shows that there are the same number of labelled lists as labelled one-hole cycles: this isn’t surprising given the discussion above, and in fact, <code>list</code> is actually implemented as <code>oneHole cycle</code>. Actually, this is a tiny lie, as the rest of the session shows: since lists are such a common combinatorial structure, there is a special case for them in the generation code. But we can explicitly generate one-hole cycles as above; it’s easy to see that they are in one-to-one correspondence with the lists.</p>
+To finish off this post, a few exercises for you (you can check your answers with the species library):
+<ol>
+<li>
+Describe the species <span class="math inline">\(1'\)</span>.
+</li>
+<li>
+Describe the species <span class="math inline">\(X'\)</span>.
+</li>
+<li>
+Describe the species <span class="math inline">\(E'\)</span>.
+</li>
+<li>
+Does differentiation distribute over addition? That is, is it true that <span class="math inline">\((F + G)' \equiv F' + G'\)</span> for any species <span class="math inline">\(F\)</span> and <span class="math inline">\(G\)</span>? Give a combinatorial interpretation of this identity, or say why it does not hold.
+</li>
+<li>
+Describe the species <span class="math inline">\(L'\)</span>.
+</li>
+<li>
+Describe the species <span class="math inline">\(C^{(n)}\)</span> (i.e. the nth derivative of the species of cycles).
+</li>
+</ol>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

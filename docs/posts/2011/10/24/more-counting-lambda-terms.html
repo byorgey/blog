@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - More counting lambda terms</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2011/10/23/announcing-diagrams-0-4.html">« Announcing diagrams-0.4</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2011/11/05/wanted-ghc-feature-warn-about-unused-constraints.html">» Wanted GHC feature: warn about unused constraints</a>
+
+</span>
+
+
+<h1>More counting lambda terms</h1>
+
+<div class="info">
+  Posted on October 24, 2011
+  
+  
+  <br />
+  Tagged 
+  
+</div>
+
+<section>
+<p>
+Yesterday someone <a href="http://byorgey.wordpress.com/2011/01/26/counting-linear-lambda-terms/#comment-8575">submitted a comment</a> to an old post of mine about counting linear lambda terms, asking the following question:
+</p>
+<blockquote>
+<p>
+I am interested in a similar problem: given a natural number N, what is the number of different symply-typed closed lambda terms with size smaller than N?
+</p>
+<p>
+They don’t need to be observationally different. They should be different modulo renaming of variables and types, though. So:
+</p>
+<p>
+lambda x^A.x and lambda y^B.y
+</p>
+<p>
+should be considered the same…
+</p>
+Do you know where I can find the answer? Answers using any kind of size measurement would be fine for me…
+</blockquote>
+<p>
+It’s an interesting question, and I thought it would make for a good way to illustrate one of my favorite techniques when trying to research a combinatorial question like this. Namely, write a program to compute the first few values by brute force, then look it up in the <a href="http://oeis.org">Online Encyclopedia of Integer Sequences</a> and follow the references.
+</p>
+<p>
+Let’s start with <em>untyped</em> lambda calculus terms.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">module</span> <span>CountSTLC</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>Nat</span> <span style="color:red;">=</span> <span>Int</span>  <span style="color:green;">-- just pretend</span>
+</code></pre>
+<p>
+A type for deBruijn-indexed lambda terms.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Tm</span> <span style="color:red;">=</span> <span>Var</span> <span>Nat</span>
+<span>&gt;</span>         <span style="color:red;">|</span> <span>App</span> <span>Tm</span> <span>Tm</span>
+<span>&gt;</span>         <span style="color:red;">|</span> <span>Lam</span> <span>Tm</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">,</span> <span>Show</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+We’ll define the <em>size</em> of a term as the number of constructors used by its representation in the above data type.
+</p>
+<pre><code><span>&gt;</span> <span>size</span> <span style="color:red;">::</span> <span>Tm</span> <span style="color:red;">-&gt;</span> <span>Nat</span>
+<span>&gt;</span> <span>size</span> <span style="color:red;">(</span><span>Var</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>     <span style="color:red;">=</span> <span class="hs-num">1</span>
+<span>&gt;</span> <span>size</span> <span style="color:red;">(</span><span>App</span> <span>t1</span> <span>t2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span class="hs-num">1</span> <span>+</span> <span>size</span> <span>t1</span> <span>+</span> <span>size</span> <span>t2</span>
+<span>&gt;</span> <span>size</span> <span style="color:red;">(</span><span>Lam</span> <span>t</span><span style="color:red;">)</span>     <span style="color:red;">=</span> <span class="hs-num">1</span> <span>+</span> <span>size</span> <span>t</span>
+</code></pre>
+<p>
+Here’s a function to generate all the closed <code>Tm</code>s of a given size. We pass along an index giving the current level of nesting (so we know what variables are available).
+</p>
+<pre><code><span>&gt;</span> <span>genAll</span> <span style="color:red;">::</span> <span>Nat</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Tm</span><span style="color:red;">]</span>
+<span>&gt;</span> <span>genAll</span> <span style="color:red;">=</span> <span>genAll'</span> <span class="hs-num">0</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">where</span>
+</code></pre>
+<p>
+There are no terms of size zero (or smaller).
+</p>
+<pre><code><span>&gt;</span>     <span>genAll'</span> <span style="color:blue;font-weight:bold;">_</span>   <span>n</span> <span style="color:red;">|</span> <span>n</span> <span>&lt;=</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>[]</span>
+</code></pre>
+<p>
+The only terms of size 1 are variables. We can choose to refer to any of the currently enclosing lambdas.
+</p>
+<pre><code><span>&gt;</span>     <span>genAll'</span> <span>ctx</span> <span class="hs-num">1</span> <span style="color:red;">=</span> <span>map</span> <span>Var</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">..</span> <span>ctx</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">]</span>
+</code></pre>
+<p>
+Otherwise, we could have an application (splitting the available size between the two sides in all possible ways) or a lambda (remembering to increment the nesting level).
+</p>
+<pre><code><span>&gt;</span>     <span>genAll'</span> <span>ctx</span> <span>n</span> <span style="color:red;">=</span> <span style="color:red;">[</span> <span>App</span> <span>t1</span> <span>t2</span> 
+<span>&gt;</span>                     <span style="color:red;">|</span> <span>n1</span> <span style="color:red;">&lt;-</span> <span style="color:red;">[</span><span class="hs-num">1</span> <span style="color:red;">..</span> <span>n</span><span style="color:green;">-</span><span class="hs-num">2</span><span style="color:red;">]</span>
+<span>&gt;</span>                     <span style="color:red;">,</span> <span>t1</span> <span style="color:red;">&lt;-</span> <span>genAll'</span> <span>ctx</span> <span>n1</span>
+<span>&gt;</span>                     <span style="color:red;">,</span> <span>t2</span> <span style="color:red;">&lt;-</span> <span>genAll'</span> <span>ctx</span> <span style="color:red;">(</span><span>n</span> <span style="color:green;">-</span> <span>n1</span> <span style="color:green;">-</span> <span class="hs-num">1</span><span style="color:red;">)</span>
+<span>&gt;</span>                     <span style="color:red;">]</span>
+<span>&gt;</span>                  <span>++</span> <span style="color:red;">(</span><span>map</span> <span>Lam</span> <span style="color:red;">(</span><span>genAll'</span> <span style="color:red;">(</span><span>succ</span> <span>ctx</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">)</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+Let’s see what we get:
+</p>
+<pre><code>*CountSTLC&gt; genAll 4
+[ Lam (App (Var 0) (Var 0))
+, Lam (Lam (Lam (Var 0)))
+, Lam (Lam (Lam (Var 1)))
+, Lam (Lam (Lam (Var 2)))
+]</code></pre>
+<p>
+Looks reasonable: there are four closed lambda terms of size 4. Now let’s count:
+</p>
+<pre><code>*CountSTLC&gt; map (length . genAll) [1..10]
+[0,1,2,4,13,42,139,506,1915,7558]</code></pre>
+<p>
+Searching for this sequence on OEIS turns up <a href="http://oeis.org/A135501">something promising</a>, with a bit of information including a formula for computing the counts directly. It also has a link to someone’s research but unfortunately it seems dead. But it does have the email address of the person who submitted this sequence, and emailing him might be a good start!
+</p>
+<p>
+This is all well and good, but the commenter actually asked for <em>simply typed</em> lambda calculus terms. The first size-4 lambda term above is not well-typed, since it involves a self-application. Can we modify our program to only generate well-typed lambda terms? This seems much more difficult. I may write about it in a future post. For now I’ll leave it as an exercise for the interested and motivated reader!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

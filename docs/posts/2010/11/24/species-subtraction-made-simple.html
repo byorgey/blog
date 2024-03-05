@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Species subtraction made simple</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2010/11/20/things-i-have-learned-about-vector-spaces.html">« Things I have learned about vector spaces</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2010/12/03/typed-type-level-programming-status-report.html">» Typed type-level programming: status report</a>
+
+</span>
+
+
+<h1>Species subtraction made simple</h1>
+
+<div class="info">
+  Posted on November 25, 2010
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'data'." href="../../../../tag/data.html" rel="tag">data</a>, <a title="All pages tagged 'integers'." href="../../../../tag/integers.html" rel="tag">integers</a>, <a title="All pages tagged 'natural'." href="../../../../tag/natural.html" rel="tag">natural</a>, <a title="All pages tagged 'numbers'." href="../../../../tag/numbers.html" rel="tag">numbers</a>, <a title="All pages tagged 'species'." href="../../../../tag/species.html" rel="tag">species</a>, <a title="All pages tagged 'structures'." href="../../../../tag/structures.html" rel="tag">structures</a>, <a title="All pages tagged 'subtraction'." href="../../../../tag/subtraction.html" rel="tag">subtraction</a>
+  
+</div>
+
+<section>
+<pre><code><span>&gt;</span> <span style="color:green;">{-# OPTIONS_GHC -fno-warn-missing-methods #-}</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">module</span> <span>Virtual</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Applicative</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Test</span><span>.</span><span>QuickCheck</span>
+</code></pre>
+<p>
+Yesterday on #haskell, augur asked me to explain how subtraction works for combinatorial species. (For an introduction to species, see my <a href="http://ozark.hendrix.edu/~yorgey/pub/species-pearl.pdf">paper from the 2010 Haskell Symposium</a>.) For example, given the equation
+</p>
+<p>
+<span class="math inline">\(M = 1 + X\)</span>
+</p>
+<p>
+defining the species <span class="math inline">\(M\)</span> (which corresponds to the Haskell type constructor <code>Maybe</code>), our algebraic sensibilities tell us this can be rewritten as
+</p>
+<p>
+<span class="math inline">\(X = M - 1\)</span>
+</p>
+<p>
+but can we make sense of this combinatorially? Addition has an obvious combinatorial interpretation (disjoint union), and so does multiplication (pairing), but what does subtraction mean? Once we allow subtraction, we have to assign meaning to expressions like <code>Void - Bool</code>, which apparently must be a species with negative two inhabitants. What on earth could that mean!? Combinatorics is all about <em>counting</em> things; we can have zero structures, or one structure, or seventy-three structures, but surely we can’t have a negative number of structures, can we?
+</p>
+<div id="building-the-integers">
+<h2>
+Building the Integers
+</h2>
+<p>
+Let’s start with a slight detour to talk about natural numbers and integers. Here’s a standard Haskell definition of the naturals:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Nat</span> <span style="color:red;">=</span> <span>Z</span> <span style="color:red;">|</span> <span>S</span> <span>Nat</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Show</span><span style="color:red;">,</span> <span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+Note that the auto-derived <code>Eq</code> and <code>Ord</code> instances have exactly the right behavior (in the latter case due to the fact that we happened to list the <code>Z</code> constructor first).
+</p>
+<pre><code>*Virtual&gt; S (S Z) == S (S Z)
+True
+*Virtual&gt; S Z == S (S Z)
+False
+*Virtual&gt; S (S Z) &lt; S Z
+False</code></pre>
+<p>
+We can do arithmetic on natural numbers, implemented via a <code>Num</code> instance:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Num</span> <span>Nat</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>Z</span>   <span>+</span> <span>n</span> <span style="color:red;">=</span> <span>n</span>
+<span>&gt;</span>   <span>S</span> <span>m</span> <span>+</span> <span>n</span> <span style="color:red;">=</span> <span>S</span> <span style="color:red;">(</span><span>m</span> <span>+</span> <span>n</span><span style="color:red;">)</span> 
+<span>&gt;</span> 
+<span>&gt;</span>   <span>Z</span>   <span>*</span> <span>n</span> <span style="color:red;">=</span> <span>Z</span>
+<span>&gt;</span>   <span>S</span> <span>m</span> <span>*</span> <span>n</span> <span style="color:red;">=</span> <span>n</span> <span>+</span> <span>m</span> <span>*</span> <span>n</span>
+<span>&gt;</span> 
+<span>&gt;</span>   <span style="color:red;">(</span><span style="color:green;">-</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>error</span> <span style="color:teal;">"Subtraction! What's that?"</span>
+<span>&gt;</span> 
+<span>&gt;</span>   <span>fromInteger</span> <span>n</span> <span style="color:red;">|</span> <span>n</span> <span>&lt;</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>error</span> <span style="color:teal;">"No can do."</span>
+<span>&gt;</span>   <span>fromInteger</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>Z</span>
+<span>&gt;</span>   <span>fromInteger</span> <span>n</span> <span style="color:red;">=</span> <span>S</span> <span style="color:red;">(</span><span>fromInteger</span> <span style="color:red;">(</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> 
+<span>&gt;</span>   <span>negate</span> <span style="color:red;">=</span> <span>error</span> <span style="color:teal;">"Huh?"</span>
+<span>&gt;</span>   <span>abs</span> <span style="color:red;">=</span> <span>id</span>
+</code></pre>
+<p>
+It seems to work:
+</p>
+<pre><code>*Virtual&gt; 1 + 3 :: Nat
+S (S (S (S Z)))</code></pre>
+<p>
+As much as I dislike <code>Num</code>, in this particular instance it is actually useful to illustrate an important point about <code>Nat</code>, namely, that subtraction (and, more fundamentally, negation) are not defined for natural numbers. (Of course, we could implement a <em>partial</em> subtraction operation, but we’d like to stick to total functions as much as possible.) We have no way to implement <code>(-)</code> or <code>negate</code>, and we even have problems with <code>fromInteger</code> if the input is negative.
+</p>
+<p>
+But what if we were crazy enough to actually want negation and subtraction? How should we generalize the natural numbers? Our first instinct might be to define something like
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>I'</span> <span style="color:red;">=</span> <span>Pos</span> <span>Nat</span> <span style="color:red;">|</span> <span>Neg</span> <span>Nat</span>
+</code></pre>
+<p>
+but this is annoying for a number of reasons. There are two different representations of zero (and having <code>Neg Z</code> represent <code>-1</code>, and so on, is too hideous to even mention (whoops)). Code to work with values of this type would also be ugly: lots of case analysis on <code>Pos</code> and <code>Neg</code> constructors with very similar code duplicated in each case. And we’re going to have to implement subtraction pretty much from scratch; there’s no good way to reuse the machinery we’ve already built for working with natural numbers.
+</p>
+<p>
+However, there’s a much better way. No subtraction? No problem! We’ll just treat subtraction as a <em>new syntactic construct</em>.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>I</span> <span style="color:red;">=</span> <span>Nat</span> <span>:-</span> <span>Nat</span>
+<span>&gt;</span>   <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span>
+</code></pre>
+<p>
+That is, a value of type <code>I</code> is a pair of <code>Nat</code>s, thought of as their difference. Why call it <code>I</code>? Well, observe that any integer, positive or negative, can be represented in this way, as a difference of two natural numbers. For example, <code>-2</code> can be represented by the pair <code>3 :- 5</code>. So this <em>is</em> our representation of integers!
+</p>
+<p>
+Of course, <code>-2</code> can also be represented by <code>4 :- 6</code>, or <code>0 :- 2</code>, or a countably infinite number of other choices. We really want to deal with <em>equivalence classes</em> of these pairs, so the first task is to decide on the proper equivalence. When are the pairs <code>p1 :- n1</code> and <code>p2 :- n2</code> equivalent? Well… when the difference between <code>p1</code> and <code>n1</code> is the same as the difference between <code>p2</code> and <code>n2</code>! This is circular, of course, since we are in the process of defining what “difference” means. But a moment’s thought reveals that we can reexpress this using only addition:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Eq</span> <span>I</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>p1</span> <span>:-</span> <span>n1</span> <span>==</span> <span>p2</span> <span>:-</span> <span>n2</span>  <span style="color:red;">=</span>  <span>p1</span> <span>+</span> <span>n2</span> <span>==</span> <span>p2</span> <span>+</span> <span>n1</span>
+</code></pre>
+<p>
+In fact, our equivalence extends naturally to an ordering as well:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Ord</span> <span>I</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>compare</span> <span style="color:red;">(</span><span>p1</span> <span>:-</span> <span>n1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>p2</span> <span>:-</span> <span>n2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>compare</span> <span style="color:red;">(</span><span>p1</span> <span>+</span> <span>n2</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>p2</span> <span>+</span> <span>n1</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+How about arithmetic? To add two integers, we just add their positive and negative parts pointwise; multiplication works by distributing out the product and collecting up the positive and negative parts; negation is just a flip:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Num</span> <span>I</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span style="color:red;">(</span><span>p1</span> <span>:-</span> <span>n1</span><span style="color:red;">)</span> <span>+</span> <span style="color:red;">(</span><span>p2</span> <span>:-</span> <span>n2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>p1</span> <span>+</span> <span>p2</span><span style="color:red;">)</span> <span>:-</span> <span style="color:red;">(</span><span>n1</span> <span>+</span> <span>n2</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span style="color:red;">(</span><span>p1</span> <span>:-</span> <span>n1</span><span style="color:red;">)</span> <span>*</span> <span style="color:red;">(</span><span>p2</span> <span>:-</span> <span>n2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>p1</span> <span>*</span> <span>p2</span> <span>+</span> <span>n1</span> <span>*</span> <span>n2</span><span style="color:red;">)</span> <span>:-</span> <span style="color:red;">(</span><span>p1</span> <span>*</span> <span>n2</span> <span>+</span> <span>p2</span> <span>*</span> <span>n1</span><span style="color:red;">)</span>
+<span>&gt;</span>   <span>negate</span> <span style="color:red;">(</span><span>p</span> <span>:-</span> <span>n</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>n</span> <span>:-</span> <span>p</span>
+<span>&gt;</span>   <span>fromInteger</span> <span>n</span> <span style="color:red;">|</span> <span>n</span> <span>&lt;</span> <span class="hs-num">0</span>     <span style="color:red;">=</span> <span>Z</span> <span>:-</span> <span>fromInteger</span> <span style="color:red;">(</span><span style="color:green;">-</span><span>n</span><span style="color:red;">)</span>
+<span>&gt;</span>                 <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span>fromInteger</span> <span>n</span> <span>:-</span> <span>Z</span>
+<span>&gt;</span>   <span>abs</span> <span>i</span> <span style="color:red;">|</span> <span>i</span> <span>&gt;</span> <span class="hs-num">0</span>     <span style="color:red;">=</span>  <span>i</span>
+<span>&gt;</span>         <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span style="color:green;">-</span><span>i</span>
+</code></pre>
+<p>
+Let’s see if it works:
+</p>
+<pre><code>*Virtual&gt; (-4) :: I
+Z :- S (S (S (S Z)))
+*Virtual&gt; 2 + 4 + (-3) :: I
+S (S (S (S (S (S Z))))) :- S (S (S Z))
+*Virtual&gt; canonicalize it
+S (S (S Z)) :- Z
+*Virtual&gt; 2 - 5 :: I
+S (S Z) :- S (S (S (S (S Z))))
+*Virtual&gt; canonicalize it
+Z :- S (S (S Z))                      </code></pre>
+<p>
+Seems to! Another important point is that we can inject the naturals into this new setting,
+</p>
+<pre><code><span>&gt;</span> <span>n2i</span> <span style="color:red;">::</span> <span>Nat</span> <span style="color:red;">-&gt;</span> <span>I</span>
+<span>&gt;</span> <span>n2i</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>:-</span> <span class="hs-num">0</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+and this injection is a <em>semiring homomorphism</em>: that is, adding (or multiplying) two <code>Nat</code>s and applying <code>n2i</code> to the result is the same (up to equality on <code>I</code>) as first applying <code>n2i</code> to each and then adding (or multiplying) the resulting <code>I</code> values. But you don’t have to take my word for it:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Arbitrary</span> <span>Nat</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>arbitrary</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>fromInteger</span> <span>.</span> <span>unNN</span><span style="color:red;">)</span> <span>`fmap`</span> <span>arbitrary</span>
+<span>&gt;</span>     <span style="color:blue;font-weight:bold;">where</span> <span>unNN</span> <span style="color:red;">(</span><span>NonNegative</span> <span>x</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>x</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Arbitrary</span> <span>I</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>arbitrary</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>:-</span><span style="color:red;">)</span> <span></span> <span>arbitrary</span> <span></span> <span>arbitrary</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>prop_n2i_hom_add</span> <span>i</span> <span>j</span> <span style="color:red;">=</span> <span>n2i</span> <span style="color:red;">(</span><span>i</span><span>+</span><span>j</span><span style="color:red;">)</span> <span>==</span> <span>n2i</span> <span>i</span> <span>+</span> <span>n2i</span> <span>j</span>
+<span>&gt;</span> <span>prop_n2i_hom_mul</span> <span>i</span> <span>j</span> <span style="color:red;">=</span> <span>n2i</span> <span style="color:red;">(</span><span>i</span><span>*</span><span>j</span><span style="color:red;">)</span> <span>==</span> <span>n2i</span> <span>i</span> <span>*</span> <span>n2i</span> <span>j</span>
+</code></pre>
+<pre><code>*Virtual&gt; quickCheck prop_n2i_hom_add
++++ OK, passed 100 tests.
+*Virtual&gt; quickCheck prop_n2i_hom_mul
++++ OK, passed 100 tests.</code></pre>
+<p>
+It is also not hard to choose a canonical representative from each equivalence class of <code>I</code> values, namely, the pairs where at least one of the elements is zero. Here’s a function that returns the canonical representative corresponding to any value:
+</p>
+<pre><code><span>&gt;</span> <span>canonicalize</span> <span style="color:red;">::</span> <span>I</span> <span style="color:red;">-&gt;</span> <span>I</span>
+<span>&gt;</span> <span>canonicalize</span> <span>i</span><span style="color:red;">@</span><span style="color:red;">(</span><span>Z</span> <span>:-</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>i</span>
+<span>&gt;</span> <span>canonicalize</span> <span>i</span><span style="color:red;">@</span><span style="color:red;">(</span><span style="color:blue;font-weight:bold;">_</span> <span>:-</span> <span>Z</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>i</span>
+<span>&gt;</span> <span>canonicalize</span> <span style="color:red;">(</span><span>S</span> <span>m</span> <span>:-</span> <span>S</span> <span>n</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>canonicalize</span> <span style="color:red;">(</span><span>m</span> <span>:-</span> <span>n</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+We can use <code>canonicalize</code> to write a (partial) projection from integers back to naturals. To check whether an integer actually corresponds to a natural, just canonicalize it and check whether its negative component is zero:
+</p>
+<pre><code><span>&gt;</span> <span>i2n</span> <span style="color:red;">::</span> <span>I</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span>Nat</span>
+<span>&gt;</span> <span>i2n</span> <span>i</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">case</span> <span>canonicalize</span> <span>i</span> <span style="color:blue;font-weight:bold;">of</span>
+<span>&gt;</span>           <span style="color:red;">(</span><span>n</span> <span>:-</span> <span>Z</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>Just</span> <span>n</span>
+<span>&gt;</span>           <span style="color:blue;font-weight:bold;">_</span>        <span style="color:red;">-&gt;</span> <span>Nothing</span>
+</code></pre>
+<p>
+Although <code>i2n</code> is partial, it is <em>complete</em>:
+</p>
+<pre><code><span>&gt;</span> <span>prop_i2n_complete</span> <span>n</span> <span style="color:red;">=</span> <span>i2n</span> <span style="color:red;">(</span><span>n2i</span> <span>n</span><span style="color:red;">)</span> <span>==</span> <span>Just</span> <span>n</span>
+</code></pre>
+<pre><code>*Virtual&gt; quickCheck prop_i2n_complete 
++++ OK, passed 100 tests.</code></pre>
+<p>
+The result of all this is that we can assign meaning to arbitrary expressions involving natural numbers, addition, multiplication, <em>and subtraction</em>, by first injecting all the naturals into our type for integers. What’s more, we have a method for deciding whether the final result is actually the image of a natural number.
+</p>
+<pre><code>*Virtual&gt; 7 - 3 :: Nat
+*** Exception: Subtraction! What's that?
+*Virtual&gt; i2n (7 - 3) :: Maybe Nat
+Just (S (S (S (S Z))))</code></pre>
+</div>
+<div id="virtual-species">
+<h2>
+Virtual Species
+</h2>
+<p>
+So what was the point of talking about natural numbers and integers? We were supposed to be talking about combinatorial species, right?
+</p>
+<p>
+Well, it turns out that we <em>were</em> talking about combinatorial species, since they include the natural numbers as a sub-semiring. The point is that the whole construction outlined above can be generalized to work over the entire semiring of species. In particular, we define <em>virtual species</em> to be equivalence classes of pairs of species <span class="math inline">\((P, N)\)</span>, where <span class="math inline">\(P\)</span> is considered “positive” and <span class="math inline">\(N\)</span> “negative”. <span class="math inline">\((P_1, N_1)\)</span> and <span class="math inline">\((P_2, N_2)\)</span> are equivalent if <span class="math inline">\(P_1 + N_2 \cong P_2 + N_1\)</span> (where <span class="math inline">\(\cong\)</span> denotes species isomorphism). Addition and multiplication for virtual species are defined in exactly the same way as we did for integers.
+</p>
+<p>
+And what about <code>canonicalize</code>? Does something similar exist for virtual species? The answer, as it turns out, is <em>yes</em>, and this is a rather big deal! This blog post is too short to contain the details (they could probably make another post or three), but the key theorem is that every species can be decomposed uniquely into a sum of species of a special type known as <em>molecular</em> species. To canonicalize a virtual species we need only decompose both its positive and negative parts, and cancel any molecular species we find on both sides. Unlike integers, canonical virtual species do not necessarily have the zero species on one side or the other (that is, there exist “complex” virtual species which are not purely positive or negative). However, injection of species into the ring of virtual species does of course work by pairing with the zero species, and this injection is a semiring homomorphism as we would expect. Other species operations (such as differentiation and cartesian product) can also be extended to virtual species in a way compatible with this injection.
+</p>
+<p>
+So to our original species expression <span class="math inline">\(M - 1\)</span> we can assign the virtual species <span class="math inline">\((M,1)\)</span>. Of course, this is not canonical; unsurprisingly, the molecular decomposition of <span class="math inline">\(M\)</span> is <span class="math inline">\(1 + X\)</span>, so canceling the <span class="math inline">\(1\)</span> gives us the canonical (and strictly positive) species <span class="math inline">\((X,0)\)</span>, as expected.
+</p>
+<p>
+Here, however, is where the similarity to naturals and integers ends. Virtual species give us a lot more additional structure over species than integers do over naturals. For example, integers don’t give us any sort of multiplicative inverses for naturals; for that we need another round of completion to obtain the rationals. Surprisingly, it turns out that virtual species already provide multiplicative inverses for “most” species! This allows us to assign meaning to expressions such as <span class="math inline">\(\frac{1}{1 - X}\)</span>. Perhaps this should be the subject of another blog post…
+</p>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

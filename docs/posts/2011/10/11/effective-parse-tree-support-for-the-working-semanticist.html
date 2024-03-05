@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Effective parse tree support for the working semanticist</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2011/09/10/diagrams-repos-now-mirrored-on-github.html">« diagrams repos now mirrored on github!</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2011/10/23/announcing-diagrams-0-4.html">» Announcing diagrams-0.4</a>
+
+</span>
+
+
+<h1>Effective parse tree support for the working semanticist</h1>
+
+<div class="info">
+  Posted on October 11, 2011
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'ambiguous'." href="../../../../tag/ambiguous.html" rel="tag">ambiguous</a>, <a title="All pages tagged 'grammar'." href="../../../../tag/grammar.html" rel="tag">grammar</a>, <a title="All pages tagged 'Ott'." href="../../../../tag/Ott.html" rel="tag">Ott</a>, <a title="All pages tagged 'parse'." href="../../../../tag/parse.html" rel="tag">parse</a>, <a title="All pages tagged 'pretty'." href="../../../../tag/pretty.html" rel="tag">pretty</a>, <a title="All pages tagged 'tree'." href="../../../../tag/tree.html" rel="tag">tree</a>
+  
+</div>
+
+<section>
+<p>If, like me, you spend large amounts of time designing, discussing, and proving things about programming languages and formal calculi, chances are you have used <a href="http://www.cl.cam.ac.uk/~pes20/ott/" title="Ott">Ott</a> (and if you do, but you haven’t, you are really missing out). You write down a formal system once, in a special format that Ott understands, and Ott typechecks it and can automatically generate nice LaTeX as well as code for proof assistants like Coq or Isabelle.</p>
+<p>However, anyone who has worked with Ott is familiar with is the dreaded ambiguous parse error. Quite often Ott grammars end up being ambiguous, and Ott needs some guidance to know which parse you want. However, the error messages are horrendous: Ott spews forth several massive parse trees in a format requiring formidable patience to read. Finding the slight differences between two such parse trees is an exercise in seizure-inducing tedium.</p>
+<p>I got sick of this so I wrote a little tool to help, which is now available on Hackage: <a href="http://hackage.haskell.org/package/ottparse%2Dpretty" title="ottparse-pretty">ottparse-pretty</a>. You paste in an Ott parse tree and it shows it to you in a nicely formatted tree view with a bunch of useless cruft removed. For example, it turns this:</p>
+<p><code>
+(St_node :formula:formula_judgement: (Ste_st (St_node :judgement:judgement_Jtype: (Ste_st
+(St_node :Jtype:coerce: (Ste_st (St_nonterm G)) (Ste_st (St_nonterm g)) (Ste_st (St_node
+:s:T_MultiTypeApp: (Ste_st (St_node :s:T_EqTy: (Ste_st (St_node :s:T_MultiTypeApp: (Ste_st
+(St_node :s:T_MultiKindApp: (Ste_st (St_node :s:T_Cons: (Ste_st (St_nonterm H)))) (Ste_st
+(St_nonterm k)))) (Ste_st (St_nonterm t)))) (Ste_st (St_node :s:T_MultiKindApp: (Ste_st
+(St_node :s:T_Cons: (Ste_st (St_nonterm H)))) (Ste_st (St_nonterm k)))))) (Ste_st (St_nonterm
+t’)))))))))
+</code></p>
+<p>into this:</p>
+<code>
+<pre>
+formula_judgement
+|
+`- judgement_Jtype
+   |
+   `- coerce
+      |
+      +- G
+      |
+      +- g
+      |
+      `- T_MultiTypeApp
+         |
+         +- T_EqTy
+         |  |
+         |  +- T_MultiTypeApp
+         |  |  |
+         |  |  +- T_MultiKindApp
+         |  |  |  |
+         |  |  |  +- T_Cons
+         |  |  |  |  |
+         |  |  |  |  `- H
+         |  |  |  |
+         |  |  |  `- k
+         |  |  |
+         |  |  `- t
+         |  |
+         |  `- T_MultiKindApp
+         |     |
+         |     +- T_Cons
+         |     |  |
+         |     |  `- H
+         |     |
+         |     `- k
+         |
+         `- t'
+</pre>
+<p></code></p>
+<p>It’s pretty simplistic at the moment—I may add more features depending on feedback. But it’s been useful for me so it seemed worth packaging it up in case it’s useful to anyone else.</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

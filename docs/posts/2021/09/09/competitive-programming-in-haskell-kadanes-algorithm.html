@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: Kadane’s algorithm</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2021/09/08/implementing-hindley-milner-with-the-unification-fd-library.html">« Implementing Hindley-Milner with the unification-fd library</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2021/09/17/automatically-updated-cached-views-with-lens.html">» Automatically updated, cached views with lens</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: Kadane’s algorithm</h1>
+
+<div class="info">
+  Posted on September  9, 2021
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'maximum'." href="../../../../tag/maximum.html" rel="tag">maximum</a>, <a title="All pages tagged 'subsequence'." href="../../../../tag/subsequence.html" rel="tag">subsequence</a>, <a title="All pages tagged 'sum'." href="../../../../tag/sum.html" rel="tag">sum</a>
+  
+</div>
+
+<section>
+<p>
+<em>I will be giving a talk on competitive programming in Haskell tomorrow, September 10, at <a href="https://haskell.love/">Haskell Love</a>. You should attend! It’s free!</em>
+</p>
+<p>
+In <a href="https://byorgey.wordpress.com/2021/08/11/competitive-programming-in-haskell-monoidal-accumulation/">my last competitive programming post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/purplerain">Purple Rain</a>. We are presented with a linear sequence of cells, each colored either red or blue, and we are supposed to find the (contiguous) segment of cells with the maximal absolute difference between the number of red and blue. For example, below is shown one of the sample inputs, with the solution highlighted: the segment from cell 3 to cell 7 (the cells are numbered from 1) has four red cells compared to only one blue, for an absolute difference of three. You can verify that no other segment does better.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2021/09/881dcb8a62a2e18a.png" />
+</p>
+</div>
+<h2 id="transforming-the-problem">
+Transforming the problem
+</h2>
+<p>
+The obvious way to do this is to generate a list of all segments, compute the absolute difference between the number of red and blue cells for each, and take the maximum. However, that approach is doomed to exceed the time limit in any programming language: it would take <span class="math inline">\(O(n^3)\)</span> time (<span class="math inline">\(O(n^2)\)</span> possible segments times <span class="math inline">\(O(n)\)</span> to sum each one), and the problem states that <span class="math inline">\(n\)</span> can be up to <span class="math inline">\(10^5\)</span>. With <span class="math inline">\(10^8\)</span> operations per second as a good rule of thumb, <span class="math inline">\(O(n^3)\)</span> with <span class="math inline">\(n = 10^5\)</span> is clearly too slow. (In fact, any time you see an input size of <span class="math inline">\(10^5\)</span>, it is a dead giveaway that you are expected to find an <span class="math inline">\(O(n)\)</span> or <span class="math inline">\(O(n \lg n)\)</span> solution. <span class="math inline">\(10^5\)</span> is big enough to make an <span class="math inline">\(O(n^2)\)</span> solution prohibitively slow, but not so big that I/O itself becomes the bottleneck.)
+</p>
+<p>
+The first insight is that we can transform this into the classic problem of finding the <em>maximum sum subarray</em> (also known as the <em>maximum segment sum</em>; either way I will abbreviate it as MSS) in two steps: first, turn each red cell into a 1, and each blue into -1. The sum of a segment then tells us how many more red than blue cells there are. Now, we actually want the biggest <em>absolute</em> difference between red and blue; but if we have an algorithm to find the MSS we can just run it twice: once to find the maximum excess of red over blue, and again with 1 and -1 flipped to find the maximum excess of blue over red.
+</p>
+<p>
+The MSS problem has a long history in the functional programming community, being one of the flagship problems to demonstrate the techniques of program derivation in the style of the <a href="https://en.wikipedia.org/wiki/Bird%E2%80%93Meertens_formalism">Bird-Meertens Formalism, aka Squiggol</a> and <a href="https://www.goodreads.com/book/show/2727190-algebra-of-programming">The Algebra of Programming</a>. It is possible to start out with a naive-but-obviously-correct <span class="math inline">\(O(n^3)\)</span> implementation, and do a series of equational transformations to turn it into an efficient <span class="math inline">\(O(n)\)</span> algorithm! If you’ve never seen that kind of thing before, I highly recommend checking it out; the Wikipedia page on the Bird-Meertens Formalism, linked above, is a good place to start. Certainly getting good at such derivations can be a handy skill when doing competitive programming in Haskell. But in any case, today I want to approach the problem from a different point of view, namely, coming up with a good functional equivalent to an existing imperative algorithm.
+</p>
+<h2 id="kadanes-algorithm">
+Kadane’s algorithm
+</h2>
+<p>
+<a href="https://en.wikipedia.org/wiki/Maximum_subarray_problem#Kadane's_algorithm">Kadane’s algorithm</a>, first proposed by <a href="http://www.stat.cmu.edu/~kadane/">Jay Kadane</a> sometime in the late 1970s, is a linear-time algorithm for solving the MSS problem. It is actually quite simple to implement (the tricky part is understanding why it works!).
+</p>
+<p>
+The idea is to loop through an array while keeping track of two things: a current value <code>cur</code>, and a <code>best</code> value. The <code>best</code> value is just the greatest value <code>cur</code> has ever taken on, so keeping it updated is easy: on every loop, we compare <code>cur</code> to <code>best</code>, and save the value of <code>cur</code> into <code>best</code> if it is higher. To keep <code>cur</code> updated, we simply add each new array value to it—but if it ever falls below zero, we just reset <code>cur</code> to zero. Here is some Java code:
+</p>
+<div class="sourceCode">
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="dt">static</span> <span class="dt">int</span> <span class="fu">kadane</span>(<span class="dt">int</span>[] a) {
+    <span class="dt">int</span> best = <span class="dv">0</span>, cur = <span class="dv">0</span>;
+    <span class="kw">for</span> (<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; a.<span class="fu">length</span>; i++) {
+        cur += a[i];
+        <span class="kw">if</span> (cur &lt; <span class="dv">0</span>) cur = <span class="dv">0</span>;
+        <span class="kw">if</span> (cur &gt; best) best = cur;
+    }
+   <span class="kw">return</span> best;
+}</code></pre>
+</div>
+<p>
+Again, it is not at all obvious why this works, though putting in the effort to understand a proof is well worth the time. That is not the purpose of this blog post, however, so I’ll leave you to read about it on your own!
+</p>
+<h2 id="translating-kadanes-algorithm-to-haskell">
+Translating Kadane’s algorithm to Haskell
+</h2>
+<p>
+In the imperative version, we iterate through a list, keep track of a current value, and also keep track of the best value we have seen so far. It is possible to translate this directly to Haskell: create a record with two fields, one for the current thing and one for the best thing, then iterate through the list with <code>foldl’</code>, doing the appropriate update at each step:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>State</span> <span>s</span> <span style="color:red;">=</span> <span>State</span> <span style="color:red;">{</span> <span>curThing</span> <span style="color:red;">::</span> <span>s</span><span style="color:red;">,</span> <span>bestThing</span> <span style="color:red;">::</span> <span>s</span> <span style="color:red;">}</span>
+
+<span style="color:green;">-- Given a way to update the current s value with the next list</span>
+<span style="color:green;">-- element of type a, update a State s value which keeps track of the</span>
+<span style="color:green;">-- current s value as well as the best s value seen so far.</span>
+<span>step</span> <span style="color:red;">::</span> <span>Ord</span> <span>s</span> <span style="color:red;">=&gt;</span> <span style="color:red;">(</span><span>s</span> <span style="color:red;">-&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>State</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>State</span> <span>s</span><span style="color:red;">)</span>
+<span>step</span> <span>update</span> <span style="color:red;">(</span><span>State</span> <span>cur</span> <span>best</span><span style="color:red;">)</span> <span>a</span> <span style="color:red;">=</span> <span>State</span> <span>next</span> <span style="color:red;">(</span><span>max</span> <span>best</span> <span>next</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>next</span> <span style="color:red;">=</span> <span>update</span> <span>cur</span> <span>a</span>
+
+<span>bestIntermediate</span> <span style="color:red;">::</span> <span>Ord</span> <span>s</span> <span style="color:red;">=&gt;</span> <span style="color:red;">(</span><span>s</span> <span style="color:red;">-&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>s</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>bestIntermediate</span> <span>update</span> <span>init</span> <span style="color:red;">=</span> <span>bestThing</span> <span>.</span> <span>foldl'</span> <span style="color:red;">(</span><span>step</span> <span>update</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>State</span> <span>init</span> <span>init</span><span style="color:red;">)</span></code></pre>
+<p>
+But there’s a much better way! Note that the <code>update</code> function has the right type to be used with <code>foldl’</code>. But if we just computed <code>foldl’ update init</code> directly, we would get only the single <code>s</code> value at the very end. But our goal is to get the best out of all the <em>intermediate</em> values. No problem: a scan is just a fold that returns all the intermediate values instead of only the final one! So instead of all this complicated and quasi-imperative <code>State</code> stuff, we just do a <code>scanl’</code> followed by taking the <code>maximum</code>:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>bestIntermediate</span> <span style="color:red;">::</span> <span>Ord</span> <span>s</span> <span style="color:red;">=&gt;</span> <span style="color:red;">(</span><span>s</span> <span style="color:red;">-&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>s</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>bestIntermediate</span> <span>update</span> <span>init</span> <span style="color:red;">=</span> <span>maximum</span> <span>.</span> <span>scanl'</span> <span>update</span> <span>init</span></code></pre>
+<p>
+Ah, much better! Using <code>bestIntermediate</code>, we can now translate Kadane’s algorithm as follows:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>kadane1</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>kadane1</span> <span style="color:red;">=</span> <span>bestIntermediate</span> <span>next</span> <span class="hs-num">0</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>next</span> <span>s</span> <span>a</span> <span style="color:red;">=</span> <span>max</span> <span class="hs-num">0</span> <span style="color:red;">(</span><span>s</span> <span>+</span> <span>a</span><span style="color:red;">)</span></code></pre>
+<p>
+Whenever I write down an algorithm like this in Haskell—<em>especially</em> if I have “translated” it from an existing, imperative algorithm—I like to figure out how I can generalize it as much as possible. What structure is assumed of the inputs that makes the algorithm work? Can we replace some concrete monomorphic types with polymorphic ones? What type class constraints are needed? Often these sorts of generalizations make for supposedly tricky competitive programming problems. For example, if you have only ever seen Dijkstra’s algorithm presented in terms of finding shortest paths by summing edge weights, it takes quite a bit of insight to realize that the algorithm really just finds the “best” path with respect to operations that play nicely with each other in certain ways. For example, if we use the operations <code>max</code> and <code>min</code> in place of <code>min</code> and <code>(+)</code>, Dijkstra’s algorithm finds the path with the maximum bottleneck. (This will probably end up being its own blog post at some point…)
+</p>
+<p>
+Anyway, how can we generalize <code>kadane1</code>? The obvious starting point is that if we just let GHC infer a type for <code>kadane1</code>, we would get something more general:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>kadane2</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Num</span> <span>a</span><span style="color:red;">,</span> <span>Ord</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">=&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>a</span>
+<span>kadane2</span> <span style="color:red;">=</span> <span>bestIntermediate</span> <span>next</span> <span class="hs-num">0</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>next</span> <span>s</span> <span>a</span> <span style="color:red;">=</span> <span>max</span> <span class="hs-num">0</span> <span style="color:red;">(</span><span>s</span> <span>+</span> <span>a</span><span style="color:red;">)</span></code></pre>
+<p>
+The only thing we do with the input list elements is add them and compare them; we also need <code>0</code> to have the same type as the input list elements. So the algorithm works for anything that has <code>Ord</code> and <code>Num</code> instances.
+</p>
+<p>
+But wait—do we really need <code>Num</code> if all we are using is <code>0</code> and <code>+</code>? Really we are using the monoid of integers under addition. So we can generalize again, to any ordered monoid:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>kadane</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Monoid</span> <span>a</span><span style="color:red;">,</span> <span>Ord</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">=&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>a</span>
+<span>kadane</span> <span style="color:red;">=</span> <span>bestIntermediate</span> <span>next</span> <span>mempty</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>next</span> <span>s</span> <span>a</span> <span style="color:red;">=</span> <span>max</span> <span>mempty</span> <span style="color:red;">(</span><span>s</span> <span>&lt;&gt;</span> <span>a</span><span style="color:red;">)</span></code></pre>
+<p>
+In fact, if you study the proof of Kadane’s algorithm, you will see that this works just so long as the monoid operation interacts nicely with the ordering, that is, if <span class="math inline">\(x &amp;lt; y\)</span> implies <span class="math inline">\(x \diamond z &amp;lt; y \diamond z\)</span> and <span class="math inline">\(z \diamond x &amp;lt; z \diamond y\)</span> for all <span class="math inline">\(z\)</span> (this is what is usually meant by an “ordered monoid”).
+</p>
+<h2 id="finding-the-best-segment">
+Finding the best segment
+</h2>
+<p>
+So far, our code finds the best segment sum, but it doesn’t tell us <em>which</em> segment it was that was best—and for this problem we are actually supposed to output the starting and ending indices of the best segment, not the maximum red-blue difference itself.
+</p>
+<p>
+If I were doing this in Java, I would probably just add several more variables: one to record where the segment currently being considered starts (which gets reset to <code>i+1</code> when <code>cur</code> is reset to <code>0</code>), and two to record the start and end indices of the <code>best</code> segment so far. This gets kind of ugly. Conceptually, the values actually belong in triples representing a segment: the start and end index together with the sum. In Java, it would be too heavyweight to construct a <code>class</code> to store these three values together, so in practice I would just do it with a mess of individual variables as described above. Fortunately, in Haskell, this is very lightweight, and we should of course create a data type to represent a segment.
+</p>
+<p>
+It’s also worth noting that in Haskell, we were naturally led to make a polymorphic <code>bestIntermediate</code> function, which will work just as well with a segment type as it does <code>Int</code>. Only our <code>kadane</code> function itself will have to change. We will make a data type to represent segments, with an appropriate <code>Ord</code> instance to specify when one segment is better than another, and we will update the <code>next</code> helper function to update a segment instead of just updating a sum.
+</p>
+<h2 id="the-solution">
+The solution
+</h2>
+<p>
+So let’s get started! First, some <code>LANGUAGE</code> pragmas and imports we will need, and a basic solution framework.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">{-# LANGUAGE DerivingStrategies         #-}</span>
+<span style="color:green;">{-# LANGUAGE DerivingVia                #-}</span>
+<span style="color:green;">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span>
+<span style="color:green;">{-# LANGUAGE LambdaCase                 #-}</span>
+<span style="color:green;">{-# LANGUAGE ViewPatterns               #-}</span>
+
+<span style="color:blue;font-weight:bold;">import</span>           <span>Control.Arrow</span>         <span style="color:red;">(</span><span style="color:red;">(</span><span>&gt;&gt;&gt;</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Data.ByteString.Char8</span> <span style="color:red;">(</span><span>ByteString</span><span style="color:red;">)</span>
+<span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data.ByteString.Char8</span> <span style="color:blue;font-weight:bold;">as</span> <span>C</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Data.List</span>             <span style="color:red;">(</span><span>scanl'</span><span style="color:red;">)</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Data.Semigroup</span>
+
+<span>showB</span> <span style="color:red;">::</span> <span>Show</span> <span>a</span> <span style="color:red;">=&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>C.ByteString</span>
+<span>showB</span> <span style="color:red;">=</span> <span>show</span> <span>&gt;&gt;&gt;</span> <span>C.pack</span>
+
+<span>main</span> <span style="color:red;">=</span> <span>C.interact</span> <span>$</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>format</span></code></pre>
+<p>
+Next, a data type to represent a segment, along with an <code>Ord</code> instance, and a function to format the answer for this problem. Note that we make all the fields of <code>Segment</code> strict (this makes a big difference in runtime—you should pretty much always use strict fields unless there is a really good reason not to). Notice also that the <code>Ord</code> instance is where we encode the problem’s specific instructions about how to break ties: “<em>If there are multiple possible answers, print the one that has the Westernmost (smallest-numbered) starting section. If there are multiple answers with the same Westernmost starting section, print the one with the Westernmost ending section.</em>” So we first compare <code>Segment</code>s by sum, then by left index, then by right index, being careful to reverse the order of comparison for the indices, since <em>better</em> for indices means <em>smaller</em>.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">-- The segment [l,r) (i.e. l inclusive, r exclusive), with its sum</span>
+<span style="color:blue;font-weight:bold;">data</span> <span>Segment</span> <span>a</span> <span style="color:red;">=</span> <span>I</span> <span style="color:red;">{</span> <span>l</span> <span style="color:red;">::</span> <span>!</span><span>Int</span><span style="color:red;">,</span> <span>r</span> <span style="color:red;">::</span> <span>!</span><span>Int</span><span style="color:red;">,</span> <span>s</span> <span style="color:red;">::</span> <span>!</span><span>a</span> <span style="color:red;">}</span> <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Eq</span><span style="color:red;">,</span> <span>Show</span><span style="color:red;">)</span>
+
+<span style="color:blue;font-weight:bold;">instance</span> <span>Ord</span> <span>a</span> <span style="color:red;">=&gt;</span> <span>Ord</span> <span style="color:red;">(</span><span>Segment</span> <span>a</span><span style="color:red;">)</span> <span style="color:blue;font-weight:bold;">where</span>
+  <span>compare</span> <span style="color:red;">(</span><span>I</span> <span>l1</span> <span>r1</span> <span>s1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>I</span> <span>l2</span> <span>r2</span> <span>s2</span><span style="color:red;">)</span>
+    <span style="color:red;">=</span> <span>compare</span> <span>s1</span> <span>s2</span> <span>&lt;&gt;</span> <span>compare</span> <span>l2</span> <span>l1</span> <span>&lt;&gt;</span> <span>compare</span> <span>r2</span> <span>r1</span>
+
+<span>format</span> <span style="color:red;">::</span> <span>Segment</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>ByteString</span>
+<span>format</span> <span style="color:red;">(</span><span>I</span> <span>l</span> <span>r</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>C.unwords</span> <span style="color:red;">[</span><span>showB</span> <span>l</span><span style="color:red;">,</span> <span>showB</span> <span style="color:red;">(</span><span>r</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">]</span>
+  <span style="color:green;">-- (r-1) since r is exclusive but we are supposed to show</span>
+  <span style="color:green;">-- the index of the last element</span></code></pre>
+<p>
+And now for Kadane’s algorithm itself. The <code>bestIntermediate</code> function is unchanged. <code>kadane</code> changes to start with an appropriate “empty” segment, and to use a <code>next</code> function that updates the current segment <code>[l,r)</code> based on the next list element <code>a</code> (the one at index <code>r+1</code>). The right index always gets incremented to <code>r+1</code>. If the current sum combined with <code>a</code> is “negative” (that is, less than <code>mempty</code>), we reset the left index to <code>r+1</code> as well (making the segment empty), and the running sum to <code>mempty</code>. Otherwise, we leave the left index unchanged and add <code>a</code> to the running sum. I also added an argument to indicate the index of the first list element, since in this problem the list is supposed to be indexed from 1, but future problems might be indexed from 0, and I would never remember which it is. (I suppose we could also take a list of pairs <code>(i,a)</code> where <code>i</code> is the index of <code>a</code>. That would even work for non-consecutive indices.)
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>bestIntermediate</span> <span style="color:red;">::</span> <span>Ord</span> <span>s</span> <span style="color:red;">=&gt;</span> <span style="color:red;">(</span><span>s</span> <span style="color:red;">-&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>s</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>bestIntermediate</span> <span>update</span> <span>init</span> <span style="color:red;">=</span> <span>maximum</span> <span>.</span> <span>scanl'</span> <span>update</span> <span>init</span>
+
+<span>kadane</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Monoid</span> <span>a</span><span style="color:red;">,</span> <span>Ord</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">=&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>a</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>Segment</span> <span>a</span>
+<span>kadane</span> <span>ix</span> <span style="color:red;">=</span> <span>bestIntermediate</span> <span>next</span> <span style="color:red;">(</span><span>I</span> <span>ix</span> <span>ix</span> <span>mempty</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>next</span> <span style="color:red;">(</span><span>I</span> <span>l</span> <span>r</span> <span>s</span><span style="color:red;">)</span> <span>a</span>
+      <span style="color:red;">|</span> <span>s</span><span>&lt;&gt;</span><span>a</span> <span>&lt;</span> <span>mempty</span> <span style="color:red;">=</span> <span>I</span> <span style="color:red;">(</span><span>r</span><span>+</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>r</span><span>+</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>mempty</span>
+      <span style="color:red;">|</span> <span>otherwise</span>     <span style="color:red;">=</span> <span>I</span> <span>l</span>     <span style="color:red;">(</span><span>r</span><span>+</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>s</span><span>&lt;&gt;</span><span>a</span><span style="color:red;">)</span></code></pre>
+<p>
+Finally, we can write the <code>solve</code> function itself. We map R’s and B’s in the input to 1 and -1, respectively, to generate a list of 1’s and -1’s called <code>mountain</code>. Then we call <code>kadane</code> on <code>mountain</code> and on <code>map negate mountain</code>, and pick whichever gives us a better answer. But wait, not quite! Remember that <code>kadane</code> needs a <code>Monoid</code> instance for the list elements, and <code>Int</code> has none. So we can whip up a quick newtype, <code>Step</code>, that has the right instances (note how deriving <code>Num</code> also allows us to use the literal values <code>1</code> and <code>-1</code> as <code>Step</code> values). <a href="https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/deriving_via.html?highlight=derivingvia#deriving-via"><code>DerivingVia</code> is quite handy</a> in situations like this.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color:red;">::</span> <span>ByteString</span> <span style="color:red;">-&gt;</span> <span>Segment</span> <span>Step</span>
+<span>solve</span> <span style="color:red;">(</span><span>C.init</span> <span style="color:red;">-&gt;</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>max</span> <span style="color:red;">(</span><span>kadane</span> <span class="hs-num">1</span> <span>mountain</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>kadane</span> <span class="hs-num">1</span> <span style="color:red;">(</span><span>map</span> <span>negate</span> <span>mountain</span><span style="color:red;">)</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>mountain</span> <span style="color:red;">=</span> <span>map</span> <span style="color:red;">(</span><span style="color:red;">\</span><span style="color:blue;font-weight:bold;">case</span> <span style="color:red;">{</span> <span style="color:teal;">'R'</span> <span style="color:red;">-&gt;</span> <span class="hs-num">1</span><span style="color:red;">;</span> <span style="color:teal;">'B'</span> <span style="color:red;">-&gt;</span> <span style="color:green;">-</span><span class="hs-num">1</span> <span style="color:red;">}</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>C.unpack</span> <span>b</span><span style="color:red;">)</span>
+
+<span style="color:blue;font-weight:bold;">newtype</span> <span>Step</span> <span style="color:red;">=</span> <span>Step</span> <span>Int</span>
+  <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Semigroup</span><span style="color:red;">,</span> <span>Monoid</span><span style="color:red;">)</span> <span>via</span> <span>Sum</span> <span>Int</span>
+  <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Eq</span><span style="color:red;">,</span> <span>Ord</span><span style="color:red;">,</span> <span>Num</span><span style="color:red;">)</span></code></pre>
+<h2 id="next-time-modulo-solitaire-and-fast-bfs">
+Next time: Modulo Solitaire and fast BFS
+</h2>
+<p>
+For next time, I invite you to solve <a href="https://open.kattis.com/problems/modulosolitaire">Modulo Solitaire</a>. Warning: this is a straightforward BFS problem; the issue is getting a Haskell solution to run fast enough! I struggled with this for quite some time before coming up with something that worked. My ultimate goal in this case is to develop a polished library with an elegant, functional API for doing BFS, but that runs fast under the hood. I’m very curious to see how others might approach the problem.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

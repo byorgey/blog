@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - The algebra of species: primitives</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2012/12/11/diagrams-0-6.html">« Diagrams 0.6</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2013/01/13/the-dawn-of-software-engineering.html">» The Dawn of Software Engineering</a>
+
+</span>
+
+
+<h1>The algebra of species: primitives</h1>
+
+<div class="info">
+  Posted on January  7, 2013
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'algebra'." href="../../../../tag/algebra.html" rel="tag">algebra</a>, <a title="All pages tagged 'bag'." href="../../../../tag/bag.html" rel="tag">bag</a>, <a title="All pages tagged 'identity'." href="../../../../tag/identity.html" rel="tag">identity</a>, <a title="All pages tagged 'one'." href="../../../../tag/one.html" rel="tag">one</a>, <a title="All pages tagged 'primitive'." href="../../../../tag/primitive.html" rel="tag">primitive</a>, <a title="All pages tagged 'singleton'." href="../../../../tag/singleton.html" rel="tag">singleton</a>, <a title="All pages tagged 'zero'." href="../../../../tag/zero.html" rel="tag">zero</a>
+  
+</div>
+
+<section>
+<p>
+<!-- -*- compile-command: "BlogLiteratelyD 05-algebra.markdown &gt; 05-algebra.html" -*- -->
+[<em>This is the fifth in a series of posts about combinatorial species. Previous posts: <a href="http://byorgey.wordpress.com/2012/10/17/and-now-back-to-your-regularly-scheduled-combinatorial-species/">And now, back to your regularly scheduled combinatorial species</a>; <a href="http://byorgey.wordpress.com/2012/10/27/decomposing-data-structures/">Decomposing data structures</a>; <a href="https://byorgey.wordpress.com/2012/11/20/combinatorial-species-definition/">Combinatorial species definition</a>, <a href="http://byorgey.wordpress.com/2012/12/06/species-definition-clarification-and-exercises/">Species definition clarification and exercises</a>.</em>]
+</p>
+<p>
+<a href="http://byorgey.wordpress.com/2012/11/20/combinatorial-species-definition/">Recall</a> that a <em>species</em> is a functor from <span class="math inline">\(\mathbb{B}\)</span>, the category of finite sets and bijections, to <span class="math inline">\(\mathbb{E}\)</span>,<sup><a href="#fn1" class="footnoteRef" id="fnref1">1</a></sup> the category of finite sets and total functions. (Equivalently, species are endofunctors on <span class="math inline">\(\mathbb{B}\)</span>, but in this post I’m going to want to think about them as the former.) That is, a species <span class="math inline">\(F\)</span> is a mapping sending every set of labels <span class="math inline">\(U\)</span> to a set of structures <span class="math inline">\(F[U]\)</span>, which also lifts relabelings <span class="math inline">\(\sigma : U \leftrightarrow V\)</span> to functions <span class="math inline">\(F[\sigma] : U \to V\)</span> in a way that respects the compositional structure of bijections.
+</p>
+<p>
+However, as I hinted in a previous post, it’s inconvenient to work directly with this definition in practice. Instead, we use an algebraic theory that lets us compositionally build up certain species from a collection of primitive species and species operations. (It’s important to note that it does <em>not</em> allow us to build <em>all</em> species, but it does allow us to build many of the ones we care about.)
+</p>
+<p>
+In this post we’ll begin by examining a few natural species to take as primitive.
+</p>
+<ul>
+<li>
+<p>
+The <em>zero</em> or <em>empty</em> species, denoted <span class="math inline">\(\mathbf{0}\)</span>, is the unique species with no structures whatsoever; that is,
+</p>
+<p>
+<span class="math inline">\(\mathbf{0}[U] = \emptyset\)</span>
+</p>
+<p>
+and
+</p>
+<p>
+<span class="math inline">\(\mathbf{0}[\sigma : U \leftrightarrow V] = id_{\emptyset} : \mathbf{0}[U] \to \mathbf{0}[V]\)</span>.
+</p>
+<p>
+Of course, <span class="math inline">\(\mathbf{0}\)</span> will turn out to be the identity element for species sum (which I’ll define in my next post, though it’s not hard to figure out what it should mean).
+</p>
+</li>
+<li>
+<p>
+The <em>unit</em> species, denoted <span class="math inline">\(\mathbf{1}\)</span>, is defined by
+</p>
+<p>
+<span class="math inline">\(\begin{array}{lcl}\mathbf{1}[\emptyset] &amp;amp;=&amp;amp; \{\star\} \\ \mathbf{1}[U] &amp;amp;=&amp;amp; \emptyset \qquad (U \neq \emptyset)\end{array}\)</span>
+</p>
+<p>
+That is, there is a unique <span class="math inline">\(\mathbf{1}\)</span>-structure indexed by the empty set of labels, and no <span class="math inline">\(\mathbf{1}\)</span>-structures with any positive number of labels. <span class="math inline">\(\mathbf{1}\)</span> lifts bijections in the obvious way, sending every bijection to the appropriate identity function.
+</p>
+<p>
+Some people initially find this definition surprising, expecting something like <span class="math inline">\(\mathbf{1}[U] = \{ \star \}\)</span> for all <span class="math inline">\(U\)</span> instead. That is indeed a valid species, and we will meet it below; but as I hope you will come to see, it doesn’t deserve the name <span class="math inline">\(\mathbf{1}\)</span>.
+</p>
+<p>
+Of course we should also verify that this definition satisfies the requisite functoriality properties, which is not difficult.
+</p>
+<p>
+More abstractly, for those who know some category theory, it’s worth mentioning that <span class="math inline">\(\mathbf{1}\)</span> can be defined as <span class="math inline">\(\mathbb{B}(\emptyset, -) : \mathbb{B} \to \mathbb{E}\)</span>, that is, the covariant hom-functor sending each finite set <span class="math inline">\(U \in \mathbb{B}\)</span> to the (finite) set of bijections <span class="math inline">\(\emptyset \leftrightarrow U\)</span>. (This is why I wanted to think of species as functors <span class="math inline">\(\mathbb{B} \to \mathbb{E}\)</span>. I learned this fact from Yeh (1986).) There is, of course, a unique bijection <span class="math inline">\(\emptyset \leftrightarrow \emptyset\)</span> and no bijections <span class="math inline">\(\emptyset \leftrightarrow U\)</span> for nonempty <span class="math inline">\(U\)</span>, thus giving rise to the definition above.
+</p>
+<p>
+As you might expect, <span class="math inline">\(\mathbf{1}\)</span> will be the identity element for species product. Like <span class="math inline">\(\mathbf{1}\)</span> itself, species product isn’t defined quite as most people would initially guess. If you haven’t seen it before, you might like to try working out how product can be defined in order to make <span class="math inline">\(\mathbf{1}\)</span> an identity element.
+</p>
+</li>
+<li>
+<p>
+The <em>singleton</em> species, denoted <span class="math inline">\(\mathbf{X}\)</span>, is defined by
+</p>
+<p>
+<span class="math inline">\(\mathbf{X}[U] = \begin{cases} U &amp;amp; |U| = 1 \\ \emptyset &amp;amp; \text{otherwise} \end{cases}\)</span>
+</p>
+<p>
+with lifting of bijections defined in the evident manner. That is, there is a single <span class="math inline">\(\mathbf{X}\)</span>-structure on a label set of size <span class="math inline">\(1\)</span> (which we identify with the label itself, though we could have also defined <span class="math inline">\(\mathbf{X}[U] = \{\star\}\)</span> when <span class="math inline">\(|U| = 1\)</span>), and no <span class="math inline">\(\mathbf{X}\)</span>-structures indexed by any other number of labels.
+</p>
+<p>
+As with <span class="math inline">\(\mathbf{1}\)</span>, we may equivalently define <span class="math inline">\(\mathbf{X}\)</span> as a hom-functor, namely <span class="math inline">\(\mathbf{X} = \mathbb{B}(\{\star\}, -)\)</span>.
+</p>
+<p>
+It’s worth noting again that although <span class="math inline">\(\mathbf{1}\)</span> and <span class="math inline">\(\mathbf{X}\)</span> do “case analysis” on the label set <span class="math inline">\(U\)</span>, they actually only depend on the <em>size</em> of <span class="math inline">\(U\)</span>; indeed, as we <a href="http://byorgey.wordpress.com/2012/12/06/species-definition-clarification-and-exercises/">noted previously</a>, by functoriality this is all they can do.
+</p>
+</li>
+<li>
+<p>
+The species of <em>bags</em><sup><a href="#fn2" class="footnoteRef" id="fnref2">2</a></sup>, denoted <span class="math inline">\(\mathbf{E}\)</span>, is defined by
+</p>
+<p>
+<span class="math inline">\(\mathbf{E}[U] = \{U\}\)</span>,
+</p>
+<p>
+that is, there is a single <span class="math inline">\(\mathbf{E}\)</span>-structure on any set of labels <span class="math inline">\(U\)</span>, which we usually identify with the set of labels itself (although we could equivalently define <span class="math inline">\(\mathbf{E}[U] = \{\star\}\)</span>). The idea is that an <span class="math inline">\(\mathbf{E}\)</span>-structure consists solely of a collection of labels, with no imposed ordering whatsoever.
+</p>
+<p>
+If you want to abuse types slightly, one can define <span class="math inline">\(\mathbf{E}\)</span> as a hom-functor too, namely <span class="math inline">\(\mathbb{E}(-,\{\star\})\)</span>. (Yeh (1986) actually has <span class="math inline">\(\mathbb{B}(-, \{\star\})\)</span>, but that’s wrong.)
+</p>
+</li>
+</ul>
+<p>
+As a summary, here’s a graphic showing <span class="math inline">\(\mathbf{0}\)</span>-, <span class="math inline">\(\mathbf{1}\)</span>-, <span class="math inline">\(\mathbf{X}\)</span>-, and <span class="math inline">\(\mathbf{E}\)</span>-structures arranged by size (<em>i.e.</em>, the size of the underlying set of labels <span class="math inline">\(U\)</span>): a dot indicates a single structure, and the size of the label set increases as you move to the right.
+</p>
+<div style="text-align:center;">
+<div class="figure">
+<img src="http://byorgey.files.wordpress.com/2013/01/a3f68a37ffc133339fc3b8f097570c28.png" />
+<p class="caption">
+</p>
+</div>
+</div>
+<p>
+Just as a teaser, it turns out that <span class="math inline">\(\mathbf{X}\)</span> and <span class="math inline">\(\mathbf{E}\)</span> are identity elements for certain binary operations on species as well, though you’ll have to wait to find out which ones!
+</p>
+<p>
+Next up, addition!
+</p>
+<h2 id="references">
+References
+</h2>
+<p>
+Yeh, Yeong-Nan. 1986. “The calculus of virtual species and K-species.” In <em>Combinatoire énumérative</em>, ed. Gilbert Labelle and Pierre Leroux, 1234:351–369. Springer Berlin Heidelberg. <a href="http://dx.doi.org/10.1007/BFb0072525" title="http://dx.doi.org/10.1007/BFb0072525">http://dx.doi.org/10.1007/BFb0072525</a>.
+</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+Last time I called this category <span class="math inline">\(\mathbf{FinSet}\)</span>, but <span class="math inline">\(\mathbb{E}\)</span> is more concise and matches the species literarure.<a href="#fnref1">↩︎</a>
+</p>
+</li>
+<li id="fn2">
+<p>
+The species literature calls this the species of <em>sets</em>, but that’s misleading to computer scientists, who expect the word “set” to imply that elements cannot be repeated.<a href="#fnref2">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

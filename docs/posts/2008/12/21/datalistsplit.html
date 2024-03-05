@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Data.List.Split</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2008/12/16/quickcheck-rocks-my-socks.html">« QuickCheck rocks my socks</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2009/01/12/abstraction-intuition-and-the-monad-tutorial-fallacy.html">» Abstraction, intuition, and the "monad tutorial fallacy"</a>
+
+</span>
+
+
+<h1>Data.List.Split</h1>
+
+<div class="info">
+  Posted on December 21, 2008
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'library'." href="../../../../tag/library.html" rel="tag">library</a>, <a title="All pages tagged 'list'." href="../../../../tag/list.html" rel="tag">list</a>, <a title="All pages tagged 'split'." href="../../../../tag/split.html" rel="tag">split</a>
+  
+</div>
+
+<section>
+<p>Have you ever had a string like this
+<code>
+“abc;def;ghijk;lm”
+</code>
+and wanted to turn it into a list of strings, like this?
+<code>
+[“abc”, “def”, “ghijk”, “lm”]
+</code>
+Of course, you could always use a parsing library, or a regular expression library, but sometimes you just want something a little more lightweight. Perl and Ruby both have library functions called “split” to do just this. Haskell’s standard libraries, on the other hand, have no such function, much to the consternation of many a newbie and experienced Haskeller alike. There have been <a href="http://www.haskell.org/pipermail/libraries/2006-July/005504.html">many</a> <a href="http://www.haskell.org/pipermail/libraries/2006-October/006072.html">proposals</a> to <a href="http://www.haskell.org/pipermail/libraries/2008-January/008922.html">add</a> such a thing to the standard Data.List module in the past, but nothing ever came of it, primarily because there are many slightly different ways to split a list, and no one could ever agree on the One True Splitting Interface.</p>
+<p>I decided we’ve been Doing It Wrong. Instead of bickering about the one true interface and going through the stringent library proposals process, let’s just get some useful code together and release it on <a href="http://hackage.haskell.org">Hackage</a>. (Of course there are advantages to inclusion in the standard libraries — but that can come later.) So I solicited contributions on a <a href="http://haskell.org/haskellwiki/Data.List.Split">wiki page</a>, took some of the ideas, bits of code, and some ideas of my own, and created <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/split">Data.List.Split</a>.</p>
+<p>Instead of talking about it more, I’ll just show some examples:</p>
+<p><code>
+<em>Data.List.Split&gt; splitOn “;” “abc;def;ghijk;lm”
+[“abc”,“def”,“ghijk”,“lm”]
+</em>Data.List.Split&gt; splitWhen (&lt;0) [1,4,-8,4,-3,-2,9]
+[[1,4],[4],[],[9]]
+<em>Data.List.Split&gt; split (startsWith “app”) “applyappicativeapplaudapproachapple”
+[“apply”,“appicative”,“applaud”,“approach”,“apple”]
+</em>Data.List.Split&gt; split (dropDelims $ oneOf “:;”) “::abc;:;;fg:h;;ij;”
+[““,”“,”abc”,““,”“,”“,”fg”,“h”,““,”ij”,“”]
+*Data.List.Split&gt; split (condense . dropInitBlank $ oneOf “:;”) “::abc;:;;fg:h;;ij;”
+[“::”,“abc”,“;:;;”,“fg”,“:”,“h”,“;;”,“ij”,“;”,“”]
+</code></p>
+<p>Detailed documentation can be found in the package itself. Install it from Hackage:
+<code>
+cabal install split
+</code></p>
+<p>You can also check out the <a href="http://code.haskell.org/~byorgey/code/split">darcs repo</a>. Comments, suggestions, and patches welcome!</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

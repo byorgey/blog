@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: folding folds</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2021/06/08/average-and-median-via-optimization.html">« Average and median via optimization</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2021/06/24/types-versus-sets-in-math-and-programming-languages.html">» Types versus sets in math and programming languages</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: folding folds</h1>
+
+<div class="info">
+  Posted on June 19, 2021
+  
+  
+  <br />
+  Tagged <a title="All pages tagged '2D'." href="../../../../tag/2D.html" rel="tag">2D</a>, <a title="All pages tagged 'fold'." href="../../../../tag/fold.html" rel="tag">fold</a>, <a title="All pages tagged 'geometry'." href="../../../../tag/geometry.html" rel="tag">geometry</a>, <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'line'." href="../../../../tag/line.html" rel="tag">line</a>, <a title="All pages tagged 'origami'." href="../../../../tag/origami.html" rel="tag">origami</a>, <a title="All pages tagged 'reflect'." href="../../../../tag/reflect.html" rel="tag">reflect</a>
+  
+</div>
+
+<section>
+<p>
+Now that the semester is over—and I will be on sabbatical in the fall!—you can expect a lot more competitive programming in Haskell posts. In <a href="https://byorgey.wordpress.com/2021/02/23/competitive-programming-in-haskell-folding-challenge/">a previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/origami">Origami</a>. <a href="https://byorgey.wordpress.com/2021/02/23/competitive-programming-in-haskell-folding-challenge/#comment-39466">j0sejuan took me up on the challenge</a>, as did Aaron Allen and Ryan Yates; if you still want to try it, go do it before reading on!
+</p>
+<p>
+In the problem, we start with a square sheet of paper and are given a series of folds to perform in sequence; each fold is specified as a line, and we fold whatever is on one side of the line across onto the other side. Given some query points, we have to compute how thick the resulting origami design is at each point.
+</p>
+<h2 id="lines">
+Lines
+</h2>
+<p>
+The first order of business is some computational geometry relating to lines in 2D (this code can all be found in <a href="https://github.com/byorgey/comprog-hs/blob/master/Geom.hs">Geom.hs</a>. Here I am following <a href="https://vlecomte.github.io/">Victor Lecomte</a>’s excellent <a href="https://vlecomte.github.io/cp-geo.pdf">Handbook of geometry for competitive programmers</a>, which I think I’ve mentioned before. I’ll try to give a bit of explanation, but if you want full explanations and proofs you should consult that document.
+</p>
+<p>
+The equation of a line <span class="math inline">\(ax + by = c\)</span> can be thought of as the set of all points <span class="math inline">\((x,y)\)</span> whose dot product with the vector <span class="math inline">\((a,b)\)</span> is a constant <span class="math inline">\(c\)</span>. This will in fact be a line perpendicular to the vector <span class="math inline">\((a,b)\)</span>, where <span class="math inline">\(c\)</span> determines the distance of the line from the origin. Alternatively, we can think of the vector <span class="math inline">\((b,-a)\)</span>, which is perpendicular to <span class="math inline">\((a,b)\)</span> and thus parallel to the line; the line now consists of all points <span class="math inline">\((x,y)\)</span> whose <a href="https://byorgey.wordpress.com/2020/07/10/competitive-programming-in-haskell-2d-cross-product-part-1/">2D cross product</a> with <span class="math inline">\((b,-a)\)</span> is the constant <span class="math inline">\(c\)</span> (since <span class="math inline">\((b,-a) \times (x,y) = by - (-a)x = ax + by\)</span>; note that the order matters). Either representation would work, but I will follow Lecomte in choosing the second: we represent a line by a vector giving its direction, and a scalar offset.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>L2</span> <span>s</span> <span style="color:red;">=</span> <span>L2</span> <span style="color:red;">{</span> <span>getDirection</span> <span style="color:red;">::</span> <span>!</span><span style="color:red;">(</span><span>V2</span> <span>s</span><span style="color:red;">)</span><span style="color:red;">,</span> <span>getOffset</span> <span style="color:red;">::</span> <span>!</span><span>s</span> <span style="color:red;">}</span>
+<span style="color:blue;font-weight:bold;">type</span> <span>L2D</span> <span style="color:red;">=</span> <span>L2</span> <span>Double</span></code></pre>
+<p>
+There are a few ways to construct a line: from an equation <span class="math inline">\(ax + by = c\)</span>, or from two points which lie on the line. The first is easy, given the above discussion. For the second, given points <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span>, we can easily construct the direction of the line as <span class="math inline">\(v = q - p\)</span>. Then to get the constant <span class="math inline">\(c\)</span>, we simply use the fact that <span class="math inline">\(c\)</span> is the cross product of the direction vector with any point on the line, say, <span class="math inline">\(p\)</span> (of course <span class="math inline">\(q\)</span> would also work).
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>lineFromEquation</span> <span style="color:red;">::</span> <span>Num</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>L2</span> <span>s</span>
+<span>lineFromEquation</span> <span>a</span> <span>b</span> <span>c</span> <span style="color:red;">=</span> <span>L2</span> <span style="color:red;">(</span><span>V2</span> <span>b</span> <span style="color:red;">(</span><span style="color:green;">-</span><span>a</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>c</span>
+
+<span>lineFromPoints</span> <span style="color:red;">::</span> <span>Num</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>L2</span> <span>s</span>
+<span>lineFromPoints</span> <span>p</span> <span>q</span> <span style="color:red;">=</span> <span>L2</span> <span>v</span> <span style="color:red;">(</span><span>v</span> <span>`cross`</span> <span>p</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>v</span> <span style="color:red;">=</span> <span>q</span> <span>^-^</span> <span>p</span></code></pre>
+<p>
+Now we can write some functions to decide where a given point lies with respect to a line. First, the <code>side</code> function computes <span class="math inline">\(ax + by - c = (b,-a) \times (x,y) - c\)</span> for any point <span class="math inline">\(p = (x,y)\)</span>.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>side</span> <span style="color:red;">::</span> <span>Num</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>L2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>s</span>
+<span>side</span> <span style="color:red;">(</span><span>L2</span> <span>v</span> <span>c</span><span style="color:red;">)</span> <span>p</span> <span style="color:red;">=</span> <span>cross</span> <span>v</span> <span>p</span> <span style="color:green;">-</span> <span>c</span></code></pre>
+<p>
+Of course, for points that lie on the line, this quantity will be zero. We can also classify points <span class="math inline">\(p\)</span> as lying to the left or right of the line (looking in the direction of <span class="math inline">\(v\)</span>) depending on whether <code>side l p</code> is positive or negative, respectively.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>onLine</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Num</span> <span>s</span><span style="color:red;">,</span> <span>Eq</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=&gt;</span> <span>L2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>Bool</span>
+<span>onLine</span> <span>l</span> <span>p</span> <span style="color:red;">=</span> <span>side</span> <span>l</span> <span>p</span> <span>==</span> <span class="hs-num">0</span>
+
+<span>leftOf</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Num</span> <span>s</span><span style="color:red;">,</span> <span>Ord</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=&gt;</span> <span>L2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>Bool</span>
+<span>leftOf</span> <span>l</span> <span>p</span> <span style="color:red;">=</span> <span>side</span> <span>l</span> <span>p</span> <span>&gt;</span> <span class="hs-num">0</span>
+
+<span>rightOf</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Num</span> <span>s</span><span style="color:red;">,</span> <span>Ord</span> <span>s</span><span style="color:red;">)</span> <span style="color:red;">=&gt;</span> <span>L2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>Bool</span>
+<span>rightOf</span> <span>l</span> <span>p</span> <span style="color:red;">=</span> <span>side</span> <span>l</span> <span>p</span> <span>&lt;</span> <span class="hs-num">0</span></code></pre>
+<p>
+The last piece we will need to solve the problem is a way to reflect a point across a line. <code>toProjection l p</code> computes the vector perpendicular to <span class="math inline">\(l\)</span> which points from <span class="math inline">\(p\)</span> to <span class="math inline">\(l\)</span>, and <code>reflectAcross</code> works by adding <code>toProjection l p</code> to <code>p</code> twice. I won’t derive the definition of <code>toProjection</code>, but the basic idea is to start with a vector perpendicular to the direction of the line (<code>perp v</code>) and scale it by a factor related to <code>side l p</code>. (Intuitively, it makes sense that <span class="math inline">\(ax + by - c\)</span> tells us something about the distance from <span class="math inline">\((x,y)\)</span> to the line; the farther away <span class="math inline">\((x,y)\)</span> is from the line, the farther <span class="math inline">\(ax + by\)</span> is from <span class="math inline">\(c\)</span>.) See Lecomte for the full details.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>toProjection</span> <span style="color:red;">::</span> <span>Fractional</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>L2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>V2</span> <span>s</span>
+<span>toProjection</span> <span>l</span><span style="color:red;">@</span><span style="color:red;">(</span><span>L2</span> <span>v</span> <span style="color:blue;font-weight:bold;">_</span><span style="color:red;">)</span> <span>p</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span style="color:green;">-</span><span>side</span> <span>l</span> <span>p</span> <span>/</span> <span>normSq</span> <span>v</span><span style="color:red;">)</span> <span>*^</span> <span>perp</span> <span>v</span>
+
+<span>project</span> <span style="color:red;">::</span> <span>Fractional</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>L2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span>
+<span>project</span> <span>l</span> <span>p</span> <span style="color:red;">=</span> <span>p</span> <span>^+^</span> <span>toProjection</span> <span>l</span> <span>p</span>
+
+<span>reflectAcross</span> <span style="color:red;">::</span> <span>Fractional</span> <span>s</span> <span style="color:red;">=&gt;</span> <span>L2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>P2</span> <span>s</span>
+<span>reflectAcross</span> <span>l</span> <span>p</span> <span style="color:red;">=</span> <span>p</span> <span>^+^</span> <span style="color:red;">(</span><span class="hs-num">2</span> <span>*^</span> <span>toProjection</span> <span>l</span> <span>p</span><span style="color:red;">)</span></code></pre>
+<h2 id="folding-origami">
+Folding origami
+</h2>
+<p>
+Finally we can solve the problem! First, some imports and input parsing.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">{-# LANGUAGE RecordWildCards #-}</span>
+
+<span style="color:blue;font-weight:bold;">import</span>           <span>Control.Arrow</span>
+<span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data.ByteString.Lazy.Char8</span> <span style="color:blue;font-weight:bold;">as</span> <span>C</span>
+
+<span style="color:blue;font-weight:bold;">import</span>           <span>Geom</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>ScannerBS</span>
+
+<span>main</span> <span style="color:red;">=</span> <span>C.interact</span> <span>$</span>
+  <span>runScanner</span> <span>tc</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>show</span> <span>&gt;&gt;&gt;</span> <span>C.pack</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>C.unlines</span>
+
+<span style="color:blue;font-weight:bold;">data</span> <span>TC</span> <span style="color:red;">=</span> <span>TC</span> <span style="color:red;">{</span> <span>steps</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>L2D</span><span style="color:red;">]</span><span style="color:red;">,</span> <span>holes</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>P2D</span><span style="color:red;">]</span> <span style="color:red;">}</span>
+
+<span>tc</span> <span style="color:red;">=</span> <span>TC</span> <span>&lt;$&gt;</span> <span>numberOf</span> <span style="color:red;">(</span><span>lineFromPoints</span> <span>&lt;$&gt;</span> <span>p2</span> <span>double</span> <span>&lt;*&gt;</span> <span>p2</span> <span>double</span><span style="color:red;">)</span> <span>&lt;*&gt;</span> <span>numberOf</span> <span style="color:red;">(</span><span>p2</span> <span>double</span><span style="color:red;">)</span>
+
+<span>solve</span> <span style="color:red;">::</span> <span>TC</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>Int</span><span style="color:red;">]</span>
+<span>solve</span> <span>TC</span><span style="color:red;">{</span><span style="color:red;">..</span><span style="color:red;">}</span> <span style="color:red;">=</span> <span>map</span> <span>countLayers</span> <span>holes</span>
+  <span style="color:blue;font-weight:bold;">where</span></code></pre>
+<p>
+For <code>countLayers</code>, the idea is to work backwards from a given query point to find all its preimages, that is, the points that will eventually map to that point under the folds. Then we can just count how many of those points lie (strictly) inside the original square of paper.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>inSquare</span> <span style="color:red;">(</span><span>V2</span> <span>x</span> <span>y</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span class="hs-num">0</span> <span>&lt;</span> <span>x</span> <span>&amp;&amp;</span> <span>x</span> <span>&lt;</span> <span class="hs-num">1000</span> <span>&amp;&amp;</span> <span class="hs-num">0</span> <span>&lt;</span> <span>y</span> <span>&amp;&amp;</span> <span>y</span> <span>&lt;</span> <span class="hs-num">1000</span></code></pre>
+<p>
+For a given point and fold, there are two possibilities, depending on which side of the fold line the point falls on. If the point falls on the fold or to the right of it, then it has no preimages (we always fold from right to left, so after the fold, there will be no paper on the right side of the line, and the problem specifies that points exactly on a folded edge do not count). Hence we can just discard such a point. On the other hand, if the point lies on the left side of the line, then the point has two preimages: the point itself, and its reflection across the fold line.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>preimage</span> <span style="color:red;">::</span> <span>L2D</span> <span style="color:red;">-&gt;</span> <span>P2D</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>P2D</span><span style="color:red;">]</span>
+    <span>preimage</span> <span>l</span> <span>p</span>
+      <span style="color:red;">|</span> <span>leftOf</span> <span>l</span> <span>p</span> <span style="color:red;">=</span> <span style="color:red;">[</span><span>p</span><span style="color:red;">,</span> <span>reflectAcross</span> <span>l</span> <span>p</span><span style="color:red;">]</span>
+      <span style="color:red;">|</span> <span>otherwise</span>  <span style="color:red;">=</span> <span>[]</span></code></pre>
+<p>
+So we keep a set of points, starting with the singleton query point, and for each fold (in order from last to first) we find the preimage of every point in the set under the fold. We actually use lists of points instead of sets, because (1) we won’t ever get any collisions (actually, the more I think about this, the less sure I am!) and (2) it lets us use the actual list monad instead of making some ad-hoc <code>Set</code> monad operations.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>countLayers</span> <span style="color:red;">::</span> <span>P2D</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+    <span>countLayers</span> <span>q</span> <span style="color:red;">=</span> <span>length</span> <span>.</span> <span>filter</span> <span>inSquare</span> <span>$</span> <span>foldr</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>l</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>&gt;&gt;=</span> <span>preimage</span> <span>l</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">[</span><span>q</span><span style="color:red;">]</span> <span>steps</span></code></pre>
+<p>
+It is very satisfying to use a fold to process a list of folds!
+</p>
+<h2 id="next-time-please-go-first">
+Next time: Please, Go First
+</h2>
+<p>
+For next time, I invite you to solve <a href="https://open.kattis.com/problems/pleasegofirst">Please, Go First</a>.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

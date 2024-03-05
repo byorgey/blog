@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - New haxr release</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2012/07/02/blogliterately-0-4-release.html">« BlogLiterately 0.4 release</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2012/07/07/blogliterately-0-5-release.html">» BlogLiterately 0.5 release</a>
+
+</span>
+
+
+<h1>New haxr release</h1>
+
+<div class="info">
+  Posted on July  7, 2012
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'ByteString'." href="../../../../tag/ByteString.html" rel="tag">ByteString</a>, <a title="All pages tagged 'haxr'." href="../../../../tag/haxr.html" rel="tag">haxr</a>, <a title="All pages tagged 'HTTP'." href="../../../../tag/HTTP.html" rel="tag">HTTP</a>, <a title="All pages tagged 'laziness'." href="../../../../tag/laziness.html" rel="tag">laziness</a>, <a title="All pages tagged 'release'." href="../../../../tag/release.html" rel="tag">release</a>
+  
+</div>
+
+<section>
+<p>
+I have just uploaded a <a href="http://hackage.haskell.org/package/haxr">new version of the <code>haxr</code> package</a> (for writing XML-RPC clients and servers), having become the new maintainer. Here is how it happened.
+</p>
+<p>
+In <a href="http://byorgey.wordpress.com/2012/07/02/blogliterately-0-4-release/">a previous post</a> I announced the release of <a href="http://hackage.haskell.org/package/BlogLiterately">BlogLiterately 0.4</a>, a tool for authoring and uploading blog posts. I mentioned that the image upload feature did not yet work, due to inexplicably closed HTTP connections. After a lot of digging, installing <a href="http://www.wireshark.org/">wireshark</a>, and some excellent <a href="http://stackoverflow.com/questions/11277788/errorclosed-exception-from-network-http-simplehttp-trying-to-upload-images-vi">advice and answers from StackOverflow</a>, I present to you the following basically-technically-accurate transcript of what was actually going on:
+</p>
+<p>
+<strong>BlogLiterately</strong>: Hi there!!<br /><strong>Server</strong>: Hello. How may I help you?<br /><strong>BL</strong>: I would like to upload some data plz kthx!<br /><strong>S</strong>: OK, go ahead.<br /><strong>BL</strong> (<em>thinking to self</em>): <em>Oh sh**, I haven’t actually computed the data I want to send! Better get started. Hrmrmrmrmmmmm….</em>
+</p>
+<p>
+<em>…four seconds later…</em>
+</p>
+<p>
+<strong>BL</strong>: <em>..i thunk i can i thunk i can i thunk i can…</em><br /><strong>S</strong>: You are wasting my time. I have better things to do. Goodbye.<br /><strong>BL</strong>: <em>…i thunk i can i thunk i can… done!</em><br /><strong>BL</strong>: OK, I’m ready now! data data data data data data data data data …<br /><strong>S</strong>: AUUGGH SHUT UP GO AWAY
+</p>
+<p>
+So the surface problem seemed to be too much laziness, and indeed, forcing evaluation of the data prior to opening the HTTP connection did make it work. However, the deeper problem is that base64-encoding a 28k image should not take four seconds! Indeed, it turned out that <code>haxr</code> was using <a href="http://hackage.haskell.org/package/dataenc"><code>dataenc</code></a> to do base64-encoding, which suffered from quadratic runtime due to left-nested list appends. After switching to <a href="http://hackage.haskell.org/package/base64%2Dbytestring"><code>base64-bytestring</code></a>, the encoding now takes basically no time at all.
+</p>
+<p>
+The other change I made to <code>haxr</code> was in the type of the <code>ValueBase64</code> constructor of the <code>Value</code> type. It used to take a <code>String</code>, but this is silly, since the argument is supposed to represent <em>binary</em> data (which will then be base64-encoded), not text. In the original author’s defense, <code>haxr</code> was written before <code>ByteString</code> existed! But now that we have <code>ByteString</code>, I made it the argument to <code>ValueBase64</code>. This means fewer conversions (in order to provide a <code>String</code> containing binary data, one byte per character, you basically have to read the file as a <code>ByteString</code> in the first place anyway and then <code>unpack</code> it), and also has the nice side benefit of being able to add a new <code>XmlRpcType</code> instance for <code>ByteString</code>, so that <code>ByteString</code>s can be passed directory to <code>remote</code>, resulting in a base64 parameter. (Previously, to distinguish a base64 parameter the only way was to explicitly wrap it in a <code>ValueBase64</code> constructor.)
+</p>
+<p>
+After a bit of discussion about these issues with Gracjan Polak, <code>haxr</code>’s previous maintainer, he suggested that I take it over since he wasn’t really using it anymore. I’m grateful to Bjorn Bringert (<code>haxr</code>’s original author) and Gracjan for their work on <code>haxr</code> over the years.
+</p>
+<p>
+And yes, this does mean that <code>BlogLiterately</code> now supports image uploads—and also a few other new features I’ve added in the meantime. A new release will follow shortly!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

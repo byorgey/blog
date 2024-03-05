@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Types versus sets in math and programming languages</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2021/06/19/competitive-programming-in-haskell-folding-folds.html">« Competitive programming in Haskell: folding folds</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2021/08/11/competitive-programming-in-haskell-monoidal-accumulation.html">» Competitive programming in Haskell: monoidal accumulation</a>
+
+</span>
+
+
+<h1>Types versus sets in math and programming languages</h1>
+
+<div class="info">
+  Posted on June 24, 2021
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'foundations'." href="../../../../tag/foundations.html" rel="tag">foundations</a>, <a title="All pages tagged 'language'." href="../../../../tag/language.html" rel="tag">language</a>, <a title="All pages tagged 'math'." href="../../../../tag/math.html" rel="tag">math</a>, <a title="All pages tagged 'pedagogy'." href="../../../../tag/pedagogy.html" rel="tag">pedagogy</a>, <a title="All pages tagged 'programming'." href="../../../../tag/programming.html" rel="tag">programming</a>, <a title="All pages tagged 'sets'." href="../../../../tag/sets.html" rel="tag">sets</a>, <a title="All pages tagged 'types'." href="../../../../tag/types.html" rel="tag">types</a>
+  
+</div>
+
+<section>
+<p>
+For several years I have been designing and implementing a <a href="https://github.com/disco-lang/disco/">functional teaching language especially for use in the context of a Discrete Mathematics course</a>. The idea is for students to be exposed to some functional and statically-typed programming early in their computer science education, and to give them a fun and concrete way to see the connections between the concepts they learn in a Discrete Math course and computation. I am <a href="https://cs.wheaton.edu/~tvandrun/dmfp/">not the first to think of combining FP + Discrete Math</a>, but I think there is an opportunity to do it really well with a language designed expressly for the purpose. (And, who am I kidding, designing and implementing a language is just plain fun.)
+</p>
+<p>
+Of course the language has an expressive static type system, with base types like natural numbers, rationals, Booleans, and Unicode characters, as well as sum and product types, lists, strings, and the ability to define arbitrary recursive types. It also has built-in types and syntax for finite sets. For example,
+</p>
+<pre><code>A : Set ℕ
+A = {1, 3, 6}</code></pre>
+<p>
+(Incidentally, I will be using Unicode syntax since it looks nice, but there are also ASCII equivalents for everything.) Sets support the usual operations like union, intersection, and difference, as well as set comprehension notation. The intention is that this will provide a rich playground for students to play around with the basic set theory that is typically taught in a discrete math class.
+</p>
+<h2 id="but-wait">
+But wait…
+</h2>
+<p>
+Hopefully the above all seems pretty normal if you are used to programming in a statically typed language. Unfortunately, there is something here that I suspect is going to be deeply confusing to students. I am so used to it that it took me a long time to realize what was wrong; maybe you have not realized it either. (Well, perhaps I gave it away with the title of the blog post…)
+</p>
+<p>
+In a math class, we typically tell students that <span class="math inline">\(\mathbb{N}\)</span> is a <em>set</em>. But in Disco, <code>ℕ</code> is a <em>type</em> and something like <code>{1,2,3}</code> is a set. If you have been told that <span class="math inline">\(\mathbb{N}\)</span> is a set, the distinction is going to seem very weird and artificial to you. For example, right now in Disco, you can ask whether <code>{1,2}</code> is a subset of <code>{1,2,3}</code>:
+</p>
+<pre><code>Disco&gt; {1,2} ⊆ {1,2,3}
+true</code></pre>
+<p>
+But if you try to ask whether <code>{1,2}</code> is a subset of <code>ℕ</code>, you get a syntax error:
+</p>
+<pre><code>Disco&gt; {1,2} ⊆ ℕ
+1:10:
+  |
+1 | {1,2} ⊆ ℕ
+  |          ^
+keyword "ℕ" cannot be used as an identifier</code></pre>
+<p>
+Now, we could try various things to improve this particular example—at the very least, make it fail more gracefully. But the fundamental question remains: what is the distinction between types and sets, and why is it important? If it’s not important, we should get rid of it; if it is important, then I need to be able to explain it to students!
+</p>
+<p>
+We could try to completely get rid of the distinction, but this seems like it would lead directly to a dependent type system and refinement types. Refinement types <a href="https://ucsd-progsys.github.io/liquidhaskell-blog/">are super cool</a> but I really don’t think I want to go there (Disco’s type system is <a href="https://github.com/disco-lang/disco/issues/207">already complicated enough</a>).
+</p>
+<p>
+However, I think there actually is an important distinction; this blog post is my first attempt at crystallizing my thoughts on the distinction and how I plan to explain it to students.
+</p>
+<h2 id="types-vs-sets">
+Types vs sets
+</h2>
+<p>
+So what is the difference between sets and types? The slogan is that types are <em>intensional</em>, whereas sets are <em>extensional</em>. (I won’t actually use those words with my students.) That is:
+</p>
+<ul>
+<li>
+Sets are characterized by the <span class="math inline">\(\in\)</span> relation: we can <em>ask</em> which items are elements of a set and which are not.
+</li>
+<li>
+Types, on the other hand, are characterized by how elements of the type are built: we can <em>construct</em> elements of a type (and <em>deconstruct</em> them) in certain ways specific to the type.
+</li>
+</ul>
+<p>
+This seems kind of symmetric, but it is not. You can’t ask whether a thing is an element of a set if you don’t know how to even make or talk about any things in the first place. So types are prior to sets: types provide a universe of values, constructed in orderly ways, that we can work with; only then can we start picking out certain values to place them in a set.
+</p>
+<p>
+Of course, this all presupposes some kind of type theory as foundational. Of course I am aware that one can instead take axiomatic set theory as a foundation and build everything up from the empty set. But I’m building a typed functional programming language, so of course I’m taking type theory as foundational! More importantly, however, it’s what almost every working mathematician does <em>in practice</em>. No one actually works or thinks in terms of axiomatic set theory (besides set theorists). Even in a typical math class, some sets are special. Before we can talk about the set <span class="math inline">\({1,3,6}\)</span>, we have to introduce the special set <span class="math inline">\(\mathbb{N}\)</span> so we know what <span class="math inline">\(1\)</span>, <span class="math inline">\(3\)</span>, and <span class="math inline">\(6\)</span> are. Before we can talk about the set <span class="math inline">\({(1,1), (3,5), (6,8)}\)</span> we have to introduce the special Cartesian product operation on sets so we know what tuples are. And so on. We can think of types as a <em>language</em> for describing this prior class of special sets.
+</p>
+<h2 id="explaining-things-to-students">
+Explaining things to students
+</h2>
+<p>
+So what will I actually say to my students? First of all, when introducing the language, I will tell them about various built-in primitive types like naturals, rationals, booleans, and characters. I won’t make a big deal about it, and I don’t think I will need to: for the most part they will have already seen a language like Python or Java with types for primitive values.
+</p>
+<p>
+When we get to talking about sets, however (usually the second unit, after starting with propositional logic), we will define sets as collections of values, and I will explicitly point out the similarity to types. I will tell them that types are <em>special built-in sets</em> with rules for building their elements. We will go on to talk about disjoint union and Cartesian product, and practice building elements of sum and product types. (When we later get to recursion, they will therefore have the tools they need to start building recursive types such as lists and trees.)
+</p>
+<p>
+The other thing to mention will be the way that when we write the type of a set, as in, <code>Set ℕ</code>, we have to write down the type of the elements—in other words, the <em>universe</em>, or ambient set from which the elements are chosen. When introducing set theory, traditionally one mentions universe sets only when talking about the set complement operation; but the fact is that mathematicians always have some universe set in mind when describing a given set.
+</p>
+<p>
+Now, coming back to the example of <code>{1,2} ⊆ ℕ</code>, it would still be confusing for students if this is a syntax error, and I have some ideas about how to make it work. Briefly, the idea is to allow types to be used in expressions (but not the other way around!), with <code>T : Set T</code>. If I tell them that types are special sets, then logically they will expect to be able to use them as such! However, this is an extremely nontrivial change: it means that Disco would now be able to represent <em>infinite</em> sets, requiring sets to be internally represented via a deep embedding, rather than simply storing their elements (as is currently the case). For example, <code>2 ∈ (ℕ  {3,5})</code> should evaluate to <code>true</code>, but we obviously can’t just enumerate all the elements of <code>ℕ  {3,5}</code> since there are infinitely many. More on this in a future post, perhaps!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

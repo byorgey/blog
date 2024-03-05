@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Parsing context-sensitive languages with Applicative</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2011/11/26/typeclassopedia-v2-moving-my-efforts-to-the-haskell-wiki.html">« Typeclassopedia v2: moving my efforts to the Haskell wiki</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2012/03/09/announcing-diagrams-0-5.html">» Announcing diagrams 0.5</a>
+
+</span>
+
+
+<h1>Parsing context-sensitive languages with Applicative</h1>
+
+<div class="info">
+  Posted on January  5, 2012
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'applicative'." href="../../../../tag/applicative.html" rel="tag">applicative</a>, <a title="All pages tagged 'context-free'." href="../../../../tag/context-free.html" rel="tag">context-free</a>, <a title="All pages tagged 'context-sensitive'." href="../../../../tag/context-sensitive.html" rel="tag">context-sensitive</a>, <a title="All pages tagged 'grammars'." href="../../../../tag/grammars.html" rel="tag">grammars</a>, <a title="All pages tagged 'infinite'." href="../../../../tag/infinite.html" rel="tag">infinite</a>, <a title="All pages tagged 'monad'." href="../../../../tag/monad.html" rel="tag">monad</a>, <a title="All pages tagged 'parsing'." href="../../../../tag/parsing.html" rel="tag">parsing</a>
+  
+</div>
+
+<section>
+<p>
+Many parser combinator libraries in Haskell (such as <a href="http://hackage.haskell.org/package/parsec">parsec</a>) have both a <code>Monad</code> interface as well as an <code>Applicative</code> interface. (Actually, to be really useful, you also need <code>MonadPlus</code> along with <code>Monad</code>, or <code>Alternative</code> along with <code>Applicative</code>, in order to encode choice; from now on when I talk about <code>Monad</code> and <code>Applicative</code> note that I really have <code>MonadPlus</code> or <code>Alternative</code> in mind as well.) The <code>Applicative</code> interface is often nicer, but it is less powerful than the <code>Monad</code> interface: in particular, using <code>Applicative</code> you can only parse <a href="http://en.wikipedia.org/wiki/Context-free_language">context-free languages</a>, whereas <code>Monad</code> lets you parse arbitrary context-sensitive languages. Intuitively, this is because the structure of <code>Applicative</code> computations cannot depend on intermediate results, whereas <code>Monad</code> computations allow you to choose which computation to run next based on intermediate results.
+</p>
+<p>
+This is a good bit of intuition, with only one minor caveat: it isn’t true! I believe it was two years ago, during the second <a href="http://www.haskell.org/haskellwiki/Hac_%CF%86">Hac phi</a>, when I first learned from <a href="http://comonad.com/reader/">Edward Kmett</a> how <code>Applicative</code> (by which I mean, of course, <code>Alternative</code>) can be used to parse arbitrary context-sensitive languages. The question just came up again in the <code>#haskell</code> IRC channel, and I figured it would be useful to have this all written down somewhere. In particular, Reid Barton gave a nice sketch which I decided to turn into some working code.
+</p>
+<p>
+Here’s the key insight: normally, grammars are defined as <em>finite</em> objects: a finite set of terminals, a finite set of nonterminals, and a finite set of productions. However, Haskell’s general recursion means that we can write down a "grammar" with an <em>infinite</em> set of production rules. This is what lets us get away with parsing context-sensitive languages with <code>Applicative</code>: we just make a different production rule for every possible input!
+</p>
+<p>
+First, some imports. Notice that I do <em>not</em> import <code>Control.Monad</code>.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Text</span><span>.</span><span>Parsec</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Text</span><span>.</span><span>Parsec</span><span>.</span><span>String</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Arrow</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>&amp;&amp;&amp;</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Control</span><span>.</span><span>Applicative</span> <span>hiding</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>&lt;|&gt;</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">import</span> <span>Data</span><span>.</span><span>List</span> <span style="color:red;">(</span><span>group</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+The usual <code>guard</code> function is for <code>MonadPlus</code>, but we can make something equivalent for <code>Alternative</code>.
+</p>
+<pre><code><span>&gt;</span> <span>guard'</span> <span style="color:red;">::</span> <span>Alternative</span> <span>f</span> <span style="color:red;">=&gt;</span> <span>Bool</span> <span style="color:red;">-&gt;</span> <span>f</span> <span>()</span>
+<span>&gt;</span> <span>guard'</span> <span>True</span>  <span style="color:red;">=</span> <span>pure</span> <span>()</span>
+<span>&gt;</span> <span>guard'</span> <span>False</span> <span style="color:red;">=</span> <span>empty</span>
+</code></pre>
+<p>
+And now for the meat of the example. <code>parseArbitrary</code> takes an arbitrary predicate on <code>Strings</code> built from lowercase letters and turns it into a parser. The created parser will accept <code>Strings</code> for which the predicate evaluates to <code>True</code> (returning <code>()</code>) and fail for any other string.
+</p>
+<pre><code><span>&gt;</span> <span>parseArbitrary</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>String</span> <span style="color:red;">-&gt;</span> <span>Bool</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>Parser</span> <span>()</span>
+<span>&gt;</span> <span>parseArbitrary</span> <span>p</span> <span style="color:red;">=</span>
+</code></pre>
+<p>
+If we encounter <code>eof</code>, we simply ensure that the predicate holds of the empty string.
+</p>
+<pre><code><span>&gt;</span>       <span style="color:red;">(</span><span>eof</span> <span>&lt;*</span> <span>guard'</span> <span style="color:red;">(</span><span>p</span> <span>[]</span><span style="color:red;">)</span><span style="color:red;">)</span> 
+</code></pre>
+<p>
+Otherwise, we choose between 26 alternatives based on the next character in the input. If the character <code>c</code> is encountered, we make a recursive call to <code>parseArbitrary (p . (c:))</code>. The remainder of the input must satisfy <code>(p . (c:))</code>, that is, it must consist of some <code>String</code> <code>s</code> such that <code>(c:s)</code> satisfies the predicate <code>p</code>.
+</p>
+<pre><code><span>&gt;</span>   <span>&lt;|&gt;</span> <span>foldr</span> <span style="color:red;">(</span><span>&lt;|&gt;</span><span style="color:red;">)</span> <span>parserZero</span> 
+<span>&gt;</span>         <span style="color:red;">(</span><span>map</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>c</span> <span style="color:red;">-&gt;</span> <span>char</span> <span>c</span> <span>*&gt;</span> 
+<span>&gt;</span>                     <span>parseArbitrary</span> <span style="color:red;">(</span><span>p</span> <span>.</span> <span style="color:red;">(</span><span>c</span><span>:</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>              <span style="color:red;">)</span> 
+<span>&gt;</span>              <span style="color:red;">[</span><span style="color:teal;">'a'</span><span style="color:red;">..</span><span style="color:teal;">'z'</span><span style="color:red;">]</span>
+<span>&gt;</span>         <span style="color:red;">)</span>
+</code></pre>
+<p>
+For any given predicate <code>p</code>, you can think of <code>parseArbitrary p</code> as an infinite tree with a 26-way branch at each node. Each node "remembers" the path taken to reach it from the root of the tree, in the form of prepend functions composed with the original predicate. We have constructed an infinite grammar: each node in the tree corresponds to a production, one for every possible input prefix.
+</p>
+<p>
+Let’s try it out. Here’s a function which only accepts <code>String</code>s of the form <code>"aaabbbccc"</code>, with an equal number of a’s, b’s, and c’s. This is a well-known example of a language which is not context-free (easily shown using the <a href="http://en.wikipedia.org/wiki/Pumping_lemma_for_context-free_languages">pumping lemma for context-free languages</a>).
+</p>
+<pre><code><span>&gt;</span> <span>f</span> <span style="color:red;">::</span> <span>String</span> <span style="color:red;">-&gt;</span> <span>Bool</span>
+<span>&gt;</span> <span>f</span> <span>s</span> 
+<span>&gt;</span>   <span style="color:red;">|</span> <span style="color:red;">[</span><span style="color:red;">(</span><span style="color:teal;">'a'</span><span style="color:red;">,</span><span>na</span><span style="color:red;">)</span><span style="color:red;">,</span> <span style="color:red;">(</span><span style="color:teal;">'b'</span><span style="color:red;">,</span><span>nb</span><span style="color:red;">)</span><span style="color:red;">,</span> <span style="color:red;">(</span><span style="color:teal;">'c'</span><span style="color:red;">,</span><span>nc</span><span style="color:red;">)</span><span style="color:red;">]</span> 
+<span>&gt;</span>     <span style="color:red;">&lt;-</span> <span>map</span> <span style="color:red;">(</span><span>head</span> <span>&amp;&amp;&amp;</span> <span>length</span><span style="color:red;">)</span><span>.</span> <span>group</span> <span>$</span> <span>s</span>
+<span>&gt;</span> 
+<span>&gt;</span>     <span style="color:red;">=</span> <span>na</span> <span>==</span> <span>nb</span> <span>&amp;&amp;</span> <span>nb</span> <span>==</span> <span>nc</span>
+<span>&gt;</span> 
+<span>&gt;</span>   <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">=</span> <span>False</span>
+</code></pre>
+<p>
+Now we make <code>f</code> into a parser and test it on some example inputs:
+</p>
+<pre><code><span>&gt;</span> <span>p</span> <span style="color:red;">=</span> <span>parseArbitrary</span> <span>f</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>main</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+<span>&gt;</span>   <span>parseTest</span> <span>p</span> <span style="color:teal;">"aaa"</span>
+<span>&gt;</span>   <span>parseTest</span> <span>p</span> <span style="color:teal;">"aaabbbcc"</span>
+<span>&gt;</span>   <span>parseTest</span> <span>p</span> <span style="color:teal;">"aaaabcccc"</span>
+<span>&gt;</span>   <span>parseTest</span> <span>p</span> <span style="color:teal;">"aaaaabbbbbccccc"</span>
+</code></pre>
+<p>
+The last test succeeds by returning <code>()</code>. For the first three, we get error messages like this:
+</p>
+<pre><code>parse error at (line 1, column 4):
+unexpected end of input
+expecting "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y" or "z"</code></pre>
+<p>
+Obviously, these are not very helpful. But what were you expecting? <s>After all, this is one of those things that is interesting in theory, but in practice amounts to an awful hack that no one would ever want to use in real code.
+</p>
+<p>
+In the end, it’s still true that <code>Applicative</code> can only parse context-free languages <em>as long as we restrict ourselves to finite grammars</em>—which any sensible programmer would do anyway.</s>
+</p>
+<p>
+[<b>ETA</b>: it looks like using infinite grammars is not as impractical as I thought—see the comments below!]
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

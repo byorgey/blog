@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: Infinite 2D array, Levels 2 and 3</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2023/01/02/binary-search-over-floating-point-representations.html">« Binary search over floating point representations</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2023/02/07/subtracting-natural-numbers-types-and-usability.html">» Subtracting natural numbers: types and usability</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: Infinite 2D array, Levels 2 and 3</h1>
+
+<div class="info">
+  Posted on January 16, 2023
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'number'." href="../../../../tag/number.html" rel="tag">number</a>
+  
+</div>
+
+<section>
+<p>
+In a <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-in-haskell-infinite-2d-array/">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. As a reminder, the problem specifies a two-parameter recurrence <span class="math inline">\(F_{x,y}\)</span>, given by
+</p>
+<ul>
+<li>
+<span class="math inline">\(F_{0,0} = 0\)</span>
+</li>
+<li>
+<span class="math inline">\(F_{0,1} = F_{1,0} = 1\)</span>
+</li>
+<li>
+<span class="math inline">\(F_{i,0} = F_{i-1,0} + F_{i-2,0}\)</span> for <span class="math inline">\(i \geq 2\)</span>
+</li>
+<li>
+<span class="math inline">\(F_{0,i} = F_{0,i-1} + F_{0,i-2}\)</span> for <span class="math inline">\(i \geq 2\)</span>
+</li>
+<li>
+<span class="math inline">\(F_{i,j} = F_{i-1,j} + F_{i,j-1}\)</span> for <span class="math inline">\(i,j \geq 1\)</span>.
+</li>
+</ul>
+<p>
+<a href="https://byorgey.wordpress.com/2022/12/03/competitive-programming-in-haskell-infinite-2d-array-level-1/">Last time</a>, we derived a formula for <span class="math inline">\(F_{x,y}\)</span> that involves only a linear number of terms:
+</p>
+<p>
+<span class="math inline">\(\displaystyle F_{x,y} = \left(\sum_{1 \leq k \leq x} F_k \binom{x-k+y-1}{x-k}\right) + \left(\sum_{1 \leq k \leq y} F_k \binom{y-k+x-1}{y-k}\right) \pmod{P}\)</span>
+</p>
+<p>
+While the number of terms may be linear, it can still be on the order of a million terms, so computing each term is going to have to be pretty quick in order to fit the whole thing within the one second time limit.
+</p>
+<h2 id="fibonacci-numbers-modulo-a-prime">
+Fibonacci numbers modulo a prime
+</h2>
+<p>
+Computing Fibonacci numbers modulo a prime is not hard, especially since we want <em>all</em> the Fibonacci numbers from 1 up to <span class="math inline">\(\max(x,y)\)</span>: just compute each one by adding the previous two modulo <span class="math inline">\(P\)</span>. We could also precompute a table of Fibonacci numbers mod <span class="math inline">\(P\)</span> this way. And any of the fast methods for computing individual Fibonacci numbers (for example, using <a href="https://www.haskellforall.com/2020/04/blazing-fast-fibonacci-numbers-using.html">2x2 matrix exponentiation</a>) also work just fine if you reduce everything modulo <span class="math inline">\(P\)</span> at each step, since they only involve addition, subtraction, and multiplication.
+</p>
+<h2 id="binomial-coefficients-modulo-a-prime">
+Binomial coefficients modulo a prime
+</h2>
+<p>
+What about binomial coefficients? Since <span class="math inline">\(n\)</span> and <span class="math inline">\(k\)</span> are not too large, and in particular since they will both be smaller than <span class="math inline">\(P\)</span>, we can use the usual formula:
+</p>
+<p>
+<span class="math inline">\(\displaystyle \binom n k = \frac{n!}{k!(n-k)!}\)</span>
+</p>
+<p>
+(If <span class="math inline">\(n\)</span> and <span class="math inline">\(k\)</span> could be much larger, or if they could be larger than <span class="math inline">\(P\)</span>, we would have to use something like <a href="https://en.wikipedia.org/wiki/Lucas%27s_theorem">Lucas’s Theorem</a> or <a href="https://cp-algorithms.com/combinatorics/binomial-coefficients.html">other techniques</a>; that might make for another interesting blog post sometime.) But how do we handle division in modular arithmtic? Since we’re working modulo a prime, every value <span class="math inline">\(a\)</span> other than zero must have a <em>modular inverse</em>, that is, a value <span class="math inline">\(a^{-1}\)</span> such that <span class="math inline">\(a \cdot a^{-1} \equiv 1 \pmod p\)</span> (this is a corollary of <a href="https://mathlesstraveled.com/2015/11/25/mablowrimo-24-bezouts-identity/">Bézout’s Theorem</a>). To compute the modular inverse for a given <span class="math inline">\(a\)</span>, we have a couple options. One simple way is to use <a href="https://mathlesstraveled.com/2017/10/14/four-formats-for-fermat/">Fermat’s Little Theorem</a>: if <span class="math inline">\(a\)</span> is not divisible by a prime <span class="math inline">\(p\)</span>, then <span class="math inline">\(a^{p-2} \cdot a = a^{p-1} \equiv 1 \pmod p\)</span>, hence <span class="math inline">\(a^{p-2}\)</span> is the modular inverse of <span class="math inline">\(a\)</span> modulo <span class="math inline">\(p\)</span>, and we can compute it efficiently using repeated squaring modulo <span class="math inline">\(p\)</span>. Another option is to use the <a href="https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm">extended Euclidean algorithm</a> to find the <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> (guaranteed to exist by Bézout’s Theorem) such that <span class="math inline">\(ax + py = 1\)</span>; then <span class="math inline">\(x\)</span> is the inverse of <span class="math inline">\(a\)</span> modulo <span class="math inline">\(p\)</span>.
+</p>
+<p>
+Both of these methods take <span class="math inline">\(O(\lg p)\)</span> time. In my experience, computing the <span class="math inline">\(p-2\)</span> power is easier to code (especially in Haskell where we <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">get exponentiation by repeated squaring for free</a>!), but using the extended Euclidean algorithm can be a bit faster when it’s well-optimized. (Note the extended Euclidean algorithm can be faster when <span class="math inline">\(a\)</span> is small, but raising to the <span class="math inline">\(p-2\)</span> power always takes the same number of steps no matter what <span class="math inline">\(a\)</span> is.)
+</p>
+<h2 id="factorials-modulo-a-prime">
+Factorials modulo a prime
+</h2>
+<p>
+Since we’re going to be repeatedly using the same factorials, one thing we absolutely must do is precompute a table of factorials mod <span class="math inline">\(P\)</span>, from <span class="math inline">\(0\)</span> up to some maximum. In this case, since our formula involves things like <span class="math inline">\(\binom {x-k+y-1}{x-k}\)</span>, we may need factorials up to <span class="math inline">\(x + y\)</span>, so a table of size <span class="math inline">\(2 \times 10^6\)</span> will do (<span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> can be up to <span class="math inline">\(10^6\)</span>).
+</p>
+<p>
+We could also precompute a table of modular inverses of factorials; to compute the inverse of <span class="math inline">\(k!\)</span>, we just find the inverse of each <span class="math inline">\(k\)</span> and multiply it by the (previously computed) inverse of <span class="math inline">\((k-1)!\)</span>. (Or we could just invert the value for <span class="math inline">\(k!\)</span> stored in the other table.) Making a table of inverse factorials like this turns out not to help too much for this particular problem, but it can be an important optimization in some cases.
+</p>
+<h2 id="the-end">
+The end?
+</h2>
+<p>
+So we can compute each additional Fibonacci number in <span class="math inline">\(O(1)\)</span>; we can also now compute binomial coefficients modulo <span class="math inline">\(P\)</span> in <span class="math inline">\(O(\lg P)\)</span>, with a few <span class="math inline">\(O(1)\)</span> table lookups for factorials and an <span class="math inline">\(O(\lg P)\)</span> inversion operation. (Again, we could achieve <span class="math inline">\(O(1)\)</span> if we also stored a table of inverse factorials, but for this problem it seems the additional time needed to construct the table in the first place outweighs the time saved computing binomial coefficients.) In theory, we have everything we need to solve this problem efficiently.
+</p>
+<p>
+However, for this problem, constant factors matter! There’s still quite a bit of nontrivial work I had to do to get my code fast enough. In my next and final post on this problem, we’ll walk through a few different ideas for implementing this concretely in Haskell.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

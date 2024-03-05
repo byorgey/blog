@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Creating documents with embedded diagrams</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2012/08/26/blogliterately-0-5-2-release-with-improved-image-uploading.html">« BlogLiterately 0.5.2 release, with improved image uploading</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2012/10/13/fogbugz-beeminder-and-pure-functions-in-the-cloud.html">» FogBugz, Beeminder, and... pure functions in the cloud?</a>
+
+</span>
+
+
+<h1>Creating documents with embedded diagrams</h1>
+
+<div class="info">
+  Posted on August 28, 2012
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'announcement'." href="../../../../tag/announcement.html" rel="tag">announcement</a>, <a title="All pages tagged 'BlogLiterately'." href="../../../../tag/BlogLiterately.html" rel="tag">BlogLiterately</a>, <a title="All pages tagged 'build'." href="../../../../tag/build.html" rel="tag">build</a>, <a title="All pages tagged 'diagrams'." href="../../../../tag/diagrams.html" rel="tag">diagrams</a>, <a title="All pages tagged 'document'." href="../../../../tag/document.html" rel="tag">document</a>, <a title="All pages tagged 'dynamic'." href="../../../../tag/dynamic.html" rel="tag">dynamic</a>, <a title="All pages tagged 'embedding'." href="../../../../tag/embedding.html" rel="tag">embedding</a>, <a title="All pages tagged 'hint'." href="../../../../tag/hint.html" rel="tag">hint</a>, <a title="All pages tagged 'LaTeX'." href="../../../../tag/LaTeX.html" rel="tag">LaTeX</a>, <a title="All pages tagged 'Markdown'." href="../../../../tag/Markdown.html" rel="tag">Markdown</a>
+  
+</div>
+
+<section>
+<p>
+If you read my <a href="http://byorgey.wordpress.com/2012/08/24/unordered-tuples-and-type-algebra/">recent post about type algebra</a>, you may have wondered how I got all those nice images in there. Surely creating the images and then inserting them into the post by hand would be rather tedious! Indeed, it would be, but that’s not what I did. I’m quite pleased to announce the release of several tools for making this sort of thing not only possible but even convenient.
+</p>
+<p>
+Behind it all is the recently released <a href="http://hackage.haskell.org/package/diagrams%2Dbuilder">diagrams-builder package</a>. Diagrams backends such as <a href="http://hackage.haskell.org/package/diagrams%2Dcairo">diagrams-cairo</a> give you a static way to render diagrams. <code>diagrams-builder</code> makes the process dynamic: it can take arbitrary snippets of Haskell code, merge them intelligently, and call out to <a href="http://hackage.haskell.org/package/hint">hint</a> to render a diagram represented by some Haskell expression.
+</p>
+<p>
+As a specific application of <code>diagrams-builder</code>, I’ve released <a href="http://hackage.haskell.org/package/BlogLiterately%2Ddiagrams">BlogLiterately-diagrams</a>, a diagrams plugin for <a href="http://hackage.haskell.org/package/BlogLiterately">BlogLiterately</a>. This is what I used to produce the type algebra post. The entire post was written in a single Markdown document, with inline diagrams code in specially marked code blocks. <code>BlogLiterately-diagrams</code> handles compiling those code blocks and replacing them with the generated images; <code>BlogLiterately</code> automatically uploads the images to the server. For example, including
+</p>
+<pre><code>```{.dia width='200'}
+sq = square 1
+
+foo 0 = sq
+foo n = ((foo' ||| sq') === (sq' ||| foo')) # centerXY # scale 0.5
+  where 
+    foo'   = foo (n-1)
+    sq'    = sq # fc (colors !! n)
+    colors = [black, red, orange, yellow, green, blue]
+
+dia = foo 5 # lw 0
+```</code></pre>
+<p>
+in the middle of a post results in
+</p>
+<div style="text-align:center;">
+<div class="figure">
+<img src="http://byorgey.files.wordpress.com/2012/08/4ad96cdf96e31202a1851539a5c1c7e0.png" />
+<p class="caption">
+</p>
+</div>
+</div>
+<p>
+being included in the generated HTML.
+</p>
+<p>
+Another exciting thing to mention is the LaTeX package <code>diagrams-latex.sty</code>, included in the <code>diagrams-builder</code> distribution. It lets you embed diagrams in LaTeX documents in much the same way that <code>BlogLiterately-diagrams</code> lets you embed diagrams in blog posts. Just stick diagrams code between <code>
+</code> and compile the document with <code>pdflatex –enable-write18</code>. It probably needs more work to smooth out some rough edges, but it’s quite usable as it is—in fact, I’m currently using it to create the slides for my Haskell Symposium presentation in a few weeks.
+</p>
+<p>
+Just to give a little perspective, this is essentially why I started building diagrams, over four years ago now—I wanted to produce some illustrations for a blog post, but was unsatisfied with the existing tools I found. With these tools, I can finally say that I’ve fully achieved my vision of four years ago—though don’t worry, my vision has grown much larger in the meantime!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

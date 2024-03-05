@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Haskell anti-pattern: incremental ad-hoc parameter abstraction</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2010/03/12/math-combinatorics-multiset-and-sawadas-algorithm.html">« Math.Combinatorics.Multiset and Sawada's algorithm</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2010/04/07/functional-pearl-on-combinatorial-species.html">» Functional pearl on combinatorial species</a>
+
+</span>
+
+
+<h1>Haskell anti-pattern: incremental ad-hoc parameter abstraction</h1>
+
+<div class="info">
+  Posted on April  3, 2010
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'anti-pattern'." href="../../../../tag/anti-pattern.html" rel="tag">anti-pattern</a>, <a title="All pages tagged 'default'." href="../../../../tag/default.html" rel="tag">default</a>, <a title="All pages tagged 'named'." href="../../../../tag/named.html" rel="tag">named</a>, <a title="All pages tagged 'optional'." href="../../../../tag/optional.html" rel="tag">optional</a>, <a title="All pages tagged 'parameters'." href="../../../../tag/parameters.html" rel="tag">parameters</a>, <a title="All pages tagged 'records'." href="../../../../tag/records.html" rel="tag">records</a>
+  
+</div>
+
+<section>
+<p>
+Recently I’ve found myself doing the following very ugly thing. Perhaps you’ve unwittingly done it too—so I thought I’d share the problem and its solution.
+</p>
+<p>
+Suppose I’ve written a function <code>foo</code>:
+</p>
+<pre><code><span>&gt;</span> <span>foo</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Result</span>
+<span>&gt;</span> <span>foo</span> <span>n</span> <span style="color:red;">=</span> <span>...</span> <span>n</span> <span>...</span>
+</code></pre>
+<p>
+Who knows what <code>Result</code> is; that’s not the point. Everything is going fine until I suddenly realize that occasionally I would like to be able to control the number of wibbles! Well, every good programmer knows the answer to this: abstract out the number of wibbles as a parameter.
+</p>
+<pre><code><span>&gt;</span> <span>foo</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Result</span>
+<span>&gt;</span> <span>foo</span> <span>numWibbles</span> <span>n</span> <span style="color:red;">=</span> <span>...</span> <span>n</span> <span>...</span> <span>numWibbles</span> <span>...</span>
+</code></pre>
+<p>
+But this isn’t quite what I want. For one thing, I’ve already used <code>foo</code> in a bunch of places in my code, and it would be annoying to go back and change them all (even with refactoring support). What’s more, most of the time I only want one wibble. So I end up doing something like this:
+</p>
+<pre><code><span>&gt;</span> <span>foo'</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Result</span>
+<span>&gt;</span> <span>foo'</span> <span>numWibbles</span> <span>n</span> <span style="color:red;">=</span> <span>...</span> <span>n</span> <span>...</span> <span>numWibbles</span> <span>...</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>foo</span> <span style="color:red;">=</span> <span>foo'</span> <span class="hs-num">1</span>
+</code></pre>
+<p>
+Great! Now all my old code still works, and I can use <code>foo’</code> whenever I want the extra control over the number of wibbles.
+</p>
+<p>
+Well, this may seem great, but it’s a slippery slope straight to code hell. What happens when I realize that I also want to be able to specify whether the wibbles should be furbled or not? Well, I could do this:
+</p>
+<pre><code><span>&gt;</span> <span>foo''</span> <span style="color:red;">::</span> <span>Bool</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Result</span>
+<span>&gt;</span> <span>foo''</span> <span>wibblesShouldBeFurbled</span> <span>numWibbles</span> <span>n</span> <span style="color:red;">=</span> <span>...</span> 
+<span>&gt;</span> 
+<span>&gt;</span> <span>foo'</span> <span style="color:red;">=</span> <span>foo''</span> <span>False</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>foo</span> <span style="color:red;">=</span> <span>foo'</span> <span class="hs-num">1</span>
+</code></pre>
+<p>
+Yes, all my old code still works and I can now succesfully control the furblization if I so desire. But at what cost? First of all, this is just… well, ugly. Good luck trying to remember what <code>foo’‘</code> does and what arguments it takes. And what if I want to furble exactly one wibble? Well, I’m stuck using <code>foo’’ True 1</code> because I can’t control the furblization without giving the number of wibbles explicitly.
+</p>
+<p>
+Yes, I have actually done things like this. In fact, this problem is quite apparent in the currently released version of my <a href="http://code.haskell.org/diagrams">diagrams library</a>. For example:
+</p>
+<ul>
+<li>
+<code>hcat</code> lays out a list of diagrams horizontally;
+</li>
+<li>
+<code>hsep</code> is like <code>hcat</code>, but takes another argument specifying the amount of space to place in between each diagram;
+</li>
+<li>
+<code>hsepA</code> is like <code>hsep</code>, but takes yet another argument specifying the vertical alignment of the diagrams;
+</li>
+<li>
+and don’t even get me started on the <code>distrib</code> family of functions, which are like <code>hcat</code> and friends but put diagrams at evenly spaced intervals instead of putting a certain amount of space between each one…
+</li>
+</ul>
+<p>
+You get the idea. So, what’s the solution? What I really want (which you may have figured out by this point) is <em>optional, named</em> arguments. But Haskell doesn’t have either! What to do?
+</p>
+<p>
+I finally came up with an idea the other day… but then with a little Googling discovered that others have already thought of it. I’ve probably even read about it before, but I guess I didn’t need it back then so it didn’t stick!
+</p>
+<p>
+Here’s the idea, <a href="http://neilmitchell.blogspot.com/2008/04/optional-parameters-in-haskell.html">as explained by Neil Mitchell</a>: put the optional arguments to a function in a custom data structure using record syntax, and declare a record with all the default arguments. Then we can call our function using the default record, overriding whichever fields we want using record update syntax. Of course, it’s still annoying to have to remember which default record of arguments goes with which function; but the icing on the cake is that we can use a type class to provide the default arguments automatically. There’s already a suitable type class on Hackage in the <a href="http://hackage.haskell.org/package/data%2Ddefault">data-default</a> package.
+</p>
+<p>
+So now my code looks something like this:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>FooOptions</span> <span style="color:red;">=</span> <span>FooOptions</span> 
+<span>&gt;</span>                   <span style="color:red;">{</span> <span>wibblesShouldBeFurbled</span> <span style="color:red;">::</span> <span>Bool</span>
+<span>&gt;</span>                   <span style="color:red;">,</span> <span>numWibbles</span> <span style="color:red;">::</span> <span>Int</span>
+<span>&gt;</span>                   <span style="color:red;">}</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">instance</span> <span>Default</span> <span>FooOptions</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>def</span> <span style="color:red;">=</span> <span>FooOptions</span> <span>False</span> <span class="hs-num">1</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span>...</span> <span>foo</span> <span>def</span> <span style="color:red;">{</span> <span>wibblesShouldBeFurbled</span> <span style="color:red;">=</span> <span>True</span> <span style="color:red;">}</span> <span>...</span>
+</code></pre>
+<p>
+Nice. It might even be cool to define <code>with</code> as a synonym for <code>def</code>, to allow the natural-sounding
+</p>
+<pre><code><span>&gt;</span> <span>...</span> <span>foo</span> <span>with</span> <span style="color:red;">{</span> <span>numWibbles</span> <span style="color:red;">=</span> <span class="hs-num">4</span> <span style="color:red;">}</span> <span>...</span>
+</code></pre>
+<p>
+Of course, this isn’t perfect; if Haskell had real records it might be a bit nicer. For one thing this tends to result in a bit of namespace pollution: I can’t have another function which also takes an option called <code>numWibbles</code> since it will clash with the one in <code>FooOptions</code>! But this is still a giant improvement over the code I used to write.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

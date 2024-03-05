@@ -1,0 +1,3060 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Catsters guide</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../">Home</a> •
+                <a href="../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../posts/2013/10/18/in-defense-of-drawing-by-coding.html">« In defense of drawing by coding</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../posts/2014/01/14/catsters-guide.html">» Catsters guide</a>
+
+</span>
+
+
+<h1>Catsters guide</h1>
+
+<div class="info">
+  Posted on January 13, 2014
+  
+  
+  <br />
+  Tagged 
+  
+</div>
+
+<section>
+<div id="TOC">
+<ul>
+<li>
+<a href="#introduction">Introduction</a>
+</li>
+<li>
+<a href="#terminal-and-initial-objects">Terminal and Initial objects</a>
+<ul>
+<li>
+<a href="#terminal-and-initial-objects-1">Terminal and initial objects 1</a>
+</li>
+<li>
+<a href="#terminal-and-initial-objects-2">Terminal and initial objects 2</a>
+</li>
+<li>
+<a href="#terminal-and-initial-objects-3">Terminal and initial objects 3</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#products-and-coproducts">Products and Coproducts</a>
+<ul>
+<li>
+<a href="#products-and-coproducts-1">Products and coproducts 1</a>
+</li>
+<li>
+<a href="#products-and-coproducts-2">Products and coproducts 2</a>
+</li>
+<li>
+<a href="#products-and-coproducts-3">Products and coproducts 3</a>
+</li>
+<li>
+<a href="#products-and-coproducts-4">Products and coproducts 4</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#pullbacks-and-pushouts">Pullbacks and Pushouts</a>
+<ul>
+<li>
+<a href="#pullbacks-and-pushouts-1">Pullbacks and pushouts 1</a>
+</li>
+<li>
+<a href="#pullbacks-and-pushouts-2">Pullbacks and pushouts 2</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#natural-transformations">Natural transformations</a>
+<ul>
+<li>
+<a href="#natural-transformations-1">Natural transformations 1</a>
+</li>
+<li>
+<a href="#natural-transformations-2">Natural transformations 2</a>
+</li>
+<li>
+<a href="#natural-transformations-3">Natural transformations 3</a>
+</li>
+<li>
+<a href="#natural-transformations-3a">Natural transformations 3A</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#representable-functors-and-the-yoneda-lemma">Representable functors and the Yoneda Lemma</a>
+<ul>
+<li>
+<a href="#representables-and-yoneda-1">Representables and Yoneda 1</a>
+</li>
+<li>
+<a href="#representables-and-yoneda-2">Representables and Yoneda 2</a>
+</li>
+<li>
+<a href="#representables-and-yoneda-3">Representables and Yoneda 3</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#adjunctions-part-1">Adjunctions (part 1)</a>
+<ul>
+<li>
+<a href="#adjunctions-1">Adjunctions 1</a>
+</li>
+<li>
+<a href="#adjunctions-2">Adjunctions 2</a>
+</li>
+<li>
+<a href="#adjunctions-4">Adjunctions 4</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#monads">Monads</a>
+<ul>
+<li>
+<a href="#monads-1">Monads 1</a>
+</li>
+<li>
+<a href="#monads-2">Monads 2</a>
+</li>
+<li>
+<a href="#monads-3">Monads 3</a>
+</li>
+<li>
+<a href="#monads-3a">Monads 3A</a>
+</li>
+<li>
+<a href="#monads-4">Monads 4</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#adjunctions-and-monads">Adjunctions and monads</a>
+<ul>
+<li>
+<a href="#adjunctions-3">Adjunctions 3</a>
+</li>
+<li>
+<a href="#adjunctions-5">Adjunctions 5</a>
+</li>
+<li>
+<a href="#adjunctions-6">Adjunctions 6</a>
+</li>
+<li>
+<a href="#adjunctions-7">Adjunctions 7</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#string-diagrams">String diagrams</a>
+<ul>
+<li>
+<a href="#string-diagrams-1">String diagrams 1</a>
+</li>
+<li>
+<a href="#string-diagrams-2">String diagrams 2</a>
+</li>
+<li>
+<a href="#string-diagrams-3">String diagrams 3</a>
+</li>
+<li>
+<a href="#string-diagrams-4">String diagrams 4</a>
+</li>
+<li>
+<a href="#string-diagrams-5">String diagrams 5</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#pipe-cleaners">Pipe cleaners</a>
+</li>
+<li>
+<a href="#general-limits-and-colimits">General Limits and Colimits</a>
+<ul>
+<li>
+<a href="#general-limits-and-colimits-1">General limits and colimits 1</a>
+</li>
+<li>
+<a href="#general-limits-and-colimits-2">General limits and colimits 2</a>
+</li>
+<li>
+<a href="#general-limits-and-colimits-3">General limits and colimits 3</a>
+</li>
+<li>
+<a href="#general-limits-and-colimits-4">General limits and colimits 4</a>
+</li>
+<li>
+<a href="#general-limits-and-colimits-5">General limits and colimits 5</a>
+</li>
+<li>
+<a href="#general-limits-and-colimits-6">General limits and colimits 6</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#slice-and-comma-categories">Slice and comma categories</a>
+<ul>
+<li>
+<a href="#slice-and-comma-categories-1">Slice and comma categories 1</a>
+</li>
+<li>
+<a href="#slice-and-comma-categories-2">Slice and comma categories 2</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#coequalisers">Coequalisers</a>
+<ul>
+<li>
+<a href="#coequalisers-1">Coequalisers 1</a>
+</li>
+<li>
+<a href="#coequalisers-2">Coequalisers 2</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#monoid-objects">Monoid objects</a>
+<ul>
+<li>
+<a href="#monoid-objects-1">Monoid objects 1</a>
+</li>
+<li>
+<a href="#monoid-objects-2">Monoid objects 2</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#categories">2-categories</a>
+<ul>
+<li>
+<a href="#categories-1">2-categories 1</a>
+</li>
+<li>
+<a href="#categories-2">2-categories 2</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#eckmann-hilton">Eckmann-Hilton</a>
+<ul>
+<li>
+<a href="#eckmann-hilton-1">Eckmann-Hilton 1</a>
+</li>
+<li>
+<a href="#eckmann-hilton-2">Eckmann-Hilton 2</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#distributive-laws">Distributive laws</a>
+<ul>
+<li>
+<a href="#distributive-laws-1">Distributive laws 1</a>
+</li>
+<li>
+<a href="#distributive-laws-2">Distributive laws 2</a>
+</li>
+<li>
+<a href="#distributive-laws-3-aka-monads-6">Distributive laws 3 (aka Monads 6)</a>
+</li>
+<li>
+<a href="#distributive-laws-4">Distributive laws 4</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#group-objects-and-hopf-algebras">Group Objects and Hopf Algebras</a>
+<ul>
+<li>
+<a href="#group-objects-and-hopf-algebras-1">Group Objects and Hopf Algebras 1</a>
+</li>
+<li>
+<a href="#group-objects-and-hopf-algebras-2">Group Objects and Hopf Algebras 2</a>
+</li>
+<li>
+<a href="#group-objects-and-hopf-algebras-3">Group Objects and Hopf Algebras 3</a>
+</li>
+<li>
+<a href="#group-objects-and-hopf-algebras-4">Group Objects and Hopf Algebras 4</a>
+</li>
+<li>
+<a href="#group-objects-and-hopf-algebras-5">Group Objects and Hopf Algebras 5</a>
+</li>
+<li>
+<a href="#group-objects-and-hopf-algebras-6">Group Objects and Hopf Algebras 6</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#ends">Ends</a>
+<ul>
+<li>
+<a href="#ends-1">Ends 1</a>
+</li>
+<li>
+<a href="#ends-2">Ends 2</a>
+</li>
+<li>
+<a href="#ends-3">Ends 3</a>
+</li>
+<li>
+<a href="#ends-4">Ends 4</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#adjunctions-from-morphisms">Adjunctions from morphisms</a>
+<ul>
+<li>
+<a href="#adjunctions-from-morphisms-1">Adjunctions from morphisms 1</a>
+</li>
+<li>
+<a href="#adjunctions-from-morphisms-2">Adjunctions from morphisms 2</a>
+</li>
+<li>
+<a href="#adjunctions-from-morphisms-3">Adjunctions from morphisms 3</a>
+</li>
+<li>
+<a href="#adjunctions-from-morphisms-4">Adjunctions from morphisms 4</a>
+</li>
+<li>
+<a href="#adjunctions-from-morphisms-5">Adjunctions from morphisms 5</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#double-categories">Double Categories</a>
+<ul>
+<li>
+<a href="#double-categories-1">Double Categories</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#spans">Spans</a>
+<ul>
+<li>
+<a href="#spans-1">Spans 1</a>
+</li>
+<li>
+<a href="#spans-2">Spans 2</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#multicategories">Multicategories</a>
+<ul>
+<li>
+<a href="#multicategories-1">Multicategories 1</a>
+</li>
+<li>
+<a href="#multicategories-2">Multicategories 2</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#metric-spaces-and-enriched-categories">Metric Spaces and Enriched Categories</a>
+<ul>
+<li>
+<a href="#metric-spaces-and-enriched-categories-1">Metric Spaces and Enriched Categories 1</a>
+</li>
+<li>
+<a href="#metric-spaces-and-enriched-categories-2">Metric Spaces and Enriched Categories 2</a>
+</li>
+<li>
+<a href="#metric-spaces-and-enriched-categories-3">Metric Spaces and Enriched Categories 3</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="introduction">
+Introduction
+</h2>
+<p>
+In an attempt to solidify and extend my knowledge of category theory, I have been working my way through the excellent <a href="http://www.youtube.com/user/TheCatsters">series of category theory lectures posted on Youtube</a> by <a href="http://www.cheng.staff.shef.ac.uk/">Eugenia Cheng</a> and <a href="http://www.simonwillerton.staff.shef.ac.uk/">Simon Willerton</a>, aka <a href="http://ncatlab.org/nlab/show/The+Catsters">the Catsters</a>.
+</p>
+<p>
+Edsko de Vries used to have a listing of the videos, but it is no longer available. After wresting a copy from a Google cache, I began working my way through the videos, but soon discovered that Edsko’s list was organized by subject, <em>not</em> topologically sorted. So I started making my own list, and have put it up here in the hopes that it may be useful to others. Suggestions, corrections, improvements, <em>etc.</em> are of course welcome!
+</p>
+<p>
+As far as possible I have tried to arrange the order so that each video only depends on concepts from earlier ones. Along with each video you can also find my cryptic notes; I make no guarantee that they will be useful to anyone (even me!), but hopefully they will at least give you an idea of what is in each video. (For some of the earlier videos I didn’t take notes, so I have just copied the description from YouTube.)
+</p>
+<p>
+I have <a href="https://www.beeminder.com/byorgey/goals/catsters">a goal</a> to watch two videos per week (at which rate it will take me about nine months to watch all of them); I will keep this list updated with new video links and notes as I go.
+</p>
+<h2 id="terminal-and-initial-objects">
+Terminal and Initial objects
+</h2>
+<h3 id="terminal-and-initial-objects-1">
+Terminal and initial objects 1
+</h3>
+<p>
+http://youtu.be/yeQcmxM2e5I
+</p>
+<ul>
+<li>
+Definition and examples of terminal objects
+</li>
+<li>
+Sketch of proof that terminal objects are unique up to unique isomorphism
+</li>
+</ul>
+<h3 id="terminal-and-initial-objects-2">
+Terminal and initial objects 2
+</h3>
+<p>
+http://youtu.be/9vhWpOVPlIE
+</p>
+<ul>
+<li>
+Proof that terminal objects are unique
+</li>
+<li>
+Examples of categories <em>without</em> terminal objects
+</li>
+</ul>
+<h3 id="terminal-and-initial-objects-3">
+Terminal and initial objects 3
+</h3>
+<p>
+http://youtu.be/yaPwKu5fHqI
+</p>
+<ul>
+<li>
+Definition and examples of initial objects
+</li>
+</ul>
+<h2 id="products-and-coproducts">
+Products and Coproducts
+</h2>
+<h3 id="products-and-coproducts-1">
+Products and coproducts 1
+</h3>
+<p>
+http://youtu.be/upCSDIO9pjc
+</p>
+<ul>
+<li>
+Definition of products
+</li>
+<li>
+Example: cartesian product of sets
+</li>
+<li>
+<span class="math inline">\(B \times A\)</span> and <span class="math inline">\(A \times B\)</span> as two (isomorphic) products
+</li>
+<li>
+Uniqueness up to unique isomorphism
+</li>
+</ul>
+<h3 id="products-and-coproducts-2">
+Products and coproducts 2
+</h3>
+<p>
+http://youtu.be/BqRkULEhG40
+</p>
+<ul>
+<li>
+More on uniqueness up to unique isomorphism
+</li>
+<li>
+Examples and non-examples of products
+</li>
+</ul>
+<h3 id="products-and-coproducts-3">
+Products and coproducts 3
+</h3>
+<p>
+http://youtu.be/TCQWHOUBwDE
+</p>
+<ul>
+<li>
+Definition and example of coproduct
+</li>
+</ul>
+<h3 id="products-and-coproducts-4">
+Products and coproducts 4
+</h3>
+<p>
+http://youtu.be/n6nBgszToBE
+</p>
+<ul>
+<li>
+Definition of the morphisms <span class="math inline">\((f,g)\)</span> and <span class="math inline">\(f \times g\)</span>
+</li>
+<li>
+The diagonal
+</li>
+<li>
+Products with the terminal object
+</li>
+</ul>
+<h2 id="pullbacks-and-pushouts">
+Pullbacks and Pushouts
+</h2>
+<h3 id="pullbacks-and-pushouts-1">
+Pullbacks and pushouts 1
+</h3>
+<p>
+http://youtu.be/XGysPJvCXOc
+</p>
+<ul>
+<li>
+Definition of pullback
+</li>
+<li>
+Example: pullbacks in <span class="math inline">\(\mathbf{Set}\)</span>
+</li>
+</ul>
+<h3 id="pullbacks-and-pushouts-2">
+Pullbacks and pushouts 2
+</h3>
+<p>
+http://youtu.be/LkkallToFQ0
+</p>
+<ul>
+<li>
+Definition of pushouts
+</li>
+<li>
+Example: pushouts in <span class="math inline">\(\mathbf{Set}\)</span>
+</li>
+<li>
+Pullback/pushout example of intersection/union of sets
+</li>
+</ul>
+<h2 id="natural-transformations">
+Natural transformations
+</h2>
+<h3 id="natural-transformations-1">
+Natural transformations 1
+</h3>
+<p>
+http://www.youtube.com/watch?v=FZSUwqWjHCU
+</p>
+<ul>
+<li>
+Definition of natural transformations.
+</li>
+<li>
+Naturality squares.
+</li>
+<li>
+Intuition about natural transformations based on homotopy.
+</li>
+<li>
+Alternative definition of natural transformation analogous to usual homotopy definition: a natural transformation is a functor <span class="math inline">\(C \times I \to D\)</span> where <span class="math inline">\(I\)</span> is the “categorical interval”, <em>i.e.</em> the two-object category with a single nontrivial morphism.
+</li>
+</ul>
+<h3 id="natural-transformations-2">
+Natural transformations 2
+</h3>
+<p>
+http://youtu.be/XnrqHd39Cl0
+</p>
+<ul>
+<li>
+Vertical composition of natural transformations.
+</li>
+<li>
+Functor categories.
+</li>
+<li>
+Horizontal composition of natural transformations
+<ul>
+<li>
+Note there are two ways to define horizontal composition, and they are equal by naturality.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="natural-transformations-3">
+Natural transformations 3
+</h3>
+<p>
+http://youtu.be/EG5xUYXHFeU
+</p>
+<ul>
+<li>
+Whiskering (though they don’t call it that yet).
+</li>
+<li>
+Horizontal composition as vertical composition of two whiskerings (in two different ways, which are equal by naturality).
+</li>
+<li>
+Interchange law: proof by commutativity of whiskering.
+</li>
+</ul>
+<h3 id="natural-transformations-3a">
+Natural transformations 3A
+</h3>
+<p>
+http://youtu.be/fsfzEz6qAGQ
+</p>
+<ul>
+<li>
+Define terminology “whiskering”.
+</li>
+<li>
+Note vertical composition of “right-whiskered fish” works because of functoriality (of functor we whiskered by).
+</li>
+<li>
+Vertical composition of “left-whiskered fish” comes by definition of vectical composition for natural transformations.
+</li>
+<li>
+So in the end, interchange depends on three things: definition of vertical composition; functoriality; naturality.
+</li>
+</ul>
+<h2 id="representable-functors-and-the-yoneda-lemma">
+Representable functors and the Yoneda Lemma
+</h2>
+<h3 id="representables-and-yoneda-1">
+Representables and Yoneda 1
+</h3>
+<p>
+http://youtu.be/4QgjKUzyrhM
+</p>
+<ul>
+<li>
+Definition of representable functors (co- or contravariant): those which are naturally isomorphic to <span class="math inline">\(H^A\)</span> or <span class="math inline">\(H_A\)</span> for some <span class="math inline">\(A\)</span>.
+<ul>
+<li>
+Contravariant: <span class="math inline">\(H_A : C^{\text{op}} \to \mathbf{Set}\)</span>; <span class="math inline">\(H_A(X) = C(X,A)\)</span>.
+</li>
+<li>
+Covariant: <span class="math inline">\(H^A : C \to \mathbf{Set}\)</span>; <span class="math inline">\(H^A(X) = C(A,X)\)</span>.
+</li>
+</ul>
+</li>
+<li>
+Is there a functor <span class="math inline">\(A \to H_A\)</span>? Yes, the <em>Yoneda embedding</em> <span class="math inline">\(Y\)</span>:
+<ul>
+<li>
+<span class="math inline">\(Y(A) = H_A\)</span>
+</li>
+<li>
+<span class="math inline">\(Y(f) = H_f\)</span>, where <span class="math inline">\(H_f : H_A \to H_B\)</span> is postcomposition with <span class="math inline">\(f\)</span>. <span class="math inline">\(H_f\)</span> is a natural transformation; its component at <span class="math inline">\(X\)</span> has type <span class="math inline">\(H_f(X) : H_A(X) \to H_B(X) = C(X,A) \to C(X,B)\)</span>. Postcomposing an arrow in <span class="math inline">\(C(X,A)\)</span> with <span class="math inline">\(f : A \to B\)</span> yields an arrow in <span class="math inline">\(C(X,B)\)</span>.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="representables-and-yoneda-2">
+Representables and Yoneda 2
+</h3>
+<p>
+http://youtu.be/eaJmUUogb6g
+</p>
+<ul>
+<li>
+Proof that Yoneda embedding <span class="math inline">\(C \to [C^{\text{op}}, \mathbf{Set}]\)</span> sends morphisms <span class="math inline">\(f\)</span> to <em>natural transformations</em> <span class="math inline">\(H_f\)</span>. Comes down to the fact that composition in the category is associative.
+</li>
+</ul>
+<h3 id="representables-and-yoneda-3">
+Representables and Yoneda 3
+</h3>
+<p>
+http://youtu.be/TLMxHB19khE
+</p>
+<ul>
+<li>
+Look at natural transformations from <span class="math inline">\(H_A\)</span> to some other (contravariant) functor <span class="math inline">\(F\)</span>. Big idea: such natural transformations <span class="math inline">\(\alpha\)</span> are entirely determined by where <span class="math inline">\(\alpha_A\)</span> sends <span class="math inline">\(1_A\)</span>.
+</li>
+<li>
+Yoneda lemma: <span class="math inline">\(F\ A \cong [C^{\text{op}}, \mathbf{Set}](H_A, F)\)</span> (natural in <span class="math inline">\(A\)</span> and <span class="math inline">\(F\)</span>). <em>I.e.</em> the set of objects in <span class="math inline">\(F\ A\)</span> is isomorphic to the hom-set of natural transformations between <span class="math inline">\(H_A\)</span> and <span class="math inline">\(F\)</span>.
+</li>
+</ul>
+<h2 id="adjunctions-part-1">
+Adjunctions (part 1)
+</h2>
+<h3 id="adjunctions-1">
+Adjunctions 1
+</h3>
+<p>
+http://youtu.be/loOJxIOmShE
+</p>
+<ul>
+<li>
+Given categories <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span> and functors <span class="math inline">\(F : C \to D\)</span> and <span class="math inline">\(G : D \to C\)</span>, we have the following situations:
+<ul>
+<li>
+Isomorphism: <span class="math inline">\(1 = GF\)</span>, <span class="math inline">\(FG = 1\)</span>
+</li>
+<li>
+Equivalence: <span class="math inline">\(1 \cong GF\)</span>, <span class="math inline">\(FG \cong 1\)</span>
+</li>
+<li>
+Adjunction: <span class="math inline">\(\eta : 1 \Rightarrow GF\)</span>, <span class="math inline">\(\varepsilon : FG \Rightarrow 1\)</span> So we can think of an adjunction as a “weaker sort of equivalence”.
+</li>
+</ul>
+</li>
+<li>
+<span class="math inline">\(\eta\)</span> and <span class="math inline">\(\varepsilon\)</span> are subject to triangle identities: <span class="math inline">\(F \stackrel{F\eta}{\Longrightarrow} FGF \stackrel{\varepsilon F}{\Longrightarrow} F\)</span> is the identity, and similarly for <span class="math inline">\(\eta G ; G \varepsilon\)</span>.
+</li>
+<li>
+These laws can be expressed as commuting diagrams of 2-cells: draw <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\varepsilon\)</span> as 2-cells and paste them in two different ways.
+</li>
+</ul>
+<h3 id="adjunctions-2">
+Adjunctions 2
+</h3>
+<p>
+http://youtu.be/JEJim3t-N9A
+</p>
+<ul>
+<li>
+Alternate definition of adjunction <span class="math inline">\(F \dashv G\)</span>: an isomorphism <span class="math inline">\(D(F X, Y) \cong C(X, G Y)\)</span> natural in <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>.
+</li>
+<li>
+What “natural in <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>” means here.
+</li>
+<li>
+Hint: sending identity morphisms across the iso gives us <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\varepsilon\)</span> from the first definition. Proof deferred to Adjunctions 4.
+</li>
+</ul>
+<h3 id="adjunctions-4">
+Adjunctions 4
+</h3>
+<p>
+http://youtu.be/nP5XQ6OBHHY
+</p>
+<ul>
+<li>
+Note: Adjunctions 4, not 3, follows on to 2.
+</li>
+<li>
+Given: an isomorphism <span class="math inline">\(D(FX,Y) \cong C(X,GY)\)</span> which is natural in <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>.
+</li>
+<li>
+Notation: write application of the isomorphism as an overbar.
+</li>
+<li>
+Construct the two squares implied by naturality. Follow them each around in <em>both</em> directions (since they involve a natural <em>isomorphism</em>) to get four equations in total governing how the iso interacts.
+</li>
+<li>
+Define <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\varepsilon\)</span> by applying the isomorphism to appropriate identity morphisms. Naturality and the triangle identities follow from the above four equations.
+</li>
+</ul>
+<h2 id="monads">
+Monads
+</h2>
+<h3 id="monads-1">
+Monads 1
+</h3>
+<p>
+http://youtu.be/9fohXBj2UEI
+</p>
+<ul>
+<li>
+Monads give us a way to talk about algebraic theories (monoids, categories, groups, <em>etc.</em>).
+</li>
+<li>
+Definition of a monad:
+<ul>
+<li>
+Functor <span class="math inline">\(T : C \to C\)</span>
+</li>
+<li>
+“unit” <span class="math inline">\(\eta : 1 \Rightarrow T\)</span>
+</li>
+<li>
+“multiplication” <span class="math inline">\(\mu : T^2 \Rightarrow T\)</span>
+</li>
+<li>
+with unit and associativity laws.
+</li>
+</ul>
+</li>
+<li>
+Note what is meant by a commutative diagram of natural transformations
+</li>
+<li>
+Example: monad for monoids (aka the list monad)
+<ul>
+<li>
+<span class="math inline">\(C = \mathbf{Set}\)</span>
+</li>
+<li>
+<span class="math inline">\(T = X \mapsto X^*\)</span>, maps a set <span class="math inline">\(X\)</span> to set of words in <span class="math inline">\(X\)</span> (<em>i.e.</em> lists)
+</li>
+<li>
+<span class="math inline">\(\eta\)</span> is singleton
+</li>
+<li>
+<span class="math inline">\(\mu\)</span> is concatenation
+</li>
+<li>
+Note, unit and associativity for <em>monad</em> is different than unit and associativity of <em>monoids</em>, which has already been encoded in the definition of <span class="math inline">\(T\)</span>.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="monads-2">
+Monads 2
+</h3>
+<p>
+http://youtu.be/Si6_oG7ZdK4
+</p>
+<ul>
+<li>
+Proof that the list monad (“monad for monoids”) is in fact a monad
+</li>
+<li>
+Example: monad for small categories
+<ul>
+<li>
+<span class="math inline">\(C = \mathbf{Gph}\)</span>, category of graphs
+</li>
+<li>
+<span class="math inline">\(T\)</span> makes the free category on a graph (morphisms = paths in the underlying graph)
+</li>
+<li>
+With only one object, this reduces to the monad for monoids.
+</li>
+<li>
+Proof of monads laws is basically the same as for the list monad.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="monads-3">
+Monads 3
+</h3>
+<p>
+http://youtu.be/eBQnysX7oLI
+</p>
+<ul>
+<li>
+Algebras for monads. Monads are supposed to be like algebraic theories; algebras are models.
+</li>
+<li>
+An <em>algebra</em> for a monad <span class="math inline">\((T : C \to C, \eta, \mu)\)</span> is an object <span class="math inline">\(A \in C\)</span> (the “underlying object”) equipped with an “action” <span class="math inline">\(\theta : T\ A \to A\)</span>, satisfying the “obvious” axioms (<span class="math inline">\(\theta\)</span> must interact “sensibly” with <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\mu\)</span>).
+<ul>
+<li>
+<span class="math inline">\(\eta ; \theta = 1\)</span>
+</li>
+<li>
+<span class="math inline">\(\mu ; \theta = T \theta ; \theta\)</span>
+</li>
+</ul>
+</li>
+<li>
+Example: <span class="math inline">\(C = \mathbf{Set}\)</span>, <span class="math inline">\(T\)</span> = list monad (“monad for monoids”)
+<ul>
+<li>
+An algebra is a set <span class="math inline">\(A\)</span> equipped with <span class="math inline">\(\theta : [A] \to A\)</span>
+</li>
+<li>
+First axiom says <span class="math inline">\(\theta\)</span> must simply project element out of length-one list.
+</li>
+<li>
+Other axiom is essentially associativity.
+</li>
+<li>
+That is, algebras for the list monad are monoids.
+</li>
+</ul>
+</li>
+<li>
+Example for monad of categories (from last time) works the same way.
+</li>
+</ul>
+<h3 id="monads-3a">
+Monads 3A
+</h3>
+<p>
+http://youtu.be/uYY5c1kkoIo
+</p>
+<p>
+More on monoids as monad algebras of the list monad.
+</p>
+<ul>
+<li>
+Given a monad algebra <span class="math inline">\(\theta : [A] \to A\)</span>, construct the monoid:
+<ul>
+<li>
+whose underlying set is <span class="math inline">\(A\)</span>
+</li>
+<li>
+<span class="math inline">\(a \cdot b = \theta [a,b]\)</span>
+</li>
+<li>
+<span class="math inline">\(\varepsilon = \theta []\)</span>.
+</li>
+</ul>
+</li>
+<li>
+The monad algebra law for <span class="math inline">\(\eta\)</span> (a triangle) just says that <span class="math inline">\(\theta\)</span> can’t do anything interesting on one-element lists: it has to just return the single element.
+</li>
+<li>
+Identity and associativity laws for the monoid come from the other monad algebra law, saying how <span class="math inline">\(\theta\)</span> interacts with <span class="math inline">\(\mu\)</span> (a square), and from how the list functor is defined. We <em>start with</em> a way of mapping <em>lists</em> down to values, which bakes in the idea that it doesn’t matter how we associate the list.
+</li>
+</ul>
+<h3 id="monads-4">
+Monads 4
+</h3>
+<p>
+http://youtu.be/Cm-O_ZWEIGY
+</p>
+<p>
+Monad algebras form a category (called <span class="math inline">\(\mathbf{Alg}\ T\)</span>).
+</p>
+<ul>
+<li>
+<p>
+Given two monad algebras <span class="math inline">\(\theta : T A \to A\)</span> and <span class="math inline">\(\varphi : T B \to B\)</span>, a morphism between them consists of a morphism of underlying objects, <span class="math inline">\(f : A \to B\)</span>, such that the obvious square commutes.
+</p>
+</li>
+<li>
+<p>
+Example. List monad again. <span class="math inline">\(C = \mathbf{Set}, T = []\)</span>. A morphism of monoids is a function <span class="math inline">\(f : A \to B\)</span> such that <span class="math inline">\(f (xy) = f(x)f(y)\)</span>. See how this equation arises from the commuting square for monad morphisms, by starting with a 2-element list in upper left and following it around.
+</p>
+</li>
+<li>
+<p>
+Given a particular mathematical theory, can it be expressed as the category of algebras for some monad? <em>I.e.</em> given a category <span class="math inline">\(D\)</span>, is it equivalent to <span class="math inline">\(\mathbf{Alg}\ T\)</span> for some <span class="math inline">\(T\)</span>? (Answer: no, not in general, <em>e.g.</em> category of topological spaces can’t.)
+</p>
+</li>
+<li>
+<p>
+But this is still an interesting question, more or less the question of “monadicity”. Category <span class="math inline">\(D\)</span> said to be <em>monadic</em> over category <span class="math inline">\(C\)</span> if <span class="math inline">\(D\)</span> can be expressed as category of algebras of monads over <span class="math inline">\(C\)</span>.
+</p>
+</li>
+</ul>
+<h2 id="adjunctions-and-monads">
+Adjunctions and monads
+</h2>
+<h3 id="adjunctions-3">
+Adjunctions 3
+</h3>
+<p>
+http://youtu.be/2i_PpYsl8b8
+</p>
+<ul>
+<li>
+Note: depends on monads.
+</li>
+<li>
+Examples of adjunctions:
+<ul>
+<li>
+between the category of sets and the category of monoids: <span class="math inline">\(\text{Free} \dashv \text{Forget}\)</span>
+</li>
+<li>
+similarly between category of graphs and category <span class="math inline">\(\mathbf{Cat}\)</span> of (small) categories.
+</li>
+</ul>
+<p>
+In general, free functors are left adjoint to forgetful functors. (How to remember the direction: “left” has four letters, just like “free”.)
+</p>
+</li>
+<li>
+Every adjunction <span class="math inline">\((F \dashv G : C \to D, \eta, \varepsilon)\)</span> gives rise to a monad <span class="math inline">\((GF, \eta, \mu = G \varepsilon F)\)</span>. Check monad laws:
+<ul>
+<li>
+Monad triangle laws are just adjunction triangle laws with extra <span class="math inline">\(G\)</span> or <span class="math inline">\(F\)</span> everywhere.
+</li>
+<li>
+Monad associativity law is naturalty for <span class="math inline">\(\varepsilon\)</span>, or something like that.
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="adjunctions-5">
+Adjunctions 5
+</h3>
+<p>
+http://youtu.be/xqLgGB7Hv7g
+</p>
+<p>
+“Every monad comes from an adjunction via its category of algebras.”
+</p>
+<p>
+Last time we showed every adjunction gives rise to a monad. What about the converse?
+</p>
+<p>
+Answer: yes. In fact, given a monad, there is an entire category of adjunctions which give rise to it, which always has initial and terminal objects: these are the constructions found by Kleisli and by Eilenberg-Moore, respectively. Intuitively, any other adjunction giving rise to the monad can be described by the morphisms between it and the Kleisli and Eilenberg-Moore constructions.
+</p>
+<p>
+Let <span class="math inline">\((T : C \to C, \eta, \mu)\)</span> be a monad.
+</p>
+<ul>
+<li>
+<p>
+Terminal solution (Eilenberg-Moore): consider category <span class="math inline">\(\mathbf{Alg}\ T\)</span> of <span class="math inline">\(T\)</span>-algebras, also written <span class="math inline">\(C^T\)</span>. We construct an adjunction <span class="math inline">\(F \dashv G : C \to C^T\)</span>. (Intuition: <span class="math inline">\(F : C \to C^T\)</span> “freely” constructs a <span class="math inline">\(T\)</span>-algebra; <span class="math inline">\(G : C^T \to C\)</span> “forgets” the algebra structure.)
+</p>
+<ul>
+<li>
+<p>
+<span class="math inline">\(G : C^T \to C\)</span> is easy to construct: <span class="math inline">\((A, \theta : T A \to A) \mapsto A\)</span>.
+</p>
+</li>
+<li>
+<p>
+What about <span class="math inline">\(F : C \to C^T\)</span>? Sends <span class="math inline">\(A\)</span> to the “free” <span class="math inline">\(T\)</span>-algebra on <span class="math inline">\(A\)</span>, with underlying set <span class="math inline">\(T A\)</span>. Then evaluation map is <span class="math inline">\(\mu\)</span>. That is, <span class="math inline">\(F A = (T A, \mu : T (T A) \to T A)\)</span>. Need to check that this definition of <span class="math inline">\(F\)</span> really gives a monad algebra as a result. In this case the monad algebra laws are just the monad laws for <span class="math inline">\(T\)</span>!
+</p>
+</li>
+<li>
+<p>
+Now define a unit and counit. <span class="math inline">\(\eta_A : A \to GFA = A \to TA\)</span> is just the <span class="math inline">\(\eta\)</span> for the monad. <span class="math inline">\(\varepsilon_\theta : FG(A,\theta) \to (A,\theta)\)</span> is an algebra morphism from the free algebra on <span class="math inline">\(A\)</span> (<em>i.e.</em> <span class="math inline">\((TA, \mu)\)</span>) to <span class="math inline">\((A,\theta)\)</span>: in fact, <span class="math inline">\(\theta\)</span> itself is such a morphism, by the second algebra law.
+</p>
+</li>
+<li>
+<p>
+Prove triangle laws for <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\varepsilon\)</span>: exercise for the watcher/reader.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="adjunctions-6">
+Adjunctions 6
+</h3>
+<p>
+http://youtu.be/Ht1mQ97Zq2k
+</p>
+<p>
+This time, initial solution to “does a monad give rise to any adjunctions”: Kleisli.
+</p>
+<ul>
+<li>
+The Kleisli category for a monad <span class="math inline">\(T\)</span> on category <span class="math inline">\(C\)</span>, written <span class="math inline">\(\mathbf{Kl}(T)\)</span> or <span class="math inline">\(C_T\)</span>
+<ul>
+<li>
+Objects: objects of <span class="math inline">\(C\)</span>.
+</li>
+<li>
+Morphisms: <span class="math inline">\(C_T(A,B) :\equiv C(A,T B)\)</span>.
+</li>
+<li>
+Composition: given <span class="math inline">\(f : A \to T B\)</span> and <span class="math inline">\(g : B \to T C\)</span>, produce <span class="math inline">\(f ; T g ; \mu : A \to T C\)</span>.
+</li>
+<li>
+Identity: <span class="math inline">\(\eta : A \to T A\)</span>.
+</li>
+<li>
+Category axioms come from monad axioms. Associativity comes from associativity and naturality of <span class="math inline">\(\mu\)</span>; unit laws come from unit laws for <span class="math inline">\(\eta\)</span>.
+</li>
+</ul>
+</li>
+<li>
+<p>
+Intuition: this is the category of free algebras: <span class="math inline">\(A \to T B = GFB\)</span> is equivalent, under the adjunction, to <span class="math inline">\(F A \to F B\)</span>, morphism between free algebras.
+</p>
+</li>
+<li>
+<p>
+Note, for the Eilenberg-Moore category (last time) it was complicated to define the objects and simple to define the morphisms. For Kleisli, it’s the other way around. “Conservation of complicatedness.”
+</p>
+</li>
+</ul>
+<h3 id="adjunctions-7">
+Adjunctions 7
+</h3>
+<p>
+http://youtu.be/D8g9xnVr0Lg
+</p>
+<p>
+The adjunction that comes from the Kleisli category, giving rise to the original monad <span class="math inline">\(T\)</span>.
+</p>
+<p>
+Again, let <span class="math inline">\((T : C \to C, \eta, \mu)\)</span> be a monad. We will construct <span class="math inline">\(F_T \dashv G_T : C \to C_T\)</span>, where <span class="math inline">\(C_T\)</span> is the Kleisli category defined in Adjunctions 6, with <span class="math inline">\(G_T F_T = T\)</span>.
+</p>
+<ul>
+<li>
+<span class="math inline">\(F_T : C \to C_T\)</span> sends objects to “free algebras”
+<ul>
+<li>
+Identity on objects.
+</li>
+<li>
+On morphisms, sends <span class="math inline">\(f : A \to B\)</span> to <span class="math inline">\(\eta ; T f : A \to T B\)</span> (equivalently <span class="math inline">\(f ; \eta\)</span>).
+</li>
+</ul>
+</li>
+<li>
+<span class="math inline">\(G_T : C_T \to C\)</span> sends a “free algebra” to its “underlying object”
+<ul>
+<li>
+Sends <span class="math inline">\(A\)</span> to <span class="math inline">\(T A\)</span>.
+</li>
+<li>
+Sends <span class="math inline">\(f : A \to T B\)</span> to <span class="math inline">\(T f ; \mu : T A \to T B\)</span>.
+</li>
+</ul>
+</li>
+<li>
+Unit and counit
+<ul>
+<li>
+<span class="math inline">\(\eta : A \to G_T F_T A = T A\)</span> we can take as the <span class="math inline">\(\eta\)</span> of the monad.
+</li>
+<li>
+<span class="math inline">\(\varepsilon : F_T G_T A = T A \to T A\)</span> we can take to be id.
+</li>
+</ul>
+</li>
+<li>
+Adjunction laws come down to monad laws (left to viewer).
+</li>
+</ul>
+<p>
+Given a monad <span class="math inline">\(T\)</span> on <span class="math inline">\(C\)</span>, we have a category of adjunctions <span class="math inline">\(\mathbf{Adj}(T)\)</span> giving rise to <span class="math inline">\(T\)</span> (morphisms are functors making everything commute). <span class="math inline">\(C_T\)</span> is the initial object and <span class="math inline">\(C^T\)</span> is terminal.
+</p>
+<p>
+Question of <em>monadicity</em>: given an adjunction <span class="math inline">\(F \dashv G\)</span>, is <span class="math inline">\(D \cong C^T\)</span>? If so, say “<span class="math inline">\(D\)</span> is monadic over <span class="math inline">\(C\)</span>”, <em>i.e.</em> everything in <span class="math inline">\(D\)</span> can be expressed as monad algebras of <span class="math inline">\(C\)</span>. Or can say the adjunction is a “monadic adjunction”. Can also say that the right adjoint (forgetful functor <span class="math inline">\(G\)</span>) “is monadic”. Monadic adjunctions are particularly nice/canonical.
+</p>
+<h2 id="string-diagrams">
+String diagrams
+</h2>
+<h3 id="string-diagrams-1">
+String diagrams 1
+</h3>
+<p>
+http://youtu.be/USYRDDZ9yEc
+</p>
+<p>
+Way of notating natural transformations and functors. Poincare dual: 0D things (points, i.e. categories) become 2D (regions), 1D things (lines, i.e. functors) stay 1D, 2D things (cells, i.e. natural transformations) become 0D.
+</p>
+<p>
+String diagrams should be read right-left and bottom-top.
+</p>
+<p>
+Horizontal and vertical composition of NTs correspond to horizontal and vertical juxtaposition of string diagrams.
+</p>
+<p>
+Can leave out vertical lines corresponding to identity functor.
+</p>
+<h3 id="string-diagrams-2">
+String diagrams 2
+</h3>
+<p>
+http://youtu.be/JeGhNhgOTuk
+</p>
+<p>
+Recall the interchange law, which says that vertical and horizontal composition of natural transformations commute. This guarantees that string diagrams are well-defined, since the diagram doesn’t specify which happens first.
+</p>
+<p>
+Whiskering is represented in string diagrams by horizontally adjoining a straight vertical line.
+</p>
+<h3 id="string-diagrams-3">
+String diagrams 3
+</h3>
+<p>
+http://youtu.be/pmvVE8AGAEA
+</p>
+<p>
+Given an adjunction <span class="math inline">\(F \dashv G\)</span>, we have natural transformations <span class="math inline">\(\varepsilon : FG \to 1\)</span> and <span class="math inline">\(\eta : 1 \to GF\)</span>, and two laws given by triangles. What do these look like as string diagrams? <span class="math inline">\(\varepsilon\)</span> is a cap, <span class="math inline">\(\eta\)</span> a cup, and the triangle laws look like pulling wiggly strings straight!
+</p>
+<h3 id="string-diagrams-4">
+String diagrams 4
+</h3>
+<p>
+http://youtu.be/YNC5faXshAk
+</p>
+<p>
+Monads in string diagrams. Draw <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\eta\)</span>, and the monad laws as nice-looking string diagrams with nice topological intuition.
+</p>
+<h3 id="string-diagrams-5">
+String diagrams 5
+</h3>
+<p>
+http://youtu.be/kiXjcqxVogE
+</p>
+<p>
+Seeing how monads arise from adjunctions, using string diagrams.
+</p>
+<h2 id="pipe-cleaners">
+Pipe cleaners
+</h2>
+<p>
+These are presented without any commentary or explanation that I can find. Each of the below videos just presents a 3D structure made out of pipe cleaners with no explanation. Maybe there is some other catsters video that presents a motivation or explanation for these; if I find it I will update the notes here. I can see that it might have something to do with string diagrams, and that you can make categories out of these sorts of topological structures (<em>e.g.</em> with gluing as composition) but otherwise I have no clue what this is about.
+</p>
+<ul>
+<li>
+Open-closed cobordisms 1: http://youtu.be/Jb1ZHLXBMy4
+</li>
+<li>
+Open-closed cobordisms 2 (“zig-zag-ator”): http://youtu.be/zQMhXy1-YNM
+</li>
+<li>
+Open-closed cobordisms 3 (“cut-off pair of pants”): http://youtu.be/_raQJYpEnU8
+</li>
+</ul>
+<p>
+There is also:
+</p>
+<ul>
+<li>
+Klein bottle: https://www.youtube.com/watch?v=kteH2ZBW9Lg
+</li>
+</ul>
+<p>
+This is a nice 5-minute presentation about Klein bottles, complete with pipe cleaner model. Though it seems to have little to do with category theory.
+</p>
+<p>
+Also also:
+</p>
+<ul>
+<li>
+Outtakes: https://www.youtube.com/watch?v=guVjFOfi2o0
+</li>
+</ul>
+<p>
+This has nothing to do with either pipe cleaners or category theory, but it is midly amusing.
+</p>
+<h2 id="general-limits-and-colimits">
+General Limits and Colimits
+</h2>
+<h3 id="general-limits-and-colimits-1">
+General limits and colimits 1
+</h3>
+<p>
+http://www.youtube.com/watch?v=g47V6qxKQNU
+</p>
+<p>
+Defining limits in general, informally.
+</p>
+<ul>
+<li>
+The thing we take a limit <em>of</em> is called a <em>diagram</em> (a collection of objects and morphisms). A limit of a diagram is a <em>universal cone</em>.
+</li>
+<li>
+A <em>cone</em> over a diagram is an object (<em>vertex</em>) together with morphisms (<em>projection maps</em>) to all objects in the diagram, such that all triangles commute.
+</li>
+<li>
+Universal cone is the “best” one, through which all other cones factor, <em>i.e.</em> there is a unique morphism from the vertex of one to the other such that all the relevant triangles commute.
+</li>
+</ul>
+<h3 id="general-limits-and-colimits-2">
+General limits and colimits 2
+</h3>
+<p>
+http://www.youtube.com/watch?v=SpCyaNi257w
+</p>
+<p>
+Examples of limits.
+</p>
+<ul>
+<li>
+Terminal objects: limit over the empty diagram.
+</li>
+<li>
+Products: limit over discrete diagram on two objects.
+</li>
+<li>
+Pullback: limit over a “cospan”, <em>i.e.</em> a diagram like <span class="math inline">\(X \to Y \leftarrow Z\)</span>. Note that we usually ignore the edge of the cone to <span class="math inline">\(Y\)</span>, since it is uniquely determined by the edges to <span class="math inline">\(X\)</span> and <span class="math inline">\(Z\)</span>.
+</li>
+<li>
+Equalizer: limit over a parallel pair of arrows.
+</li>
+</ul>
+<h3 id="general-limits-and-colimits-3">
+General limits and colimits 3
+</h3>
+<p>
+http://www.youtube.com/watch?v=U3nzEUEnLKQ
+</p>
+<ul>
+<li>
+Note: requires natural transformations.
+</li>
+<li>
+Formal definitions of:
+<ul>
+<li>
+Diagram (functor from an index category)
+</li>
+<li>
+Cone (natural transformation from constant functor to diagram).
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="general-limits-and-colimits-4">
+General limits and colimits 4
+</h3>
+<p>
+http://youtu.be/7B4cawdLAPg
+</p>
+<ul>
+<li>
+Requires Yoneda.
+</li>
+<li>
+<p>
+Formal definition of a limit: given a diagram <span class="math inline">\(D : I \to C\)</span>, a limit for <span class="math inline">\(D\)</span> is an object <span class="math inline">\(U\)</span> together with a family of isomorphisms <span class="math inline">\(C(V,U) \cong [I,C](\Delta_V, D)\)</span> natural in <span class="math inline">\(V\)</span>. <em>I.e.</em> a natural correspondence between morphisms <span class="math inline">\(V \to U\)</span> (the “factorization” from one cone to another) and morphisms (<em>i.e.</em> natural transformations) from <span class="math inline">\(\Delta_V\)</span> to <span class="math inline">\(D\)</span> in the functor category <span class="math inline">\([I,C]\)</span> (<em>i.e.</em> cones over <span class="math inline">\(D\)</span> with vertex <span class="math inline">\(V\)</span>). That is, every cone with vertex <span class="math inline">\(V\)</span> has a unique factorization morphism, <em>and vice versa</em>!. The “vice versa” part is the surprising bit. If we have a limit then <em>every</em> morphism is the factorization for some cone to the universal cone.
+</p>
+</li>
+<li>
+<p>
+If we set <span class="math inline">\(V = U\)</span> then <span class="math inline">\(C(U,U) \cong \dots\)</span> <em>etc.</em> In particular <span class="math inline">\(1_U : C(U,U)\)</span> corresponds to some cone, which is THE universal cone. The Yoneda lemma says (?) that the entire natural isomorphism is determined by this one piece of data (where <span class="math inline">\(1_U\)</span> goes). Note that both <span class="math inline">\(C(-,U)\)</span> and <span class="math inline">\([I,C](\Delta_-, D)\)</span> are functors <span class="math inline">\(C^{\text{op}} \to \mathbf{Set}\)</span>. The Yoneda lemma says that a natural transformation from <span class="math inline">\(C(-,U) = H_U\)</span> to <span class="math inline">\([I,C](\Delta_-, D)\)</span> is isomorphic to <span class="math inline">\([I,C](\Delta_U, D)\)</span> — i.e. a cone with vertex <span class="math inline">\(U\)</span>, the universal cone.
+</p>
+</li>
+<li>
+<p>
+The universality of this cone apparently comes from naturality.
+</p>
+</li>
+</ul>
+<h3 id="general-limits-and-colimits-5">
+General limits and colimits 5
+</h3>
+<p>
+http://youtu.be/Ud_k4HFIogQ
+</p>
+<ul>
+<li>
+Requires adjunctions.
+</li>
+<li>
+Notation for limits. Categories that “have all limits (of a given shape)”.
+</li>
+<li>
+The natural isomorphism defining a limit can be seen as an adjunction <span class="math inline">\(\Delta \dashv \lim_{I \leftarrow}\)</span> where <span class="math inline">\(\Delta : C \to [I,C]\)</span>, and <span class="math inline">\(\lim_{I \leftarrow} : [I,C] \to C\)</span> is the functor that takes a diagram and produces its limit.
+</li>
+<li>
+Claim: this is an adjunction <em>if</em> <span class="math inline">\(C\)</span> has all <span class="math inline">\(I\)</span>-limits. Need to show that the iso is also natural in <span class="math inline">\(D\)</span>, and that <span class="math inline">\(\lim_{I \leftarrow}\)</span> is actually a functor.
+</li>
+</ul>
+<h3 id="general-limits-and-colimits-6">
+General limits and colimits 6
+</h3>
+<p>
+http://youtu.be/9UOdrRF_pNc
+</p>
+<p>
+Colimits using the same general formulation. “Just dualize everything”.
+</p>
+<ul>
+<li>
+<p>
+Cocone (“cone under the diagram”) is an object with morphisms <em>from</em> the objects in the diagram such that everything commutes.
+</p>
+</li>
+<li>
+<p>
+Universal cocone: for any other cocone, there is a unique morphism from the universal cocone <em>to</em> the other cone which makes everything commute. Note it has to go that direction since the universal cocone is supposed to be a “factor” of other cocones.
+</p>
+</li>
+<li>
+<p>
+In Eugenia’s opinion the word “cocone” is stupid.
+</p>
+</li>
+<li>
+<p>
+More generally: natural isomorphism between cocones and morphisms. <span class="math inline">\(C(\lim_{\to I}, V) \cong [I,C](D, \Delta_V)\)</span>. Limits in <span class="math inline">\(C\)</span> are the same as colimits in <span class="math inline">\(C^{op}\)</span>, and vice versa.
+</p>
+</li>
+<li>
+<p>
+All limits are terminal objects in a category of cones (and colimits are initial objects).
+</p>
+</li>
+<li>
+<p>
+Since terminal objects are initial objects in <span class="math inline">\(C^{op}\)</span> (and vice versa), we can even say that all universal properties are initial objects (and terminal objects) <em>somewhere</em>.
+</p>
+</li>
+</ul>
+<h2 id="slice-and-comma-categories">
+Slice and comma categories
+</h2>
+<h3 id="slice-and-comma-categories-1">
+Slice and comma categories 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=f4jpvwwnq_s
+</p>
+<p>
+Slice category. Given a category <span class="math inline">\(C\)</span>, fix an object <span class="math inline">\(X \in C\)</span>. Then we define the slice category <span class="math inline">\(C/X\)</span> by
+</p>
+<ul>
+<li>
+Objects are pairs <span class="math inline">\((A,p)\)</span> where <span class="math inline">\(p : A \to X\)</span>.
+</li>
+<li>
+Morphisms from <span class="math inline">\((A,p)\)</span> to <span class="math inline">\((B,q)\)</span> are morphisms <span class="math inline">\(h : A \to B\)</span> in <span class="math inline">\(C\)</span> which make the triangle commute.
+</li>
+</ul>
+<p>
+Coslice category, or “slice under” category <span class="math inline">\(X/C\)</span> is the dual of <span class="math inline">\(C/X\)</span>, i.e. objects are pairs <span class="math inline">\((A,p)\)</span> where <span class="math inline">\(p : X \to A\)</span>, etc.
+</p>
+<ul>
+<li>
+<p>
+If <span class="math inline">\(C\)</span> has a terminal object <span class="math inline">\(1\)</span>, <span class="math inline">\(C/1 \cong C\)</span>. (Dually, <span class="math inline">\(0/C \cong C\)</span>.)
+</p>
+</li>
+<li>
+<p>
+Products in <span class="math inline">\(C/X\)</span> are pullbacks in <span class="math inline">\(C\)</span> having <span class="math inline">\(X\)</span> as a corner. (Dually, coproucts in <span class="math inline">\(X/C\)</span> are pushouts.)
+</p>
+</li>
+</ul>
+<h3 id="slice-and-comma-categories-2">
+Slice and comma categories 2
+</h3>
+<p>
+http://youtu.be/W6sG5uraex0
+</p>
+<p>
+Comma categories are a generalization of slice categories. Fix a functor <span class="math inline">\(F : C \to D\)</span> and an object <span class="math inline">\(X \in D\)</span>. Then we can form the comma category <span class="math inline">\(F \downarrow X\)</span>.
+</p>
+<ul>
+<li>
+Objects: pairs <span class="math inline">\((c \in C, p : F c \to X)\)</span>. Image of some object under <span class="math inline">\(F\)</span> and an arrow from it to <span class="math inline">\(X\)</span>.
+</li>
+<li>
+Morphisms are morphisms <span class="math inline">\(f\)</span> in <span class="math inline">\(C\)</span> such that <span class="math inline">\(F f\)</span> makes the relevant diagram commute.
+</li>
+</ul>
+<p>
+Of course we can dualize, <span class="math inline">\(X \downarrow F\)</span> (“cocomma” sounds even stupider than “cocone”, perhaps).
+</p>
+<p>
+Apparently comma categories give us nice ways to talk about adjunctions.
+</p>
+<p>
+Let’s generalize even more! Fix the functor <span class="math inline">\(F\)</span> but not the object <span class="math inline">\(X \in D\)</span>. Then we can form <span class="math inline">\(F \downarrow D\)</span>:
+</p>
+<ul>
+<li>
+Objects: triple <span class="math inline">\((c \in C, X \in D, p : F C \to X)\)</span>.
+</li>
+<li>
+Morphism <span class="math inline">\((c, X, p) \to (c', X', p')\)</span> is a pair of morphisms <span class="math inline">\(c \to c'\)</span> and <span class="math inline">\(X \to X'\)</span> such that the relevant square commutes.
+</li>
+</ul>
+<p>
+Can also dualize, <span class="math inline">\(D \downarrow F\)</span>.
+</p>
+<p>
+An <em>even further</em> generalization! Start with two functors <span class="math inline">\(F : C \to D\)</span>, <span class="math inline">\(G : E \to D\)</span>. Form <span class="math inline">\(F \downarrow G\)</span>:
+</p>
+<ul>
+<li>
+Objects: triples <span class="math inline">\((c \in C, e \in E, p : F c \to G e)\)</span>.
+</li>
+<li>
+Morphisms: obvious generalization.
+</li>
+</ul>
+<p>
+In fact, all of these constructions are universal and can be seen as limits/colimits from the right point of view. “Next time”. (?)
+</p>
+<h2 id="coequalisers">
+Coequalisers
+</h2>
+<h3 id="coequalisers-1">
+Coequalisers 1
+</h3>
+<p>
+https://youtu.be/vYktRTtulek
+</p>
+<p>
+Coequalisers are a colimit. Show up all over the place. Give us quotients and equivalence relations. Also tell us about <em>monadicity</em> (given an adjunction, is it a monadic one?).
+</p>
+<p>
+Definition: a <em>coequaliser</em> is a colimit of a diagram consisting of two parallel arrows.
+</p>
+<p>
+More specifically, given <span class="math inline">\(f,g : A \to B\)</span>, a coequaliser is an object <span class="math inline">\(C\)</span> equipped with <span class="math inline">\(e : B \to C\)</span> such that <span class="math inline">\(f;e = g;e\)</span>, with a universal property: given any other <span class="math inline">\(s : B \to V\)</span> with <span class="math inline">\(f;s = g;s\)</span>, <span class="math inline">\(s\)</span> factors uniquely through <span class="math inline">\(e\)</span>.
+</p>
+<ul>
+<li>
+<p>
+Example: in <span class="math inline">\(\mathbf{Set}\)</span>: coequaliser of <span class="math inline">\(f,g : A \to B\)</span> is a quotient <span class="math inline">\(B/\sim\)</span>, where <span class="math inline">\(\sim\)</span> is the equivalence relation generated by <span class="math inline">\(f(a) \sim g(a)\)</span> for all <span class="math inline">\(a \in A\)</span>.
+</p>
+</li>
+<li>
+<p>
+Conversely, we can <em>start</em> with an equivalence relation and build it using a coequaliser. Given: an equivalence relation <span class="math inline">\(R \subseteq B \times B\)</span>. Note we have <span class="math inline">\(\pi_1, \pi_2 : R \to B\)</span>. Coequaliser is equivalence classes of <span class="math inline">\(R\)</span>.
+</p>
+</li>
+</ul>
+<h3 id="coequalisers-2">
+Coequalisers 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=DMSPS6us__Y
+</p>
+<p>
+Quotient groups as coequalisers. Consider a group <span class="math inline">\(G\)</span> and a normal subgroup <span class="math inline">\(H \triangleleft G\)</span>. In the category of groups, consider two parallel maps <span class="math inline">\(H \to G\)</span>: the inclusion map <span class="math inline">\(\iota\)</span>, and the zero map <span class="math inline">\(0\)</span> which sends everything to the identity element <span class="math inline">\(e \in G\)</span>. Claim: the coequaliser of these two maps is the quotient group <span class="math inline">\(G/H\)</span>, together with the quotient map <span class="math inline">\(G \to G/H\)</span>.
+</p>
+<p>
+Let’s see why. Suppose we have another group <span class="math inline">\(V\)</span> with a group homomorphism <span class="math inline">\(\theta : G \to V\)</span> such that <span class="math inline">\(\iota ; \theta = 0 ; \theta = 0\)</span>; that is, <span class="math inline">\(\theta(h) = e\)</span> for all <span class="math inline">\(h \in H\)</span>. We must show there is a unique homomorphism <span class="math inline">\(G/H \to V\)</span> which makes the diagram commute.
+</p>
+<p>
+Notation: <span class="math inline">\(g \in G\)</span> under the quotient map gets sent to <span class="math inline">\([g] = gH\)</span> (<span class="math inline">\(g_1 \sim g_2\)</span> iff <span class="math inline">\(g_2 g_1^{-1} \in H\)</span>). For the homomorphism <span class="math inline">\(G/H \to V\)</span>, send <span class="math inline">\([g]\)</span> to <span class="math inline">\(\theta(g)\)</span>. Note this is required to make things commute, which gives us uniqueness; we must check this is well-defined and a group homomorphism. If <span class="math inline">\(g_1 \sim g_2\)</span> then <span class="math inline">\(g_2 g_1^{-1} \in H\)</span>. By definition, <span class="math inline">\(\theta(g_2 g_1^{-1}) = e\)</span>, and since <span class="math inline">\(\theta\)</span> is a group homomorphism, <span class="math inline">\(\theta(g_2) = \theta(g_1)\)</span>. Hence it is well-defined, and must additionally be a group homomorphism since <span class="math inline">\([g_1] [g_2] = [g_1 g_2]\)</span> and <span class="math inline">\(\theta\)</span> is a group homomorphism.
+</p>
+<h2 id="monoid-objects">
+Monoid objects
+</h2>
+<h3 id="monoid-objects-1">
+Monoid objects 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=PH-OhkrXXvA
+</p>
+<p>
+Idea: take the definition of monoids from <span class="math inline">\(\mathbf{Set}\)</span>, and “plunk it” into any other category with enough structure.
+</p>
+<ul>
+<li>
+A <em>monoid</em> is:
+<ul>
+<li>
+A set <span class="math inline">\(A\)</span>
+</li>
+<li>
+A binary operation <span class="math inline">\(a \cdot b\)</span> on <span class="math inline">\(A\)</span>
+</li>
+<li>
+A unit <span class="math inline">\(e \in A\)</span>
+</li>
+<li>
+Associativity: <span class="math inline">\(\forall a,b,c \in A, (ab)c = a(bc)\)</span>
+</li>
+<li>
+Identity: <span class="math inline">\(\forall a, ea = a = ae\)</span>
+</li>
+</ul>
+</li>
+</ul>
+<p>
+Now let’s reexpress this categorically in <span class="math inline">\(\mathbf{Set}\)</span>. Note we have been talking about <em>elements</em> of sets; we have to replace this with use of only objects and morphisms of <span class="math inline">\(\mathbf{Set}\)</span>.
+</p>
+<ul>
+<li>
+A <em>monoid</em> (take 2) is:
+<ul>
+<li>
+An object <span class="math inline">\(A \in \mathbf{Set}\)</span>
+</li>
+<li>
+A morphism <span class="math inline">\(\mu : A \times A \to A\)</span> (note we use Cartesian product structure of <span class="math inline">\(\mathbf{Set}\)</span>)
+</li>
+<li>
+A morphism <span class="math inline">\(\eta : 1 \to A\)</span>
+</li>
+<li>
+A commutative diagram
+</li>
+</ul>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/ouudfwc.png" /></p>
+</div>
+</div>
+<ul>
+<li>
+A commutative diagram
+</li>
+</ul>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/nbbqcho.png" /></p>
+</div>
+</div>
+</li>
+</ul>
+<p>
+Now we take the definition and port it to any monoidal category.
+</p>
+<ul>
+<li>
+A <em>monoid object</em> in a monoidal category <span class="math inline">\(C\)</span> is:
+<ul>
+<li>
+An object <span class="math inline">\(A \in C\)</span>
+</li>
+<li>
+A morphism <span class="math inline">\(\mu : A \otimes A \to A\)</span>
+</li>
+<li>
+A morphism <span class="math inline">\(\eta : 1 \to A\)</span>
+</li>
+<li>
+A commutative diagram
+</li>
+</ul>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/nfy8o4h.png" /></p>
+</div>
+</div>
+<ul>
+<li>
+A commutative diagram
+</li>
+</ul>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/ntvfd67.png" /></p>
+</div>
+</div>
+</li>
+</ul>
+<h3 id="monoid-objects-2">
+Monoid objects 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=7Sf3Y4sesZE
+</p>
+<p>
+Today: monoid object in the category of monoids is a commutative monoid.
+</p>
+<p>
+Note first the category of monoids is itself monoidal under Cartesian product. That is, given two monoids <span class="math inline">\(M\)</span> and <span class="math inline">\(N\)</span>, <span class="math inline">\(M \times N\)</span> is also a monoid.
+</p>
+<p>
+Now, what is a monoid object in <span class="math inline">\(\mathbf{Mon}\)</span>?
+</p>
+<ul>
+<li>
+An object <span class="math inline">\(M \in \mathbf{Mon}\)</span>, <em>i.e.</em> a monoid
+</li>
+<li>
+Monoid morphisms <span class="math inline">\(\eta : 1 \to M\)</span> and <span class="math inline">\(\mu : M \times M \to M\)</span>
+</li>
+<li>
+…satisfying unit and associativity laws.
+</li>
+</ul>
+<p>
+<span class="math inline">\(\eta : 1 \to M\)</span> is a <em>monoid</em> morphism so it has to send the single object of <span class="math inline">\(1\)</span> to the unit of <span class="math inline">\(M\)</span>. Hence <span class="math inline">\(\eta\)</span> is entirely constrained and uninteresting.
+</p>
+<p>
+<span class="math inline">\(\mu : M \times M \to M\)</span> has to be a monoid map. That is, <span class="math inline">\(\mu((a,b) \circ (c,d)) = \mu(a,b) \circ \mu(c,d)\)</span>, <em>i.e.</em> <span class="math inline">\(\mu(a \circ c, b \circ d) = \mu(a,b) \circ \mu(c,d)\)</span>. So <span class="math inline">\(\mu\)</span> has to “commute” with <span class="math inline">\(\circ\)</span>. This is precisely the condition needed to apply Eckmann-Hilton.
+</p>
+<p>
+Monoid object is also required to satisfy unital and associativity laws, but we can already deduce those from Eckmann-Hilton.
+</p>
+<h2 id="categories">
+2-categories
+</h2>
+<h3 id="categories-1">
+2-categories 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=k-RehY4tLdI
+</p>
+<p>
+Generalization of categories: not just objects and morphisms, but also (2-)morphisms between the (1-)morphisms. Primordial example: categories, functors, and natural transformations.
+</p>
+<p>
+Note: today, <em>strict</em> 2-categories, i.e. everything will hold on the nose rather than up to isomorphism. A bit immoral of us. [If we let things be a bit looser we get bicategories?]
+</p>
+<p>
+Recall: a (small) <em>category</em> <span class="math inline">\(C\)</span> is given by
+</p>
+<ul>
+<li>
+A set <span class="math inline">\(\mathrm{Ob}\ C\)</span> of objects
+</li>
+<li>
+for all <span class="math inline">\(x,y \in \mathrm{Ob}\ C\)</span>, a set <span class="math inline">\(C(x,y)\)</span> of morphisms
+</li>
+</ul>
+<p>
+equipped with
+</p>
+<ul>
+<li>
+identities: for all <span class="math inline">\(x \in C\)</span> a function <span class="math inline">\(1 \to C(x,x)\)</span>
+</li>
+<li>
+composition: for all <span class="math inline">\(x,y,z \in C\)</span>, a composition function <span class="math inline">\(C(y,z) \times C(x,y) \to C(x,z)\)</span>.
+</li>
+<li>
+unit and associativity laws.
+</li>
+</ul>
+<p>
+To make this into a 2-category, we take the <em>set</em> of morphisms and <em>categorify</em> it. That turns some of the above <em>functions</em> into <em>functors</em>. Thus, a <span class="math inline">\(2\)</span>-category <span class="math inline">\(C\)</span> is given by a set of objects along with
+</p>
+<ul>
+<li>
+a <em>category</em> <span class="math inline">\(C(x,y)\)</span> for each <span class="math inline">\(x,y \in C\)</span>
+</li>
+<li>
+a <em>functor</em> <span class="math inline">\(1 \to C(x,x)\)</span> for each <span class="math inline">\(x \in C\)</span>
+</li>
+<li>
+a composition <em>functor</em> <span class="math inline">\(C(y,z) \times C(x,y) \to C(x,z)\)</span>.
+</li>
+<li>
+etc.
+</li>
+</ul>
+<p>
+(Note: why not turn the set of <em>objects</em> into a category? That’s a good question. Turns out we would get something different.)
+</p>
+<p>
+Let’s unravel this a bit. If <span class="math inline">\(C(x,y)\)</span> is a <em>category</em> then the objects are morphisms (of <span class="math inline">\(C\)</span>) <span class="math inline">\(x \to y\)</span>, and there can also be morphisms (of <span class="math inline">\(C(x,y)\)</span>) <em>between</em> these morphisms: <span class="math inline">\(2\)</span>-cells. <span class="math inline">\(2\)</span>-cells can be composed (“vertical” composition).
+</p>
+<p>
+We also have the composition functor <span class="math inline">\(C(y,z) \times C(x,y) \to C(x,z)\)</span>. On “objects” (which are <span class="math inline">\(1\)</span>-cells in <span class="math inline">\(C\)</span>) the action of this functor is just the usual composition of <span class="math inline">\(1\)</span>-cells. On morphisms (i.e. <span class="math inline">\(2\)</span>-cells), it gives us “horiztonal” composition.
+</p>
+<p>
+Next time: how functoriality gives us the interchange law.
+</p>
+<h3 id="categories-2">
+2-categories 2
+</h3>
+<p>
+http://youtu.be/DRGh-HESyag
+</p>
+<p>
+Interchange in a 2-category comes from functoriality of the composition functor. The key is to remain calm.
+</p>
+<p>
+The functor is <span class="math inline">\(C(y,z) \times C(x,y) \to C(x,z)\)</span>. On morphisms, it sends pairs of <span class="math inline">\(2\)</span>-cells to a single <span class="math inline">\(2\)</span>-cell, the horizontal composite. What does functoriality mean? It means if we have two (vertically!) composable pairs of <span class="math inline">\(2\)</span>-cells; the functor on their composition (<em>i.e</em> doing vertical composition pointwise) is the same as applying the functor to each (<em>i.e.</em> first doing the horizontal compositions) and then composing (vertically).
+</p>
+<h2 id="eckmann-hilton">
+Eckmann-Hilton
+</h2>
+<h3 id="eckmann-hilton-1">
+Eckmann-Hilton 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=Rjdo-RWQVIY
+</p>
+<p>
+NOTE: There seems to be no catsters video actually explaining what a “bicategory” is. <a href="https://ncatlab.org/nlab/show/bicategory">According to the nlab</a> it is a weaker version of a 2-category, where certain things are required to hold only up to coherent isomorphism rather than on the nose.
+</p>
+<p>
+Eckmann-Hilton argument. Originally used to show all higher homotopy groups are Abelian. We can use it for other things, e.g.
+</p>
+<ul>
+<li>
+A bicategory with only one 0-cell and one 1-cell is a commutative monoid.
+</li>
+<li>
+A monoid object in the monoidal category of monoids is a commutative monoid. (waaaat)
+</li>
+</ul>
+<p>
+Idea: given a set with two unital binary operations, they are exactly the same, and commutative — as long as the operations interact in a certain coherent way.
+</p>
+<p>
+Given a set with two binary operations <span class="math inline">\(\circ\)</span> and <span class="math inline">\(\star\)</span>, such that
+</p>
+<ul>
+<li>
+<span class="math inline">\(\circ\)</span> and <span class="math inline">\(\star\)</span> are unital, with the same unit;
+</li>
+<li>
+one of them distributes over the other, i.e. <span class="math inline">\((a \star b) \circ (c \star d) = (a \circ c) \star (b \circ d)\)</span>,
+</li>
+</ul>
+<p>
+then <span class="math inline">\(\circ = \star\)</span>, and the operation is commutative.
+</p>
+<p>
+Geometric intuition: <span class="math inline">\(\circ\)</span> and <span class="math inline">\(\star\)</span> could be vertical and horizontal composition of <span class="math inline">\(2\)</span>-cells in a bicategory. Then distributivity is just the interchange law.
+</p>
+<p>
+Proof: use the “Eckmann-Hilton clock”. See video for pictures. Given e.g. <span class="math inline">\(a \circ b\)</span>, “rotate” <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> around each other by inserting units and using interchange law.
+</p>
+<p>
+In fact, it is not necessary to require that the two units are the same: it is implied by the interchange law. Left as an exercise.
+</p>
+<h3 id="eckmann-hilton-2">
+Eckmann-Hilton 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=wnRqo7UHa-k
+</p>
+<p>
+This time, show the interchange law implies the units are the same and associativity.
+</p>
+<p>
+Let <span class="math inline">\(v\)</span> be the vertical unit and <span class="math inline">\(h\)</span> the horizontal unit. Then <span class="math inline">\(((v \circ h) \star (h \circ v)) = h \star h = h\)</span> but also by interchange law it is equal to <span class="math inline">\(((v \star h) \circ (h \star v)) = v \circ v = v\)</span>, hence <span class="math inline">\(h = v\)</span>.
+</p>
+<p>
+<span class="math inline">\((a \circ 1) \star (b \circ c) = a \star (b \circ c)\)</span>; interchange gives <span class="math inline">\((a \star b) \circ (1 \star c) = (a \star b) \circ c\)</span>. Since the two operations have to be the same, this gives associativity.
+</p>
+<p>
+Example. A (small) <span class="math inline">\(2\)</span>-category with only one <span class="math inline">\(0\)</span>-cell and only one <span class="math inline">\(1\)</span>-cell is in fact a commutative monoid. Underlying set is set of <span class="math inline">\(2\)</span>-cells. Operation is either <span class="math inline">\(\circ\)</span> or <span class="math inline">\(\star\)</span>, which by Eckmann-Hilton are the same and commutative.
+</p>
+<p>
+Bicategory case is a bit more complicated, since horizontal composition is not strictly unital. A bicategory with only one <span class="math inline">\(0\)</span>-cell is a monoidal category. A bicategory with only one <span class="math inline">\(1\)</span>-cell is a commutative monoid.
+</p>
+<h2 id="distributive-laws">
+Distributive laws
+</h2>
+<h3 id="distributive-laws-1">
+Distributive laws 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=mw4IhOLhDwY
+</p>
+<p>
+Monads represent algebraic structure; a distributive law says when two algebraic structures interact with each other in a coherent way. Motivating example: multiplication and addition in a ring.
+</p>
+<p>
+Let <span class="math inline">\(S\)</span>, <span class="math inline">\(T\)</span> be monads on a category <span class="math inline">\(C\)</span>. A <em>distributive law</em> of <span class="math inline">\(S\)</span> over <span class="math inline">\(T\)</span> is a natural transformation <span class="math inline">\(\lambda : ST \to TS\)</span>, satisfying the “obvious” axioms: <span class="math inline">\(\lambda\)</span> needs to interact properly with the monad structure of <span class="math inline">\(S\)</span> and <span class="math inline">\(T\)</span>, that is:
+</p>
+<ul>
+<li>
+<span class="math inline">\(\eta_S T ; \lambda = T \eta_S\)</span>
+</li>
+<li>
+<p>
+<span class="math inline">\(S \lambda ; \lambda S ; T \mu_S = \mu_S T ; \lambda\)</span>
+</p>
+</li>
+<li>
+<span class="math inline">\(S \eta_T ; \lambda = \eta_T S\)</span>
+</li>
+<li>
+<p>
+<span class="math inline">\(\lambda T ; T \lambda ; \mu_T S = S \mu_T ; \lambda\)</span>
+</p>
+</li>
+</ul>
+<p>
+Example: <span class="math inline">\(C = \mathbf{Set}\)</span>. <span class="math inline">\(S\)</span> = free commutative monoid monad (“multiplication”), <span class="math inline">\(T\)</span> = free abelian group monad (“addition”). Define <span class="math inline">\(\lambda_X : STX \to TSX\)</span>: <span class="math inline">\(TX\)</span> is formal sums of elements of <span class="math inline">\(X\)</span>, like <span class="math inline">\((a + b + c)\)</span>; <span class="math inline">\(S\)</span> constructs formal products. So we have to send things like <span class="math inline">\((a + b)(c + d)\)</span> to formal sums of formal products, <span class="math inline">\(ac + bc + ad + bd\)</span>.
+</p>
+<p>
+In fact we have constructed the free ring monad, <span class="math inline">\(TS\)</span>.
+</p>
+<p>
+If we start with a monoid and consider the free group on its underlying elements, we can define a product using distributivity; so the free group on a monoid is a group. Formally, the free group monad lifts to the category of monoids (?).
+</p>
+<h3 id="distributive-laws-2">
+Distributive laws 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=TLgjH9Y8HOc
+</p>
+<p>
+More abstract story behind our favorite example: combining a group and a monoid to get a ring.
+</p>
+<p>
+Note: distributive law (at least in this example) is definitely non-invertible: you can turn a product of sums into a sum of products, but you can’t necessarily go in the other direction.
+</p>
+<p>
+Main result: A distributive law <span class="math inline">\(\lambda : ST \to TS\)</span> is equivalent to a lift of <span class="math inline">\(T\)</span> to a monad <span class="math inline">\(T'\)</span> on <span class="math inline">\(S\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span>. <span class="math inline">\(TS\)</span> becomes a monad, and <span class="math inline">\(TS\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span> is equivalent to <span class="math inline">\(T'\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span>.
+</p>
+<p>
+When is <span class="math inline">\(TS\)</span> a monad? We need <span class="math inline">\(\mu : TSTS \to TS\)</span>; can do this if we have <span class="math inline">\(\lambda : ST \to TS\)</span>, then use <span class="math inline">\(\mu_T \mu_S\)</span>. The laws for a distributive law ensure that this satisfies the monad laws.
+</p>
+<p>
+Distributive law is equivalent to a lift of <span class="math inline">\(T\)</span> to a monad on <span class="math inline">\(S\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span>?
+</p>
+<ul>
+<li>
+An <span class="math inline">\(S\)</span>-algebra looks like <span class="math inline">\(\theta : SX \to X\)</span>; we want <span class="math inline">\(T'\)</span> to send this to another <span class="math inline">\(S\)</span>-algebra, with carrier <span class="math inline">\(TX\)</span>, i.e. some <span class="math inline">\(\phi : STX \to TX\)</span>. But we have <span class="math inline">\(T \theta : TSX \to TX\)</span>; precomposing with <span class="math inline">\(\lambda\)</span> gives us what we want, and the distributive law axioms ensure that <span class="math inline">\(T'\)</span> is a monad on <span class="math inline">\(S\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span>.
+</li>
+</ul>
+<p>
+<span class="math inline">\(TS\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span> is equivalent to <span class="math inline">\(T'\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span>?
+</p>
+<ul>
+<li>
+<p>
+Since <span class="math inline">\(T'\)</span> is a monad on <span class="math inline">\(\mathbf{Alg} S\)</span>, a <span class="math inline">\(T'\)</span>-algebra has <em>an <span class="math inline">\(S\)</span>-algebra</em> as its underlying object. So given some <span class="math inline">\(S\)</span>-algebra <span class="math inline">\(\theta : SX \to X\)</span>, a <span class="math inline">\(T\)</span>’-algebra on it is a morphism of <span class="math inline">\(S\)</span>-algebras from <span class="math inline">\(T'\theta\)</span> to <span class="math inline">\(\theta\)</span>, that is,
+</p>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/kzpuvz4.png" /></p>
+</div>
+</div>
+<p>
+This essentially says that an algebra for <span class="math inline">\(T'\)</span> is simultaneously an algebra for <span class="math inline">\(S\)</span> and an algebra for <span class="math inline">\(T\)</span> which interact properly via the distributivity law.
+</p>
+</li>
+<li>
+<p>
+An algebra for <span class="math inline">\(TS\)</span> is <span class="math inline">\(\psi : TSX \to X\)</span>. Clear that from a <span class="math inline">\(T'\)</span>-algebra we get a <span class="math inline">\(TS\)</span> algebra. What about vice versa? Just precompose <span class="math inline">\(\psi\)</span> with <span class="math inline">\(\eta_T\)</span> to get an <span class="math inline">\(S\)</span>-algebra, and with <span class="math inline">\(T \eta_S\)</span> to get a <span class="math inline">\(T\)</span>-algebra. A <span class="math inline">\(TS\)</span>-algebra says how to evaluate e.g. multiplication and additions all mixed up; precomposing with <span class="math inline">\(\eta\)</span> picks out the stuff with just multiplication or just addition. Apparently one can prove that the algebras you get this way do indeed interact nicely.
+</p>
+</li>
+</ul>
+<h3 id="distributive-laws-3-aka-monads-6">
+Distributive laws 3 (aka Monads 6)
+</h3>
+<p>
+https://www.youtube.com/watch?v=g-SCYArh5RY
+</p>
+<p>
+Recall that a monad is a functor together with some natural transformations; we can see this as a construction in the <span class="math inline">\(2\)</span>-category of categories, functors, and natural transformations. We can carry out the same construction in any <span class="math inline">\(2\)</span>-category <span class="math inline">\(C\)</span>, giving monads <em>in</em> <span class="math inline">\(C\)</span>.
+</p>
+<p>
+Let <span class="math inline">\(C\)</span> be a <span class="math inline">\(2\)</span>-category (<em>e.g.</em> <span class="math inline">\(\mathbf{Cat}\)</span>). A monad <em>in</em> <span class="math inline">\(C\)</span> is given by
+</p>
+<ul>
+<li>
+a <span class="math inline">\(0\)</span>-cell <span class="math inline">\(X\)</span>
+</li>
+<li>
+a <span class="math inline">\(1\)</span>-cell <span class="math inline">\(T : X \to X\)</span>
+</li>
+<li>
+a pair of <span class="math inline">\(2\)</span>-cells <span class="math inline">\(\eta : 1 \to T\)</span> and <span class="math inline">\(\mu : T^2 \to T\)</span>
+</li>
+</ul>
+<p>
+satisfying the usual monad axioms.
+</p>
+<p>
+In fact, we get an entire <span class="math inline">\(2\)</span>-category of monads inside <span class="math inline">\(C\)</span>!
+</p>
+<p>
+What is a morphism of monads? A monad functor <span class="math inline">\((X_1, S_1, \eta_1, \mu_1) \to (X_2, S_2, \eta_2, \mu_2)\)</span> (<em>i.e.</em> a <span class="math inline">\(1\)</span>-cell in the <span class="math inline">\(2\)</span>-category of monads in <span class="math inline">\(C\)</span>) is given by
+</p>
+<ul>
+<li>
+a <span class="math inline">\(1\)</span>-cell <span class="math inline">\(u : X_1 \to X_2\)</span>
+</li>
+<li>
+a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\lambda : S_2 u \to u S_1\)</span> (Note, this is not backwards! This is what we will need to map algebras of the firs monad to algebras of the second.)
+</li>
+</ul>
+<p>
+satisfying the axioms:
+</p>
+<ul>
+<li>
+<span class="math inline">\(\eta_{S_2} u ; \lambda = u \eta_{S_1}\)</span>
+</li>
+<li>
+<span class="math inline">\(S_2 \lambda ; \lambda S_1 ; u \mu_{S_1} = \mu_{S_2} ; \lambda\)</span>
+</li>
+</ul>
+<p>
+A monad transformation (<em>i.e.</em> a <span class="math inline">\(2\)</span>-cell in the <span class="math inline">\(2\)</span>-category of monads in <span class="math inline">\(C\)</span>) is given by
+</p>
+<ul>
+<li>
+a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\sigma : u_1 \to u_2\)</span>, satisfying <span class="math inline">\(\sigma S_2 ; \lambda_2 = \lambda_1 ; S_1 \sigma\)</span> (something like that, see pasting diagrams of <span class="math inline">\(2\)</span>-cells in the video).
+</li>
+</ul>
+<h3 id="distributive-laws-4">
+Distributive laws 4
+</h3>
+<p>
+https://www.youtube.com/watch?v=FZeoHPRoBVk
+</p>
+<p>
+Distributive laws, even more formally!
+</p>
+<p>
+Consider the <span class="math inline">\(2\)</span>-category of monads <span class="math inline">\(\mathbf{Mnd}(C)\)</span> in an arbitrary <span class="math inline">\(2\)</span>-category <span class="math inline">\(C\)</span>; monads <em>in</em> <span class="math inline">\(\mathbf{Mnd}(C)\)</span> are distributive laws!
+</p>
+<p>
+Recall that a monad in an arbitrary <span class="math inline">\(2\)</span>-category is a <span class="math inline">\(0\)</span>-cell equipped with an endo-<span class="math inline">\(1\)</span>-cell and appropriate <span class="math inline">\(2\)</span>-cells <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\mu\)</span>. In <span class="math inline">\(\mathbf{Mnd}(C)\)</span>:
+</p>
+<ul>
+<li>
+A <span class="math inline">\(0\)</span>-cell in <span class="math inline">\(\mathbf{Mnd}(C)\)</span>, that is, a monad in <span class="math inline">\(C\)</span> <span class="math inline">\((X,S)\)</span>.
+</li>
+<li>
+A <span class="math inline">\(1\)</span>-cell <span class="math inline">\((X,S) \to (X,S)\)</span>, that is, a functor <span class="math inline">\(T : X \to X\)</span> and <span class="math inline">\(\lambda : ST \to TS\)</span>.
+</li>
+<li>
+<span class="math inline">\(2\)</span>-cells <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\mu\)</span>. Can check that these turn <span class="math inline">\(T\)</span> into a monad.
+</li>
+<li>
+Axioms on <span class="math inline">\(\lambda\)</span> give exactly what is needed to make it a distributive law.
+</li>
+</ul>
+<p>
+Summarizing more concisely/informally, a monad in <span class="math inline">\(\mathbf{Mnd}(C)\)</span> is
+</p>
+<ul>
+<li>
+A <span class="math inline">\(0\)</span>-cell <span class="math inline">\(X\)</span>
+</li>
+<li>
+A pair of monads <span class="math inline">\(S\)</span>,<span class="math inline">\(T\)</span>
+</li>
+<li>
+A distributive law <span class="math inline">\(\lambda : ST \to TS\)</span>.
+</li>
+</ul>
+<p>
+Consider the map <span class="math inline">\(C \mapsto \mathbf{Mnd}(C)\)</span>. This actually defines an endofunctor <span class="math inline">\(\mathbf{Mnd}(-)\)</span> on <span class="math inline">\(2\)</span>-<span class="math inline">\(\mathbf{Cat}\)</span>, the category of (strict) <span class="math inline">\(2\)</span>-categories and (strict) <span class="math inline">\(2\)</span>-functors. In fact, Street showed that <span class="math inline">\(\mathbf{Mnd}(-)\)</span> is a monad! The “monad monad”.
+</p>
+<p>
+The multiplication has type <span class="math inline">\(\mathbf{Mnd}(\mathbf{Mnd}(C)) \to \mathbf{Mnd}(C)\)</span>. Recall that objects in <span class="math inline">\(\mathbf{Mnd}(\mathbf{Mnd}(C))\)</span> are a pair of monads <span class="math inline">\(S\)</span>,<span class="math inline">\(T\)</span> plus a distributive law. In fact, the distributive law is precisely what is needed to make <span class="math inline">\(TS\)</span> into a monad, which is the monad returned by the multiplication.
+</p>
+<h2 id="group-objects-and-hopf-algebras">
+Group Objects and Hopf Algebras
+</h2>
+<h3 id="group-objects-and-hopf-algebras-1">
+Group Objects and Hopf Algebras 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=p3kkm5dYH-w
+</p>
+<p>
+Take the idea of a group and develop it categorically, first in the category of sets and then transport it into other categories (though it may not be completely obvious what properties of <span class="math inline">\(\mathbf{Set}\)</span> we are using).
+</p>
+<p>
+A group is of course a set <span class="math inline">\(G\)</span> with an associative binary product, inverses, and an identity element. Let’s make this categorical: don’t want to talk about internal structure of <span class="math inline">\(G\)</span> but just about <span class="math inline">\(G\)</span> as an object in <span class="math inline">\(\mathbf{Set}\)</span>.
+</p>
+<p>
+So a group is:
+</p>
+<ul>
+<li>
+an object <span class="math inline">\(G \in \mathbf{Set}\)</span>
+</li>
+<li>
+a multiplication morphism <span class="math inline">\(\mu : G \times G \to G\)</span>
+</li>
+<li>
+an inverse morphism <span class="math inline">\(\gamma : G \to G\)</span>
+</li>
+<li>
+a unit morphism <span class="math inline">\(\eta : 1 \to G\)</span> (<em>i.e.</em> “universal element”)
+</li>
+</ul>
+<p>
+together with axioms expressed as commutative diagrams:
+</p>
+<ul>
+<li>
+<span class="math inline">\((id \times \mu) ; \mu = (\mu \times id) ; \mu\)</span>
+</li>
+<li>
+<span class="math inline">\((\eta \times id) ; \mu = id = (id \times \eta) ; \mu\)</span> (note to be pedantic we also need to use <span class="math inline">\(\lambda : G \to 1 \times G\)</span> and <span class="math inline">\(\rho : G \to G \times 1\)</span>)
+</li>
+<li>
+<span class="math inline">\(\Delta ; (id \times \gamma) ; \mu = \varepsilon ; \eta\)</span>
+</li>
+</ul>
+<p>
+where <span class="math inline">\(\Delta : G \to G \times G\)</span> is the diagonal map (note the fact that we are using <span class="math inline">\(\Delta\)</span> is the most interesting part; see forthcoming lectures) and <span class="math inline">\(\varepsilon : G \to 1\)</span> is the unique map to a terminal set.
+</p>
+<h3 id="group-objects-and-hopf-algebras-2">
+Group Objects and Hopf Algebras 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=kJ2X_U7X5WA
+</p>
+<p>
+Note just <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\eta\)</span> together with axioms (forgetting about <span class="math inline">\(\gamma\)</span> and its axioms) is the definition of a monoidal category. Not surprising since a group is a monoid with inverses.
+</p>
+<p>
+Recall <span class="math inline">\(\Delta : G \to G \times G\)</span>. We get that for free from the fact that the monoid we are using is really the categorical product; <span class="math inline">\(\Delta\)</span> can be easily defined using the universal property of categorical product.
+</p>
+<p>
+In fact, every set <span class="math inline">\(S\)</span> is a <em>comonoid</em> in a unique way, since <span class="math inline">\(\times\)</span> is a categorical product. That is, a comonoid on a set <span class="math inline">\(S\)</span> is given by
+</p>
+<ul>
+<li>
+a comultiplication <span class="math inline">\(\Delta : S \to S \times S\)</span>
+</li>
+<li>
+a counit <span class="math inline">\(\varepsilon : S \to 1\)</span>
+</li>
+<li>
+satisfying coassociativity and counit axioms.
+</li>
+</ul>
+<p>
+And note we used <span class="math inline">\(\Delta\)</span> and <span class="math inline">\(\varepsilon\)</span> in the definition of a group, in particular in the axioms for <span class="math inline">\(\gamma\)</span>.
+</p>
+<h3 id="group-objects-and-hopf-algebras-3">
+Group Objects and Hopf Algebras 3
+</h3>
+<p>
+https://www.youtube.com/watch?v=wAeHrtKMTHM
+</p>
+<p>
+The definition given last time won’t work in general for any monoidal category, but it does work for any <em>Cartesian</em> category (that is, monoidal categories where the monoidal operation is categorical product). Examples of Cartesian categories, in which it therefore makes sense to have group objects, include:
+</p>
+<ul>
+<li>
+<span class="math inline">\(\mathbf{Set}\)</span>
+</li>
+<li>
+<span class="math inline">\(\mathbf{Top}\)</span> (category of topological spaces, with Cartesian product toplogy)
+</li>
+<li>
+<span class="math inline">\(\mathbf{Diff}\)</span> (cat. of smooth manifolds?)
+</li>
+<li>
+<span class="math inline">\(\mathbf{Grp}\)</span> (groups)
+</li>
+<li>
+<span class="math inline">\(\mathbf{Cat}\)</span> (categories)
+</li>
+</ul>
+<p>
+Let’s see what a group object looks like in each of these examples.
+</p>
+<ul>
+<li>
+In <span class="math inline">\(\mathbf{Set}\)</span>, a group object is a group.
+</li>
+<li>
+In <span class="math inline">\(\mathbf{Top}\)</span>, a topological group.
+</li>
+<li>
+In <span class="math inline">\(\mathbf{Diff}\)</span>, a Lie group.
+</li>
+<li>
+In <span class="math inline">\(\mathbf{Grp}\)</span>, it turns out a group object is an Abelian group! (Details left as an exercise.)
+</li>
+<li>
+In <span class="math inline">\(\mathbf{Cat}\)</span>, we get a “crossed module”.
+</li>
+</ul>
+<p>
+What about non-Cartesian monoidal categories? Simplest example is <span class="math inline">\(\mathbf{Vect}\)</span>, category of (finite-dimensional) vector spaces with linear maps. Monoidal structure given by tensor product and complex numbers. Tensor product defined by
+</p>
+<p>
+<span class="math inline">\(V \otimes W = \{ \sum_t \alpha_t (v_t \otimes w_t) \mid v_t \in V, w\_t \in W \} / [(\alpha_1 v_1 + \alpha_2 v_2) \otimes w \sim \alpha_1 (v_1 \otimes w) + \alpha_2(v_2 \otimes w) \text{ and symmetrically}]\)</span>
+</p>
+<p>
+Suppose <span class="math inline">\(\{v_i\}\)</span> is a basis for <span class="math inline">\(V\)</span> and <span class="math inline">\(\{w_j\}\)</span> is a basis for <span class="math inline">\(W\)</span>, then <span class="math inline">\(\{v_i \otimes w_j\}\)</span> is a basis for <span class="math inline">\(V \otimes W\)</span>.
+</p>
+<p>
+The point is that <span class="math inline">\(\mathrm{dim}(V \otimes W) = \mathrm{dim}(V) \times \mathrm{dim}(W)\)</span>, but that’s different than <span class="math inline">\(\mathrm{dim}(V \times W) = \mathrm{dim}(V) + \mathrm{dim}(W)\)</span>, so <span class="math inline">\(\mathbf{Vect}\)</span> is <em>not</em> Cartesian.
+</p>
+<h3 id="group-objects-and-hopf-algebras-4">
+Group Objects and Hopf Algebras 4
+</h3>
+<p>
+https://www.youtube.com/watch?v=zZn9ZETVkF8
+</p>
+<p>
+We still want to be able to define group objects in monoidal categories which are not Cartesian.
+</p>
+<p>
+Recall: if we have a monoidal category <span class="math inline">\((C, \times, 1)\)</span> where <span class="math inline">\(\times\)</span> is the categorical product, then every object <span class="math inline">\(X \in C\)</span> is a comonoid <span class="math inline">\((X, \Delta, \varepsilon)\)</span> in a unique way, and every morphism is a comonoid map.
+</p>
+<p>
+Notation: in <span class="math inline">\(\mathbf{Set}\)</span>, an object with an associative binary operation and an identity is called a <em>monoid</em>; in <span class="math inline">\(\mathbf{Vec}\)</span> it’s called an <em>algebra</em>. So when we generalize to arbitrary categories sometimes “monoid” is used, sometimes “algebra”.
+</p>
+<p>
+A <em>Hopf algebra</em> is a group object in a general monoidal (tensor) category. Details next time.
+</p>
+<h3 id="group-objects-and-hopf-algebras-5">
+Group Objects and Hopf Algebras 5
+</h3>
+<p>
+https://www.youtube.com/watch?v=gmxZ_KCRZho
+</p>
+<p>
+A <em>Hopf algebra</em> <span class="math inline">\(H\)</span> in a (braided) monoidal category is as follows. We don’t get comonoid stuff for free any more so we have to put it in “by hand”.
+</p>
+<ul>
+<li>
+comonoid <span class="math inline">\(\Delta : H \to H \otimes H\)</span> and <span class="math inline">\(\varepsilon : H \to 1\)</span>
+</li>
+<li>
+monoid <span class="math inline">\(\mu : H \otimes H \to H\)</span> and <span class="math inline">\(\eta : 1 \to H\)</span>
+</li>
+<li>
+“antipode” or inverse <span class="math inline">\(\gamma : H \to H\)</span>
+</li>
+</ul>
+<p>
+(See video for string diagrams.) Note the monoid and comonoid also need to be “compatible”: this is where the braidedness comes in. In particular <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\eta\)</span> need to be <em>comonoid morphisms</em>. So we need <span class="math inline">\(H \otimes H\)</span> to be a coalgebra.
+</p>
+<p>
+Lemma: suppose <span class="math inline">\(H\)</span>, <span class="math inline">\(K\)</span> are comonoids. Then <span class="math inline">\(H \otimes K\)</span> is a coalgebra if the category is braided: <span class="math inline">\(H \otimes K \to (H \otimes H) \otimes (K \otimes K)\)</span> using comonoid structures on <span class="math inline">\(H\)</span> and <span class="math inline">\(K\)</span>, and then using (associativity and) braiding we can flip inner <span class="math inline">\(H \otimes K\)</span> around to get <span class="math inline">\((H \otimes K) \otimes (H \otimes K)\)</span>.
+</p>
+<p>
+Can then write down what it means for <span class="math inline">\(\mu\)</span> to be a coalgebra map aka comonoid morphism; left as an exercise (or the next video).
+</p>
+<h3 id="group-objects-and-hopf-algebras-6">
+Group Objects and Hopf Algebras 6
+</h3>
+<p>
+https://www.youtube.com/watch?v=Gv1sRLOwVWA
+</p>
+<p>
+String diagram showing comonoid <span class="math inline">\(\Delta\)</span> for <span class="math inline">\(H \otimes K\)</span>.
+</p>
+<p>
+<span class="math inline">\(\mu\)</span> and <span class="math inline">\(\eta\)</span> should be a comonoid morphism, <em>i.e.</em> must commute with <span class="math inline">\(\Delta\)</span> (string diagram) and also with <span class="math inline">\(\varepsilon\)</span> (another string diagram).
+</p>
+<p>
+There seems to be some asymmetry: monoid + comonoid + monoid must be comonoid morphisms. But it’s the same to say that the comonoid must be monoid morphisms.
+</p>
+<h2 id="ends">
+Ends
+</h2>
+<h3 id="ends-1">
+Ends 1
+</h3>
+<p>
+http://youtu.be/mxI9ba6Rexc
+</p>
+<p>
+Given a functor <span class="math inline">\(T : C^{op}\times C \to D\)</span>, an <em>end</em> <span class="math inline">\(\int_{c \in C} T(c,c)\)</span> is an object in <span class="math inline">\(D\)</span> which is “limit-like” in some sense.
+</p>
+<p>
+Ends are not as common as coends (and perhaps not as intuitive?). Two particular places where ends do show up:
+</p>
+<ul>
+<li>
+natural transformations (especially in enriched setting; see Ends 2)
+</li>
+<li>
+reconstruction theorems (recover an algebra from category of its representations, <em>i.e.</em> <em>Tannaka reconstruction</em>, see Ends 3)
+</li>
+</ul>
+<p>
+Definition:
+</p>
+<ul>
+<li>
+A <em>wedge</em> <span class="math inline">\(x \stackrel{\bullet}{\to} T\)</span> consists of
+<ul>
+<li>
+an object <span class="math inline">\(x \in D\)</span>
+</li>
+<li>
+a family of <span class="math inline">\(D\)</span>-morphisms <span class="math inline">\(\omega_c : x \to T(c,c)\)</span> for all <span class="math inline">\(c \in C\)</span>
+</li>
+<li>
+such that for all <span class="math inline">\(f : c \to c'\)</span> the obvious square with vertices <span class="math inline">\(x\)</span>, <span class="math inline">\(T(c,c)\)</span>, <span class="math inline">\(T(c',c')\)</span>, and <span class="math inline">\(T(c,c')\)</span> commutes. (Dinaturality/extranaturality.)
+</li>
+</ul>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/mrpq76b.png" /></p>
+</div>
+</div>
+<ul>
+<li>
+This is in some sense a generalization of a cone.
+</li>
+</ul>
+</li>
+<li>
+<p>
+An <em>end</em> is a universal wedge, <em>i.e.</em> a wedge <span class="math inline">\(E \stackrel{\bullet}{\to} T\)</span> such that if <span class="math inline">\(x \stackrel{\bullet}{\to} T\)</span> then there exists a unique morphism <span class="math inline">\(x \to E\)</span> through which the components of <span class="math inline">\(x\)</span> factor.
+</p>
+</li>
+</ul>
+<p>
+Note we write the object <span class="math inline">\(E\)</span> using the intergral notation, <span class="math inline">\(\int_{c \in C} T(c,c)\)</span> (the morphisms of the wedge are left implicit).
+</p>
+<h3 id="ends-2">
+Ends 2
+</h3>
+<p>
+http://youtu.be/gyc86NFT0Sw
+</p>
+<p>
+Simple example of an end: <span class="math inline">\(T = \mathrm{Hom} : C^{\text{op}} \times C \to \mathbf{Set}\)</span>. In this case a wedge <span class="math inline">\(x \stackrel{\bullet}{\to} T\)</span> consists of:
+</p>
+<ul>
+<li>
+some <span class="math inline">\(x \in \mathbf{Set}\)</span>
+</li>
+<li>
+for each <span class="math inline">\(c \in C\)</span> a function <span class="math inline">\(\omega_c : x \to \mathrm{Hom}(c,c)\)</span>
+</li>
+<li>
+such that <span class="math inline">\(\forall f : c \to c'\)</span> we have <span class="math inline">\(\omega_c; f \circ - = \omega_{c'}; - \circ f\)</span>.
+</li>
+</ul>
+<p>
+That is, for every <span class="math inline">\(n \in x\)</span> we have <span class="math inline">\(\omega_c(n) = n_c : c \to c\)</span>, such that <span class="math inline">\(f \circ n_c = c_{c'} \circ f\)</span>. <em>i.e.</em> the family <span class="math inline">\(n_c\)</span> are the components of a natural transformation <span class="math inline">\(Id_C \to Id_C\)</span>.
+</p>
+<p>
+Note this goes in the other direction too, that is, a wedge <span class="math inline">\(x \stackrel{\bullet}{\to} \mathrm{Hom}\)</span> is precisely the same thing as a function <span class="math inline">\(x \to \mathrm{Nat}(Id_C, Id_C)\)</span>. Therefore, the universal such <span class="math inline">\(x\)</span> is precisely this set of natural transformations. (Can be thought of as “set of symmetries” of a category. Also the <em>Hochschild cohomology</em>.)
+</p>
+<h3 id="ends-3">
+Ends 3
+</h3>
+<p>
+http://youtu.be/TfSUxhCNZZ0
+</p>
+<p>
+More examples. First, straightforward generalization: given functors <span class="math inline">\(F, G : C \to E\)</span>, form the bifunctor <span class="math inline">\(\mathrm{Hom}_E(F(-), G(-)) : C^{op}\times C \to \mathbf{Set}\)</span>. Then we can see that
+</p>
+<p>
+<span class="math inline">\(\int_{c \in C} \mathrm{Hom}_E(F(c),G(c)) = \mathrm{Nat}(F,G)\)</span>.
+</p>
+<p>
+(Proof is just a small generalization of the proof in Ends 2, left as exercise.) Useful in an enriched context, can use this end to construct an <em>object</em> of natural transformations instead of a set.
+</p>
+<p>
+Another example, “baby Tannaka reconstruction” (see <a href="http://ncatlab.org/nlab/show/Tannaka+duality">Tannaka duality</a> and <a href="http://ncatlab.org/nlab/show/reconstruction+theorem">reconstruction theorem</a> on nlab).
+</p>
+<ul>
+<li>
+<span class="math inline">\(M\)</span> is a monoid in the category of sets.
+</li>
+<li>
+<span class="math inline">\(M\)</span>-<span class="math inline">\(\mathbf{Set}\)</span> is the category of sets that <span class="math inline">\(M\)</span> acts on
+</li>
+<li>
+<span class="math inline">\(U : M\text{-}\mathbf{Set} \to \mathbf{Set}\)</span> is the forgetful functor.
+</li>
+<li>
+Result: <span class="math inline">\(\int_{(S,\sigma) \in M\text{-}\mathbf{Set}} \mathrm{Hom} (U(S,\sigma), U(S,\sigma)) \cong \mathrm{Nat}(U,U) \cong M\)</span>. (In general, natural transformations over forgetful functor reconstructs algebraic objects.)
+</li>
+</ul>
+<p>
+Proof (application of Yoneda):
+</p>
+<ul>
+<li>
+Let <span class="math inline">\(\mu : M \times M \to M\)</span> be monoid operation and <span class="math inline">\(e\)</span> the identity.
+</li>
+<li>
+An <span class="math inline">\(M\)</span>-set consists of a set <span class="math inline">\(S\)</span> together with an action <span class="math inline">\(\sigma : M \times S \to S\)</span>. Morphisms <span class="math inline">\((S,\sigma) \to (R,\rho)\)</span> are just functions <span class="math inline">\(S \to R\)</span> which commute with the actions (“equivariant maps”).
+</li>
+<li>
+Note <span class="math inline">\(U\)</span> is representable:
+<ul>
+<li>
+Consider the <span class="math inline">\(M\)</span>-set <span class="math inline">\(M^l = (M, \mu)\)</span> (“left-regular representation of <span class="math inline">\(M\)</span>”)
+</li>
+<li>
+Define <span class="math inline">\(\mathrm{Hom}(M^l, (S, \sigma)) \to S\)</span> by <span class="math inline">\(f \mapsto f(e)\)</span>.
+</li>
+<li>
+Note <span class="math inline">\(f(e)\)</span> determines <span class="math inline">\(f\)</span> since <span class="math inline">\(f\)</span> is equivariant: <span class="math inline">\(f(m) = f(m \cdot e) = m \cdot f(e)\)</span>. In fact <span class="math inline">\(\mathrm{Hom}(M^l, (S, \sigma)) \cong S\)</span>.
+</li>
+<li>
+Thus <span class="math inline">\(U = \mathrm{Hom}(M^l, -)\)</span>.
+</li>
+</ul>
+</li>
+<li>
+So <span class="math inline">\(\mathrm{Nat}(U,U) = \mathrm{Nat}(\mathrm{Hom}(M^l,-), \mathrm{Hom}(M^l,-))\)</span>, and by (co-?)Yoneda, this is just <span class="math inline">\(\mathrm{Hom}(M^l, M^l) = U(M^l) = M\)</span>.
+</li>
+</ul>
+<h3 id="ends-4">
+Ends 4
+</h3>
+<p>
+http://youtu.be/3hOtm0paWXY
+</p>
+<p>
+Combine some of the previous examples. Recall
+</p>
+<ul>
+<li>
+<span class="math inline">\(\int_C \mathrm{Hom} \cong \mathrm{Nat}(Id,Id)\)</span> (Ends 2)
+</li>
+<li>
+<span class="math inline">\(\int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{\mathbf{Set}}(U(-), U(-)) \cong M\)</span> (Ends 3)
+</li>
+</ul>
+<p>
+What happens if we combine these two results? First, look at the end from last time:
+</p>
+<ul>
+<li>
+Let <span class="math inline">\(\Phi \in \int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{M\text{-}\mathbf{Set}}(U -,U -) = \mathrm{Nat}(U,U)\)</span> be a natural transformation on <span class="math inline">\(U\)</span>. That is, <span class="math inline">\(\Phi_{(R,\rho)}\)</span> is a function <span class="math inline">\(R \to R\)</span>, such that <span class="math inline">\(\Phi\)</span> commutes with the underlying function of any equivariant map, <em>i.e.</em>
+</li>
+</ul>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/qzxv7gq.png" /></p>
+</div>
+</div>
+<ul>
+<li>
+As we showed last time, <span class="math inline">\(\Phi_{(R,\rho)} = \rho(m)\)</span> for some <span class="math inline">\(m \in M\)</span>.
+</li>
+<li>
+Note <span class="math inline">\(\Phi_{(R,\rho)}\)</span> is just a function <span class="math inline">\(R \to R\)</span>, but has to commute with equivariant functions.
+</li>
+</ul>
+<p>
+Now look at the end of the bare hom-functor in the category of <span class="math inline">\(M\)</span>-sets. <em>i.e.</em> <span class="math inline">\(\int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{M\text{-}\mathbf{Set}}(-,-) = ?\)</span>
+</p>
+<ul>
+<li>
+<p>
+Now if <span class="math inline">\(\Theta \in \int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{M\text{-}\mathbf{Set}}(-,-)\)</span>, we have
+</p>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/mal2e6h.png" /></p>
+</div>
+</div>
+</li>
+<li>
+<p>
+What’s the difference? <span class="math inline">\(\Theta\)</span> is now a family of <em>equivariant</em> maps. But note equivariant maps are determined by their underlying function. So any diagram of this form implies one of the previous form; the only thing we’ve added is that <span class="math inline">\(\Theta\)</span> itself has to be equivariant (in the previous case <span class="math inline">\(\Phi\)</span> could be any function). So in fact we have
+</p>
+<p>
+<span class="math inline">\(\int \mathrm{Hom}(-,-) \subseteq \int \mathrm{Hom}(U -, U -) = M\)</span>.
+</p>
+<p>
+<em>i.e.</em> we’re picking out some subset of <span class="math inline">\(M\)</span>. Question: <em>which</em> subset is it? That is, given such a <span class="math inline">\(\Theta_{(R,\rho)}\)</span> we know <span class="math inline">\(\Theta_{(R,\rho)} = \rho(m)\)</span> for some <span class="math inline">\(m\)</span>; which <span class="math inline">\(m\)</span>’s can we get?
+</p>
+</li>
+<li>
+<p>
+Consider the left-regular representation <span class="math inline">\(M^l\)</span> again. Then we know <span class="math inline">\(\Phi_{M^l} : M^l \to M_l\)</span> is just left-multiplication by some <span class="math inline">\(m \in M\)</span>. But it has to commute with equivariant maps; picking the action on the particular element <span class="math inline">\(e\)</span>, this means for all <span class="math inline">\(n \in M\)</span>
+</p>
+<p>
+<span class="math inline">\(n \cdot \Phi_{M^l}(e) = \Phi_{M^l}(n \cdot e)\)</span>
+</p>
+<p>
+that is, <span class="math inline">\(nm = mn\)</span>, <em>i.e.</em> <span class="math inline">\(m \in Z(M)\)</span>.
+</p>
+</li>
+<li>
+<p>
+So we conclude <span class="math inline">\(\int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{M\text{-}\mathbf{Set}}(-,-) = Z(M)\)</span>.
+</p>
+</li>
+</ul>
+<h2 id="adjunctions-from-morphisms">
+Adjunctions from morphisms
+</h2>
+<h3 id="adjunctions-from-morphisms-1">
+Adjunctions from morphisms 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=SzzHjpRmrLU
+</p>
+<p>
+General phenomenon: associate some category <span class="math inline">\(C(X)\)</span> to an object <span class="math inline">\(X\)</span>. For example:
+</p>
+<ul>
+<li>
+In representation theory, to a group or algebra we associate a category of modules or representations.
+</li>
+<li>
+In algebraic topology, to a space <span class="math inline">\(X\)</span> we associate <span class="math inline">\(\mathbf{Vect}(X)\)</span> (category of “bundles”?)
+</li>
+<li>
+In algebraic geometry, to an algebraic variety associate the category of sheaves.
+</li>
+<li>
+In logic, to a set of terms associate a category of subsets (predicates) over the terms.
+</li>
+<li>
+In analysis, to a metric space <span class="math inline">\(X\)</span> associate a category of Lipschitz functions <span class="math inline">\(X \to \mathbb{R}\)</span>.
+</li>
+</ul>
+<p>
+Question: if we have a morphism <span class="math inline">\(f : X \to Y\)</span>, how does that relate to the categories <span class="math inline">\(C(X)\)</span> and <span class="math inline">\(C(Y)\)</span> associated to <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>?
+</p>
+<p>
+We often get some sort of “pullback” functor <span class="math inline">\(f^* : C(X) \leftarrow C(Y)\)</span>. (Also often get some sort of monoidal structure on <span class="math inline">\(C(X)\)</span> and <span class="math inline">\(C(Y)\)</span>, and <span class="math inline">\(f^*\)</span> is often monoidal.)
+</p>
+<p>
+We also get various “pushforwards” <span class="math inline">\(f_* : C(X) \to C(Y)\)</span>, right adjoint to <span class="math inline">\(f^*\)</span>. In some situation we also get a left adjoint to <span class="math inline">\(f^*\)</span>.
+</p>
+<p>
+This is the beginning of the story of “Grothendieck’s 6 operations”. Lots of similar structure arises in all these different areas.
+</p>
+<h3 id="adjunctions-from-morphisms-2">
+Adjunctions from morphisms 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=jAQfNGEOass
+</p>
+<p>
+Baby examples of some particular adjunctions (in generality, they show up in Grothendieck’s 6 operations, Frobenius reciprocity, …). Idea: start with (<em>e.g.</em>) sets; to each set associate a category; to each morphism between sets we will get functors between the categories.
+</p>
+<ul>
+<li>
+To the set <span class="math inline">\(X\)</span> associate the slice category <span class="math inline">\(\mathbf{Set}/X\)</span>.
+<ul>
+<li>
+Think of the objects of this slice category, <span class="math inline">\(E \to X\)</span>, as “bundles over <span class="math inline">\(X\)</span>”: a base space <span class="math inline">\(X\)</span> and a set above that, where each element of <span class="math inline">\(X\)</span> is associated to its fiber/preimage.
+</li>
+<li>
+Another way to think of this is as a functor <span class="math inline">\(\hat{E} : X \to \mathbf{Set}\)</span> (considering <span class="math inline">\(X\)</span> as a discrete category), that picks out the fiber of each element of <span class="math inline">\(X\)</span>.
+</li>
+</ul>
+</li>
+<li>
+<p>
+There is actually an equivalence of categories <span class="math inline">\(\mathbf{Set}^X \cong \mathbf{Set}/X\)</span>.
+</p>
+</li>
+<li>
+<p>
+What about maps between sets? <em>e.g.</em> <span class="math inline">\(f : X \to Y\)</span>. As we’ll see, we get three associated maps <span class="math inline">\(f^* : \mathbf{Set}^Y \to \mathbf{Set}^X\)</span>, <span class="math inline">\(f_* : \mathbf{Set}^X \to \mathbf{Set}^Y\)</span>, and <span class="math inline">\(f_! : \mathbf{Set}^X \to \mathbf{Set}^Y\)</span>, with <span class="math inline">\(f_! \dashv f^* \dashv f_*\)</span>. Details in the next lecture.
+</p>
+</li>
+</ul>
+<h3 id="adjunctions-from-morphisms-3">
+Adjunctions from morphisms 3
+</h3>
+<p>
+https://www.youtube.com/watch?v=tWhB7E-HS8Y
+</p>
+<ul>
+<li>
+<p>
+Given <span class="math inline">\(f : X \to Y\)</span>, define the “pullback” of a bundle over <span class="math inline">\(Y\)</span> to a bundle over <span class="math inline">\(X\)</span> written <span class="math inline">\(f^* : \mathbf{Set}^Y \to \mathbf{Set}^X\)</span>: to each <span class="math inline">\(x \in X\)</span> we associate the fiber of <span class="math inline">\(f(x) \in Y\)</span>. That is,
+</p>
+<p>
+<span class="math inline">\(f^* \hat{F} = \hat{F} \circ f.\)</span>
+</p>
+</li>
+<li>
+<p>
+Now for the other direction. Idea: given a bundle over <span class="math inline">\(X\)</span> and <span class="math inline">\(f : X \to Y\)</span>, for each <span class="math inline">\(y \in Y\)</span> we have a set <span class="math inline">\(f^{-1}(y) \subseteq X\)</span> which are sent to that <span class="math inline">\(y\)</span> by <span class="math inline">\(f\)</span>; we have to somehow combine their fibers to yield a fiber for <span class="math inline">\(y\)</span>. Several ways we could imagine doing it: disjoint union, product? In this case we want the product. That is,
+</p>
+<p>
+<span class="math inline">\(\displaystyle (f_* \hat{E})(y) = \prod_{x \in f^{-1}(y)} \hat{E}(x).\)</span>
+</p>
+</li>
+</ul>
+<p>
+(Foreshadowing: taking the disjoint union gives us another adjoint.)
+</p>
+<h3 id="adjunctions-from-morphisms-4">
+Adjunctions from morphisms 4
+</h3>
+<p>
+http://youtu.be/Cf7hCiTspJc
+</p>
+<p>
+Proof of the adjunction <span class="math inline">\(f^* \dashv f_*\)</span>. (Come up with your own mnemonic to remember which way around the adjunction goes; suggested: think of a “falling star”.)
+</p>
+<ul>
+<li>
+<p>
+Notation: <span class="math inline">\(\mathrm{Hom}_X(a,b)\)</span> instead of <span class="math inline">\(\mathbf{Set}^X(a,b)\)</span> or <span class="math inline">\(\mathrm{Hom}_{\mathbf{Set}^X}(a,b)\)</span>
+</p>
+</li>
+<li>
+<p>
+Such hom-sets are a collection of maps between fibers, one for each base point.
+</p>
+</li>
+<li>
+<p>
+So we have <span class="math inline">\(\mathrm{Hom}_X(f^* \hat F, \hat E) = \prod_{x \in X} \mathrm{Hom}(f^* \hat F (x), \hat E (x)) = \prod_{x \in X} \mathrm{Hom}(\hat F (f(x)), \hat E (x))\)</span>.
+</p>
+</li>
+<li>
+<p>
+We can partition <span class="math inline">\(X\)</span> as preimages of elements of <span class="math inline">\(Y\)</span> under <span class="math inline">\(f\)</span>. So the above is equal to <span class="math inline">\(\prod_{y \in Y} \prod_{x \in f^{-1}(y)} \mathrm{Hom}(\hat F (y), \hat E (x))\)</span>.
+</p>
+</li>
+<li>
+<p>
+A product of hom-sets is isomorphic to a hom-set into a product (<em>i.e.</em> <span class="math inline">\(A^X B^X = (AB)^X\)</span>), so this is equal to <span class="math inline">\(\prod_{y \in Y} \mathrm{Hom}(\hat F (y), \prod_{x \in f^{-1}(y)} \hat E (x))\)</span>.
+</p>
+</li>
+<li>
+<p>
+By definition of <span class="math inline">\(f_*\)</span>, this is <span class="math inline">\(\prod_{y \in Y} \mathrm{Hom}(\hat F (y), (f_* \hat E) (y))\)</span>.
+</p>
+</li>
+<li>
+<p>
+Finally, by definition of <span class="math inline">\(\mathrm{Hom}_Y\)</span>, this is <span class="math inline">\(\mathrm{Hom}_Y (\hat F, f_* \hat E)\)</span>.
+</p>
+</li>
+<li>
+<p>
+Of course technically we would need to show naturality as well, but this is the basic idea.
+</p>
+</li>
+</ul>
+<h3 id="adjunctions-from-morphisms-5">
+Adjunctions from morphisms 5
+</h3>
+<p>
+https://www.youtube.com/watch?v=MSOGEtW39qM
+</p>
+<p>
+Last time, we proved an adjunction <span class="math inline">\(f^* \dashv f_*\)</span>, <em>i.e.</em>
+</p>
+<p>
+<span class="math inline">\(\mathrm{Hom}_X (f^* \hat F, \hat E) \cong \mathrm{Hom}_Y (\hat F, f_* \hat E).\)</span>
+</p>
+<p>
+In fact, we showed that both are isomorphic to
+</p>
+<p>
+<span class="math inline">\(\prod_{x \in X} \mathrm{Hom}(\hat F (f(x)), \hat E(x)).\)</span>
+</p>
+<p>
+<em>i.e.</em> given some <span class="math inline">\(f : X \to Y\)</span>, for each <span class="math inline">\(x\)</span> we get a map going the <em>other</em> way, from the fiber over <span class="math inline">\(f(x)\)</span> to the fiber over <span class="math inline">\(x\)</span>. (See the video for a nice picture.) But we can imagine turning these maps around, giving
+</p>
+<p>
+<span class="math inline">\(\prod_{x \in X} \mathrm{Hom}(\hat E(x), \hat F(f(x))).\)</span>
+</p>
+<p>
+Using the same trick as last time, this is equivalent to <span class="math inline">\(\prod_{y \in Y} \prod_{x \in f^{-1}(y)} \mathrm{Hom} (\hat E (x), \hat F (y))\)</span>, which is in turn equivalent to
+</p>
+<p>
+<span class="math inline">\(\prod_{y \in Y} \mathrm{Hom} (\coprod_{x \in f^{-1}(y)} \hat E (x), \hat F (y))\)</span>
+</p>
+<p>
+(since <span class="math inline">\(\mathrm{Hom}(-,B)\)</span> turns limits into colimits; concretely, note that <span class="math inline">\(A^X A^Y = A^{X + Y}\)</span>).
+</p>
+<p>
+This gives us a left adjoint <span class="math inline">\(f_! \dashv f^*\)</span>, defined by
+</p>
+<p>
+<span class="math inline">\(\displaystyle (f_! \hat E)(y) = \coprod_{x \in f^{-1}(y)} \hat E(x).\)</span>
+</p>
+<p>
+Remark: note that if we view bundles over <span class="math inline">\(X\)</span> as objects of the slice category <span class="math inline">\(\mathbf{Set}/X\)</span>, <span class="math inline">\(f_!\)</span> is just composition.
+</p>
+<h2 id="double-categories">
+Double Categories
+</h2>
+<h3 id="double-categories-1">
+Double Categories
+</h3>
+<p>
+https://www.youtube.com/watch?v=kiCZiSA2W3Q
+</p>
+<p>
+Internal categories in <span class="math inline">\(\mathbf{Cat}\)</span>. Recall that an internal category in <span class="math inline">\(E\)</span> is a pair of objects <span class="math inline">\(A\)</span> (representing objects) and <span class="math inline">\(B\)</span> (representing morphisms), and a pair of parallel arrows <span class="math inline">\(s,t : B \to A\)</span> in <span class="math inline">\(E\)</span> recording the source and target of each morphism, all suitably equipped with unit and composition.
+</p>
+<p>
+If <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are themselves categories, and <span class="math inline">\(s\)</span> and <span class="math inline">\(t\)</span> are functors, then <span class="math inline">\(B\)</span> itself has sets of objects <span class="math inline">\(B_0\)</span> and morphisms <span class="math inline">\(B_1\)</span> with source and target functions, and the same for <span class="math inline">\(A\)</span>. Then the functors <span class="math inline">\(s\)</span> and <span class="math inline">\(t\)</span> have actions on morphisms and objects, so we get a square with two parallel arrows on each side.
+</p>
+<ul>
+<li>
+<span class="math inline">\(A_0\)</span> are <span class="math inline">\(0\)</span>-cells.
+</li>
+<li>
+<span class="math inline">\(A_1\)</span> are “vertical <span class="math inline">\(1\)</span>-cells”.
+</li>
+<li>
+<span class="math inline">\(B_0\)</span> are “horizontal <span class="math inline">\(1\)</span>-cells”.
+</li>
+<li>
+<span class="math inline">\(B_1\)</span> are <span class="math inline">\(2\)</span>-cells, which sit inside <em>squares</em> (not inside the area between two parallel <span class="math inline">\(1\)</span>-cells): each element of <span class="math inline">\(B_1\)</span> has corresponding sources and targets in both <span class="math inline">\(B_0\)</span> and <span class="math inline">\(A_1\)</span>, and the double commuting square described above ensures that the sources and targets of <em>those</em> have to match up in a square.
+</li>
+</ul>
+<p>
+What about composition? Note <span class="math inline">\(B\)</span> and <span class="math inline">\(A\)</span> already come equipped with composition, which together give us “vertical composition” of <span class="math inline">\(2\)</span>-cells. Composition in the internal category gives horizontal composition of <span class="math inline">\(2\)</span>-cells.
+</p>
+<p>
+Note if all vertical <span class="math inline">\(1\)</span>-cells are identities, this collapses to the usual idea of a <span class="math inline">\(2\)</span>-category. (Or symmetrically, with horizontal <span class="math inline">\(1\)</span>-cells being identities.)
+</p>
+<h2 id="spans">
+Spans
+</h2>
+<h3 id="spans-1">
+Spans 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=SQfUXOCMUhI
+</p>
+<p>
+NOTE: There seems to be no catsters video actually explaining what a “bicategory” is. <a href="https://ncatlab.org/nlab/show/bicategory">According to the nlab</a> it is a weaker version of a 2-category, where certain things are required to hold only up to coherent isomorphism rather than on the nose.
+</p>
+<p>
+Let <span class="math inline">\(E\)</span> be a category with (chosen) pullbacks. <span class="math inline">\(\mathbf{Span}(E)\)</span> is a bicategory with
+</p>
+<ul>
+<li>
+<span class="math inline">\(0\)</span>-cells the objects of <span class="math inline">\(E\)</span>
+</li>
+<li>
+<span class="math inline">\(1\)</span>-cells <span class="math inline">\(A \to B\)</span> are spans <span class="math inline">\(A \leftarrow S \rightarrow B\)</span>.
+</li>
+<li>
+<p>
+<span class="math inline">\(2\)</span>-cells are morphisms between <span class="math inline">\(1\)</span>-cells, that is, spans. So a <span class="math inline">\(2\)</span>-cell between <span class="math inline">\(A \leftarrow S \rightarrow B\)</span> and <span class="math inline">\(A \leftarrow S' \rightarrow B\)</span> is a morphism <span class="math inline">\(S \to S'\)</span> which makes things commute.
+</p>
+</li>
+<li>
+<p>
+<span class="math inline">\(1\)</span>-cell composition: use pullback. Is this associative? Yes, up to isomorphism (because of universal property of pullbacks) but not on the nose. (Hence we get a bicategory and not a strict <span class="math inline">\(2\)</span>-category.)
+</p>
+</li>
+<li>
+Vertical <span class="math inline">\(2\)</span>-cell composition: just composition of the underlying morphisms.
+</li>
+<li>
+<p>
+Horizontal <span class="math inline">\(2\)</span>-cell composition: the two pullbacks induce a morphism between them.
+</p>
+</li>
+</ul>
+<p>
+Can check all the axioms etc.
+</p>
+<p>
+Now, note monads can be constructed inside any bicategory, and are given by
+</p>
+<ul>
+<li>
+a <span class="math inline">\(0\)</span>-cell <span class="math inline">\(X\)</span>
+</li>
+<li>
+a <span class="math inline">\(1\)</span>-cell <span class="math inline">\(T : X \to X\)</span>
+</li>
+<li>
+<span class="math inline">\(2\)</span>-cells <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\mu\)</span> satisfying the usual monad axioms (slightly modified to make them make sense)
+</li>
+</ul>
+<p>
+It turns out that monads in <span class="math inline">\(\mathbf{Span}(E)\)</span> are great! For example, monads in <span class="math inline">\(\mathbf{Span}(\mathbf{Set})\)</span> are small categories. Next time we’ll see why.
+</p>
+<h3 id="spans-2">
+Spans 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=Jn5dZuebeXU
+</p>
+<p>
+Monads in <span class="math inline">\(\mathbf{Span}(Set)\)</span> are small categories. These notes make a lot more sense when you can look at the diagrams. Watch the video or work out the diagrams yourself.
+</p>
+<p>
+We have
+</p>
+<ul>
+<li>
+a <span class="math inline">\(0\)</span>-cell, <em>i.e.</em> a set <span class="math inline">\(C_0\)</span>.
+</li>
+<li>
+a <span class="math inline">\(1\)</span>-cell from <span class="math inline">\(C_0\)</span> to itself, <em>i.e.</em> a span <span class="math inline">\(C_0 \stackrel{s}{\leftarrow} C_1 \stackrel{t}{\rightarrow} C_0\)</span> (idea is that <span class="math inline">\(C_1\)</span> will be the set of morphisms, and <span class="math inline">\(s\)</span> and <span class="math inline">\(t\)</span> will pick out the source and target objects)
+</li>
+<li>
+a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\eta\)</span> from <span class="math inline">\(1\)</span> (the boring span with all the same object and identity morphisms) to the <span class="math inline">\(1\)</span>-cell given above. This ends up being a function <span class="math inline">\(f : C_0 \to C_1\)</span> such that <span class="math inline">\(f ; s = f ; t = id\)</span>, that is, <span class="math inline">\(f\)</span> takes each object in <span class="math inline">\(C_0\)</span> to a morphism in <span class="math inline">\(C_1\)</span> having that object as both its source and target.
+</li>
+<li>
+a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\mu : C_1^2 \to C_1\)</span>. <span class="math inline">\(C_1^2\)</span> is given by a pullback: a pair of morphisms such that the target of the first equals the source of the second, <em>i.e.</em> a composable pair. <span class="math inline">\(\mu\)</span> therefore has to take a composable pair and produce a single morphism in <span class="math inline">\(C_1\)</span> such that its source equals the source of the first and its target equals the target of the second.
+</li>
+</ul>
+<p>
+And of course there are some monad laws which amount to the category laws.
+</p>
+<p>
+More generally, monads in <span class="math inline">\(\mathbf{Span}(E)\)</span> are categories internal to <span class="math inline">\(E\)</span>. <em>I.e.</em>
+</p>
+<ul>
+<li>
+an “objects object” <span class="math inline">\(C_0\)</span>
+</li>
+<li>
+a “morphisms object” <span class="math inline">\(C_1\)</span>
+</li>
+<li>
+source and target maps <span class="math inline">\(C_1 \to C_0\)</span>
+</li>
+<li>
+identities and composition as before.
+</li>
+</ul>
+<h2 id="multicategories">
+Multicategories
+</h2>
+<h3 id="multicategories-1">
+Multicategories 1
+</h3>
+<p>
+http://www.youtube.com/watch?v=D_pPNgGZYDs
+</p>
+<p>
+Like categories, but morphisms have multiple objects as their source.
+</p>
+<p>
+A (small) multicategory <span class="math inline">\(C\)</span> is given by
+</p>
+<ul>
+<li>
+a set of objects, <span class="math inline">\(\mathrm{ob} C\)</span>
+</li>
+<li>
+For all <span class="math inline">\(x_1, \dots, x_n, x\)</span>, a set <span class="math inline">\(C(x_1, \dots, x_n, x)\)</span> of morphisms.
+</li>
+<li>
+Composition: a morphism with <span class="math inline">\(n\)</span> inputs can be composed with <span class="math inline">\(n\)</span> morphisms, producing a result which is a morphism with the concatenation of inputs of all the <span class="math inline">\(n\)</span> morphisms.
+</li>
+<li>
+Identity morphisms, with just one input and output.
+</li>
+</ul>
+<p>
+Note that one can have a morphism with <em>no</em> inputs.
+</p>
+<p>
+This can all be expressed nicely using the “free monoid monad” (i.e. list monad). Let <span class="math inline">\(T\)</span> be the free monoid monad on <span class="math inline">\(\mathbf{Set}\)</span>, i.e. the list monad; that is, <span class="math inline">\(T\)</span> sends each set <span class="math inline">\(S\)</span> to the free monoid on <span class="math inline">\(S\)</span> (i.e. lists of <span class="math inline">\(S\)</span>).
+</p>
+<p>
+Make a bicategory of <span class="math inline">\(T\)</span>-spans. Just as monads in the category of spans were small categories, monads in the (bi)category of <span class="math inline">\(T\)</span>-spans are multicategories.
+</p>
+<p>
+<span class="math inline">\(T\)</span>-span has:
+</p>
+<ul>
+<li>
+<span class="math inline">\(0\)</span>-cells are sets
+</li>
+<li>
+<span class="math inline">\(1\)</span>-cells are spans <span class="math inline">\(T A \leftarrow S \to B\)</span>.
+</li>
+<li>
+<span class="math inline">\(2\)</span>-cells are just span morphisms.
+</li>
+<li>
+Composition uses pullbacks and multiplication of <span class="math inline">\(T\)</span>.
+</li>
+<li>
+Identity is <span class="math inline">\(T\)</span>-span <span class="math inline">\(T A \leftarrow A \to A\)</span> using <span class="math inline">\(\eta\)</span> and <span class="math inline">\(id\)</span>.
+</li>
+</ul>
+<p>
+Bicategory axioms follow from monad laws for <span class="math inline">\(T\)</span>. Next time: monads in this category are multicategories.
+</p>
+<h3 id="multicategories-2">
+Multicategories 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=WytjdlserwU
+</p>
+<p>
+We’ve seen that monads in Span are categories.
+</p>
+<p>
+We’ve seen a category of <span class="math inline">\(T\)</span>-spans, spans with a <span class="math inline">\(T\)</span> on the left. We’ll see that monads in <span class="math inline">\(T\)</span>-<span class="math inline">\(\mathbf{Span}\)</span> are multicategories.
+</p>
+<p>
+Recall that <span class="math inline">\(T\)</span> is the list monad.
+</p>
+<p>
+A monad in <span class="math inline">\(T\)</span>-<span class="math inline">\(\mathbf{Span}\)</span> is:
+</p>
+<ul>
+<li>
+a set <span class="math inline">\(C_0\)</span> (which will represent objects of the multicategory)
+</li>
+<li>
+a <span class="math inline">\(1\)</span>-cell <span class="math inline">\(C_0 \to C_0\)</span> is a <span class="math inline">\(T\)</span>-span, i.e. an object <span class="math inline">\(C_1\)</span> (representing morphisms of the multicategory) together with morphisms from <span class="math inline">\(C_1\)</span> to <span class="math inline">\(T\ C_0\)</span> (picking out the sequence of input objects) and from <span class="math inline">\(C_1\)</span> to <span class="math inline">\(C_0\)</span> (picking the target object).
+</li>
+<li>
+a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\eta\)</span>, representing the identity morphism with a single input (see video for a commutative diagrma)
+</li>
+<li>
+a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\mu\)</span> which represents composition in a multicategory. See video for diagram!
+</li>
+</ul>
+<p>
+Key point: we can actually do this with other monads <span class="math inline">\(T\)</span>! And even on other categories with pullbacks, as long as <span class="math inline">\(T\)</span> preserves pullbacks (and <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\mu\)</span> commutative diagrams are pullbacks). This yields a notion of a <span class="math inline">\(T\)</span>-multicategory. The source of each morphism is not just a list of objects but a <span class="math inline">\(T\)</span>-structure of objects.
+</p>
+<h2 id="metric-spaces-and-enriched-categories">
+Metric Spaces and Enriched Categories
+</h2>
+<h3 id="metric-spaces-and-enriched-categories-1">
+Metric Spaces and Enriched Categories 1
+</h3>
+<p>
+https://www.youtube.com/watch?v=be7rx29eMr4
+</p>
+<p>
+Idea due to Lawvere. A metric <span class="math inline">\(d\)</span> on a metric space satisfies:
+</p>
+<ul>
+<li>
+Triangle inequality: <span class="math inline">\(d(a,b) + d(b,c) \geq d(a,c)\)</span>
+</li>
+<li>
+<span class="math inline">\(0 \geq d(a,a)\)</span>
+</li>
+</ul>
+<p>
+Compare to the data for a category, written in a slightly funny way:
+</p>
+<ul>
+<li>
+<span class="math inline">\(\mathrm{Hom}(a,b) \times \mathrm{Hom}(b,c) \to \mathrm{Hom}(a,c)\)</span>
+</li>
+<li>
+<span class="math inline">\(\{\star\} \to \mathrm{Hom}(a,a)\)</span>
+</li>
+</ul>
+<p>
+These look remarkably similar! In fact, they are both examples of enriched category. We’ll start with a normal category and show how to generalize it to an enriched category.
+</p>
+<p>
+Let <span class="math inline">\(C\)</span> be a category. We have:
+</p>
+<ul>
+<li>
+a collection <span class="math inline">\(\mathrm{Ob}(C)\)</span>
+</li>
+<li>
+<span class="math inline">\(\forall a,b \in \mathrm{Ob}(C)\)</span>, <span class="math inline">\(\mathrm{Hom}(a,b) \in \mathrm{Ob}(\mathbf{Set})\)</span>
+</li>
+<li>
+<span class="math inline">\(\forall a,b,c \in \mathrm{Ob}(C)\)</span>, <span class="math inline">\(\exists \mathrm{Hom}(a,b) \times \mathrm{Hom}(b,c) \to \mathrm{Hom}(a,c)\)</span>
+</li>
+<li>
+<span class="math inline">\(\forall a \in \mathrm{Ob}(C)\)</span>, <span class="math inline">\(\exists \{\star\} \to \mathrm{Hom}(a,a)\)</span>
+</li>
+<li>
+…satisfying associativity and unit laws.
+</li>
+</ul>
+<p>
+Important thing to note: composition and identity are morphisms in <span class="math inline">\(\mathbf{Set}\)</span>. What properties of <span class="math inline">\(\mathbf{Set}\)</span> have we used? Just a Cartesian product and the one-element set <span class="math inline">\(\{\star\}\)</span>. Right generalization is a monoidal category.
+</p>
+<p>
+In particular, if <span class="math inline">\((V, \otimes, I)\)</span> is a monoidal category, we can define <em>categories enriched in <span class="math inline">\(V\)</span></em>. Definition becomes:
+</p>
+<p>
+<span class="math inline">\(C\)</span> is a <span class="math inline">\(V\)</span>-category (category enriched in <span class="math inline">\(V\)</span>):
+</p>
+<ul>
+<li>
+collection <span class="math inline">\(\mathrm{Ob}(C)\)</span> as before
+</li>
+<li>
+<span class="math inline">\(\mathrm{Hom}(a,b) \in \mathrm{Ob}(V)\)</span>, <em>i.e</em> we don’t have hom-<em>sets</em> but hom-<em>objects</em> that live in the category <span class="math inline">\(V\)</span>
+</li>
+<li>
+The composition map is a morphism <span class="math inline">\(\mathrm{Hom}(a,b) \otimes \mathrm{Hom}(b,c) \to \mathrm{Hom}(a,c)\)</span> in <span class="math inline">\(V\)</span>
+</li>
+<li>
+Identity morphisms are now given by a morphism <span class="math inline">\(I \to \mathrm{Hom}(a,a)\)</span> in <span class="math inline">\(V\)</span>.
+</li>
+<li>
+…satisfying associativity and unit laws.
+</li>
+</ul>
+<p>
+<em>e.g.</em> pick <span class="math inline">\(V\)</span> to be category of Abelian groups (yields “additive category”), or category of vector spaces (yields “linear categories”).
+</p>
+<p>
+What if we take <span class="math inline">\(V\)</span> to be a non-concrete category? <em>e.g.</em> take the poset of nonnegative real numbers under <span class="math inline">\(\geq\)</span>. Can make this monoidal by taking the usual <span class="math inline">\(+\)</span>, identity is <span class="math inline">\(0\)</span>. Then it turns out that categories enriched in this poset category are metric spaces!
+</p>
+<h3 id="metric-spaces-and-enriched-categories-2">
+Metric Spaces and Enriched Categories 2
+</h3>
+<p>
+https://www.youtube.com/watch?v=0p3iS3Nf-fs
+</p>
+<p>
+Explains in more detail how categories enriched in <span class="math inline">\((\mathbb{R}^+, \geq)\)</span> poset (with monoidal structure given by <span class="math inline">\(+\)</span> and <span class="math inline">\(0\)</span>) are metric spaces.
+</p>
+<ul>
+<li>
+For each pair of objects we have a “Hom-object” which is a nonnegative real number. (“distance”)
+</li>
+<li>
+Composition is supposed to be a morphism <span class="math inline">\(\mathrm{Hom}(a,b) \otimes \mathrm{Hom}(b,c) \to \mathrm{Hom}(a,c)\)</span>. But <span class="math inline">\(\otimes\)</span> is <span class="math inline">\(+\)</span> and <span class="math inline">\(\to\)</span> is <span class="math inline">\(\geq\)</span>, so this is the triangle inequality.
+</li>
+<li>
+Identity morphisms are given by <span class="math inline">\(I \to \mathrm{Hom}(a,a)\)</span>; in this context that says <span class="math inline">\(0 \geq \mathrm{Hom}(a,a)\)</span>, i.e. distance from <span class="math inline">\(a\)</span> to itself is <span class="math inline">\(0\)</span>.
+</li>
+<li>
+Associativity and unit laws are vacuous.
+</li>
+</ul>
+<p>
+This is actually a <em>generalized</em> metric space. More general than a metric space in several ways:
+</p>
+<ul>
+<li>
+Distance is not symmetric: <span class="math inline">\(d(a,b) \neq d(b,a)\)</span>. This actually has many real-world models (e.g. time to go between towns in the Alps).
+</li>
+<li>
+We might have <span class="math inline">\(d(a,b) = 0\)</span> for <span class="math inline">\(a \neq b\)</span>.
+</li>
+<li>
+We allow “infinite” distances (???)
+</li>
+</ul>
+<p>
+Now we can study metric spaces categorically.
+</p>
+<p>
+Given two <span class="math inline">\(V\)</span>-categories, a <span class="math inline">\(V\)</span>-functor <span class="math inline">\(\Phi : C \to D\)</span> consists of
+</p>
+<ul>
+<li>
+a map <span class="math inline">\(\mathrm{Ob}(C) \to \mathrm{Ob}(D)\)</span>, and
+</li>
+<li>
+for all <span class="math inline">\(a,b,c \in C\)</span>, <span class="math inline">\(\Phi : \mathrm{Hom}(a,b) \to \mathrm{Hom(\Phi a, \Phi b)}\)</span> (a morphism in <span class="math inline">\(D\)</span>) which has to commute with composition in the appropriate way.
+</li>
+</ul>
+<p>
+In the generalized metric setting, such a <span class="math inline">\(\Phi\)</span> is a nonexpansive map.
+</p>
+<h3 id="metric-spaces-and-enriched-categories-3">
+Metric Spaces and Enriched Categories 3
+</h3>
+<p>
+https://www.youtube.com/watch?v=kMSt_Ci54BE
+</p>
+<p>
+Enriched natural transformations. There are actually various ways to generalize. Today: simple-minded version. Apparently if we generalize the notion of a <em>set</em> of natural transformations we get a slightly better definition—this will be covered in future videos. [editor’s note: to my knowledge no such future videos exist.]
+</p>
+<p>
+Standard definition of a natural transformation <span class="math inline">\(\theta : F \to G\)</span> given functors <span class="math inline">\(F,G : C \to D\)</span>. Problem: we are supposed to have <span class="math inline">\(\theta_x \in \mathrm{Hom}(F x, G x)\)</span>, but in the enriched setting <span class="math inline">\(\mathrm{Hom}(F x, G x)\)</span> may not be a <em>set</em>, but just some object. So what should it mean for <span class="math inline">\(\theta_x\)</span> to be an “element” of it?
+</p>
+<p>
+Simple way around this: let <span class="math inline">\((V, \otimes, 1)\)</span> be a monoidal category. We can define a canonical functor <span class="math inline">\(\Gamma : V \to \mathrm{Set}\)</span> (“generalized elements”) which takes an object <span class="math inline">\(v \in V\)</span> to the Hom-set <span class="math inline">\(\mathrm{Hom}(1,v)\)</span>.
+</p>
+<p>
+e.g. if <span class="math inline">\(V = \mathrm{Set}\)</span>, <span class="math inline">\(\Gamma\)</span> is the identity. Another example I don’t understand involving category of complex vector spaces.
+</p>
+<p>
+In the example we care about, <span class="math inline">\(V = \mathbb{R}^+\)</span>, and <span class="math inline">\(I = 0\)</span>. In this case <span class="math inline">\(\Gamma\)</span> sends <span class="math inline">\(v\)</span> to the Hom-set <span class="math inline">\(0 \geq v\)</span>, that is, <span class="math inline">\(\{\star\}\)</span> if <span class="math inline">\(v = 0\)</span> and the empty set otherwise.
+</p>
+<p>
+So now we can say that <span class="math inline">\(\theta_x\)</span> should be a <em>generalized element</em> of <span class="math inline">\(\mathrm{Hom}(F x, G x)\)</span>.
+</p>
+<p>
+So, let <span class="math inline">\(F, G\)</span> be <span class="math inline">\(V\)</span>-functors. Define a <span class="math inline">\(V\)</span>-natural transformation <span class="math inline">\(\theta : F \to G\)</span> as
+</p>
+<ul>
+<li>
+for all <span class="math inline">\(x \in C\)</span>, <span class="math inline">\(\theta_x \in \Gamma(\mathrm{Hom}(F x, G x))\)</span>.
+</li>
+<li>
+Big commuting diagram expressing naturality in the enriched setting (see the video).
+</li>
+</ul>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

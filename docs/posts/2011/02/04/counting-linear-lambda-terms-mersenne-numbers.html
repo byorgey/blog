@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Counting linear lambda terms: Mersenne numbers</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2011/01/26/counting-linear-lambda-terms.html">« Counting linear lambda terms</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2011/02/08/counting-linear-lambda-terms-choice-and-correspondence.html">» Counting linear lambda terms: choice and correspondence</a>
+
+</span>
+
+
+<h1>Counting linear lambda terms: Mersenne numbers</h1>
+
+<div class="info">
+  Posted on February  4, 2011
+  
+  
+  <br />
+  Tagged 
+  
+</div>
+
+<section>
+<p>In a <a href="http://byorgey.wordpress.com/2011/01/26/counting-linear-lambda-terms/">previous post</a> I posed the challenge of coming up with polymorphic types admitting certain numbers of linear inhabitants. (If you didn’t see the previous post and want to puzzle over an interesting lambda-calculus based problem, stop reading now and go read <a href="http://byorgey.wordpress.com/2011/01/26/counting-linear-lambda-terms/">the previous post</a> first.) In this post I’ll outline some solutions and some further questions.</p>
+<p>First, we can make the easy observation that if we have polymorphic types admitting <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span> linear inhabitants respectively, we can easily construct a type with <span class="math inline">\(mn\)</span> inhabitants, by first alpha-varying the types so they have disjoint type parameters, then concatenating their inputs and pairing their outputs. For example, we can use <span class="math inline">\(\forall a. (a,a) \to (a,a)\)</span>, with two linear inhabitants, to construct the type <span class="math inline">\(\forall a b. (a,a) \to (b,b) \to ((a,a),(b,b))\)</span> with four.</p>
+<p>OK, so we can construct types with any power of two number of inhabitants. In fact, we can get any factorial number of linear inhabitants with functions from n-tuples to n-tuples, whose linear inhabitants correspond to permutations. For example, <span class="math inline">\(\forall a. (a,a,a,a) \to (a,a,a,a)\)</span> has <span class="math inline">\(4! = 24\)</span> linear inhabitants. So now we can get any number which can be decomposed as a product of factorials.</p>
+<p>But what about 3, or 5, or 7, or…? After thinking for several days I finally stumbled upon this type:</p>
+<p><span class="math inline">\(\forall a b. (a \to b) \to (b \to a) \to a \to b \to (a,b)\)</span></p>
+which has exactly three linear inhabitants, namely
+<ul>
+<li>
+<span class="math inline">\(\lambda f g a b. (g (f a), b)\)</span>
+</li>
+<li>
+<span class="math inline">\(\lambda f g a b. (g b, f a)\)</span>
+</li>
+<li>
+<span class="math inline">\(\lambda f g a b. (a, f (g b))\)</span>
+</li>
+</ul>
+<p>That is, we can pair up the function inputs with the other inputs, or we can apply both functions to one input, or both functions (in the other order) to the other input. In each of these cases, the types ensure that we have no further choice – for example, we can’t swap the order of the outputs since then they would have the wrong types.</p>
+<p>Generalizing a bit, consider the type</p>
+<p><span class="math inline">\(\forall a_1, \dots, a_n. (a_1 \to a_2) \to \dots \to (a_{n-1} \to a_n) \to (a_n \to a_1) \\ \to a_1 \to \dots \to a_n \to (a_1,\dots,a_n)\)</span></p>
+<p>That is, we take as inputs <span class="math inline">\(n\)</span> functions arranged in a cycle (the first function maps from <span class="math inline">\(a_1\)</span> to <span class="math inline">\(a_2\)</span>, the second from <span class="math inline">\(a_2\)</span> to <span class="math inline">\(a_3\)</span>, and so on, with the <span class="math inline">\(n\)</span>th function mapping from <span class="math inline">\(a_n\)</span> back to <span class="math inline">\(a_1\)</span>), and <span class="math inline">\(n\)</span> inputs of types <span class="math inline">\(a_1\)</span> through <span class="math inline">\(a_n\)</span>, and output an <span class="math inline">\(n\)</span>-tuple of values with types <span class="math inline">\(a_1\)</span> to <span class="math inline">\(a_n\)</span>. How many linear inhabitants does this type have, as a function of <span class="math inline">\(n\)</span>?</p>
+<p>Well, if we compose all the functions together we can make them into a function <span class="math inline">\(a_i \to a_i\)</span> for any <span class="math inline">\(i\)</span>, depending on the order in which we compose them. So we can take all the functions and apply them to any one of the other inputs, passing through the remaining <span class="math inline">\(n-1\)</span> inputs unchanged. We can also apply each function individually to its matching input, “shifting” the types of all the inputs by one. Is there anything else we can do?</p>
+<p>Indeed there is. For example, we could chain together some of the functions to make a function (say) <span class="math inline">\(a_2 \to a_7\)</span>, and if we compose the remaining functions we get a function <span class="math inline">\(a_7 \to a_2\)</span> – so we can apply these functions to the inputs of type <span class="math inline">\(a_2\)</span> and <span class="math inline">\(a_7\)</span> respectively, swapping their positions in the output, and passing through the remaining inputs unchanged. In fact, given a choice of <i>any</i> non-empty subset of the non-function inputs, there is exactly one way to use the given functions to cyclically permute them and pass through the other inputs unchanged. For example, if we choose <span class="math inline">\(a_1\)</span>, <span class="math inline">\(a_3\)</span>, and <span class="math inline">\(a_6\)</span>, then we must apply the first two functions to the <span class="math inline">\(a_1\)</span> to give an <span class="math inline">\(a_3\)</span>, the next three functions to the <span class="math inline">\(a_3\)</span> which will give us an <span class="math inline">\(a_6\)</span>, and the remaining functions applied to the <span class="math inline">\(a_6\)</span> will give us an <span class="math inline">\(a_1\)</span> again.</p>
+<p>So the linear inhabitants of this type are in one-to-one correspondence with the non-empty subsets of <span class="math inline">\(\{a_1, \dots, a_n\}\)</span>, which means there are <span class="math inline">\(2^n - 1\)</span> inhabitants. This gives us 3, as we saw before, and it also tells us that</p>
+<p><span class="math inline">\(\forall a b c. (a \to b) \to (b \to c) \to (c \to a) \to a \to b \to c \to (a,b,c)\)</span></p>
+<p>has 7 linear inhabitants.</p>
+<p>Great, so now we can create arbitrary products of factorials and Mersenne numbers. But what about, say, 5?</p>
+<p>Well… I conjecture that no types with five linear inhabitants exist, but I don’t have a proof yet!</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Typed type-level programming in Haskell, part III: I can haz typs plz?</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2010/07/06/typed-type-level-programming-in-haskell-part-ii-type-families.html">« Typed type-level programming in Haskell, part II: type families</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2010/08/01/422.html">» Species and Functors and Types, Oh My!</a>
+
+</span>
+
+
+<h1>Typed type-level programming in Haskell, part III: I can haz typs plz?</h1>
+
+<div class="info">
+  Posted on July 19, 2010
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'functional programming'." href="../../../../tag/functional%20programming.html" rel="tag">functional programming</a>, <a title="All pages tagged 'type-level'." href="../../../../tag/type-level.html" rel="tag">type-level</a>
+  
+</div>
+
+<section>
+<p>In <a href="http://byorgey.wordpress.com/2010/07/06/typed-type-level-programming-in-haskell-part-ii-type-families/">Part II</a>, I showed how <i>type families</i> can be used to do type-level programming in a functional style. For example, here is addition of natural numbers again:</p>
+<pre>
+  data Z
+  data S n
+
+  type family Plus m n :: *
+  type instance Plus Z n = n
+  type instance Plus (S m) n = S (Plus m n)
+</pre>
+<p>Now, <i>why</i> might we want to do such a thing? One example (I know, I know, this is <i>always</i> the example… but hey, it’s a good example) is if we wanted to have a type of polymorphic <i>length-indexed vectors</i> (or as they are sometimes known, “Length-Observed Lists”) where the type of a vector includes its length. Using a <a href="http://haskell.org/haskellwiki/GADT">generalized algebraic data type (GADT)</a>, we can write something like this:</p>
+<pre>
+  data LOL :: * -&gt; * -&gt; * where
+    KThxBye :: LOL Z a
+    Moar    :: a -&gt; LOL n a -&gt; LOL (S n) a
+</pre>
+This says that
+<ol>
+<li>
+<code>LOL</code> is a type constructor of kind <code>* -&gt; * -&gt; <em></code>, that is, it takes two type arguments of kind <code></em></code> and produces a type of kind <code>*</code>. The intention is that the first argument records the length, and the second records the type of the elements.
+</li>
+<li>
+<code>KThxBye</code> constructs a vector of length zero.
+</li>
+<li>
+Given an element of type <code>a</code> and a vector of </code>a</code>s of length <code>n</code>, <code>Moar</code> constructors a vector of length <code>S n</code>.
+</li>
+</ol>
+<p>The type-level function <code>Plus</code> comes in when we implement an <code>append</code> function for our length-indexed vectors: in order to express the type of <code>append</code> we have to add the lengths of the input vectors.</p>
+<pre>
+  append :: LOL m a -&gt; LOL n a -&gt; LOL (Plus m n) a
+  append KThxBye     v = v
+  append (Moar x xs) v = Moar x (append xs v)
+</pre>
+<p>If you haven’t already seen things like this, it’s a good exercise to figure out why this definition of <code>append</code> typechecks (and why it <i>wouldn’t</i> typecheck if we put anything other than <code>Plus m n</code> as the length of the output).</p>
+OK, great! We can make GHC check the lengths of our lists at compile time. So what’s the problem? Well, there are (at least) three obvious things which this code leaves to be desired:
+<ol>
+<li>
+It doesn’t matter whether we have already declared a <code>Nat</code> type with constructors <code>Z</code> and <code>S</code>; we have to redeclare some empty types <code>Z</code> and <code>S</code> to represent our type-level natural number “values”. And declaring empty types to use like “values” seems silly anyway.
+</li>
+<li>
+It also doesn’t matter whether we’ve already implemented a <code>plus</code> function for our <code>Nat</code> values; we must re-code the addition algorithm at the type level with the type family <code>Plus</code>. Especially irksome is the fact that these definitions will be virtually identical.
+</li>
+<li>
+Finally, and most insidiously, <code>LOL</code> is essentially <i>untyped</i>. Look again at the kind of <code>LOL :: * -&gt; * -&gt; *</code>. There’s nothing in the kind of <code>LOL</code> that tells us the first argument is supposed to be a type-level number. Nothing prevents us from accidentally writing the type <code>LOL Int (S Z)</code> – we’ll only run into (potentially confusing) problems later when we try to write down a value with this type.
+</li>
+</ol>
+<p>Wouldn’t it be nice if we could reuse (1) values and (2) functions at the type level, and (3) get more informative kinds in the bargain? Indeed, inspired by Conor McBride’s <a href="http://personal.cis.strath.ac.uk/~conor/pub/she/">SHE</a>, our work aims precisely to enable (1) and (3) in GHC as a start, and hopefully eventually (2) (and other features) as well. Hopefully soon, you’ll be able to write this:</p>
+<pre>
+  data Nat = Z | S Nat
+
+  type family Plus (m::Nat) (n::Nat) :: Nat
+  type instance Plus Z n = n
+  type instance Plus (S m) n = S (Plus m n)
+
+  data LOL :: Nat -&gt; * -&gt; * where
+    KThxBye :: LOL Z a
+    Moar    :: a -&gt; LOL n a -&gt; LOL (S n) a
+
+  append :: ...  -- exactly the same as before
+</pre>
+<p>…or even this:</p>
+<pre>
+  data Nat = Z | S Nat
+
+  plus :: Nat -&gt; Nat -&gt; Nat
+  plus Z n = n
+  plus (S m) n = S (plus m n)
+
+  data LOL :: Nat -&gt; * -&gt; * where ... -- same as above
+
+  append :: LOL m a -&gt; LOL n a -&gt; LOL (plus m n) a
+  append = ...  -- same as before
+</pre>
+<p>In another post I’ll explain what the above fantasy code would be doing in a bit more detail, talk about precisely how we propose to accomplish this, and discuss why we might want to do things this way, rather than introducing full dependent types (or just chucking Haskell and all moving to <a href="http://wiki.portal.chalmers.se/agda/pmwiki.php">Agda</a>).</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

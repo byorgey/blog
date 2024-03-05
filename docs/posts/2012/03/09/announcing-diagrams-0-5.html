@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Announcing diagrams 0.5</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2012/01/05/parsing-context-sensitive-languages-with-applicative.html">« Parsing context-sensitive languages with Applicative</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2012/06/12/unsubscribing-from-wolfram-emails-rant.html">» Unsubscribing from Wolfram emails (rant)</a>
+
+</span>
+
+
+<h1>Announcing diagrams 0.5</h1>
+
+<div class="info">
+  Posted on March  9, 2012
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'diagrams'." href="../../../../tag/diagrams.html" rel="tag">diagrams</a>, <a title="All pages tagged 'EDSL'." href="../../../../tag/EDSL.html" rel="tag">EDSL</a>, <a title="All pages tagged 'graphics'." href="../../../../tag/graphics.html" rel="tag">graphics</a>, <a title="All pages tagged 'release'." href="../../../../tag/release.html" rel="tag">release</a>, <a title="All pages tagged 'vector'." href="../../../../tag/vector.html" rel="tag">vector</a>
+  
+</div>
+
+<section>
+<p>
+I am pleased to announce the release of version 0.5 of <a href="http://projects.haskell.org/diagrams">diagrams</a>, a full-featured framework and embedded domain-specific language for declarative drawing. Check out the <a href="http://projects.haskell.org/diagrams/gallery.html">gallery</a> for examples of what it can do!
+</p>
+<div data-align="center">
+<p><a href="http://projects.haskell.org/diagrams/gallery/FibCalls.html"><img src="http://projects.haskell.org/diagrams/gallery/FibCalls.svg" width="400" alt="Naive fibonacci call tree" /></a></p>
+</div>
+<p>
+Highlights of this release include:
+</p>
+<ul>
+<li>
+A new <a href="http://hackage.haskell.org/package/diagrams%2Dcontrib">diagrams-contrib</a> package of user-contributed modules, which so far contains code for tree drawing, Apollonian gaskets, planar tilings, "wrapped" layout, and turtle graphics.
+</li>
+<li>
+Experimental support for animation, built on top of the new <a href="http://hackage.haskell.org/package/active">active</a> library.
+</li>
+<li>
+Numerous small additions and improvements, including more general rounded rectangle shapes and better text support.
+</li>
+<li>
+Much better performance in some common situations, such as laying out a very long list of diagrams using ‘cat’ and related combinators.
+</li>
+<li>
+Added support for GHC 7.4.
+</li>
+</ul>
+<p>
+See the <a href="http://projects.haskell.org/diagrams/releases.html">release notes</a> for complete details, and the <a href="http://www.haskell.org/haskellwiki/Diagrams/Migrate0.5">diagrams wiki</a> for help migrating code from 0.4 to 0.5 (changes should be minimal).
+</p>
+<h2 id="try-it-out">
+Try it out
+</h2>
+<p>
+For the truly impatient:
+</p>
+<pre><code>cabal install gtk2hs-buildtools
+cabal install diagrams</code></pre>
+<p>
+Diagrams is supported under GHC 6.12, 7.0, 7.2, and 7.4. However, getting cairo to build can be tricky on some platforms; see the <a href="http://www.haskell.org/haskellwiki/Diagrams">diagrams wiki</a> for more information and workarounds regarding specific platforms. (A new native SVG backend is in the works, targeted for the 0.6 release.)
+</p>
+<p>
+To get started with diagrams, read the <a href="http://projects.haskell.org/diagrams/tutorial/DiagramsTutorial.html">quick tutorial</a>, which will introduce you to the fundamentals of the framework.
+</p>
+<p>
+For those who are even less impatient but want to really dig in and use the power features, read the <a href="http://projects.haskell.org/diagrams/manual/diagrams-manual.html">user manual</a>.
+</p>
+<h2 id="get-involved">
+Get involved
+</h2>
+<p>
+Subscribe to the <a href="http://groups.google.com/group/diagrams-discuss">project mailing list</a>, and/or come hang out in the <code>#diagrams</code> IRC channel on freenode.org for help and discussion. Make some diagrams. <a href="http://code.google.com/p/diagrams/issues/list">Fix some bugs</a>. Submit your cool examples for inclusion in the <a href="http://projects.haskell.org/diagrams/gallery.html">gallery</a> or your cool code for inclusion in the <a href="http://hackage.haskell.org/package/diagrams%2Dcontrib">diagrams-contrib</a> package!
+</p>
+<p>
+Happy diagramming!
+</p>
+<p>
+Brought to you by the diagrams team:
+</p>
+<ul>
+<li>
+Peter Hall
+</li>
+<li>
+Ian Ross
+</li>
+<li>
+Michael Sloan
+</li>
+<li>
+Ryan Yates
+</li>
+<li>
+Brent Yorgey
+</li>
+</ul>
+<p>
+with contributions from:
+</p>
+<ul>
+<li>
+Sam Griffin
+</li>
+<li>
+Claude Heiland-Allen
+</li>
+<li>
+John Lato
+</li>
+<li>
+Vilhelm Sjöberg
+</li>
+<li>
+Luite Stegeman
+</li>
+<li>
+Kanchalai Suveepattananont
+</li>
+<li>
+Scott Walck
+</li>
+</ul>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

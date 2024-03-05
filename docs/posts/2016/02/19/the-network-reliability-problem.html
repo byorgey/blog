@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - The network reliability problem</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2015/11/15/a-strange-representation-of-z6.html">« A strange representation of Z6</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2016/03/02/at-sigcse-2016-in-memphis.html">» At SIGCSE 2016 in Memphis</a>
+
+</span>
+
+
+<h1>The network reliability problem</h1>
+
+<div class="info">
+  Posted on February 19, 2016
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'graph'." href="../../../../tag/graph.html" rel="tag">graph</a>, <a title="All pages tagged 'network'." href="../../../../tag/network.html" rel="tag">network</a>, <a title="All pages tagged 'probability'." href="../../../../tag/probability.html" rel="tag">probability</a>, <a title="All pages tagged 'reliability'." href="../../../../tag/reliability.html" rel="tag">reliability</a>
+  
+</div>
+
+<section>
+<p>
+Let <span class="math inline">\(G = (V,E)\)</span> be a directed graph with vertices <span class="math inline">\(V\)</span> and edges <span class="math inline">\(E\)</span>. Multiple edges between the same pair of vertices are allowed. For concreteness’ sake, think of the vertices as routers, and the edges as (one-way) connections. Let <span class="math inline">\(\mathbb{P} = [0,1]\)</span> denote the set of probabilities, and <span class="math inline">\(\varphi : E \to \mathbb{P}\)</span> be a function which assigns some probability to each edge. Think of <span class="math inline">\(\varphi(e)\)</span> as the probability that a single message sent along the edge <span class="math inline">\(e\)</span> from the source router will successfully reach the target router on the other end.
+</p>
+<p>
+Suppose that when a router receives a message on an incoming connection, it immediately resends it on all outgoing connections. For <span class="math inline">\(s,t \in V\)</span>, let <span class="math inline">\(P(s,t)\)</span> denote the probability that, under this “flooding” scenario, <em>at least one copy</em> of a message originating at <span class="math inline">\(s\)</span> will eventually reach <span class="math inline">\(t\)</span>.
+</p>
+<p>
+For example, consider the simple network shown below.
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2016/02/187e77faef9c21c1.png" alt />
+</p>
+</div>
+<p>
+A message sent from <span class="math inline">\(s\)</span> along the upper route through <span class="math inline">\(r\)</span> has an <span class="math inline">\(0.5 \times 0.9 = 0.45\)</span> probability of arriving at <span class="math inline">\(t\)</span>. By definition a message sent along the bottom route has an <span class="math inline">\(0.7\)</span> probability of arriving at <span class="math inline">\(t\)</span>. One way to think about computing the overall probability <span class="math inline">\(P(s,t)\)</span> is to compute the probability that it is <em>not</em> the case that the message <em>fails</em> to traverse <em>both</em> links, that is, <span class="math inline">\(1 - (1 - 0.45)(1 - 0.7) = 1 - 0.165 = 0.835\)</span>. Alternatively, in general we can see that <span class="math inline">\(1 - (1 - p)(1 - q) = p + q - pq\)</span>, so <span class="math inline">\(0.45 + 0.7 - 0.45 \times 0.7 = 0.835\)</span> as well. Intuitively, since the two events are not mutually exclusive, if we add them we are double-counting the situation where both links work, so we subtract the probability of both working.
+</p>
+<p>
+The question is, given some graph <span class="math inline">\(G\)</span> and some specified nodes <span class="math inline">\(s\)</span> and <span class="math inline">\(t\)</span>, how can we efficiently compute <span class="math inline">\(P(s,t)\)</span>? For now I am calling this the “network reliability problem” (though I fully expect someone to point out that it already has a name). Note that it might make the problem a bit easier to restrict to directed <em>acyclic</em> graphs; but the problem is still well-defined even in the presence of cycles.
+</p>
+<p>
+This problem turned out to be surprisingly more difficult and interesting than it first appeared. In a future post or two I will explain my solution, with a Haskell implementation. In the meantime, feel free to chime in with thoughts, questions, solutions, or pointers to the literature.
+</p>
+<div id="refs" class="references" role="list">
+
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

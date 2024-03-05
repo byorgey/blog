@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Deducing code from types: filterM</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2007/06/21/solving-an-arithmetic-puzzle-with-haskell.html">« Solving an arithmetic puzzle with Haskell</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2007/08/13/rationals.html">» Rationals!</a>
+
+</span>
+
+
+<h1>Deducing code from types: filterM</h1>
+
+<div class="info">
+  Posted on June 26, 2007
+  
+  
+  <br />
+  Tagged 
+  
+</div>
+
+<section>
+The other day in #haskell a few people were trying to figure out how to generate the list of all sublists of a given list. Various people tried various kludgy things involving inits and tails and concatMap, none of which quite worked correctly, until:
+<pre><font size="+1">
+13:26:10  &gt; filterM (const [True,False]) "123"
+13:26:11   ["123","12","13","1","23","2","3",""]
+13:26:29  o_O
+</font></pre>
+(lambdabot wasn’t working so Baughn had temporarily run another one under the nick Baughnie.) Anyway, this was sort of like that moment from Monty Python’s Holy Grail when the townspeople are trying to guess “what also floats in water”, and King Arthur suddenly says, “a duck”. To someone more well-versed in the ways of Haskell, Cale’s code is probably unremarkable; to me, it seemed like magic: although I’m quite comfortable with monads I had never seen filterM before, and had no idea how this worked (although clearly, it did). So, I looked up filterM using hoogle:
+<pre>filterM <font color="Red">::</font> Monad m <font color="Red">=&gt;</font> <font color="Cyan">(</font>a <font color="Red">-&gt;</font> m Bool<font color="Cyan">)</font> <font color="Red">-&gt;</font> <font color="Red">[</font>a<font color="Red">]</font> <font color="Red">-&gt;</font> m <font color="Red">[</font>a<font color="Red">]</font>
+<font color="Blue">--This generalizes the list-based filter function.</font></pre>
+<p>Here’s where I did something interesting, and I’m glad I did: instead of just clicking on “Source” to see the implementation, I decided to see if I could deduce the implementation of filterM, given only this information. I’d like to take you on a journey through my thought process: I learned a lot from this exercise and I think that anyone at about the same level of Haskell-fu as me (i.e. comfortable with the type system and monads, but still picking up idioms and bits and pieces of useful library functions, etc.) probably can too. Ready?</p>
+First, let’s recall the implementation of filter:
+<pre>filter <font color="Red">::</font> <font color="Cyan">(</font>a <font color="Red">-&gt;</font> Bool<font color="Cyan">)</font> <font color="Red">-&gt;</font> <font color="Red">[</font>a<font color="Red">]</font> <font color="Red">-&gt;</font> <font color="Red">[</font>a<font color="Red">]</font>
+filter <font color="Green"><u>_</u></font> []     <font color="Red">=</font> []
+filter p <font color="Cyan">(</font>x<font color="Red"><strong>:</strong></font>xs<font color="Cyan">)</font>
+     <font color="Red">|</font> p x       <font color="Red">=</font> x <font color="Red"><strong>:</strong></font> filter p xs
+     <font color="Red">|</font> otherwise <font color="Red">=</font> filter p xs</pre>
+<p>Pretty straightforward: recursively take each element of the list, and prepend it to the result if and only if applying the predicate p to it returns True.</p>
+So now let’s write filterM. Note the type is almost the same as the type of filter, except that the predicate returns a Bool value inside a monad, and the resulting list is supposed to be inside the same monad. The first case is easy, and follows directly from the type:
+<pre>filterM' p [] <font color="Red">=</font> return []</pre>
+<p>If the second argument (of type [a]) is an empty list, this is the only possible implementation (other than undefined): first of all, we know nothing about the type a, so there’s no way we can generate anything other than an empty list if we’re not given any values of type a in the first place; second, we want the result to be a list inside a monad, but we don’t know anything specific about the monad, so all we can do is return.</p>
+Now, for the recursive case. Since this is supposed to be similar to filter, we’ll first assume that we should do something with the first element, recurse on the rest, and combine them somehow. First things first:
+<pre>filterM' p <font color="Cyan">(</font>x<font color="Red"><strong>:</strong></font>xs<font color="Cyan">)</font> <font color="Red">=</font>
+    <font color="Green"><u>let</u></font> rest <font color="Red">=</font> filterM' p xs <font color="Green"><u>in</u></font> <font color="Cyan">...</font></pre>
+Of course, rest has type m [a]. OK, now what should we do with the first element, x? Let’s look at the types: x is of type a, and the other thing we have (p) is of type (a -&gt; m Bool). It’s pretty obvious what we should do: apply p to a, and get something of type m Bool. Then we can pull out a Bool value using do-notation and call it b:
+<pre>filterM' p <font color="Cyan">(</font>x<font color="Red"><strong>:</strong></font>xs<font color="Cyan">)</font> <font color="Red">=</font>
+    <font color="Green"><u>let</u></font> rest <font color="Red">=</font> filterM' p xs <font color="Green"><u>in</u></font>
+      <font color="Green"><u>do</u></font> b <font color="Red"> p x </font><font color="Cyan">...</font></pre>
+Now, what to do with b? Well, by analogy with filter, we should probably use it to decide whether to prepend x to rest! The only difference is that rest is of type m [a] so we can’t just prepend x like x : rest. We’ll have to use liftM to apply (x:) inside the monad:
+<pre>filterM' p <font color="Cyan">(</font>x<font color="Red"><strong>:</strong></font>xs<font color="Cyan">)</font> <font color="Red">=</font>
+    <font color="Green"><u>let</u></font> rest <font color="Red">=</font> filterM' p xs <font color="Green"><u>in</u></font>
+      <font color="Green"><u>do</u></font> b <font color="Red"> p x
+         </font><font color="Green"><u>if</u></font> b <font color="Green"><u>then</u></font> liftM <font color="Cyan">(</font>x<font color="Red"><strong>:</strong></font><font color="Cyan">)</font> rest
+              <font color="Green"><u>else</u></font>            rest</pre>
+And we’re done! Here’s the whole implementation, for reference:
+<pre><font color="Green"><u>import</u></font> Control<font color="Cyan">.</font>Monad  <font color="Blue">-- for liftM</font>
+
+filterM' <font color="Red">::</font> <font color="Cyan">(</font>Monad m<font color="Cyan">)</font> <font color="Red">=&gt;</font> <font color="Cyan">(</font>a <font color="Red">-&gt;</font> m Bool<font color="Cyan">)</font> <font color="Red">-&gt;</font> <font color="Red">[</font>a<font color="Red">]</font> <font color="Red">-&gt;</font> m <font color="Red">[</font>a<font color="Red">]</font>
+filterM' p [] <font color="Red">=</font> return []
+filterM' p <font color="Cyan">(</font>x<font color="Red"><strong>:</strong></font>xs<font color="Cyan">)</font> <font color="Red">=</font>
+    <font color="Green"><u>let</u></font> rest <font color="Red">=</font> filterM' p xs <font color="Green"><u>in</u></font>
+      <font color="Green"><u>do</u></font> b <font color="Red"> p x
+         </font><font color="Green"><u>if</u></font> b <font color="Green"><u>then</u></font> liftM <font color="Cyan">(</font>x<font color="Red"><strong>:</strong></font><font color="Cyan">)</font> rest
+              <font color="Green"><u>else</u></font>            rest</pre>
+Does it work?
+<pre>
+*Main&gt; filterM' (const [False,True]) [1,2,3]
+[[],[3],[2],[2,3],[1],[1,3],[1,2],[1,2,3]]
+*Main&gt; filterM' (x -&gt; if even x then Just True else Nothing) [2,4..8]
+Just [2,4,6,8]
+*Main&gt; filterM' (x -&gt; if even x then Just True else Nothing) [2,4,6,7,8]
+Nothing</pre>
+<p>Sure seems to! A quick look at the actual library code shows that we did things a little differently, but filterM’ is essentially the same as filterM (I leave a formal proof as an exercise =). All with nothing more than the type and a vague statement of purpose! Of course, this is not the only implementation that fits the type – and I’m not just talking about things like filterM’ = undefined; there are other implementations whose most general type is the same as filterM. But it’s still amazing to me how much information is to be found just in types.</p>
+<p>And now I understand how filterM (const [True,False]) works… do you? (Hint: how does (const [True,False]) match the type a -&gt; m Bool? How does sequencing work in the list monad?)</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

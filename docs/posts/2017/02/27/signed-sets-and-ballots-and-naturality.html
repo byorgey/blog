@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Signed sets and ballots and naturality</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2017/02/24/signed-sets-and-ballots-part-2.html">« Signed sets and ballots, part 2</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2017/03/04/deep-work-and-email-habits-a-followup.html">» Deep work and email habits: a followup</a>
+
+</span>
+
+
+<h1>Signed sets and ballots and naturality</h1>
+
+<div class="info">
+  Posted on February 27, 2017
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'ballots'." href="../../../../tag/ballots.html" rel="tag">ballots</a>, <a title="All pages tagged 'bijection'." href="../../../../tag/bijection.html" rel="tag">bijection</a>, <a title="All pages tagged 'involution'." href="../../../../tag/involution.html" rel="tag">involution</a>, <a title="All pages tagged 'natural'." href="../../../../tag/natural.html" rel="tag">natural</a>, <a title="All pages tagged 'sets'." href="../../../../tag/sets.html" rel="tag">sets</a>, <a title="All pages tagged 'signed'." href="../../../../tag/signed.html" rel="tag">signed</a>, <a title="All pages tagged 'species'." href="../../../../tag/species.html" rel="tag">species</a>, <a title="All pages tagged 'virtual'." href="../../../../tag/virtual.html" rel="tag">virtual</a>
+  
+</div>
+
+<section>
+<p>
+This is blog post #3 in a series on signed sets and ballots (the previous posts are <a href="https://byorgey.wordpress.com/2017/02/20/signed-sets-and-ballots-part-1/">here</a> and <a href="https://byorgey.wordpress.com/2017/02/24/signed-sets-and-ballots-part-2/">here</a>).
+</p>
+<h2 id="naturality-isomorphism-and-equipotence">
+Naturality, isomorphism, and equipotence
+</h2>
+<p>
+When are two species isomorphic? Since species are, <a href="https://byorgey.wordpress.com/2012/11/20/combinatorial-species-definition/">by definition</a>, <a href="https://byorgey.wordpress.com/2012/12/06/species-definition-clarification-and-exercises/">functors <span class="math inline">\(\mathbb{B} \to \mathbf{FinSet}\)</span></a>, the obvious answer is “when they are isomorphic as functors”, that is, when there is a <em>natural isomorphism</em> between them.
+</p>
+<p>
+Let’s unpack definitions a bit. Recall that <span class="math inline">\(\mathbb{B}\)</span> is the groupoid (<em>i.e.</em> category with all morphisms invertible) of finite sets and bijections, and <span class="math inline">\(\mathbf{FinSet}\)</span> is the category of finite sets and total functions.
+</p>
+<p>
+Given two functors <span class="math inline">\(F, G : \mathbb{B} \to \mathbf{FinSet}\)</span>, a <em>natural isomorphism</em> is some family of bijections <span class="math inline">\(\psi_U : F[U] \leftrightarrow G[U]\)</span> such that for any bijection <span class="math inline">\(\varphi : U \leftrightarrow V\)</span>, the following square commutes:
+</p>
+<div style="text-align:center;">
+<div class="figure">
+<p><img src="http://mathurl.com/zkplcov.png" /></p>
+</div>
+</div>
+<p>
+Think of <span class="math inline">\(\varphi\)</span> as a <em>relabelling</em>—that is, a 1-1 correspondence between labels in <span class="math inline">\(U\)</span> and labels in <span class="math inline">\(V\)</span>. By functoriality of <span class="math inline">\(F\)</span> and <span class="math inline">\(G\)</span>, we can lift <span class="math inline">\(\varphi\)</span> to relabel whole structures, via <span class="math inline">\(F[\varphi]\)</span> and <span class="math inline">\(G[\varphi]\)</span>. The whole square then says that the family of correspondences <span class="math inline">\(\psi\)</span> “commute with relabelling”—that is, intuitively, <span class="math inline">\(\psi\)</span> can’t “look at” the labels at all, because it has to “do the same thing” even when we change the labels out from under it. It operates based solely on the structure present in the <span class="math inline">\(F\)</span>- or <span class="math inline">\(G\)</span>-structures—which by functoriality must be independent of the labels—and not based on the identity or structure of the set of labels itself.
+</p>
+<p>
+All this generalizes readily to virtual species: recall that virtual species consist of pairs of species <span class="math inline">\((P,N)\)</span>, where we define <span class="math inline">\((P_1, N_1)\)</span> to be equivalent to <span class="math inline">\((P_2, N_2)\)</span> if and only if <span class="math inline">\(P_1 + N_2\)</span> is (naturally) isomorphic to <span class="math inline">\(N_1 + P_2\)</span>. That is, isomorphism of virtual species already has natural isomorphism of regular species baked into it by definition.
+</p>
+<p>
+Now, recall the signed involution from <a href="https://byorgey.wordpress.com/2017/02/24/signed-sets-and-ballots-part-2/">my previous post</a>. Since it depends on a chosen linear order, it is <em>not</em> a natural isomorphism: an arbitrary relabelling certainly need not preserve the ordering on the labels, so the involution is not preserved under relabelling.
+</p>
+<p>
+This brings up the natural (haha) question: is it possible to give a <em>natural</em> isomorphism between signed sets and signed ballots? If so, we would certainly prefer it to this involution that makes use of a linear order. But sadly, the answer, it turns out, is no. Let <span class="math inline">\(k\)</span> range from <span class="math inline">\(0\)</span> to <span class="math inline">\(n\)</span>. We are looking for a natural isomorphism
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle E_n + \sum_{k \text{ even}} (E_+)^k \cong \sum_{k \text{ odd}} (E_+)^k\)</span></p>
+</div>
+</p>
+<p>
+in the case that <span class="math inline">\(n\)</span> is odd, or
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle \sum_{k \text{ even}} (E_+)^k \cong E_n + \sum_{k \text{ odd}} (E_+)^k\)</span></p>
+</div>
+</p>
+<p>
+when <span class="math inline">\(n\)</span> is even.
+</p>
+<p>
+Notice that in any case, whether positive or negative, the <span class="math inline">\(E_n\)</span>-structure will be fixed by any relabelling which is a permutation (because permuting the elements of a set does not change the set). Hence, any <em>natural</em> isomorphism must send it to some structure which is also fixed by all permutations. But the only such ballot structure is the one consisting of a single part containing all the elements. This ballot has an odd number of parts, so there cannot be a natural isomorphism in the case that <span class="math inline">\(n\)</span> is even—we would have to match the <span class="math inline">\(E_n\)</span> structure with some even-sized ballot which is fixed by all permutations of the labels, but there are none. Hence there is no natural isomorphism, which by definition would have to work for <em>all</em> <span class="math inline">\(n\)</span>.
+</p>
+<p>
+But what about for odd <span class="math inline">\(n\)</span>? Can we have a natural isomorphism between the structures restricted to the case when <span class="math inline">\(n\)</span> is odd? In fact, no: we can make a more general argument that applies for any <span class="math inline">\(n &amp;gt; 1\)</span>. Consider the <span class="math inline">\(n!\)</span> different ballots consisting of <span class="math inline">\(n\)</span> separate singleton parts. Each of these is fixed by <em>no</em> permutations other than the identity. So, under a natural isomorphism they would all have to map to ballots of the opposite parity which are also fixed by no permutations other than the identity: but by the Pigeonhole Principle, any ballot with fewer than <span class="math inline">\(n\)</span> parts must have at least one part containing more than one element, and will therefore be fixed under any permutation that only touches the elements in that part.
+</p>
+<p>
+In this situation—when there is a 1-1 correspondence between species, but not a <em>natural</em> one—we say the species are <em>equipotent</em> but not isomorphic. The species have the same <em>number</em> of structures of each size, and hence exactly the same generating function, but they are not (naturally) isomorphic: it is possible to tell them apart by looking at how structures behave under relabelling. Another classic example of this phenomenon is the species of lists and the species of permutations: each has exactly <span class="math inline">\(n!\)</span> labelled structures of size <span class="math inline">\(n\)</span>, but they are not naturally isomorphic. Lists have no symmetry at all, that is, they are fixed by no permutations other than the identity, but permutations, in general, do have some symmetry. For example, any permutation <span class="math inline">\(p\)</span> is fixed when the labels are permuted by <span class="math inline">\(p\)</span> itself: the permutation <span class="math inline">\((123)\)</span> is the same as the permutation <span class="math inline">\((231)\)</span>. The classic combinatorial proof that there are the same number of lists and permutations also uses an extra linear order on the labels.
+</p>
+<h2 id="subset-parity">
+Subset parity
+</h2>
+<p>
+A classic lemma in combinatorics states that any nonempty finite set has the same number of even and odd subsets. In fact, I recently <a href="https://mathlesstraveled.com/2016/12/03/the-mobius-function-proof-part-2-the-subset-parity-lemma/">wrote a proof of this on my other blog</a>. Since it’s written for a more general audience, it’s spelled out there in quite a lot of detail; but if you understand the idea of signed involutions, the classic combinatorial proof is quite simple to state: given a set <span class="math inline">\(S\)</span>, pick some <span class="math inline">\(a \in S\)</span>, and define a signed involution on subsets of <span class="math inline">\(S\)</span> (signed according to the parity of their size) by “toggling” the presence of <span class="math inline">\(a\)</span>. That is, given <span class="math inline">\(X \subseteq S\)</span>, if <span class="math inline">\(a \in X\)</span> then take it out, and if <span class="math inline">\(a \notin X\)</span> then add it in. This is clearly an involution and sends even subsets to odd and vice versa.
+</p>
+<p>
+However, this involution is not natural—it depends on the choice of <span class="math inline">\(a\)</span>.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> Is it possible to prove it via a <em>natural</em> correspondence? In fact, that’s one of the things <a href="http://akc.is/blog/2017-02-18-Inverse-species-and-sign-reversing-involutions.html">Anders Claesson’s original post</a>—the one that got me started down this whole rabbit hole—was trying to do. Unfortunately, hidden in the middle of his proof was an assumed correspondence between signed sets and signed ballots, and as we’ve seen, this correspondence actually cannot be proved naturally. (I should reiterate that in no way do I mean to disparage his post—it’s still a great post with a lot of cool insights, not to mention a nice framework for thinking about multiplicative inverses of species. It just doesn’t quite accomplish one of the things he thought it was accomplishing!)
+</p>
+<p>
+Now, at this point, all we know is that the <em>particular</em> argument used in that post is not, in fact, natural. But that doesn’t necessarily mean a natural correspondence between even and odd subsets is impossible. However, it turns out that it is (mostly) impossible: we can give a more direct argument that, in fact, there is no natural proof—that is, the species of odd subsets and the species of even subsets are equipotent but not naturally isomorphic.
+</p>
+<p>
+The proof is quite simple, and along similar lines as the proof for signed sets and ballots. Note that the empty subset is fixed by all permutations, as is the maximal subset—and these are clearly the only such subsets. So any natural correspondence must match these subsets with each other—but when <span class="math inline">\(n\)</span> is even they have the same parity.
+</p>
+<p>
+What about if we restrict to the case when <span class="math inline">\(n\)</span> is odd? Unlike the case of signed sets and ballots, it turns out that we actually <em>can</em> give a natural proof in this case! The involution to use is the one that simply sends any <span class="math inline">\(X \subseteq S\)</span> to its complement <span class="math inline">\(S - X\)</span>. This is clearly an involution, and since <span class="math inline">\(|S|\)</span> is odd, it reverses the parity as required. It also does not depend at all on the elements of <span class="math inline">\(S\)</span> or any assumed structure on them, that is, it commutes perfectly well with relabelling.
+</p>
+<p>
+This corresponds nicely with an observation we can make about Pascal’s triangle: it is easy to see that the alternating sum of any odd row is <span class="math inline">\(0\)</span>, for example, <span class="math inline">\(1 - 5 + 10 - 10 + 5 - 1 = 0\)</span>, since the entries are all duplicated, with one positive and one negative version of each. However, for even rows it is not quite so obvious: why is <span class="math inline">\(1 - 4 + 6 - 4 + 1 = 0\)</span>? To show this cancels to give 0 we must “split up” some of the numbers so that one part of them cancels with one number and another part cancels with another; that is, we cannot necessarily treat all the subsets of a given size uniformly. But subsets of a given size are completely indistinguishable up to relabelling—hence the necessity of some extra structure to allow us to make the necessary distinctions.
+</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+Interestingly, it does not depend on a linear order—just on a chosen element. I wonder if anyone has ever thought about “classifying” different equipotences by the “strength” of the extra structure needed to prove them.<a href="#fnref1">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Themes on Streams, Part II</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2011/05/18/tic-tac-toe-maps-with-diagrams.html">« Tic-tac-toe maps with diagrams</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2011/05/27/bit-rotted-text-adventure-edsl-free-to-a-good-home.html">» Bit-rotted text adventure EDSL free to a good home</a>
+
+</span>
+
+
+<h1>Themes on Streams, Part II</h1>
+
+<div class="info">
+  Posted on May 20, 2011
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'comonad'." href="../../../../tag/comonad.html" rel="tag">comonad</a>, <a title="All pages tagged 'free theorem'." href="../../../../tag/free%20theorem.html" rel="tag">free theorem</a>, <a title="All pages tagged 'functor'." href="../../../../tag/functor.html" rel="tag">functor</a>, <a title="All pages tagged 'parametricity'." href="../../../../tag/parametricity.html" rel="tag">parametricity</a>, <a title="All pages tagged 'representable'." href="../../../../tag/representable.html" rel="tag">representable</a>
+  
+</div>
+
+<section>
+<p>
+In a <a href="http://byorgey.wordpress.com/2011/05/09/themes-on-streams/">previous post</a> I claimed that <em>comonad structures on <code>R -&gt; a</code> are in one-to-one correspondence with monoid structures on <code>R</code></em>. In this post and the next I’ll justify that claim.
+</p>
+<div id="characterizing-comonads-on-R -&gt; a">
+<h2>
+Characterizing comonads on <code>R -&gt; a</code>
+</h2>
+<p>
+Suppose we have a comonad structure on <code>R -&gt; a</code>. What could it possibly look like? Well, we must have two functions
+</p>
+<pre><code><span>extract</span>   <span style="color:red;">::</span> <span style="color:red;">(</span><span>R</span> <span style="color:red;">-&gt;</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>a</span>
+<span>duplicate</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>R</span> <span style="color:red;">-&gt;</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>R</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>R</span> <span style="color:red;">-&gt;</span> <span>a</span><span style="color:red;">)</span><span style="color:red;">)</span></code></pre>
+<p>
+(these are the duals of <code>return</code> and <code>join</code> for monads). Furthermore, <code>extract</code> and <code>duplicate</code> must satisfy some laws; we’ll get to those in a minute. For now, let’s just think a bit about these functions and their implementations. How would you implement them? They seem awfully constrained. For example, look at the type of <code>extract</code>: it takes a function of type <code>R -&gt; a</code> and must somehow return an <code>a</code>. Intuitively, the only way it could do this is by applying the function to some distinguished value of type <code>R</code>. Similarly, <code>duplicate</code> takes a function <code>R -&gt; a</code> as input and must produce a function of type <code>R -&gt; R -&gt; a</code>. How could this output function behave? It takes two <code>R</code> values and then must produce an <code>a</code>. The only place to get an <code>a</code> is from the argument to <code>duplicate</code>, which must be passed an <code>R</code>; the only possibility is to somehow combine its two <code>R</code> values into one.
+</p>
+<p>
+Hmm… a distinguished value of type <code>R</code>… combining two <code>R</code> values into one… this should sound familiar! But how do we formalize all of this?
+</p>
+<p>
+Any time we talk about the way a function’s <em>type</em> constrains its <em>behavior</em> we should immediately think of <em>parametricity</em> (aka <a href="http://homepages.inf.ed.ac.uk/wadler/papers/free/free.ps"><em>free theorems</em></a>). Using the very nice <a href="http://www-ps.iai.uni-bonn.de/cgi-bin/free-theorems-webui.cgi">free theorem generator</a> (using <code>T0</code> in place of <code>R</code>) we can automatically generate some theorems about <code>extract</code> and <code>duplicate</code> based on their types. I’ve taken the liberty of specializing and alpha-varying them a bit. First, here’s the free theorem for <code>extract</code>:
+</p>
+<p>
+<span class="math inline">\(\forall g :: a \to b, \forall p :: R \to a, \forall q :: R \to b, \\ \quad (g \circ p = q) \implies (g\ (\mathit{extract}\ p) = \mathit{extract}\ q)\)</span>
+</p>
+<p>
+Now watch what happens when we set <code>q = g</code> and <code>p = id</code> (so <code>a = R</code>). The left-hand side of the implication becomes <code>g . id = g</code> which is trivially satisfied. Hence the right-hand side must hold:
+</p>
+<p>
+<span class="math inline">\(g\ (\mathit{extract}\ id) = \mathit{extract}\ g\)</span>
+</p>
+<p>
+What does this give us? Well, flipping it around, it tells us that applying <code>extract</code> to an arbitrary function <code>g</code> is equivalent to applying <code>g</code> to some value of type <code>R</code> (in particular, the value we get when applying <code>extract</code> to the identity function). In other words, up to behavioral equivalence, the only possible implementation of <code>extract g</code> is the one which applies <code>g</code> to some distinguished <code>R</code> value – which is exactly what our intuition told us before! <code>extract</code> is completely determined by the chosen value of <code>R</code>; let’s call it <code>r</code>.
+</p>
+<p>
+Similarly, here’s the free theorem for <code>duplicate</code>:
+</p>
+<p>
+<span class="math inline">\(\forall g :: a \to b, \forall p :: R \to a, \forall q :: R \to b, (g \circ p = q) \implies \\ \quad (\forall y,z :: R, g\ (\mathit{duplicate}\ p\ y\ z) = \mathit{duplicate}\ q\ y\ z)\)</span>
+</p>
+<p>
+Again setting <code>q = g</code> and <code>p = id</code> gives us
+</p>
+<p>
+<span class="math inline">\(g\ (\mathit{duplicate}\ \mathit{id}\ y\ z) = \mathit{duplicate}\ g\ y\ z\)</span>
+</p>
+<p>
+Writing <span class="math inline">\(\oplus\)</span> for <span class="math inline">\(\mathit{duplicate}\ \mathit{id}\)</span> gives us
+</p>
+<p>
+<span class="math inline">\(\mathit{duplicate}\ g\ y\ z = g\ (y \oplus z)\)</span>
+</p>
+<p>
+that is, the only possible implementation of <code>duplicate g y z</code> is to pass some combination of <code>y</code> and <code>z</code> as an argument to <code>g</code>.
+</p>
+<p>
+So now we know that for some value <span class="math inline">\(r :: R\)</span> and some binary function <span class="math inline">\(\oplus :: R \to R \to R\)</span>,
+</p>
+<p>
+<span class="math inline">\(\mathit{extract}\ g = g\ r \\ \mathit{duplicate}\ g\ y\ z = g\ (y \oplus z)\)</span>
+</p>
+<p>
+But in order to form a valid comonad instance, these functions must satisfy a few laws. In another post, I’ll show what these laws tell us about <span class="math inline">\(r\)</span> and <span class="math inline">\(\oplus\)</span> (you can probably already guess, and might want to try working out the proof yourself… =)
+</p>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

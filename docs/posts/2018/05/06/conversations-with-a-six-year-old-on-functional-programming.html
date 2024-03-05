@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Conversations with a six-year-old on functional programming</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2018/04/23/call-for-submissions-farm-2018.html">« Call for submissions: FARM 2018</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2018/05/08/apply-to-attend-the-oregon-programming-languages-summer-school.html">» Apply to attend the Oregon Programming Languages Summer School!</a>
+
+</span>
+
+
+<h1>Conversations with a six-year-old on functional programming</h1>
+
+<div class="info">
+  Posted on May  6, 2018
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'children'." href="../../../../tag/children.html" rel="tag">children</a>, <a title="All pages tagged 'function'." href="../../../../tag/function.html" rel="tag">function</a>, <a title="All pages tagged 'game'." href="../../../../tag/game.html" rel="tag">game</a>, <a title="All pages tagged 'input'." href="../../../../tag/input.html" rel="tag">input</a>, <a title="All pages tagged 'machine'." href="../../../../tag/machine.html" rel="tag">machine</a>, <a title="All pages tagged 'output'." href="../../../../tag/output.html" rel="tag">output</a>
+  
+</div>
+
+<section>
+<p>
+My six-year-old son walked up to me yesterday. “What are you reading?”
+</p>
+<p>
+At the time, I was reading part of <a href="http://www.janis-voigtlaender.eu/papers/TypesForProgrammingAndReasoning.pdf">Janis Voigtländer’s habilitation thesis</a>. Unsure where to even start, I decided to just answer straightforwardly: “I’m reading a very long story about free theorems.”
+</p>
+<p>
+He persisted. “What are free theorems?”
+</p>
+<p>
+Never one to shrink from a pedagogical challenge, I thought for a moment, then began: “Do you know what a <em>function</em> is?” He didn’t. “A function is like a machine where you put something in one end and something comes out the other end. For example, maybe you put a number in, and the number that is one bigger comes out. So if you put in three, four comes out, or if you put in six, seven comes out.” This clearly made sense to him, so I continued, “The <em>type</em> of a function machine tells you what kinds of things you put in and what kinds of things come out. So maybe you put a number in and get a number out. Or maybe you put in a <em>list</em> of numbers and get a number out.” He interrupted excitedly, “Or maybe you could put <em>words</em> in??” “Yes, exactly! Maybe you can put words in and get words out. Or maybe there is a function machine where you put <em>other function machines</em> in and get function machines out!” He gasped in astonishment at the idea of putting function machines into function machines.
+</p>
+<p>
+“So,” I concluded, “a free theorem is when you can say something that is always true about a function machine if you <em>only</em> know its type, but you <em>don’t</em> know anything about what it does on the inside.” This seemed a bit beyond him (and to be fair, free theorems are only interesting when polymorphism is involved which I definitely didn’t want to go into). But the whole conversation had given me a different idea.
+</p>
+<p>
+“Hey, I have a good idea for a game,” I said. “It’s called the function machine game. I will think of a function machine. You tell me things to put into the function machine, and I will tell you what comes out. Then you have to guess what the function machine does.” He immediately liked this game and it has been a huge hit; he wants to play it all the time. We played it while driving to a party yesterday, and we played it this morning while I was in the shower. So far, he has correctly guessed:
+</p>
+<ul>
+<li>
+<span class="math inline">\(\lambda x.\, x + 1\)</span>
+</li>
+<li>
+<span class="math inline">\(\lambda x.\, x - 3\)</span>
+</li>
+<li>
+<span class="math inline">\(\lambda x.\, 10x\)</span>
+</li>
+<li>
+<span class="math inline">\(\lambda x.\, 2x\)</span>
+</li>
+<li>
+<span class="math inline">\(\lambda x.\, 6\)</span>
+</li>
+<li>
+<span class="math inline">\(\lambda w\!:\!\text{English noun}.\, \text{plural}(w)\)</span>
+</li>
+<li>
+<span class="math inline">\(\lambda x.\, 10 \lfloor x/10 \rfloor\)</span>
+</li>
+</ul>
+<p>
+I tried <span class="math inline">\(\lambda x.\, \min(x+2,10)\)</span> but that was a bit tough for him. I realized that in some cases he may understand intuitively what the function does but have trouble expressing it in words (this was also a problem with <span class="math inline">\(\lambda x.\, 10 \lfloor x/10 \rfloor\)</span>), so we started using the obvious variant where once the guesser thinks they know what the function does, the players switch roles and the person who came up with function specifies some inputs in order to test whether the guesser is able to produce the correct outputs.
+</p>
+<p>
+<span class="math inline">\(\lambda x.\, 6\)</span> was also surprisingly difficult for him to guess (though he did get it right eventually). I think he was just stuck on the idea of the function doing something arithmetical to the input, and was having trouble coming up with some sort of arithmetic procedure which would result in <span class="math inline">\(6\)</span> no matter what you put in! It simply hadn’t occurred to him that the machine might <em>not care</em> about the input. (Interestingly, many students in my functional programming class this semester were also confused by constant functions when we were learning about the lambda calculus; they really wanted to substitute the input <em>somewhere</em> and were upset/confused by the fact that the bound variable did not occur in the body at all!)
+</p>
+<p>
+After a few rounds of guessing my functions, he wanted to come up with his own functions for me to guess (as I knew he would). Sometimes his functions are great and sometimes they don’t make sense (usually because his idea of what the function does changes over time, which of course he, in all sincerity, denies), but it’s fun either way. And after he finally understood <span class="math inline">\(\lambda x. \min(x+2, 10)\)</span>, he came up with his own function which was something like
+</p>
+<p>
+<span class="math inline">\(\lambda x:\mathbb{N}. \begin{cases} 10 - x &amp;amp; x \leq 10 \\ 10 &amp;amp; \text{otherwise} \end{cases}\)</span>
+</p>
+<p>
+inspired, I think, by his kindergarten class where they were learning about pairs of numbers that added up to <span class="math inline">\(10\)</span>.
+</p>
+<p>
+Definitely one of my better parenting days.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

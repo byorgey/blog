@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Species definition clarification and exercises</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2012/11/25/teaching-abstraction.html">« Teaching abstraction</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2012/12/11/diagrams-0-6.html">» Diagrams 0.6</a>
+
+</span>
+
+
+<h1>Species definition clarification and exercises</h1>
+
+<div class="info">
+  Posted on December  6, 2012
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'exercises'." href="../../../../tag/exercises.html" rel="tag">exercises</a>, <a title="All pages tagged 'finite'." href="../../../../tag/finite.html" rel="tag">finite</a>, <a title="All pages tagged 'functor'." href="../../../../tag/functor.html" rel="tag">functor</a>, <a title="All pages tagged 'size'." href="../../../../tag/size.html" rel="tag">size</a>
+  
+</div>
+
+<section>
+<!-- -*- compile-command: "BlogLiteratelyD 04-defn2.markdown &gt; 04-defn2.html" -*- -->
+<p>
+[<em>This is the fourth in a series of posts about combinatorial species. Previous posts: <a href="http://byorgey.wordpress.com/2012/10/17/and-now-back-to-your-regularly-scheduled-combinatorial-species/">And now, back to your regularly scheduled combinatorial species</a>; <a href="http://byorgey.wordpress.com/2012/10/27/decomposing-data-structures/">Decomposing data structures</a>; <a href="https://byorgey.wordpress.com/2012/11/20/combinatorial-species-definition/">Combinatorial species definition</a>.</em>]
+</p>
+<p>
+In <a href="https://byorgey.wordpress.com/2012/11/20/combinatorial-species-definition/">my previous post</a> I neglected to mention something quite crucial, namely, that (at least for now) we are only talking about <em>finite</em> sets of labels and <em>finite</em> sets of structures. That is, we do not consider structures with infinitely many labels, and given a particular finite set of labels, there must be only a finite number of structures with those labels. The category <span class="math inline">\(\mathbb{B}\)</span> is the category of <em>finite</em> sets and bijections, not of all sets as I said previously.
+</p>
+<p>
+Of course, in practice we <em>do</em> want to think about infinite sets of structures and labels, especially in relation to a non-strict language like Haskell! But the theory was invented by mathematicians interested in <em>counting things</em>. I do intend to explore ways to extend the theory to encompass infinite structures, but for now we’ll stick to the finite.
+</p>
+<p>
+Before moving on to talk about the algebraic approach to species, I also want to point out a few simple implications of the <a href="https://byorgey.wordpress.com/2012/11/20/combinatorial-species-definition/">formal definition</a>. Instead of spelling them out in detail, I will pose them as exercises: you can either take them on faith, or try working through the exercises to deepen your understanding.
+</p>
+<ol style="list-style-type:decimal;">
+<li>
+Let <span class="math inline">\([n]\)</span> denote the set <span class="math inline">\(\{0, \dots, n-1\}\)</span><sup><a href="#fn1" class="footnoteRef" id="fnref1">1</a></sup>, and write <span class="math inline">\(F[n]\)</span> as an abbreviation for <span class="math inline">\(F[[n]]\)</span>, <em>i.e.</em> the application of the species <span class="math inline">\(F\)</span> to the label set <span class="math inline">\([n]\)</span>. Show that given <span class="math inline">\(F[n]\)</span> we can determine <span class="math inline">\(F[U]\)</span> for any <span class="math inline">\(U\)</span> with <span class="math inline">\(|U| = n\)</span>.
+</li>
+</ol>
+<p>
+(This shows that “size is all that matters”: in some sense species are really indexed not by sets of labels but by <em>size</em>.)
+</p>
+<ol start="2" style="list-style-type:decimal;">
+<li>
+[BLL<sup><a href="#fn2" class="footnoteRef" id="fnref2">2</a></sup> Exercise 1.1.2] Show that we get an equivalent definition if we take species to be functors from <span class="math inline">\(\mathbb{B}\)</span> to <span class="math inline">\(\mathbf{FinSet}\)</span> (the category of finite sets and (total) functions) instead of endofunctors on <span class="math inline">\(\mathbb{B}\)</span>.
+</li>
+</ol>
+<p>
+(Apparently one can generalize the notion of species by replacing <span class="math inline">\(\mathbf{FinSet}\)</span> with other categories, but at present I am not sure of the implications.)
+</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+The species literature uses <span class="math inline">\(\{1, \dots, n\}\)</span>, but (as every good computer scientist knows) counting ought to begin at zero.<a href="#fnref1">↩︎</a>
+</p>
+</li>
+<li id="fn2">
+<p>
+I will use “BLL” to refer to Bergeron, Labelle, and Leroux, <em>Combinatorial Species and Tree-Like Structures</em> (see the references at the end of <a href="http://byorgey.wordpress.com/2012/11/20/combinatorial-species-definition/">the previous post</a> for the full citation).<a href="#fnref2">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: BFS, part 4 (implementation via STUArray)</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2021/11/15/competitive-programming-in-haskell-enumeration.html">« Competitive programming in Haskell: Enumeration</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2022/05/11/wp-global-styles-pub%252ftwentyten.html">» Custom Styles</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: BFS, part 4 (implementation via STUArray)</h1>
+
+<div class="info">
+  Posted on November 17, 2021
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'BFS'." href="../../../../tag/BFS.html" rel="tag">BFS</a>, <a title="All pages tagged 'graph'." href="../../../../tag/graph.html" rel="tag">graph</a>, <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'mutable'." href="../../../../tag/mutable.html" rel="tag">mutable</a>, <a title="All pages tagged 'search'." href="../../../../tag/search.html" rel="tag">search</a>, <a title="All pages tagged 'STUArray'." href="../../../../tag/STUArray.html" rel="tag">STUArray</a>
+  
+</div>
+
+<section>
+<p>
+In <a href="https://byorgey.wordpress.com/2021/10/29/competitive-programming-in-haskell-bfs-part-3-implementation-via-hashmap/">a previous post</a>, we saw one way to implement our <a href="https://byorgey.wordpress.com/2021/10/14/competitive-programming-in-haskell-bfs-part-1/">BFS API</a>, but I claimed that it is not fast enough to solve <a href="https://open.kattis.com/problems/modulosolitaire">Modulo Solitaire</a>. Today, I want to demonstrate a faster implementation. (It’s almost certainly possible to make it faster still; I welcome suggestions!)
+</p>
+<p>
+Once again, the idea is to replace the <code>HashMap</code>s from last time with <em>mutable arrays</em>, but in such a way that we get to keep the same pure API—almost. In order to allow arbitrary vertex types, while storing the vertices efficiently in a mutable array, we will require one extra argument to our <code>bfs</code> function, namely, an <a href="https://byorgey.wordpress.com/2021/11/15/competitive-programming-in-haskell-enumeration/"><code>Enumeration</code></a> specifying a way to map back and forth between vertices and array indices.
+</p>
+<p>
+So why not instead just restrict vertices to some type that can be used as keys of a mutable array? That would work, but would unnecessarily restrict the API. For example, it is very common to see competitive programming problems that are “just” a standard graph algorithm, but on a non-obvious graph where the vertices are conceptually some more complex algebraic type, or on a graph where the vertices are specified as strings. Typically, competitive programmers just implement a mapping between vertices to integers on the fly—using either some math or some lookup data structures on the side—but wouldn’t it be nicer to be able to compositionally construct such a mapping and then have the graph search algorithm automatically handle the conversion back and forth? This is exactly what the <code>Enumeration</code> abstraction gives us.
+</p>
+<p>
+This post is literate Haskell; you can <a href="https://hub.darcs.net/byorgey/byorgey-wordpress/browse/2019-04-comprog-hs/24-BFS-impl-STUArray.lhs">obtain the source from the darcs repo</a>. The source code (without accompanying blog post) can also be found <a href="https://github.com/byorgey/comprog-hs/blob/master/Graph.hs">in my comprog-hs repo</a>.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">{-# LANGUAGE FlexibleContexts    #-}</span>
+<span style="color:green;">{-# LANGUAGE RankNTypes          #-}</span>
+<span style="color:green;">{-# LANGUAGE RecordWildCards     #-}</span>
+<span style="color:green;">{-# LANGUAGE ScopedTypeVariables #-}</span>
+
+<span style="color:blue;font-weight:bold;">module</span> <span>Graph</span> <span style="color:blue;font-weight:bold;">where</span>
+
+<span style="color:blue;font-weight:bold;">import</span> <span>Enumeration</span>
+
+<span style="color:blue;font-weight:bold;">import</span>           <span>Control.Arrow</span>       <span style="color:red;">(</span><span style="color:red;">(</span><span>&gt;&gt;&gt;</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Control.Monad</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Control.Monad.ST</span>
+<span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data.Array.IArray</span>   <span style="color:blue;font-weight:bold;">as</span> <span>IA</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Data.Array.ST</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Data.Array.Unboxed</span>  <span style="color:red;">(</span><span>UArray</span><span style="color:red;">)</span>
+<span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data.Array.Unboxed</span>  <span style="color:blue;font-weight:bold;">as</span> <span>U</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Data.Array.Unsafe</span>   <span style="color:red;">(</span><span>unsafeFreeze</span><span style="color:red;">)</span>
+<span style="color:blue;font-weight:bold;">import</span>           <span>Data.Sequence</span>       <span style="color:red;">(</span><span>Seq</span> <span style="color:red;">(</span><span style="color:red;">..</span><span style="color:red;">)</span><span style="color:red;">,</span> <span>ViewL</span> <span style="color:red;">(</span><span style="color:red;">..</span><span style="color:red;">)</span><span style="color:red;">,</span> <span style="color:red;">(</span><span>&lt;|</span><span style="color:red;">)</span><span style="color:red;">,</span> <span style="color:red;">(</span><span>|&gt;</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span style="color:blue;font-weight:bold;">import</span> <span style="color:blue;font-weight:bold;">qualified</span> <span>Data.Sequence</span>       <span style="color:blue;font-weight:bold;">as</span> <span>Seq</span>
+
+<span style="color:blue;font-weight:bold;">infixl</span> <span class="hs-num">0</span> <span>&gt;$&gt;</span>
+<span style="color:red;">(</span><span>&gt;$&gt;</span><span style="color:red;">)</span> <span style="color:red;">::</span> <span>a</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>a</span> <span style="color:red;">-&gt;</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>b</span>
+<span style="color:red;">(</span><span>&gt;$&gt;</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>flip</span> <span style="color:red;">(</span><span>$</span><span style="color:red;">)</span>
+<span style="color:green;">{-# INLINE (&gt;$&gt;) #-}</span></code></pre>
+<p>
+<code>exhaustM</code> is like <code>exhaust</code> from the last post, but in the context of an arbitrary <code>Monad</code>. Each step will now be able to have effects (namely, updating mutable arrays) so needs to be monadic.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>exhaustM</span> <span style="color:red;">::</span> <span>Monad</span> <span>m</span> <span style="color:red;">=&gt;</span> <span style="color:red;">(</span><span>a</span> <span style="color:red;">-&gt;</span> <span>m</span> <span style="color:red;">(</span><span>Maybe</span> <span>a</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>m</span> <span>a</span>
+<span>exhaustM</span> <span>f</span> <span style="color:red;">=</span> <span>go</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>go</span> <span>a</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+      <span>ma</span> <span style="color:red;">&lt;-</span> <span>f</span> <span>a</span>
+      <span>maybe</span> <span style="color:red;">(</span><span>return</span> <span>a</span><span style="color:red;">)</span> <span>go</span> <span>ma</span></code></pre>
+<p>
+The <code>BFSResult</code> type is the same as before.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>BFSResult</span> <span>v</span> <span style="color:red;">=</span>
+  <span>BFSR</span> <span style="color:red;">{</span> <span>getLevel</span> <span style="color:red;">::</span> <span>v</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span>Int</span><span style="color:red;">,</span> <span>getParent</span> <span style="color:red;">::</span> <span>v</span> <span style="color:red;">-&gt;</span> <span>Maybe</span> <span>v</span> <span style="color:red;">}</span></code></pre>
+<p>
+Instead of using <code>HashMap</code>s in our <code>BFSState</code> as before, we will use <code>STUArray</code>s.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> These are <a href="https://hackage.haskell.org/package/array-0.5.4.0/docs/Data-Array-ST.html">unboxed, mutable arrays</a> which we can use in the <a href="https://hackage.haskell.org/package/base-4.13.0.0/docs/Control-Monad-ST-Safe.html#t:ST"><code>ST</code> monad</a>. Note we also define <code>V</code> as a synonym for <code>Int</code>, just as a mnemonic way to remind ourselves which <code>Int</code> values are supposed to represent vertices.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">type</span> <span>V</span> <span style="color:red;">=</span> <span>Int</span>
+<span style="color:blue;font-weight:bold;">data</span> <span>BFSState</span> <span>s</span> <span style="color:red;">=</span>
+  <span>BS</span> <span style="color:red;">{</span> <span>level</span> <span style="color:red;">::</span> <span>STUArray</span> <span>s</span> <span>V</span> <span>Int</span><span style="color:red;">,</span> <span>parent</span> <span style="color:red;">::</span> <span>STUArray</span> <span>s</span> <span>V</span> <span>V</span><span style="color:red;">,</span> <span>queue</span> <span style="color:red;">::</span> <span>Seq</span> <span>V</span> <span style="color:red;">}</span></code></pre>
+<p>
+To initialize a BFS state, we allocate new mutable level and parent arrays (initializing them to all <span class="math inline">\(-1\)</span> values), and fill in the <code>level</code> array and queue with the given start vertices. Notice how we need to be explicitly given the size of the arrays we should allocate; we will get this size from the <code>Enumeration</code> passed to <code>bfs</code>.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>initBFSState</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>V</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>ST</span> <span>s</span> <span style="color:red;">(</span><span>BFSState</span> <span>s</span><span style="color:red;">)</span>
+<span>initBFSState</span> <span>n</span> <span>vs</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+  <span>l</span> <span style="color:red;">&lt;-</span> <span>newArray</span> <span style="color:red;">(</span><span class="hs-num">0</span><span style="color:red;">,</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span>
+  <span>p</span> <span style="color:red;">&lt;-</span> <span>newArray</span> <span style="color:red;">(</span><span class="hs-num">0</span><span style="color:red;">,</span><span>n</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span style="color:red;">(</span><span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span>
+
+  <span>forM_</span> <span>vs</span> <span>$</span> <span style="color:red;">\</span><span>v</span> <span style="color:red;">-&gt;</span> <span>writeArray</span> <span>l</span> <span>v</span> <span class="hs-num">0</span>
+  <span>return</span> <span>$</span> <span>BS</span> <span>l</span> <span>p</span> <span style="color:red;">(</span><span>Seq.fromList</span> <span>vs</span><span style="color:red;">)</span></code></pre>
+<p>
+The <code>bfs’</code> function implements the BFS algorithm itself. Notice that it is <em>not</em> polymorphic in the vertex type; we will fix that with a wrapper function later. If you squint, the implementation looks very similar to the implementation of <code>bfs</code> from <a href="https://byorgey.wordpress.com/2021/10/29/competitive-programming-in-haskell-bfs-part-3-implementation-via-hashmap/">my previous post</a>, with the big difference that everything has to be in the <code>ST</code> monad now.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>bfs'</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>V</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>V</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>V</span><span style="color:red;">]</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>V</span> <span style="color:red;">-&gt;</span> <span>Bool</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>ST</span> <span>s</span> <span style="color:red;">(</span><span>BFSState</span> <span>s</span><span style="color:red;">)</span>
+<span>bfs'</span> <span>n</span> <span>vs</span> <span>next</span> <span>goal</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+  <span>st</span> <span style="color:red;">&lt;-</span> <span>initBFSState</span> <span>n</span> <span>vs</span>
+  <span>exhaustM</span> <span>bfsStep</span> <span>st</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>bfsStep</span> <span>st</span><span style="color:red;">@</span><span>BS</span><span style="color:red;">{</span><span style="color:red;">..</span><span style="color:red;">}</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">case</span> <span>Seq.viewl</span> <span>queue</span> <span style="color:blue;font-weight:bold;">of</span>
+      <span>EmptyL</span> <span style="color:red;">-&gt;</span> <span>return</span> <span>Nothing</span>
+      <span>v</span> <span>:&lt;</span> <span>q'</span>
+        <span style="color:red;">|</span> <span>goal</span> <span>v</span> <span style="color:red;">-&gt;</span> <span>return</span> <span>Nothing</span>
+        <span style="color:red;">|</span> <span>otherwise</span> <span style="color:red;">-&gt;</span> <span>v</span> <span>&gt;$&gt;</span> <span>next</span> <span>&gt;&gt;&gt;</span> <span>filterM</span> <span style="color:red;">(</span><span>fmap</span> <span>not</span> <span>.</span> <span>visited</span> <span>st</span><span style="color:red;">)</span>
+            <span>&gt;=&gt;</span> <span>foldM</span> <span style="color:red;">(</span><span>upd</span> <span>v</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>st</span><span style="color:red;">{</span><span>queue</span><span style="color:red;">=</span><span>q'</span><span style="color:red;">}</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>fmap</span> <span>Just</span>
+
+    <span>upd</span> <span>p</span> <span>b</span><span style="color:red;">@</span><span>BS</span><span style="color:red;">{</span><span style="color:red;">..</span><span style="color:red;">}</span> <span>v</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+      <span>lp</span> <span style="color:red;">&lt;-</span> <span>readArray</span> <span>level</span> <span>p</span>
+      <span>writeArray</span> <span>level</span> <span>v</span> <span style="color:red;">(</span><span>lp</span> <span>+</span> <span class="hs-num">1</span><span style="color:red;">)</span>
+      <span>writeArray</span> <span>parent</span> <span>v</span> <span>p</span>
+      <span>return</span> <span>$</span> <span>b</span><span style="color:red;">{</span><span>queue</span> <span style="color:red;">=</span> <span>queue</span> <span>|&gt;</span> <span>v</span><span style="color:red;">}</span>
+
+<span>visited</span> <span style="color:red;">::</span> <span>BFSState</span> <span>s</span> <span style="color:red;">-&gt;</span> <span>V</span> <span style="color:red;">-&gt;</span> <span>ST</span> <span>s</span> <span>Bool</span>
+<span>visited</span> <span>BS</span><span style="color:red;">{</span><span style="color:red;">..</span><span style="color:red;">}</span> <span>v</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>/=</span> <span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>&lt;$&gt;</span> <span>readArray</span> <span>level</span> <span>v</span>
+<span style="color:green;">{-# INLINE visited #-}</span></code></pre>
+<p>
+The <code>bfs</code> function is a wrapper around <code>bfs’</code>. It presents the <a href="https://byorgey.wordpress.com/2021/10/14/competitive-programming-in-haskell-bfs-part-1/">same API as before</a>, with the exception that it requires an extra <code>Enumeration v</code> argument, and uses it to convert vertices to integers for the inner <code>bfs’</code> call, and then back to vertices for the final result. It also handles freezing the mutable arrays returned from <code>bfs’</code> and constructing level and parent lookup functions that index into them. Note, the use of <code>unsafeFreeze</code> seems unavoidable, since <code>runSTUArray</code> only allows us to work with a <em>single</em> mutable array; in any case, it is safe for the same reason the use of <code>unsafeFreeze</code> in the implementation of <code>runSTUArray</code> itself is safe: we can see from the type of <code>toResult</code> that the <code>s</code> parameter cannot escape, so the type system will not allow any further mutation to the arrays after it completes.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>bfs</span> <span style="color:red;">::</span> <span style="color:blue;font-weight:bold;">forall</span> <span>v</span><span>.</span> <span>Enumeration</span> <span>v</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>v</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>v</span> <span style="color:red;">-&gt;</span> <span style="color:red;">[</span><span>v</span><span style="color:red;">]</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>v</span> <span style="color:red;">-&gt;</span> <span>Bool</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>BFSResult</span> <span>v</span>
+<span>bfs</span> <span>Enumeration</span><span style="color:red;">{</span><span style="color:red;">..</span><span style="color:red;">}</span> <span>vs</span> <span>next</span> <span>goal</span>
+  <span style="color:red;">=</span> <span>toResult</span> <span>$</span> <span>bfs'</span> <span>card</span> <span style="color:red;">(</span><span>map</span> <span>locate</span> <span>vs</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>map</span> <span>locate</span> <span>.</span> <span>next</span> <span>.</span> <span>select</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>goal</span> <span>.</span> <span>select</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>toResult</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span style="color:blue;font-weight:bold;">forall</span> <span>s</span><span>.</span> <span>ST</span> <span>s</span> <span style="color:red;">(</span><span>BFSState</span> <span>s</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>BFSResult</span> <span>v</span>
+    <span>toResult</span> <span>m</span> <span style="color:red;">=</span> <span>runST</span> <span>$</span> <span style="color:blue;font-weight:bold;">do</span>
+      <span>st</span> <span style="color:red;">&lt;-</span> <span>m</span>
+      <span style="color:red;">(</span><span>level'</span> <span style="color:red;">::</span> <span>UArray</span> <span>V</span> <span>Int</span><span style="color:red;">)</span> <span style="color:red;">&lt;-</span> <span>unsafeFreeze</span> <span style="color:red;">(</span><span>level</span> <span>st</span><span style="color:red;">)</span>
+      <span style="color:red;">(</span><span>parent'</span> <span style="color:red;">::</span> <span>UArray</span> <span>V</span> <span>V</span><span style="color:red;">)</span> <span style="color:red;">&lt;-</span> <span>unsafeFreeze</span> <span style="color:red;">(</span><span>parent</span> <span>st</span><span style="color:red;">)</span>
+      <span>return</span> <span>$</span>
+        <span>BFSR</span>
+          <span style="color:red;">(</span><span style="color:red;">(</span><span style="color:red;">\</span><span>l</span> <span style="color:red;">-&gt;</span> <span>guard</span> <span style="color:red;">(</span><span>l</span> <span>/=</span> <span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>&gt;&gt;</span> <span>Just</span> <span>l</span><span style="color:red;">)</span> <span>.</span> <span style="color:red;">(</span><span>level'</span> <span>IA</span><span>.!</span><span style="color:red;">)</span> <span>.</span> <span>locate</span><span style="color:red;">)</span>
+          <span style="color:red;">(</span><span style="color:red;">(</span><span style="color:red;">\</span><span>p</span> <span style="color:red;">-&gt;</span> <span>guard</span> <span style="color:red;">(</span><span>p</span> <span>/=</span> <span style="color:green;">-</span><span class="hs-num">1</span><span style="color:red;">)</span> <span>&gt;&gt;</span> <span>Just</span> <span style="color:red;">(</span><span>select</span> <span>p</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>.</span> <span style="color:red;">(</span><span>parent'</span> <span>IA</span><span>.!</span><span style="color:red;">)</span> <span>.</span> <span>locate</span><span style="color:red;">)</span></code></pre>
+<p>
+Incidentally, instead of adding an <code>Enumeration v</code> argument, why don’t we just make a type class <code>Enumerable</code>, like this?
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">class</span> <span>Enumerable</span> <span>v</span> <span style="color:blue;font-weight:bold;">where</span>
+  <span>enumeration</span> <span style="color:red;">::</span> <span>Enumeration</span> <span>v</span>
+
+<span>bfs</span> <span style="color:red;">::</span> <span style="color:blue;font-weight:bold;">forall</span> <span>v</span><span>.</span> <span>Enumerable</span> <span>v</span> <span style="color:red;">=&gt;</span> <span style="color:red;">[</span><span>v</span><span style="color:red;">]</span> <span style="color:red;">-&gt;</span> <span>...</span></code></pre>
+<p>
+This would allow us to keep the same API for BFS, up to only different type class constraints on <code>v</code>. We could do this, but it doesn’t particularly seem worth it. It would typically require us to make a <code>newtype</code> for our vertex type (necessitating extra code to map in and out of the <code>newtype</code>) and to declare an <code>Enumerable</code> instance; in comparison, the current approach with an extra argument to <code>bfs</code> requires us to do nothing other than constructing the <code>Enumeration</code> itself.
+</p>
+<p>
+Using this implementation, <code>bfs</code> is finally fast enough to solve <a href="https://open.kattis.com/problems/modulosolitaire">Modulo Solitaire</a>, like this:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>main</span> <span style="color:red;">=</span> <span>C.interact</span> <span>$</span> <span>runScanner</span> <span>tc</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>format</span>
+
+<span style="color:blue;font-weight:bold;">data</span> <span>Move</span> <span style="color:red;">=</span> <span>Move</span> <span style="color:red;">{</span> <span>a</span> <span style="color:red;">::</span> <span>!</span><span>Int</span><span style="color:red;">,</span> <span>b</span> <span style="color:red;">::</span> <span>!</span><span>Int</span> <span style="color:red;">}</span> <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Eq</span><span style="color:red;">,</span> <span>Show</span><span style="color:red;">)</span>
+<span style="color:blue;font-weight:bold;">data</span> <span>TC</span> <span style="color:red;">=</span> <span>TC</span> <span style="color:red;">{</span> <span>m</span> <span style="color:red;">::</span> <span>Int</span><span style="color:red;">,</span> <span>s0</span> <span style="color:red;">::</span> <span>Int</span><span style="color:red;">,</span> <span>moves</span> <span style="color:red;">::</span> <span style="color:red;">[</span><span>Move</span><span style="color:red;">]</span> <span style="color:red;">}</span> <span style="color:blue;font-weight:bold;">deriving</span> <span style="color:red;">(</span><span>Eq</span><span style="color:red;">,</span> <span>Show</span><span style="color:red;">)</span>
+
+<span>tc</span> <span style="color:red;">::</span> <span>Scanner</span> <span>TC</span>
+<span>tc</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+  <span>m</span> <span style="color:red;">&lt;-</span> <span>int</span>
+  <span>n</span> <span style="color:red;">&lt;-</span> <span>int</span>
+  <span>TC</span> <span>m</span> <span>&lt;$&gt;</span> <span>int</span> <span>&lt;*&gt;</span> <span>n</span> <span>&gt;&lt;</span> <span style="color:red;">(</span><span>Move</span> <span>&lt;$&gt;</span> <span>int</span> <span>&lt;*&gt;</span> <span>int</span><span style="color:red;">)</span>
+
+<span style="color:blue;font-weight:bold;">type</span> <span>Output</span> <span style="color:red;">=</span> <span>Maybe</span> <span>Int</span>
+
+<span>format</span> <span style="color:red;">::</span> <span>Output</span> <span style="color:red;">-&gt;</span> <span>ByteString</span>
+<span>format</span> <span style="color:red;">=</span> <span>maybe</span> <span style="color:teal;">"-1"</span> <span>showB</span>
+
+<span>solve</span> <span style="color:red;">::</span> <span>TC</span> <span style="color:red;">-&gt;</span> <span>Output</span>
+<span>solve</span> <span>TC</span><span style="color:red;">{</span><span style="color:red;">..</span><span style="color:red;">}</span> <span style="color:red;">=</span> <span>getLevel</span> <span>res</span> <span class="hs-num">0</span>
+  <span style="color:blue;font-weight:bold;">where</span>
+    <span>res</span> <span style="color:red;">=</span> <span>bfs</span> <span style="color:red;">(</span><span>finiteE</span> <span>m</span><span style="color:red;">)</span> <span style="color:red;">[</span><span>s0</span><span style="color:red;">]</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>v</span> <span style="color:red;">-&gt;</span> <span>map</span> <span style="color:red;">(</span><span>step</span> <span>m</span> <span>v</span><span style="color:red;">)</span> <span>moves</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>==</span><span class="hs-num">0</span><span style="color:red;">)</span>
+
+<span>step</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Int</span> <span style="color:red;">-&gt;</span> <span>Move</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>step</span> <span>m</span> <span>v</span> <span style="color:red;">(</span><span>Move</span> <span>a</span> <span>b</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>a</span><span>*</span><span>v</span> <span>+</span> <span>b</span><span style="color:red;">)</span> <span>`mod`</span> <span>m</span>
+<span style="color:green;">{-# INLINE step #-}</span></code></pre>
+<p>
+It’s pretty much unchanged <a href="https://byorgey.wordpress.com/2021/10/14/competitive-programming-in-haskell-bfs-part-1/">from before</a>, except for the need to pass an <code>Enumeration</code> to <code>bfs</code> (in this case we just use <code>finiteE m</code>, which is the identity on the interval <span class="math inline">\([0 .. m)\)</span>).
+</p>
+<h2 id="some-remaining-questions">
+Some remaining questions
+</h2>
+<p>
+This is definitely not the end of the story.
+</p>
+<ul>
+<li>
+<p>
+Submitting all this code (BFS, <code>Enumeration</code>, and the above solution itself) as a single file gives a 2x speedup over submitting them as three separate modules. That’s annoying—why is that?
+</p>
+</li>
+<li>
+<p>
+Can we make this even faster? My solution to Modulo Solitaire runs in 0.57s. There are faster Haskell solutions (for example, <a href="https://anurudhp.github.io/blogs/tags/competitive-programming">Anurudh Peduri</a> has a solution that runs in 0.32s), and there are Java solutions as fast as 0.18s, so it seems to me there ought to be ways to make it much faster. If you have an idea for optimizing this code I’d be very interested to hear it! I am far from an expert in Haskell optimization.
+</p>
+</li>
+<li>
+<p>
+Can we generalize this nicely to other kinds of graph search algorithms (at a minimum, DFS and Dijkstra)? I definitely plan to explore this question in the future.
+</p>
+</li>
+</ul>
+<h2 id="for-next-time-breaking-bad">
+For next time: Breaking Bad
+</h2>
+<p>
+Next time, I want to look at a few other applications of this BFS code (and perhaps see if we can improve it along the way); I challenge you to solve <a href="https://open.kattis.com/problems/breakingbad">Breaking Bad</a>.
+</p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote">
+<p>
+Why not use <code>Vector</code>, you ask? It’s probably even a bit faster, but the <code>vector</code> library is not supported on as many platforms.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a>
+</p>
+</li>
+</ol>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

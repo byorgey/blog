@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Monoidal sparks</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2018/06/23/new-icfp-functional-pearl-on-subtracting-bijections.html">« New ICFP functional pearl on subtracting bijections</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2018/10/06/counting-inversions-with-monoidal-sparks.html">» Counting inversions with monoidal sparks</a>
+
+</span>
+
+
+<h1>Monoidal sparks</h1>
+
+<div class="info">
+  Posted on October  1, 2018
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'monoid'." href="../../../../tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged 'pairs'." href="../../../../tag/pairs.html" rel="tag">pairs</a>, <a title="All pages tagged 'product'." href="../../../../tag/product.html" rel="tag">product</a>, <a title="All pages tagged 'quadratic'." href="../../../../tag/quadratic.html" rel="tag">quadratic</a>, <a title="All pages tagged 'spark'." href="../../../../tag/spark.html" rel="tag">spark</a>
+  
+</div>
+
+<section>
+<p>
+While at <a href="https://icfp18.sigplan.org/">ICFP in St. Louis</a> this past week, I discovered an interesting construction on monoids that no one I talked to (including <a href="http://very.science/">Kenny Foner</a> and <a href="https://github.com/ekmett">Edward Kmett</a>) seemed to have heard of or thought about before. In this post I’ll present the abstract construction itself, and in another post I’ll explain the particular context in which I first came up with it. (Normally I would <a href="https://byorgey.wordpress.com/2009/01/12/abstraction-intuition-and-the-monad-tutorial-fallacy/">put the examples first</a>, before explaining the idea in general; but I only know of <em>one</em> example so far, and I’m curious to see if anyone will come up with more. I don’t want to bias people’s thinking too much with my one example!)
+</p>
+<p>
+The bigger context here is thinking about different ways of putting a monoid structure on a product type <span class="math inline">\(A \times B\)</span>, assuming <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are themselves monoids. Previously I knew of two ways to do this. The obvious way is to just have the two sides operate in parallel, without interacting at all: <span class="math inline">\((a_1,b_1) \diamond (a_2,b_2) = (a_1 \diamond a_2, b_1 \diamond b_2)\)</span> and so on. Alternatively, if <span class="math inline">\(A\)</span> acts on <span class="math inline">\(B\)</span>, we can form the <a href="http://ozark.hendrix.edu/~yorgey/pub/twisted.pdf">semidirect product</a>.
+</p>
+<p>
+But here is a third way. Suppose <span class="math inline">\((A, \varepsilon_A, \diamond)\)</span> is a monoid, and <span class="math inline">\((B, \varepsilon_B, \oplus)\)</span> is a <em>commutative</em> monoid. To connect them, we also suppose there is another binary operation <span class="math inline">\(- \cdot - : A \to A \to B\)</span>, which I will pronounce “spark”. The way I like to think of it is that two values of type <span class="math inline">\(A\)</span>, in addition to combining to produce another <span class="math inline">\(A\)</span> via the monoid operation, also produce a “spark” of type <span class="math inline">\(B\)</span>. That is, values of type <span class="math inline">\(B\)</span> somehow capture information about the interaction between pairs of <span class="math inline">\(A\)</span> values.
+</p>
+<p>
+Sparking needs to interact sensibly with the monoid structures on <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>: in particular, fixing either argument must result in a monoid homomorphism from <span class="math inline">\(A\)</span> to <span class="math inline">\(B\)</span>. That is, for any choice of <span class="math inline">\(a \in A\)</span>, we have <span class="math inline">\(a \cdot \varepsilon_A = \varepsilon_B\)</span> (<em>i.e.</em> <span class="math inline">\(\varepsilon_A\)</span> is boring and can never produce a nontrivial spark with anything else), and <span class="math inline">\(a \cdot (a_1 \diamond a_2) = (a \cdot a_1) \oplus (a \cdot a_2)\)</span> (<em>i.e.</em> sparking commutes with the monoid operations). Similar laws should hold if we fix the second argument of <span class="math inline">\(- \cdot -\)</span> instead of the first.
+</p>
+<p>
+Given all of this, we can now define a monoid on <span class="math inline">\(A \times B\)</span> as follows:
+</p>
+<p>
+<span class="math inline">\((a_1, b_1) \otimes (a_2, b_2) = (a_1 \diamond a_2, b_1 \oplus b_2 \oplus (a_1 \cdot a_2))\)</span>
+</p>
+<p>
+That is, we combine the <span class="math inline">\(A\)</span> values normally, and then we combine the <span class="math inline">\(B\)</span> values <em>together with</em> the “spark” of type <span class="math inline">\(B\)</span> produced by the two <span class="math inline">\(A\)</span> values.
+</p>
+<p>
+Let’s see that this does indeed define a valid monoid:
+</p>
+<ul>
+<li>
+<p>
+The identity is <span class="math inline">\((\varepsilon_A, \varepsilon_B)\)</span>, since
+</p>
+<p>
+<span class="math inline">\((\varepsilon_A, \varepsilon_B) \otimes (a,b) = (\varepsilon_A \diamond a, \varepsilon_B \oplus b \oplus (\varepsilon_A \cdot a)) = (a, b \oplus \varepsilon_B) = (a,b)\)</span>
+</p>
+<p>
+Notice how we used the identity laws for <span class="math inline">\(A\)</span> (once) and <span class="math inline">\(B\)</span> (twice), as well as the law that says <span class="math inline">\(\varepsilon_A \cdot a = \varepsilon_B\)</span>. The proof that <span class="math inline">\((\varepsilon_A, \varepsilon_B)\)</span> is a right identity for <span class="math inline">\(\otimes\)</span> is similar.
+</p>
+</li>
+<li>
+<p>
+To see that the combining operation is associative, we can reason as follows:
+</p>
+<p>
+<span class="math inline">\(\begin{array}{rcl} &amp;amp; &amp;amp; ((a_1,b_1) \otimes (a_2,b_2)) \otimes (a_3,b_3) \\[0.5em] &amp;amp; = &amp;amp; \qquad \text{\{expand definition of \begin{math}\otimes\end{math}\}} \\[0.5em] &amp;amp; &amp;amp; (a_1 \diamond a_2, b_1 \oplus b_2 \oplus (a_1 \cdot a_2)) \otimes (a_3,b_3) \\[0.5em] &amp;amp; = &amp;amp; \qquad \text{\{expand definition of \begin{math}\otimes\end{math} again\}} \\[0.5em] &amp;amp; &amp;amp; (a_1 \diamond a_2 \diamond a_3, b_1 \oplus b_2 \oplus (a_1 \cdot a_2) \oplus b_3 \oplus ((a_1 \diamond a_2) \cdot a_3)) \\[0.5em] &amp;amp; = &amp;amp; \qquad \text{\{\begin{math}- \cdot a_3\end{math} is a homomorphism, \begin{math}\oplus\end{math} is commutative\}} \\[0.5em] &amp;amp; &amp;amp; (a_1 \diamond a_2 \diamond a_3, b_1 \oplus b_2 \oplus b_3 \oplus (a_1 \cdot a_2) \oplus (a_1 \cdot a_3) \oplus (a_2 \cdot a_3)) \end{array}\)</span>
+</p>
+<p>
+and
+</p>
+<p>
+<span class="math inline">\(\begin{array}{rcl} &amp;amp; &amp;amp; (a_1,b_1) \otimes ((a_2,b_2) \otimes (a_3,b_3)) \\[0.5em] &amp;amp; = &amp;amp; \qquad \text{\{expand definition of \begin{math}\otimes\end{math}\}} \\[0.5em] &amp;amp; &amp;amp; (a_1,b_1) \otimes (a_2 \diamond a_3, b_2 \oplus b_3 \oplus (a_2 \cdot a_3)) \\[0.5em] &amp;amp; = &amp;amp; \qquad \text{\{expand definition of \begin{math}\otimes\end{math} again\}} \\[0.5em] &amp;amp; &amp;amp; (a_1 \diamond a_2 \diamond a_3, b_1 \oplus (b_2 \oplus b_3 \oplus (a_2 \cdot a_3)) \oplus (a_1 \cdot (a_2 \diamond a_3))) \\[0.5em] &amp;amp; = &amp;amp; \qquad \text{\{\begin{math}a_1 \cdot -\end{math} is a homomorphism, \begin{math}\oplus\end{math} is commutative\}} \\[0.5em] &amp;amp; &amp;amp; (a_1 \diamond a_2 \diamond a_3, b_1 \oplus b_2 \oplus b_3 \oplus (a_1 \cdot a_2) \oplus (a_1 \cdot a_3) \oplus (a_2 \cdot a_3)) \end{array}\)</span>
+</p>
+<p>
+In a formal proof one would have to also explicitly note uses of associativity of <span class="math inline">\(\diamond\)</span> and <span class="math inline">\(\oplus\)</span> but I didn’t want to be that pedantic here.
+</p>
+</li>
+</ul>
+<p>
+In addition, if <span class="math inline">\(A\)</span> is a commutative monoid and the spark operation <span class="math inline">\(- \cdot -\)</span> commutes, then the resulting monoid <span class="math inline">\((A \times B, \otimes)\)</span> will be commutative as well.
+</p>
+<p>
+The proof of associativity gives us a bit of insight into what is going on here. Notice that when reducing <span class="math inline">\((a_1,b_1) \otimes (a_2,b_2) \otimes (a_3,b_3)\)</span>, we end up with all possible sparks between pairs of <span class="math inline">\(a\)</span>’s, <em>i.e.</em> <span class="math inline">\((a_1 \cdot a_2) \oplus (a_1 \cdot a_3) \oplus (a_2 \cdot a_3)\)</span>, and one can prove that this holds more generally. In particular, if we start with a list of <span class="math inline">\(A\)</span> values:
+</p>
+<p>
+<span class="math inline">\([a_1, a_2, \dots, a_n]\)</span>,
+</p>
+<p>
+then inject them all into <span class="math inline">\(A \times B\)</span> by pairing them with <span class="math inline">\(\varepsilon_B\)</span>:
+</p>
+<p>
+<span class="math inline">\([(a_1, \varepsilon_B), (a_2, \varepsilon_B), \dots, (a_n, \varepsilon_B)]\)</span>,
+</p>
+<p>
+and finally fold this list with <span class="math inline">\(\otimes\)</span>, the second element of the resulting pair is
+</p>
+<p>
+<span class="math inline">\(\displaystyle \bigoplus_{i \neq j} (a_i \cdot a_j)\)</span>,
+</p>
+<p>
+that is, the combination (via the monoid on <span class="math inline">\(B\)</span>) of the sparks between <em>all possible pairings</em> of the <span class="math inline">\(a_i\)</span>. Of course there are <span class="math inline">\(O(n^2)\)</span> such pairings: the point is that whereas computing this via a straightforward fold over the list may well take <span class="math inline">\(O(n^2)\)</span> time, by using a balanced fold (<em>i.e.</em> splitting the list in half recursively and then combining from the leaves up) it may be possible to compute it in <span class="math inline">\(O(n \log n)\)</span> time instead (at least, this is the case for the example I have in mind!).
+</p>
+<p>
+Please leave a comment if you can you think of any instances of this pattern, or if you have seen this pattern discussed elsewhere. In a future post I will write about the instance I had in mind when coming up with this generalized formulation.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

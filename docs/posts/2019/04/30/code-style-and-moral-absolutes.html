@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Code style and moral absolutes</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html">« Competitive Programming in Haskell: Basic Setup</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2019/05/14/lightweight-efficiently-sampleable-enumerations-in-haskell.html">» Lightweight, efficiently sampleable enumerations in Haskell</a>
+
+</span>
+
+
+<h1>Code style and moral absolutes</h1>
+
+<div class="info">
+  Posted on April 30, 2019
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'code'." href="../../../../tag/code.html" rel="tag">code</a>, <a title="All pages tagged 'moral'." href="../../../../tag/moral.html" rel="tag">moral</a>, <a title="All pages tagged 'style'." href="../../../../tag/style.html" rel="tag">style</a>
+  
+</div>
+
+<section>
+<p>
+In my <a href="https://byorgey.wordpress.com/2019/04/24/competitive-programming-in-haskell-basic-setup/">previous post</a> about my basic setup for solving competitive programming problems with Haskell, I (somewhat provocatively) used lists to represent pairs, and wrote a partial function to process them. Commenter <a href="https://byorgey.wordpress.com/2019/04/24/competitive-programming-in-haskell-basic-setup/#comment-36250">Yom responded with a proposed alternative that was (less) partial</a>. I was glad for the comment, because it gave me a good opportunity to think more about why I wrote the code in the way I did, and how it fits into larger issues of good coding practices and the reasons behind them.
+</p>
+<h2 id="good-code-style-as-moral-behavior">
+Good code style as moral behavior
+</h2>
+<p>
+<strong>What is good code style?</strong> You probably have some opinions about this. In fact, I’m willing to bet you might even have some <em>very strong</em> opinions about this; I know I do. Whether consciously or not, we tend to frame good coding practices as a <em>moral</em> issue. Following good coding practices makes us feel virtuous; ignoring them makes us feel guilty. I can guess that this is why Yom said “I don’t think I could <em>bring myself to be satisfied with</em> partial functions” [emphasis added]. And this is why we say “<em>good</em> code style”, not “optimal” or “rational” or “best practice” code style.
+</p>
+<p>
+Why is this? Partly, it is just human: we like to have right and wrong ways to do everything (load the dishwasher, enforce grammar “rules”, use a text editor, <em>etc.</em>), and we naturally create and enforce community standards via subtle and not-so-subtle social cues. In the case of coding practices, I think we also sometimes do it consciously and explicitly, because the benefits can be unintuitive or only manifest in the long term. So the only way to get our students—or ourselves—to follow practices that are in our rational self-interest is by framing them in moral terms; rational arguments do not work in and of themselves. For example, I cannot get my students to write good comments by explaining to them how it will be beneficial to them in the future. It seems obvious to them that they will remember perfectly how their code works in the future, so any argument claiming the opposite falls on deaf ears. The only way to get them to write comments is to make it a moral issue: they should feel bad (<em>i.e.</em> lose points, lose respect, feel like they are “taking shortcuts”) if they don’t. Of course I do this “for their own good”: I trust that in the future they will come to appreciate this ingrained behavior on its own merits.
+</p>
+<p>
+The problem is that things framed in moral terms become absolutes, and it is then difficult for us to assess them rationally. My students will never be able to write a [function without comments, partial function, <code>goto</code> statement, …] without feeling bad about it, and they probably won’t stop to think about why.
+</p>
+<h2 id="good-code-style-as-rational-behavior">
+Good code style as rational behavior
+</h2>
+<p>
+I ask again: <strong>what is good code style</strong>—and <strong>why?</strong> I have identified a few <em>reasons</em> for various “good” coding practices. Ultimately, we want our code to have properties such as:
+</p>
+<ul>
+<li>
+<strong>Robustness</strong>: it should handle unexpected or invalid inputs gracefully.
+</li>
+<li>
+<strong>Readability</strong>: it should be easy for others (or us in the future) to read and understand the program.
+</li>
+<li>
+<strong>Maintainability</strong>: it should be easy to modify the program as requirements change.
+</li>
+<li>
+<strong>Efficiency</strong>: in general, programs should not do anything obviously redundant, or use data structures with a lot of overhead when faster ones are available (<em>e.g.</em> <code>String</code> vs <code>Text</code> or <code>ByteString</code>).
+</li>
+</ul>
+<p>
+Even in scenarios where one might initially think these properties are not needed (<em>e.g.</em> writing a one-off script for some sysadmin or data processing task), they often end up being important anyway (<em>e.g.</em> that one-off script gets copied and mutated until it becomes a key piece of some production system). And this is exactly one of the reasons for framing good coding style in moral terms! I won’t write comments or use good function decomposition in my one-off script just because I know, rationally, that it <em>might</em> end up in a production system someday. (I <em>“know”</em> that <em>this</em> particular script <em>really is</em> just a one-off script!) But I just might follow good coding practices anyway if I feel bad about not doing it (<em>e.g.</em> I would feel ashamed if other people saw it).
+</p>
+<p>
+It seems to me that most things we would typically think of as good code style are geared towards producing code with some or all of the above properties (and perhaps some other properties as well), and most scenarios in which code is being written really do benefit from these properties.
+</p>
+<h2 id="good-code-style-is-context-dependent">
+“Good” code style is context-dependent
+</h2>
+<p>
+But what if there was a scenario where these properties are actually, concretely of no benefit? As you can probably guess, I would argue that competitive programming is one such scenario:
+</p>
+<ul>
+<li>
+<strong>Robustness</strong>: we do not care what our program does when given unexpected or invalid inputs, since we are absolutely, 100% guaranteed that our program will only ever be run on inputs that exactly follow the given specification.
+</li>
+<li>
+<strong>Maintainability</strong>: the requirements for our program will never change.
+</li>
+<li>
+<strong>Efficiency</strong>: if you haven’t done much competitive programming you might be surprised to learn that we often <em>don’t</em> care about efficiency either. That is, although we certainly do care about <em>asymptotic</em> efficiency, <em>i.e.</em> choosing a good algorithm, problem time limits are typically set in such a way that constant factors don’t matter very much. A program that runs within 5x-10x of the optimal speed will often fit comfortably within the time limit.
+</li>
+</ul>
+<p>
+So what <em>do</em> we care about?
+</p>
+<ul>
+<li>
+<strong>Readability</strong>: the one thing from my previous list that we <em>do</em> care about is readability. Debugging becomes quite difficult if you can’t read and understand the code you wrote (this becomes even more important if you’re working on a team). And insofar as a solution represents particular insights or techniques, you may want be able to read it much later in order to remember or share what you learned.
+</li>
+<li>
+<strong>Programmer time</strong>: programmer time is always valuable, of course, but with competitive programming this is taken to an extreme: it is almost always done under time pressure, so the whole point is to write a program to solve a given problem <em>as fast as possible</em>.
+</li>
+</ul>
+<p>
+The combination of optimizing for speed and <em>not</em> caring about things like robustness, maintainability, and efficiency leads to a number of “best practices” for competitive programming that fly in the face of typical standards. For example:
+</p>
+<ul>
+<li>
+Adding code to deal gracefully with inputs that don’t follow the specification would just be a <em>waste of time</em> (a cardinal sin in this context!). My Haskell solutions are full of calls to partial functions like <code>read</code>, <code>head</code>, <code>tail</code>, <code>fromJust</code>, and so on, even though I would almost never use these functions in other contexts. This is also why I used a partial function that was only defined on lists of length two in my previous post (though as I <a href="https://byorgey.wordpress.com/2019/04/24/competitive-programming-in-haskell-basic-setup/#comment-36251">argue in a comment</a>, perhaps it’s not so much that the function is partial as that its type is too big).
+</li>
+<li>
+I often just use <code>String</code> for text processing, even though something like <code>Text</code> or <code>ByteString</code> (depending on the scenario) would be faster or more robust. (The exception is problems with a large amount of I/O, when the overhead of <code>String</code> really does become a problem; more on this in a future post.)
+</li>
+<li>
+Other than the simplest uses of <code>foldr</code>, <code>foldl’</code>, and <code>scanl</code>, I don’t bother with generic recursion schemes; I tend to just write lots of explicit recursion, which I find quicker to write and easier to debug.
+</li>
+</ul>
+<p>
+There are similar things I do in Java as well. It has taken me quite a while to become comfortable with these things and stop feeling bad about them, and I think I finally understand why.
+</p>
+<p>
+I’m not sure I really have a main point, other than to encourage you to consider your coding practices, and why you consider certain practices to be good or bad (and whether it depends on the context!).
+</p>
+<p>
+Next time, back to your regularly scheduled competitive programming tips!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

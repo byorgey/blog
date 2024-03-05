@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Idea for a physics-based rolling ball puzzle game</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2019/02/24/whats-the-right-way-to-quickcheck-floating-point-routines.html">« What’s the right way to QuickCheck floating-point routines?</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html">» Competitive Programming in Haskell: Basic Setup</a>
+
+</span>
+
+
+<h1>Idea for a physics-based rolling ball puzzle game</h1>
+
+<div class="info">
+  Posted on March 14, 2019
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'angular'." href="../../../../tag/angular.html" rel="tag">angular</a>, <a title="All pages tagged 'ball'." href="../../../../tag/ball.html" rel="tag">ball</a>, <a title="All pages tagged 'game'." href="../../../../tag/game.html" rel="tag">game</a>, <a title="All pages tagged 'idea'." href="../../../../tag/idea.html" rel="tag">idea</a>, <a title="All pages tagged 'physics'." href="../../../../tag/physics.html" rel="tag">physics</a>, <a title="All pages tagged 'rolling'." href="../../../../tag/rolling.html" rel="tag">rolling</a>, <a title="All pages tagged 'velocity'." href="../../../../tag/velocity.html" rel="tag">velocity</a>
+  
+</div>
+
+<section>
+<p>
+For quite a while I’ve had this idea for a cool game, and had vague intentions to learn some game/physics framework well enough to make it, but I’ve finally admitted that this is never going to happen. Instead I’ll just describe my idea here in the hope that someone else will either make it, or tell me that it already exists!
+</p>
+<p>
+This is a 2D physics-based puzzle/obstacle game where you control a ball (<em>aka</em> circle). The twist that distinguishes it from similar games I’ve seen is that you have only two ways to control the ball:
+</p>
+<ul>
+<li>
+<p>
+Pushing the left or right arrow keys changes the ball’s <em>angular velocity</em>, that is, its rate of spin. If the ball is sitting on a surface, this will cause it to roll due to friction, but if the ball is in the air, it will just change its spin rate without changing its trajectory at all.
+</p>
+</li>
+<li>
+<p>
+The down arrow key increases the ball’s velocity in the downwards direction. If the ball is sitting on a surface this will cause it to bounce upwards a bit. If the ball is in the air you can cause it to either bounce higher, by adding to its downward velocity while it is already falling, or you can dampen a bounce by pushing the down arrow while the ball is travelling upwards.
+</p>
+</li>
+</ul>
+<p>
+Those are the key mechanics. My intuition is that controlling the ball would be challenging but doable, and there would be lots of opportunities for interesting obstacles to navigate. For example, to get out of a deep pit you have to keep bouncing higher and then once you’re high enough, you impart a bit of spin so the next time you bounce you travel sideways over the lip of the pit. Or there could be a ledge so that you have to bounce once or twice while travelling towards it to get high enough to clear it, but then immediately control your subsequent bounce so you don’t bounce too high and hit some sort of hazard on the ceiling. And so on.
+</p>
+<p>
+Finally, of course there could be various power-ups (<em>e.g.</em> to make the ball faster, or sticky, or to alter gravity in various ways). Various puzzles might be based on figuring out which power-ups to use or how to use them to overcome various obstacles.
+</p>
+<p>
+So, does this game already exist? Or does someone want to make it? (Preferably in Haskell? =)
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

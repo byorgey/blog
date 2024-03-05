@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Swarm 0.4 release</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2023/07/13/compiling-to-intrinsically-typed-combinators.html">« Compiling to Intrinsically Typed Combinators</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Swarm 0.4 release</h1>
+
+<div class="info">
+  Posted on August 22, 2023
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'game'." href="../../../../tag/game.html" rel="tag">game</a>, <a title="All pages tagged 'programming'." href="../../../../tag/programming.html" rel="tag">programming</a>, <a title="All pages tagged 'resource'." href="../../../../tag/resource.html" rel="tag">resource</a>, <a title="All pages tagged 'robot'." href="../../../../tag/robot.html" rel="tag">robot</a>, <a title="All pages tagged 'Swarm'." href="../../../../tag/Swarm.html" rel="tag">Swarm</a>
+  
+</div>
+
+<section>
+<p>
+The <a href="https://github.com/swarm-game/swarm/">Swarm</a> development team is very proud to announce the latest release of the game. This should still be considered a development/preview release—you still can’t <a href="https://github.com/swarm-game/swarm/issues/50">save your games</a>—but it’s made some remarkable progress and there are lots of fun things to try.
+</p>
+<h2 id="what-is-it">
+What is it?
+</h2>
+<p>
+As a reminder, Swarm is a 2D, open-world programming and resource gathering game with a strongly-typed, functional programming language and a unique upgrade system. Unlocking language features is tied to collecting resources, making it an interesting challenge to bootstrap your way into the use of the full language. It has also become a flexible and powerful platform for constructing programming challenges.
+</p>
+<p>
+A few of the most significant new features are highlighted below; for full details, see the <a href="https://github.com/swarm-game/swarm/releases/tag/0.4.0.0">release notes</a>. If you just want to try it out, see the <a href="https://github.com/swarm-game/swarm#installing">installation instructions</a>.
+</p>
+<h2 id="expanded-design-possibilities">
+Expanded design possibilities
+</h2>
+<p>
+The default play mode is the open-world, resource-gathering scenario—but Swarm also supports “challenge scenarios”, where you have to complete one or more specific objectives with given resources on a custom map. There are currently 58 scenarios and counting—some are silly proofs of concept, but many are quite fun and challenging! I especially recommend checking out the <code>Ranching</code> and <code>Sokoban</code> scenarios, as well as <code>A Frivolous Excursion</code> (pictured below). And creating new scenarios is a great way you can contribute to Swarm even if you don’t know Haskell, or aren’t comfortable hacking on the codebase.
+</p>
+<div style="text-align: center">
+<p>
+<img src="http://byorgey.files.wordpress.com/2023/08/excursion.png" />
+</p>
+</div>
+<p>
+Recently, a large amount of work has gone into expanding the possibilities for scenario design:
+</p>
+<ul>
+<li>
+<a href="https://github.com/swarm-game/swarm/pull/1332">Structure templates</a> allow you to design map tiles and then reuse them multiple times within a scenario.
+</li>
+<li>
+<a href="https://github.com/swarm-game/swarm/pull/1356">Waypoints and portals</a> provide a mechanism for automatically navigating and teleporting around the world.
+</li>
+<li>
+Scenarios can have multiple <a href="https://github.com/swarm-game/swarm/pull/1353">subworlds</a> besides the main “overworld”, connected by portals. For example you could go “into a building” and have a separate map for the building interior.
+</li>
+<li>
+There are a slew of new robot commands, many to do with different sensing modalities: <code>stride</code>, <code>detect</code>, <code>sniff</code>, <code>chirp,</code> <code>resonate</code>, <code>watch</code>, <code>surveil</code>, <code>scout</code>, <code>instant</code>, <code>push</code>, <code>density</code>, <code>use</code>, <code>halt</code>, and <code>backup</code>.
+</li>
+<li>
+A <a href="https://github.com/swarm-game/swarm/pull/1376">new domain-specific language</a> for describing procedurally generated worlds. The default procedurally generated world used to be hardcoded, but now it is described externally via the new DSL, and you can design your own procedurally generated worlds without editing the Swarm source code.
+</li>
+<li>
+The <a href="https://github.com/swarm-game/swarm/pull/1214">key input handler</a> feature allows you to program robots to respond to keyboard input, so you can <em>e.g.</em> drive them around manually, or interactively trigger more complex behaviors. This makes it possible to design “arcade-style” challenges, where the player needs to guide a robot and react to obstacles in real time—but they get to program the robot to respond to their commands first!
+</li>
+<li>
+A new prototype <a href="https://github.com/swarm-game/swarm/pull/873">integrated world editor</a> lets you design worlds interactively.
+</li>
+</ul>
+<h2 id="ui-improvements">
+UI improvements
+</h2>
+<p>
+In the past, entity and goal descriptions were simply plain text; recently, we switched to actually parsing Markdown. Partly, this is just to make things look nice, since we can highlight code snippets, entity names, etc.:
+</p>
+<div style="text-align: center">
+<p>
+<img src="http://byorgey.files.wordpress.com/2023/08/crafting.png" />
+</p>
+</div>
+<p>
+But it also means that we can now validate all code examples and entity names, and even test that the tutorial is pedagogically sound: any command used in a tutorial solution must be mentioned in a previous tutorial, or else our CI fails!
+</p>
+<p>
+There are also a number of other small UI enhancements, such as improved type error messages, inventory search, and a collapsible REPL panel, among others.
+</p>
+<h2 id="scoring-metrics">
+Scoring metrics
+</h2>
+<p>
+We now keep track of a number of metrics related to challenge scenario solutions, such as total time, total game ticks, and code size. These metrics are tracked and saved across runs, so you can compete with yourself, and with others. For now, see these wiki pages:
+</p>
+<ul>
+<li>
+<a href="https://github.com/swarm-game/swarm/wiki/Speedrunning">Swarm speedrunning</a>
+</li>
+<li>
+<a href="https://github.com/swarm-game/swarm/wiki/Code-golf">Swarm code golf</a>
+</li>
+</ul>
+<p>
+In the future, perhaps there will eventually be some kind of <a href="https://github.com/swarm-game/swarm/issues/1259">social website</a> with leaderboards and user-uploaded scenarios.
+</p>
+<h2 id="debugging">
+Debugging
+</h2>
+<p>
+Last but not least, we now have an <a href="https://github.com/swarm-game/swarm/pull/1081">integrated single-stepping and debugging mode</a> (enabled by the <code>tweezers</code> device).
+</p>
+<div style="text-align: center">
+<p>
+<img src="http://byorgey.files.wordpress.com/2023/08/debugger.png" />
+</p>
+</div>
+<h2 id="give-it-a-try">
+Give it a try!
+</h2>
+<p>
+To install, check out the <a href="https://github.com/swarm-game/swarm#installing">installation instructions</a>: you can download a <a href="https://github.com/swarm-game/swarm/releases">binary release</a> (for now, Linux only, but MacOS binaries should be on the horizon), or <a href="https://hackage.haskell.org/package/swarm">install from Hackage</a>. Give it a try and send us your feedback, either <a href="https://github.com/swarm-game/swarm/issues/new/choose">via a github issue</a> or <a href="https://web.libera.chat/?channels=#swarm">IRC</a>!
+</p>
+<h2 id="future-plans-getting-involved">
+Future plans &amp; getting involved
+</h2>
+<p>
+We’re still hard at work on the game. Fun upcoming things include:
+</p>
+<ul>
+<li>
+<a href="https://github.com/swarm-game/swarm/issues/50">Saving and loading games</a>
+</li>
+<li>
+New world features like aliens and <a href="https://github.com/swarm-game/swarm/issues/112">cities</a>
+</li>
+<li>
+New language features like <a href="https://github.com/swarm-game/swarm/issues/154">recursive types</a>, <a href="https://github.com/swarm-game/swarm/issues/98">arrays</a>, <a href="https://github.com/swarm-game/swarm/issues/94">inter-robot communication</a>, and <a href="https://github.com/swarm-game/swarm/issues/495">a proper <code>import</code> construct</a>
+</li>
+</ul>
+<p>
+Of course, there are also <a href="https://github.com/swarm-game/swarm/issues?q=is%3Aissue+is%3Aopen+label%3A%22C-Low+Hanging+Fruit%22">tons of small things that need fixing and polishing</a> too! If you’re interested in getting involved, check out our <a href="https://github.com/swarm-game/swarm/blob/main/CONTRIBUTING.md">contribution guide</a>, come <a href="https://web.libera.chat/?channels=#swarm">join us on IRC</a> (<code>#swarm</code> on Libera.Chat), or take a look at the list of <a href="https://github.com/swarm-game/swarm/issues?q=is%3Aissue+is%3Aopen+label%3A%22C-Low+Hanging+Fruit%22">issues marked “low-hanging fruit”</a>.
+</p>
+<p>
+Brought to you by the Swarm development team:
+</p>
+<ul>
+<li>
+Brent Yorgey
+</li>
+<li>
+Karl Ostmo
+</li>
+<li>
+Ondřej Šebek
+</li>
+</ul>
+<p>
+With contributions from:
+</p>
+<ul>
+<li>
+Alexander Block
+</li>
+<li>
+Brian Wignall
+</li>
+<li>
+Chris Casinghino
+</li>
+<li>
+Daniel Díaz Carrete
+</li>
+<li>
+Huw Campbell
+</li>
+<li>
+Ishan Bhanuka
+</li>
+<li>
+Jacob
+</li>
+<li>
+Jens Petersen
+</li>
+<li>
+José Rafael Vieira
+</li>
+<li>
+Joshua Price
+</li>
+<li>
+lsmor
+</li>
+<li>
+Noah Yorgey
+</li>
+<li>
+Norbert Dzikowski
+</li>
+<li>
+Paul Brauner
+</li>
+<li>
+Ryan Yates
+</li>
+<li>
+Sam Tay
+</li>
+<li>
+Steven Garcia
+</li>
+<li>
+Tamas Zsar
+</li>
+<li>
+Tristan de Cacqueray
+</li>
+<li>
+Valentin Golev
+</li>
+</ul>
+<p>
+…not to mention many others who gave valuable suggestions and feedback. Want to see your name listed here in the next release? <a href="https://github.com/swarm-game/swarm/blob/main/CONTRIBUTING.md">See how you can contribute!</a>
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

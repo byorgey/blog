@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Primitive species and species operations, part II</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2009/07/30/primitive-species-and-species-operations.html">« Primitive species and species operations</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2009/08/05/species-operations-differentiation.html">» Species operations: differentiation</a>
+
+</span>
+
+
+<h1>Primitive species and species operations, part II</h1>
+
+<div class="info">
+  Posted on August  1, 2009
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'combinatorial species'." href="../../../../tag/combinatorial%20species.html" rel="tag">combinatorial species</a>, <a title="All pages tagged 'cycles'." href="../../../../tag/cycles.html" rel="tag">cycles</a>, <a title="All pages tagged 'sets'." href="../../../../tag/sets.html" rel="tag">sets</a>, <a title="All pages tagged 'singletons'." href="../../../../tag/singletons.html" rel="tag">singletons</a>
+  
+</div>
+
+<section>
+<p>In <a href="http://byorgey.wordpress.com/2009/07/30/primitive-species-and-species-operations/">my previous post</a>, I began describing the primitive species and species operations supported by my <a href="http://hackage.haskell.org/package/species">combinatorial species library</a>; we looked at the ring structure on species, that is, the primitive species <span class="math inline">\(0\)</span> and <span class="math inline">\(1\)</span>, and the operations of species sum and product. Today we’ll continue by looking at a few more primitive species: <i>singletons</i>, <i>sets</i>, and <i>cycles</i>.</p>
+<p>[By the way, all the diagrams for this post and the previous one were generated programmatically using my <a href="http://code.haskell.org/diagrams/">diagrams</a> library. I’ll probably put the code up as an example on the diagrams website sometime in the near future.]</p>
+<h3>
+X
+</h3>
+<p>The species <span class="math inline">\(X\)</span>, also known as the species of <i>singletons</i>, is picky in a way similar to the species <span class="math inline">\(1\)</span>. Whereas <span class="math inline">\(1\)</span> only puts a structure on the empty set of labels, X only puts a (single) structure on singleton label sets. If you give it more than one label, or none, it turns up its nose and refuses to do anything.</p>
+<p>[caption id=“attachment_227” align=“aligncenter” width=“400” caption=“The species X of singletons”]<img src="http://byorgey.files.wordpress.com/2009/07/singleton.png" alt="The species X of singletons" title="singleton" width="400" height="92" class="size-full wp-image-227" />[/caption]</p>
+<p><code>
+&gt; take 10 $ labelled singleton
+[0,1,0,0,0,0,0,0,0,0]
+&gt; generate singleton ([‘a’] :: [Char])
+[‘a’]
+&gt; generate singleton (“abc” :: [Char])
+[]
+</code></p>
+A few exercises: try to work them out yourself, then use the species library to check if you are correct!
+<ol>
+<li>
+Describe the species <span class="math inline">\(X + X\)</span>. Show that it is isomorphic to the species <span class="math inline">\(2 * X\)</span>.
+</li>
+<li>
+Describe the species <span class="math inline">\(X * X\)</span>.
+</li>
+</ol>
+<h3>
+E
+</h3>
+<p>The species <span class="math inline">\(E\)</span> of sets, on the other hand, isn’t picky at all: it will happily put a singleton structure on any label set. Usually we identify this structure with the label set itself; that is, the only <span class="math inline">\(E\)</span>-structure on a label set <span class="math inline">\(U\)</span> is <span class="math inline">\(U\)</span> itself.</p>
+<p>[caption id=“attachment_258” align=“aligncenter” width=“400” caption=“The species E of sets”]<img src="http://byorgey.files.wordpress.com/2009/07/set1.png" alt="The species E of sets" title="set" width="400" height="92" class="size-full wp-image-258" />[/caption]</p>
+<p><code>
+&gt; take 10 $ labelled sets
+[1,1,1,1,1,1,1,1,1,1]
+&gt; take 10 $ unlabelled sets
+[1,1,1,1,1,1,1,1,1,1]
+&gt; generate set ([1..3] :: [Int])
+[{1,2,3}]
+&gt; generate set ([] :: [Int])
+[{}]
+</code></p>
+<p>We can now also describe the derived species <span class="math inline">\(X * E\)</span> of <i>elements</i>, also known as the species of <i>pointed sets</i>. The only way to get any <span class="math inline">\(X * E\)</span> structures is by partitioning the label set <span class="math inline">\(U\)</span> into a singleton and all the rest, in which case we get exactly one structure; so there is one <span class="math inline">\(X * E\)</span> structure for each element of <span class="math inline">\(U\)</span>.</p>
+<p><code>
+&gt; take 10 $ labelled (x * set)
+[0,1,2,3,4,5,6,7,8,9]
+&gt; take 10 $ unlabelled (x * set)
+[0,1,1,1,1,1,1,1,1,1]
+&gt; generate (x * set) ([1..3] :: [Int])
+[(1,{2,3}),(2,{1,3}),(3,{1,2})]
+</code></p>
+<p>(<code>x</code> is just a synonym for <code>singleton</code>.) Noteworthy is the fact that this is the first species we’ve looked at which has different numbers of labelled and unlabelled structures! This makes sense: there are <span class="math inline">\(n\)</span> labelled <span class="math inline">\((X * E)\)</span>-structures on a size <span class="math inline">\(n\)</span> set; but if we can’t tell the difference between the labels, any one of them is just as good as any other, so we only get one unlabelled structure (unless the label set is empty, when we don’t get any structures: the <span class="math inline">\(X\)</span> still requires us to have at least one element!). Note also that <code>element</code> is a special synonym for <code>x * set</code> with a special semantics under <code>generate</code>: if we really want to pick <i>elements</i> of the label set, then we probably don’t want to actually see each element paired with a set of the leftover elements, we just want to see the element itself:</p>
+<p><code>
+&gt; generate elements ([1..3]::[Int])
+[1,2,3]
+</code></p>
+<h3>
+C
+</h3>
+<p>The final primitive species—and the only one so far that doesn’t feel quite so utterly trivial—is the species <span class="math inline">\(C\)</span> of <i>cycles</i>. <span class="math inline">\(C\)</span> puts no structures on an empty label set, but given any non-empty label set, <span class="math inline">\(C\)</span> generates the set of all <i>cyclical orderings</i> of the labels.</p>
+<p>[caption id=“attachment_259” align=“aligncenter” width=“400” caption=“The species C of cycles”]<img src="http://byorgey.files.wordpress.com/2009/07/cycle1.png" alt="The species C of cycles" title="cycle" width="400" height="92" class="size-full wp-image-259" />[/caption]</p>
+<p>Of course, the above diagram only shows six of the cycle structures on five labels; the ellipsis is meant to suggest the others not shown. So… how many labelled cycle structures <i>are</i> there on five labels, or generally on <span class="math inline">\(n\)</span> labels? (Of course there is only one <i>un</i>labelled <span class="math inline">\(n\)</span>-cycle.) I’ll leave it as a (hopefully easy) exercise; and of course you know how to check your answer!</p>
+<p><code>
+&gt; generate cycles ([1..4] :: [Int])
+[&lt;1,2,3,4&gt;,&lt;1,2,4,3&gt;,&lt;1,3,2,4&gt;,&lt;1,3,4,2&gt;,&lt;1,4,2,3&gt;,&lt;1,4,3,2&gt;]
+</code></p>
+<p>As you can see, cycles are indicated with angle brackets; it is understood that <code>&lt;1,2,3,4&gt;</code>, <code>&lt;2,3,4,1&gt;</code>, <code>&lt;3,4,1,2&gt;</code>, and <code>&lt;4,1,2,3&gt;</code> are all equivalent.</p>
+<p>At this point, you’re probably thinking about a certain species and wondering why I haven’t mentioned it yet—it seems pretty fundamental and primitive. Are you thinking of… the species of <i>lists</i>? It turns out that we don’t have to take lists as primitive—we can define the species of lists as the <i>derivative</i> of the species of cycles! <a href="http://strictlypositive.org/diff.pdf">The derivative of a regular type is its type of one-hole</a>… but I’m getting ahead of myself. We’ll look at species differentiation (along with several other operations on species) in the next post!</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

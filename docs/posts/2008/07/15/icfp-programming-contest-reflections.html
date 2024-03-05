@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - ICFP programming contest reflections</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2008/06/21/zipedit.html">« ZipEdit</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2008/07/16/call-for-an-icfp-mars-server.html">» Call for an ICFP Mars Server!</a>
+
+</span>
+
+
+<h1>ICFP programming contest reflections</h1>
+
+<div class="info">
+  Posted on July 15, 2008
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'ICFP programming contest Mars rover lessons'." href="../../../../tag/ICFP%20programming%20contest%20Mars%20rover%20lessons.html" rel="tag">ICFP programming contest Mars rover lessons</a>
+  
+</div>
+
+<section>
+<p>This past weekend, I participated in the <a href="http://www.icfpcontest.org/">11th ICFP Programming Contest</a>, together with Christophe Poucet, Johan Tibell, Johan Liesen (all in Switzerland) and Cale Gibbard (in Ontario, Canada), coding in Haskell. The task this year was to write a controller for a Martian rover, which received data about the rover’s surroundings, and issued commands to the rover to guide it safely back to its “home base”. This was my first time participating (I wanted to participate last year but couldn’t/didn’t, for reasons I no longer recall), and I must say that I had a lot of fun! Here are a few of my recollections, experiences, and reactions, in no particular order…</p>
+<p>I wasn’t super excited about it for the first 48 hours or so (Friday evening, Saturday, and Sunday morning)… too much networking, GUI construction, asynchronous communication, messy stuff that I don’t really enjoy. I felt obligated to my teammates, though, so I made myself generally useful doing some mathematical analysis, working on a few analytic geometry tools, and creating some test maps, while taking long breaks to go to a barbecue, sleep, spend time with my wife, and go to church. I definitely enjoyed myself, but just couldn’t find anything to be really excited about. On Sunday afternoon/evening, though, I found something to be excited about: I spent all evening writing a <a href="https://secure.wikimedia.org/wikipedia/en/wiki/Quadtree">quadtree</a> implementation and using it to keep a granularized representation of the discovered obstacles in the world. I got a few hours of sleep and then got up again at 4:30am to continue, implementing a way to take a quadtree and generate a graph representing the connections between the empty regions in the world. Cale arrived shortly after I started in the morning and implemented an A* search routine at the same time, as well as some code for simplifying the paths that were generated and some code to glue the quadtree and A* stuff together. By midday on Monday, we had basic path planning working: it was pretty sweet watching our rover get around big walls and solve rudimentary mazes. I got a huge kick out of writing some fairly complex “theoretical”-ish code, and have it actually work and produce a tangible improvement in our rover’s behavior. Maybe later on I will post some of the code.</p>
+<p>One strange occurrence during the contest took place while I was out for a few hours – someone apparently took an IRC nick similar to mine (with an appended backtick), logged in claiming “connection troubles” to explain the backtick, and proceeded to have entire conversations with my teammates, who didn’t notice the switch since the impersonator was able to keep his replies generic. When confronted later (under a different nick, in the #icfp-contest channel) he said he did it “for the lulz” although that sounds rather implausible. I can only surmise he hoped to get some code or ideas he could use in his own contest entry. In the event, he didn’t end up gaining any information that would have been very useful, but regardless, I was surprised how angry I felt when I discovered that I had been impersonated. Identity and reputation are powerful assets, especially in an online community.</p>
+<p>The sad ending to the story is that due to a combination of poor decisions, miscommunication, last-minute bugs, and network outages, we submitted our contest entry… nine seconds too late!! =( It was a rather disappointing end to an otherwise excellent experience. We have no one to blame but ourselves, of course… but I will always wonder how our submission would have done… (although we most definitely weren’t going to win).</p>
+<p>Now, post-contest, I’m almost done digging out from under the pile of emails, rss items, and dirty dishes that piled up, unread and unwashed, over the weekend. =P But I’m already looking forward to next year’s contest, with a few lessons learned: (1) I would prefer working with a co-located team, or at least on a team with one other member in the same physical location as me. The remote thing worked ok, but I would have enjoyed more interaction and feedback. (2) Submit early and often! =( (3) I should have just jumped into the more theoretical algorithms stuff right away, instead of fiddling around for a couple days first! Next time I’ll try to think more critically about what my strengths are and how I can apply them – even if it means building something which might only be usable a little ways down the road. By the time I finish it, it will probably be usable!</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

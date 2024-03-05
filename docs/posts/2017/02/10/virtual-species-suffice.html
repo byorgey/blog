@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Virtual species suffice</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2017/01/27/advent-of-code-16-solution-an-algebra-of-bitstrings.html">« Advent of code #16 solution: an algebra of bitstrings</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2017/02/20/signed-sets-and-ballots-part-1.html">» Signed sets and ballots, part 1</a>
+
+</span>
+
+
+<h1>Virtual species suffice</h1>
+
+<div class="info">
+  Posted on February 10, 2017
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'species'." href="../../../../tag/species.html" rel="tag">species</a>, <a title="All pages tagged 'virtual'." href="../../../../tag/virtual.html" rel="tag">virtual</a>
+  
+</div>
+
+<section>
+<p>
+Over six years ago, I <a href="https://byorgey.wordpress.com/2010/11/24/species-subtraction-made-simple/">wrote a post</a> explaining how <em>virtual species</em> are defined. Ever since then (time flies!) I’ve been meaning to write a follow-up post explaining a bit more about virtual species and how they actually suffice to give us not just additive inverses, but also (somewhat surprisingly) <em>multiplicative</em> inverses.
+</p>
+<p>
+Recall that the intuitive idea of a combinatorial species is a <em>family of labelled structures</em> which are invariant under relabelling. If you’ve never seen the formal definition before, don’t worry: just think “data structures” or “algebraic data types” for now.
+</p>
+<p>
+The basic idea of <em>virtual species</em> is to work with <em>pairs</em> of species <span class="math inline">\((P,N)\)</span> where <span class="math inline">\(P\)</span> is considered “positive” and <span class="math inline">\(N\)</span> “negative”. Formally, we consider equivalence classes of such pairs under the equivalence relation defined by <span class="math inline">\((P_1, N_1) \cong (P_2, N_2)\)</span> iff <span class="math inline">\(P_1 + N_2 = P_2 + N_1\)</span>.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> This parallels the way one typically gives a formal definition of the integers starting from the natural numbers (the “Grothendieck construction”); see <a href="https://byorgey.wordpress.com/2010/11/24/species-subtraction-made-simple/">my previous post</a> for more details.
+</p>
+<h1 id="intuition">
+Intuition
+</h1>
+<p>
+How can we build intuition for virtual species, and for additive inverses of species in particular? To be honest I have been struggling with this question for many years.
+</p>
+<p>
+<em>Multiplicative</em> inverses are much simpler to think about: they are like matter and antimatter. Having <em>both</em> an <span class="math inline">\(F\)</span>-structure and an <span class="math inline">\(F^{-1}\)</span> structure is the same as having <em>nothing</em>; they annihilate each other. By “having nothing” we mean “having no information”, that is, having a unit value: <span class="math inline">\(F F^{-1} = 1\)</span>.
+</p>
+<p>
+What about <em>additive</em> inverses? Note first that the <span class="math inline">\(0\)</span> species does not correspond to <em>having nothing</em>; the word “nothing” corresponds to the <span class="math inline">\(1\)</span> (<em>i.e.</em> unit) species. Instead the <span class="math inline">\(0\)</span> (<em>i.e.</em> uninhabited) species corresponds to <em>(logical) impossibility</em>. So to interpret <span class="math inline">\(-F\)</span> we have to imagine something where <em>having either <span class="math inline">\(F\)</span> or <span class="math inline">\(-F\)</span> is impossible</em>.
+</p>
+<p>
+…yeah, me neither. This seems deeply strange. If someone says, “I either have an <span class="math inline">\(F\)</span> or a <span class="math inline">\(-F\)</span>”, you can confidently call them a liar, because it is impossible to have either an <span class="math inline">\(F\)</span> or a <span class="math inline">\(-F\)</span>; that is, <span class="math inline">\(F - F = 0\)</span>. But surely if you actually have an <span class="math inline">\(F\)</span>-structure, it should also be true to say “I have either an <span class="math inline">\(F\)</span> or a <span class="math inline">\(G\)</span>”? Well, that works for normal, positive species—in which case we can define a canonical injection <span class="math inline">\(F \to F + G\)</span>. But once we introduce negative species this completely breaks down. As another example, if someone <em>truthfully</em> says, “I have either a tree or a negative non-empty tree”, you should be able to say, “Aha! I know what you have—it must be an empty tree.” In general, it’s strange that expressing a <em>disjunction</em> can cause some possibilities to be <em>ruled out</em>. Normally, we are used to disjunctions only <em>increasing</em> the number of possibilities.
+</p>
+<p>
+Inspired by James and Sabry’s really cool paper <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.399.3417&amp;rep=rep1&amp;type=pdf">The Two Dualities of Computation: Negative and Fractional Types</a>, I have thought a bit about whether there is some plausible interpretation involving travelling backwards in time, but I haven’t been able to come up with one. I can’t quite seem to make the formalism of the paper match up with my intuition about species (though this may just be a failure of my imagination or intuition).
+</p>
+<h1 id="multiplicative-inverses">
+Multiplicative Inverses
+</h1>
+<p>
+In any case, let’s see why the ring of virtual species actually has multiplicative inverses—at least, all the ones we could possibly hope for. This is somewhat surprising, since when we build integers from natural numbers by considering equivalence classes of pairs, we certainly don’t get any multiplicative inverses, only additive ones. To get multiplicative inverses we have to do the same process a second time, building the rational numbers as equivalence classes of pairs of integers. But species already have enough extra structure that throwing in additive inverses is all it takes.
+</p>
+<p>
+First, a caveat: we don’t get multiplicative inverses for <em>all</em> species, but only those species <span class="math inline">\(G\)</span> such that <span class="math inline">\(G(0) = 1\)</span>: that is, species <span class="math inline">\(G\)</span> with only a single structure of size zero, which are of the form <span class="math inline">\(G = 1 + X(\dots)\)</span>. With any constant term other than <span class="math inline">\(1\)</span>, we clearly have no hope of finding another species <span class="math inline">\(H\)</span> such that <span class="math inline">\(GH = 1\)</span>, since the constant term of <span class="math inline">\(GH\)</span> will be a multiple of <span class="math inline">\(G\)</span>’s constant term.
+</p>
+<p>
+So given such a <span class="math inline">\(G\)</span>, write <span class="math inline">\(G = 1 + G_+\)</span>, where <span class="math inline">\(G_+\)</span> denotes “non-empty <span class="math inline">\(G\)</span>-structures”. Then we can define the multiplicative inverse of <span class="math inline">\(G\)</span> as follows:
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle G^{-1} = \sum_{k \geq 0} (-1)^k (G_+)^k = 1 - G_+ + G_+^2 - G_+^3 + \dots\)</span></p>
+</div>
+</p>
+<p>
+That is, a <span class="math inline">\(G^{-1}\)</span>-structure consists of a list of nonempty <span class="math inline">\(G\)</span>-structures, except that even-length lists are considered “positive” and odd-length lists considered “negative”.
+</p>
+<p>
+We can easily check that this indeed defines a multiplicative inverse for <span class="math inline">\(G\)</span>:
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle \begin{array}{rcl}G G^{-1} &amp;amp;=&amp;amp; (1 + G_+) (1 - G_+ + G_+^2 - G_+^3 + \dots) \\[0.5em] &amp;amp;=&amp;amp; (1 - G_+ + G_+^2 - G_+^3 + \dots) + (G_+ - G_+^2 + G_+^3 - G_+^4 + \dots) \\[0.5em] &amp;amp;=&amp;amp; 1 \end{array}\)</span></p>
+</div>
+</p>
+<p>
+The infinite sums telescope down to leave only <span class="math inline">\(1\)</span>. Notice this really isn’t about species in particular, but really about infinite power series (of which species are the categorification): any infinite power series with integer coefficients and a constant term of <span class="math inline">\(1\)</span> has a multiplicative inverse which is also such a power series.
+</p>
+<p>
+As an example, consider <span class="math inline">\(1/(1-X) = (1-X)^{-1}\)</span>. We know this is “supposed” to be the species of lists (since it results from solving <span class="math inline">\(L = 1 + XL\)</span> for <span class="math inline">\(L\)</span>), but let’s see what happens. In this case <span class="math inline">\(G = 1-X\)</span> and <span class="math inline">\(G_+ = -X\)</span>. So the inverse ought to be
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle (1-X)^{-1} = \sum_{k \geq 0} (-1)^k (-X)^k = \sum_{k \geq 0} X^k = 1 + X + X^2 + X^3 + \dots\)</span></p>
+</div>
+</p>
+<p>
+And hey, look at that! Lists!
+</p>
+<h1 id="a-field-of-species">
+A field of species?
+</h1>
+<p>
+So what would we need to get a true field, <em>i.e.</em> a multiplicative inverse for <em>every</em> nonzero species? Well, for that we would need to throw in rational coefficients. I forget exactly where I read this—some paper by Baez and Dolan, most likely—but I believe the proper way to interpret this would be as groupoid-valued species, since there is a sense in which the “cardinality” of groupoids can be interpreted as rational numbers. But to be honest I have no idea where this leads.
+</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+Note that species sum is cancellative—that is, if <span class="math inline">\(A + C = B + C\)</span> then <span class="math inline">\(A = B\)</span>—so this is a coherent definition. This cancellative property is probably worth another post of its own since the reason for it is not entirely trivial.<a href="#fnref1">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

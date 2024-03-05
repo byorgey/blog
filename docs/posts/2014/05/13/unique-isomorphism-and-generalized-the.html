@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Unique isomorphism and generalized "the"</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2014/05/08/avoiding-the-axiom-of-choice-part-i.html">« Avoiding the axiom of choice, part I</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2014/06/05/ac-and-equivalence-of-categories.html">» AC and equivalence of categories</a>
+
+</span>
+
+
+<h1>Unique isomorphism and generalized "the"</h1>
+
+<div class="info">
+  Posted on May 13, 2014
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'AC'." href="../../../../tag/AC.html" rel="tag">AC</a>, <a title="All pages tagged 'axiom of choice'." href="../../../../tag/axiom%20of%20choice.html" rel="tag">axiom of choice</a>, <a title="All pages tagged 'category'." href="../../../../tag/category.html" rel="tag">category</a>, <a title="All pages tagged 'constructive'." href="../../../../tag/constructive.html" rel="tag">constructive</a>, <a title="All pages tagged 'functor'." href="../../../../tag/functor.html" rel="tag">functor</a>, <a title="All pages tagged 'isomorphism'." href="../../../../tag/isomorphism.html" rel="tag">isomorphism</a>, <a title="All pages tagged 'theory'." href="../../../../tag/theory.html" rel="tag">theory</a>, <a title="All pages tagged 'types'." href="../../../../tag/types.html" rel="tag">types</a>, <a title="All pages tagged 'unique'." href="../../../../tag/unique.html" rel="tag">unique</a>
+  
+</div>
+
+<section>
+<p>
+This is part two in a series of posts on avoiding the axiom of choice; <a href="http://byorgey.wordpress.com/2014/05/08/avoiding-the-axiom-of-choice-part-i/">you can read part one here</a>.
+</p>
+<p>
+In category theory, one is typically interested in specifying objects only <em>up to unique isomorphism</em>. In fact, definitions which make use of actual <em>equality</em> on objects are sometimes referred to (half-jokingly) as <em>evil</em>. More positively, the <a href="http://ncatlab.org/nlab/show/principle+of+equivalence"><em>principle of equivalence</em></a> states that properties of mathematical structures should be invariant under equivalence. This principle leads naturally to speaking of “the” object having some property, when in fact there may be many objects with the given property, but all such objects are uniquely isomorphic; this cannot cause confusion if the principle of equivalence is in effect.
+</p>
+<p>
+This phenomenon should be familiar to anyone who has seen simple universal constructions such as terminal objects or categorical products. For example, an object <span class="math inline">\(1 \in \mathbb{C}\)</span> is called if there is a unique morphism <span class="math inline">\(A \to 1\)</span> from each object <span class="math inline">\(A \in \mathbb{C}\)</span>. In general, there may be many objects satisfying this criterion. For example, in <span class="math inline">\(\mathbf{Set}\)</span>, the category of sets and functions, <em>every</em> singleton set is terminal: there is always a unique function from any set <span class="math inline">\(A\)</span> to a singleton set <span class="math inline">\(\{\star\}\)</span>, namely, the function that sends each element of <span class="math inline">\(A\)</span> to <span class="math inline">\(\star\)</span>. However, it is not hard to show that any two terminal objects must be uniquely isomorphic<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>. Thus it “does not matter” which terminal object we use—they all have the same properties, as long as we don’t do anything “evil”—and one therefore speaks of “the” terminal object of <span class="math inline">\(\mathbb{C}\)</span>. As another example, a <em>product</em> of two objects <span class="math inline">\(A,B \in \mathbb{C}\)</span> is a diagram <span class="math inline">\(A \stackrel{\pi_1}{\longleftarrow} C \stackrel{\pi_2}{\longrightarrow} B\)</span> with the universal property that any other <span class="math inline">\(C'\)</span> with morphisms to <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> uniquely factors through <span class="math inline">\(C\)</span>. Again, there may be multiple such products, but they are all uniquely isomorphic, and one speaks of “the” product <span class="math inline">\(A \times B\)</span>.
+</p>
+<p>
+Note that in some cases, there may be a canonical choice among isomorphic objects. For example, this is the case with products in <span class="math inline">\(\mathbf{Set}\)</span>, where we may always pick the Cartesian product <span class="math inline">\(\{(a,b) \mid a \in A, b \in B\}\)</span> as a canonical product of <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> (even though there are also other products, such as <span class="math inline">\(\{(b,a) \mid a \in A, b \in B\}\)</span>). In such cases use of “the”, as in “the product of <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>”, is even more strongly justified, since we may take it to mean “the <em>canonical</em> product of <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>”. However, in many cases (for example, with terminal objects in <span class="math inline">\(\mathbf{Set}\)</span>), there is no canonical choice, and “the terminal object” simply means something like “some terminal object, it doesn’t matter which”.
+</p>
+<p>
+Beneath this seemingly innocuous use of “the” (often referred to as <em>generalized “the”</em>), however, lurks the axiom of choice! For example, if a category <span class="math inline">\(\mathbb{C}\)</span> has all products, we can define a functor <span class="math inline">\(P : \mathbb{C} \times \mathbb{C} \to \mathbb{C}\)</span><a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a> which picks out “the” product of any two objects <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>—indeed, <span class="math inline">\(P\)</span> may be taken as the <em>definition</em> of the product of <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>. But how is <span class="math inline">\(P\)</span> to be defined? Consider <span class="math inline">\(\{ \mathrm{Prod}(A,B) \mid A,B \in \mathbb{C} \}\)</span>, where <span class="math inline">\(\mathrm{Prod}(A,B)\)</span> denotes the set of all possible products of <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>, <em>i.e.</em> all suitable diagrams <span class="math inline">\(A \stackrel{\pi_1}{\longleftarrow} C \stackrel{\pi_2}{\longrightarrow} B\)</span> in <span class="math inline">\(\mathbb{C}\)</span>. Since <span class="math inline">\(\mathbb{C}\)</span> has all products, this is a collection of nonempty sets; therefore we may invoke AC to obtain a choice function, which is precisely <span class="math inline">\(P_0\)</span>, the action of <span class="math inline">\(P\)</span> on objects. The action of <span class="math inline">\(P\)</span> on morphisms may then be defined straightforwardly.
+</p>
+<p>
+The axiom of choice really is necessary to construct <span class="math inline">\(P\)</span>: as has already been noted, there is, in general, no way to make some canonical choice of object from each equivalence class. On the other hand, this seems like a fairly “benign” use of AC. If we have a collection of equivalence classes, where the elements in each class are all uniquely isomorphic, then using AC to pick one representative from each really “does not matter”, in the sense that we cannot tell the difference between different choices (as long as we refrain from evil). Unfortunately, even such “benign” use of AC still poses a problem for computation.
+</p>
+<div class="references">
+
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+If you have never seen this proof before, I highly recommend working it out for yourself. Given two terminal objects <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>, what morphisms must exist between them? What can you say about their composition? You will need to use both the <em>existence</em> and <em>uniqueness</em> of morphisms to terminal objects.<a href="#fnref1">↩︎</a>
+</p>
+</li>
+<li id="fn2">
+<p>
+Note that we have made use here of “the” product category <span class="math inline">\(\mathbb{C} \times \mathbb{C}\)</span>—fortunately <span class="math inline">\(\mathbf{Cat}\)</span>, like <span class="math inline">\(\mathbf{Set}\)</span>, has a suitably <em>canonical</em> notion of products.<a href="#fnref2">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

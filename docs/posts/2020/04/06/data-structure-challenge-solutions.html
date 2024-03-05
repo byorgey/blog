@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Data structure challenge: solutions</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot.html">« Data structure challenge: finding the rightmost empty slot</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2020/04/06/data-structure-challenge-application.html">» Data structure challenge: application</a>
+
+</span>
+
+
+<h1>Data structure challenge: solutions</h1>
+
+<div class="info">
+  Posted on April  6, 2020
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'balanced'." href="../../../../tag/balanced.html" rel="tag">balanced</a>, <a title="All pages tagged 'challenge'." href="../../../../tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged 'data'." href="../../../../tag/data.html" rel="tag">data</a>, <a title="All pages tagged 'empty'." href="../../../../tag/empty.html" rel="tag">empty</a>, <a title="All pages tagged 'full'." href="../../../../tag/full.html" rel="tag">full</a>, <a title="All pages tagged 'log'." href="../../../../tag/log.html" rel="tag">log</a>, <a title="All pages tagged 'rank'." href="../../../../tag/rank.html" rel="tag">rank</a>, <a title="All pages tagged 'rightmost'." href="../../../../tag/rightmost.html" rel="tag">rightmost</a>, <a title="All pages tagged 'select'." href="../../../../tag/select.html" rel="tag">select</a>, <a title="All pages tagged 'slot'." href="../../../../tag/slot.html" rel="tag">slot</a>, <a title="All pages tagged 'structure'." href="../../../../tag/structure.html" rel="tag">structure</a>, <a title="All pages tagged 'tree'." href="../../../../tag/tree.html" rel="tag">tree</a>, <a title="All pages tagged 'union-find'." href="../../../../tag/union-find.html" rel="tag">union-find</a>
+  
+</div>
+
+<section>
+<p>
+In <a href="https://byorgey.wordpress.com/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot/">my previous post</a> I challenged you to find a way to keep track of a sequence of slots in such a way that we can quickly (in <span class="math inline">\(O(\lg n)\)</span> or better) either mark any empty slot as full, or find the rightmost empty slot prior to a given index. When I posted it, I had two solutions in mind; thanks to all the excellent comments I now know of many more!
+</p>
+<ul>
+<li>
+<p>
+There were quite a few answers which in some way or another boiled down to using a balanced tree structure.
+</p>
+<ul>
+<li>
+<p>
+<a href="https://byorgey.wordpress.com/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot/#comment-38031">Joachim Breitner suggested</a> to use something like <a href="http://hackage.haskell.org/package/containers-0.6.2.1/docs/Data-IntMap.html"><code>Data.IntMap</code></a>.
+</p>
+</li>
+<li>
+<p>
+Roman Cheplyaka suggested using <a href="http://hackage.haskell.org/package/containers-0.6.2.1/docs/Data-Set.html"><code>Data.Set</code></a>.
+</p>
+</li>
+<li>
+<p>
+An <a href="https://byorgey.wordpress.com/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot/#comment-38030">anonymous commenter suggested</a> using some kind of self-balancing tree like a red-black tree.
+</p>
+</li>
+<li>
+<p>
+<a href="https://byorgey.wordpress.com/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot/#comment-38032">Commenter Albert suggested</a> keeping <em>two</em> balanced trees, one containing all the full slots and one containing the empty slots (though it is not clear to me what the benefit would be of having both).
+</p>
+</li>
+</ul>
+<p>
+In all these cases, the idea is that the tree stores the sorted indices of all empty slots. We can mark a slot full or empty by deleting or inserting from the tree structure, and we can find the rightmost empty slot not exceeding a given index by searching for the index and returning highest value in the tree which is less than the index being searched. It is well-known that all these operations can be done in <span class="math inline">\(O(\lg n)\)</span> time.
+</p>
+</li>
+<li>
+<p>
+<a href="https://byorgey.wordpress.com/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot/#comment-38033">David Barbour suggested</a> something along similar lines, but somewhat more general: keep a <a href="https://en.wikipedia.org/wiki/Finger_tree">finger tree</a> with cached monoidal annotations representing both the total number of elements of each subtree, as well as the number of elements satisfying some proposition (such as the number of empty slots). This also allows performing the operations in <span class="math inline">\(O(\lg n)\)</span> time. This is in some sense similar to the previous suggestions, but it generalizes much more readily, since we can use this scheme to track any kind of monoidal annotation. I had thought of using a <a href="https://cp-algorithms.com/data_structures/segment_tree.html">segment tree</a> where slot <span class="math inline">\(i\)</span> stores the value <span class="math inline">\(i\)</span> when it is full, and <span class="math inline">\(0\)</span> when it is empty, and each node caches the max value contained in its subtree, allowing updates and queries to happen in <span class="math inline">\(O(\lg n)\)</span> time. This could also track arbitrary monoidal annotations, but using a finger tree is strictly more expressive since it also supports insertion and deletion (although that is not required for my original formulation of the problem).
+</p>
+</li>
+<li>
+<p>
+<a href="https://byorgey.wordpress.com/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot/#comment-38032">Albert also suggested</a> using a <a href="https://en.wikipedia.org/wiki/Van_Emde_Boas_tree">van Emde Boas tree</a> to achieve <span class="math inline">\(O(\lg \lg n)\)</span> performance. Van Emde Boas trees directly support a “predecessor” operation which finds the largest key smaller than a given value.
+</p>
+</li>
+<li>
+<p>
+Roman Cheplyaka suggested using some sort of dynamic <a href="https://en.wikipedia.org/wiki/Succinct_data_structure">rank/select</a>: if we think of the sequence of slots as a bit vector, and represent empty slots by 1s and full slots by 0s, we can find the rightmost empty slot up to a given index by first finding the rank of the index, then doing a select operation on that rank. (I smell some kind of adjunction here: the composition of rank then select is a sort of idempotent closure operator that “rounds down” to the index of the rightmost preceding 1 bit. Maybe one of my readers can elaborate?) The tricky part, apparently, is doing this in such a way that we can dynamically update bits; apparently it can be done so the operations are still <span class="math inline">\(O(\lg n)\)</span> (Roman <a href="https://core.ac.uk/download/pdf/82350483.pdf">linked to this paper</a>) but it seems complicated.
+</p>
+</li>
+<li>
+<p>
+One of my favorite solutions (which I also independently came up with) was <a href="https://byorgey.wordpress.com/2020/03/23/data-structure-challenge-finding-the-rightmost-empty-slot/#comment-38038">suggested by Julian Beaumont</a>: use a <a href="https://en.wikipedia.org/wiki/Disjoint-set_data_structure">disjoint-set data structure</a> (<em>aka</em> union-find) which stores a set for each contiguous (possibly empty) block of full slots together with its one empty predecessor (we can create a dummy slot on the left end to act as the “empty predecessor” for the first block of full slots). Each set keeps track of the index of its leftmost, empty, slot, which is easy to do: any time two sets are unioned we simply take the minimum of their empty slot indices (more generally, we can annotate the sets of a disjoint-set structure with values from any arbitrary monoid). To mark an empty slot as full, we simply union its set with the set of the slot to the left. To find the rightmost empty slot left of a given index, just look up the stored leftmost index corresponding to the set of the given index. Both these operations can thus be implemented in amortized <span class="math inline">\(O(\alpha(n))\)</span> time (where <span class="math inline">\(\alpha\)</span> is the <a href="https://en.wikipedia.org/wiki/Ackermann_function#Inverse">inverse Ackermann function</a>, hence essentially constant). Intuitively, I doubt it is possible to do any better than this. Curiously, however, unlike the other solutions, this solution depends crucially on the fact that we can never revert a full slot to empty!
+</p>
+</li>
+<li>
+<p>
+Apparently, this is known as the <a href="https://en.wikipedia.org/wiki/Predecessor_problem">predecessor problem</a>, and can also be solved with something called <a href="https://en.wikipedia.org/wiki/Fusion_tree">fusion trees</a> which I had never heard of before.
+</p>
+</li>
+</ul>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

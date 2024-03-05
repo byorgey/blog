@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Dynamic programming in Haskell: lazy immutable arrays</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">« Competitive programming in Haskell: introduction to dynamic programming</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html">» Dynamic programming in Haskell: automatic memoization</a>
+
+</span>
+
+
+<h1>Dynamic programming in Haskell: lazy immutable arrays</h1>
+
+<div class="info">
+  Posted on June  2, 2023
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'challenge'." href="../../../../tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged 'dynamic programming'." href="../../../../tag/dynamic%20programming.html" rel="tag">dynamic programming</a>, <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>
+  
+</div>
+
+<section>
+<p>
+This is part 1 of a <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">promised multi-part series</a> on dynamic programming in Haskell. As a reminder, we’re using <a href="https://open.kattis.com/problems/zapis">Zapis</a> as a sample problem. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
+</p>
+<p>
+<a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">Last time</a>, we developed a recurrence for this problem and saw some naive, directly recursive Haskell code for computing it. Although this naive version is technically correct, it is much too slow, so our goal is to implement it more efficiently.
+</p>
+<h2 id="mutable-arrays">
+Mutable arrays?
+</h2>
+<p>
+Someone coming from an imperative background might immediately reach for some kind of mutable array, <em>e.g.</em> <code>STUArray</code>. Every time we call the function, we check whether the corresponding array index has already been filled in. If so, we simply return the stored value; if not, we compute the value recursively, and then fill in the array before returning it.
+</p>
+<p>
+This would work, but there is a better way!
+</p>
+<h2 id="immutable-arrays">
+Immutable arrays
+</h2>
+<p>
+While mutable arrays <a href="https://byorgey.wordpress.com/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray/">occasionally have their place</a>, we can surprisingly often get away with <em>immutable</em> arrays, where we completely define the array up front and then only use it for fast lookups afterwards.
+</p>
+<ul>
+<li>
+If the type of the array elements is suitable, and we can initialize the array elements all at once from a list using some kind of formula, map, scan, <em>etc.</em>, we should use <code>UArray</code> <a href="https://byorgey.wordpress.com/2023/02/24/competitive-programming-in-haskell-infinite-2d-array-level-4/">since it is much faster</a> than <code>Array</code>.
+</li>
+<li>
+However, <code>UArray</code> is strict in the elements, and the elements must be of a type that can be stored unboxed. If we need a more complex element type, or we need to compute the array recursively (where some elements depend on other elements), we can use <code>Array</code>.
+</li>
+</ul>
+<p>
+What about the <a href="http://hackage.haskell.org/package/vector"><code>vector</code> library</a>, you ask? Well, it’s a very nice library, and quite fast, but unfortunately it is not available on many judging platforms, so I tend to stick to <code>array</code> to be safe. However, if you’re doing something like <a href="https://adventofcode.com/">Advent of Code</a> or <a href="https://projecteuler.net/">Project Euler</a> where you get to run the code on your own machine, then you should definitely reach for <code>vector</code>.
+</p>
+<h2 id="lazy-recursive-immutable-arrays">
+Lazy, recursive, immutable arrays
+</h2>
+<p>
+In <a href="https://byorgey.wordpress.com/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness/">my previous post on topsort</a> we already saw the basic idea: since <code>Array</code>s are lazy in their elements, we can define them recursively; the Haskell runtime then takes care of computing the elements in a suitable order. Previously, we saw this applied to automatically compute a topological sort, but more generally, we can use it to fill out a table of values for any recurrence.
+</p>
+<p>
+So, as a first attempt, let’s just replace our recursive <code>c</code> function from <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">last time</a> with an array. I’ll only show the <code>solve</code> function for now; the rest of the code remains the same. (Spoiler alert: this solution works, but it’s ugly. We’ll develop much better solutions later.)
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
+<span>solve</span> <span>str</span> <span style="color: red">=</span> <span>c</span><span>!</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
+  <span style="color: blue;font-weight: bold">where</span>
+    <span>n</span> <span style="color: red">=</span> <span>length</span> <span>str</span>
+    <span>s</span> <span style="color: red">=</span> <span>listArray</span> <span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">)</span> <span>str</span>
+
+    <span>c</span> <span style="color: red">::</span> <span>Array</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span>Integer</span>
+    <span>c</span> <span style="color: red">=</span> <span>array</span> <span style="color: red">(</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span><span style="color: red">,</span><span style="color: red">(</span><span>n</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span><span style="color: red">)</span> <span>$</span>
+      <span style="color: red">[</span> <span style="color: red">(</span><span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>i</span><span style="color: red">)</span><span style="color: red">,</span> <span class="hs-num">1</span><span style="color: red">)</span> <span style="color: red">|</span> <span>i</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span> <span style="color: red">]</span>
+      <span>++</span>
+      <span style="color: red">[</span> <span style="color: red">(</span><span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span> <span style="color: red">|</span> <span>i</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>j</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>even</span> <span>i</span> <span>/=</span> <span>even</span> <span>j</span> <span style="color: red">]</span>
+      <span>++</span>
+      <span style="color: red">[</span> <span style="color: red">(</span><span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span><span style="color: red">,</span><span>v</span><span style="color: red">)</span>
+      <span style="color: red">|</span> <span>i</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>j</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>i</span> <span>/=</span> <span>j</span><span style="color: red">,</span> <span>even</span> <span>i</span> <span>==</span> <span>even</span> <span>j</span>
+      <span style="color: red">,</span> <span style="color: blue;font-weight: bold">let</span> <span>v</span> <span style="color: red">=</span> <span>sum</span> <span style="color: red">[</span> <span>m</span> <span style="color: red">(</span><span>s</span><span>!</span><span>i</span><span style="color: red">)</span> <span style="color: red">(</span><span>s</span><span>!</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>c</span><span>!</span><span style="color: red">(</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>c</span><span>!</span><span style="color: red">(</span><span>k</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span> <span style="color: red">|</span> <span>k</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span> <span>i</span><span>+</span><span class="hs-num">3</span> <span style="color: red">..</span> <span>j</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">]</span><span style="color: red">]</span>
+      <span style="color: red">]</span></code></pre>
+<p>
+We use the <code>array</code> function to create an array, which takes first a pair of indices specifying the index range, and then a list of (index, value) pairs. (The <code>listArray</code> function can also be particularly useful, when we have a list of values which are already in index order, as in the definition of <code>s</code>.)
+</p>
+<p>
+This solution is accepted, and it’s quite fast (0.04s for me). However, it’s really ugly, and although it’s <em>conceptually</em> close to our directly recursive function from before, the code is almost unrecognizably different. It’s ugly that we have to repeat conditions like <code>i /= j</code> and <code>even i == even j</code>, and binders like <code>i &lt;- [0..n]</code>; the multiple list comprehensions and nested pairs like <code>((i,j),v)</code> are kind of ugly, and the fact that this is implementing a recurrence is completely obscured.
+</p>
+<p>
+However, I included this solution as a first step because for a long time, after I learned about using lazy immutable arrays to implement dynamic programming in Haskell, this was the kind of solution I wrote! Indeed, if you just think about the idea of creating a recursively defined array, this might be the kind of thing you come up with: we define an array <code>c</code> using the <code>array</code> function, then we have to list all its elements, and we get to refer to <code>c</code> along the way.
+</p>
+<h2 id="mutual-recursion-to-the-rescue">
+Mutual recursion to the rescue
+</h2>
+<p>
+Most of the ugliness comes from losing sight of the fact that there is a <em>function</em> mapping indices to values: we simply listed out all the function’s input/output pairs without getting to use any of Haskell’s very nice facilities for defining functions! So we can clean up the code considerably if we make a <em>mutually recursive</em> pair of an array and a function: the array values are defined using the function, and the function definition can look up values in the array.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
+<span>solve</span> <span>str</span> <span style="color: red">=</span> <span>cA</span><span>!</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
+  <span style="color: blue;font-weight: bold">where</span>
+    <span>n</span> <span style="color: red">=</span> <span>length</span> <span>str</span>
+    <span>s</span> <span style="color: red">=</span> <span>listArray</span> <span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">)</span> <span>str</span>
+
+    <span>cA</span> <span style="color: red">::</span> <span>Array</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span>Integer</span>
+    <span>cA</span> <span style="color: red">=</span> <span>array</span> <span style="color: red">(</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span><span style="color: red">,</span><span style="color: red">(</span><span>n</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span><span style="color: red">)</span> <span>$</span>
+      <span style="color: red">[</span> <span style="color: red">(</span><span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span><span style="color: red">,</span> <span>c</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span><span style="color: red">)</span> <span style="color: red">|</span> <span>i</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span> <span style="color: red">..</span> <span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>j</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span> <span style="color: red">..</span> <span>n</span><span style="color: red">]</span> <span style="color: red">]</span>
+
+    <span>c</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Integer</span>
+    <span>c</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
+      <span style="color: red">|</span> <span>i</span> <span>==</span> <span>j</span>           <span style="color: red">=</span> <span class="hs-num">1</span>
+      <span style="color: red">|</span> <span>even</span> <span>i</span> <span>/=</span> <span>even</span> <span>j</span> <span style="color: red">=</span> <span class="hs-num">0</span>
+      <span style="color: red">|</span> <span>otherwise</span>        <span style="color: red">=</span> <span>sum</span>
+        <span style="color: red">[</span> <span>m</span> <span style="color: red">(</span><span>s</span><span>!</span><span>i</span><span style="color: red">)</span> <span style="color: red">(</span><span>s</span><span>!</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>cA</span> <span>!</span> <span style="color: red">(</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>cA</span> <span>!</span> <span style="color: red">(</span><span>k</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
+        <span style="color: red">|</span> <span>k</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span> <span>i</span><span>+</span><span class="hs-num">3</span> <span style="color: red">..</span> <span>j</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">]</span>
+        <span style="color: red">]</span></code></pre>
+<p>
+Much better! The <code>c</code> function looks much the same as our naive version from before, with the one difference that instead of calling itself recursively, it looks up values in the array <code>cA</code>. The array, in turn, is simply defined as a lookup table for the outputs of the function.
+</p>
+<h2 id="generalized-tabulation">
+Generalized tabulation
+</h2>
+<p>
+One nice trick we can use to simplify the code a bit more is to use the <code>range</code> function to generate the list of all valid array indices, and then just <code>map</code> the <code>c</code> function over this. This also allows us to use the <code>listArray</code> function, since we know that the <code>range</code> will generate the indices in the right order.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>cA</span> <span style="color: red">::</span> <span>Array</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span>Integer</span>
+<span>cA</span> <span style="color: red">=</span> <span>listArray</span> <span>rng</span> <span>$</span> <span>map</span> <span>c</span> <span style="color: red">(</span><span>range</span> <span>rng</span><span style="color: red">)</span>
+  <span style="color: blue;font-weight: bold">where</span>
+    <span>rng</span> <span style="color: red">=</span> <span style="color: red">(</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span><span style="color: red">,</span> <span style="color: red">(</span><span>n</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span><span style="color: red">)</span></code></pre>
+<p>
+In fact, we can abstract this into a useful little function to create a lookup table for a function:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>tabulate</span> <span style="color: red">::</span> <span>Ix</span> <span>i</span> <span style="color: red">=&gt;</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>i</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>i</span> <span style="color: red">-&gt;</span> <span>a</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Array</span> <span>i</span> <span>a</span>
+<span>tabulate</span> <span>rng</span> <span>f</span> <span style="color: red">=</span> <span>listArray</span> <span>rng</span> <span style="color: red">(</span><span>map</span> <span>f</span> <span>$</span> <span>range</span> <span>rng</span><span style="color: red">)</span></code></pre>
+<p>
+(We can generalize this even more to make it work for <code>UArray</code> as well as <code>Array</code>, but I’ll stop here for now. And yes, I intentionally named this to echo the <a href="https://hackage.haskell.org/package/adjunctions-4.4.2/docs/Data-Functor-Rep.html#v:tabulate"><code>tabulate</code> function from the <code>adjunctions</code> package</a>; <code>Array i</code> is indeed a representable functor, though it’s not really possible to express without dependent types.)
+</p>
+<h2 id="the-solution-so-far">
+The solution so far
+</h2>
+<p>
+Putting it all together, here’s our complete solution so far. It’s pretty good, and in fact it’s organized in a very similar way to <a href="https://gist.github.com/meooow25/8d5441fa54e645c8f2a48f91a750d360">Soumik Sarkar’s dynamic programming solution</a> to <a href="https://byorgey.wordpress.com/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa/">Chemist’s Vows</a>. (However, there’s an even better solution coming in my next post!)
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">import</span> <span>Control.Arrow</span>
+<span style="color: blue;font-weight: bold">import</span> <span>Data.Array</span>
+
+<span>main</span> <span style="color: red">=</span> <span>interact</span> <span>$</span> <span>lines</span> <span>&gt;&gt;&gt;</span> <span>last</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>format</span>
+
+<span>format</span> <span style="color: red">::</span> <span>Integer</span> <span style="color: red">-&gt;</span> <span>String</span>
+<span>format</span> <span style="color: red">=</span> <span>show</span> <span>&gt;&gt;&gt;</span> <span>reverse</span> <span>&gt;&gt;&gt;</span> <span>take</span> <span class="hs-num">5</span> <span>&gt;&gt;&gt;</span> <span>reverse</span>
+
+<span>tabulate</span> <span style="color: red">::</span> <span>Ix</span> <span>i</span> <span style="color: red">=&gt;</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>i</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>i</span> <span style="color: red">-&gt;</span> <span>a</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Array</span> <span>i</span> <span>a</span>
+<span>tabulate</span> <span>rng</span> <span>f</span> <span style="color: red">=</span> <span>listArray</span> <span>rng</span> <span style="color: red">(</span><span>map</span> <span>f</span> <span>$</span> <span>range</span> <span>rng</span><span style="color: red">)</span>
+
+<span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
+<span>solve</span> <span>str</span> <span style="color: red">=</span> <span>cA</span><span>!</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
+  <span style="color: blue;font-weight: bold">where</span>
+    <span>n</span> <span style="color: red">=</span> <span>length</span> <span>str</span>
+    <span>s</span> <span style="color: red">=</span> <span>listArray</span> <span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">)</span> <span>str</span>
+
+    <span>cA</span> <span style="color: red">::</span> <span>Array</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span>Integer</span>
+    <span>cA</span> <span style="color: red">=</span> <span>tabulate</span> <span style="color: red">(</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span><span style="color: red">,</span><span style="color: red">(</span><span>n</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span><span style="color: red">)</span> <span>c</span>
+
+    <span>c</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Integer</span>
+    <span>c</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
+      <span style="color: red">|</span> <span>i</span> <span>==</span> <span>j</span>           <span style="color: red">=</span> <span class="hs-num">1</span>
+      <span style="color: red">|</span> <span>even</span> <span>i</span> <span>/=</span> <span>even</span> <span>j</span> <span style="color: red">=</span> <span class="hs-num">0</span>
+      <span style="color: red">|</span> <span>otherwise</span>        <span style="color: red">=</span> <span>sum</span>
+        <span style="color: red">[</span> <span>m</span> <span style="color: red">(</span><span>s</span><span>!</span><span>i</span><span style="color: red">)</span> <span style="color: red">(</span><span>s</span><span>!</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>cA</span> <span>!</span> <span style="color: red">(</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>cA</span> <span>!</span> <span style="color: red">(</span><span>k</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
+        <span style="color: red">|</span> <span>k</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span> <span>i</span><span>+</span><span class="hs-num">3</span> <span style="color: red">..</span> <span>j</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">]</span>
+        <span style="color: red">]</span>
+
+<span>m</span> <span style="color: teal">'('</span> <span style="color: teal">')'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
+<span>m</span> <span style="color: teal">'['</span> <span style="color: teal">']'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
+<span>m</span> <span style="color: teal">'{'</span> <span style="color: teal">'}'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
+<span>m</span> <span style="color: teal">'?'</span> <span style="color: teal">'?'</span>                <span style="color: red">=</span> <span class="hs-num">3</span>
+<span>m</span> <span>b</span> <span style="color: teal">'?'</span> <span style="color: red">|</span> <span>b</span> <span>`elem`</span> <span style="color: teal">"([{"</span> <span style="color: red">=</span> <span class="hs-num">1</span>
+<span>m</span> <span style="color: teal">'?'</span> <span>b</span> <span style="color: red">|</span> <span>b</span> <span>`elem`</span> <span style="color: teal">")]}"</span> <span style="color: red">=</span> <span class="hs-num">1</span>
+<span>m</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: blue;font-weight: bold">_</span>                    <span style="color: red">=</span> <span class="hs-num">0</span></code></pre>
+<h2 id="coming-up-next-automatic-memoization">
+Coming up next: automatic memoization!
+</h2>
+<p>
+So what’s not to like about this solution? Well, I still don’t like the fact that we have to define a mutually recursive array and function. Conceptually, I want to name them both <code>c</code> (or whatever) since they are really isomorphic representations of the exact same mathematical function. It’s annoying that I have to make up a name like <code>cA</code> or <code>c’</code> or whatever for one of them. I also don’t like that we have to remember to do array lookups instead of recursive calls in the function—and if we forget, Haskell will not complain! It will just be really slow.
+</p>
+<p>
+Next time, we’ll see how to use some clever ideas from Conal Elliot’s <a href="https://hackage.haskell.org/package/MemoTrie"><code>MemoTrie</code> package</a> (which themselves ultimately came from <a href="https://citeseerx.ist.psu.edu/doc/10.1.1.43.3272">a paper by Ralf Hinze</a>) to solve these remaining issues and end up with some really beautiful code!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

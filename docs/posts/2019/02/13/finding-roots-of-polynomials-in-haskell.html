@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Finding roots of polynomials in Haskell?</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2018/11/04/hendrix-teams-at-acm-icpc.html">« Hendrix teams at ACM ICPC</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2019/02/16/worstsort.html">» Worstsort</a>
+
+</span>
+
+
+<h1>Finding roots of polynomials in Haskell?</h1>
+
+<div class="info">
+  Posted on February 13, 2019
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'diagrams'." href="../../../../tag/diagrams.html" rel="tag">diagrams</a>, <a title="All pages tagged 'finding'." href="../../../../tag/finding.html" rel="tag">finding</a>, <a title="All pages tagged 'polynomial'." href="../../../../tag/polynomial.html" rel="tag">polynomial</a>, <a title="All pages tagged 'root'." href="../../../../tag/root.html" rel="tag">root</a>, <a title="All pages tagged 'solve'." href="../../../../tag/solve.html" rel="tag">solve</a>
+  
+</div>
+
+<section>
+<p>
+<strong>tl;dr</strong>: <em>There are several Haskell packages one can use to find an individual root of a function on a certain interval. But I’ve had less luck finding a suitable package for finding all the roots of a given polynomial. This blog post consists of my notes and a plea for help.</em>
+</p>
+<p>
+The <a href="http://hackage.haskell.org/package/diagrams-solve"><code>diagrams-solve</code> package</a> contains miscellaneous numeric solving routines used in <a href="http://diagrams.github.io">diagrams</a>, including tridiagonal and cyclic tridiagonal linear system solvers (used for generating cubic splines and <a href="http://hackage.haskell.org/package/diagrams-contrib-1.4.3/docs/Diagrams-TwoD-Path-Metafont.html">emulating Metafont paths</a>) as well as functions for finding roots of low-dimensional polynomials (quadratic, cubic, and quartic). Solving quadratics is used in a bunch of places; solving cubics is needed specifically for doing interior/exterior testing on closed loops built from cubic Bezier curves; thankfully we have never needed to solve a quartic or higher.
+</p>
+<p>
+Unfortunately, the polynomial root solvers are pretty naive: I simply transcribed some formulas (which is why it <a href="https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem">only goes up to quartics</a>). This works OK a lot of the time, but the formulas are very numerically unstable, and it’s not hard to come up with example inputs where the returned roots are off by quite a bit. In fact, people <a href="https://github.com/diagrams/diagrams-solve/issues/4">regularly run into this</a> when running the test suite. I am not specifically aware of any diagrams bugs that have arisen in actual practice due to the cubic solutions being off, but it’s probably just a matter of time.
+</p>
+<p>
+So I decided it was finally time to look into better root-finding methods. This blog post is both a plea for help and a place to write down some of the things I’ve learned so far.
+</p>
+<h2 id="theres-root-finding-and-then-theres-root-finding">
+There’s root finding, and then there’s root finding
+</h2>
+<p>
+The first thing to get out of the way is that when you talk about “root finding” there are (at least!) two pretty different things you could mean:
+</p>
+<ol type="1">
+<li>
+Given a function <span class="math inline">\(f\)</span> and some particular interval, or an initial guess, find a value <span class="math inline">\(x\)</span> in the interval/close to the initial guess for which <span class="math inline">\(f(x) = 0\)</span>.
+</li>
+<li>
+Given a polynomial with {real, complex} coefficients, find all its {real, complex} roots.
+</li>
+</ol>
+<p>
+If you want to do (1), there are several nice Haskell packages you could use. The <a href="http://hackage.haskell.org/package/math-functions-0.3.1.0/docs/Numeric-RootFinding.html"><code>Numeric.RootFinding</code> module</a> from the <a href="http://hackage.haskell.org/package/math-functions"><code>math-functions</code> package</a> is probably your best bet; it implements both Ridders’ method and the Newton-Raphson method, which both attempt to find a single root of a function on a given interval. They both work on any continuous <code>Double -&gt; Double</code> function, not just polynomials (Newton-Raphson also needs to know the first derivative). But they don’t work well if you don’t already have an interval in mind to search; and if you want to find <em>all</em> the roots you have to call these multiple times (somehow coming up with an appropriate interval each time).
+</p>
+<p>
+As for (2), I haven’t been able to find anything that would work well for <code>diagrams-solve</code>. Here are my notes:
+</p>
+<ul>
+<li>
+<p>
+The <a href="https://hackage.haskell.org/package/dsp-0.2.1"><code>dsp</code> package</a> has a <a href="https://hackage.haskell.org/package/dsp-0.2.1/docs/Polynomial-Roots.html">module <code>Polynomial.Roots</code></a> containing an implementation of <a href="https://en.wikipedia.org/wiki/Laguerre%27s_method">Laguerre’s method</a>, which finds all the (complex) roots of a polynomial. However, the <code>dsp</code> package is a rather heavyweight dependency to pull in just for the root-finding code; it’s also licensed under the GPL and I’d like to avoid having to “infect” the entire diagrams ecosystem with the GPL.
+</p>
+</li>
+<li>
+<p>
+Laguerre’s method seems like it should be fairly easy to implement myself—<em>but</em> writing my own solver from scratch is how I got here in the first place; I’d really like to avoid it if possible. I am far from being an expert on numerical analysis, floating-point computation, <em>etc.</em>
+</p>
+</li>
+<li>
+<p>
+The <a href="http://hackage.haskell.org/package/hmatrix-gsl"><code>hmatrix-gsl</code> package</a> has the <a href="http://hackage.haskell.org/package/hmatrix-gsl-0.19.0.1/docs/Numeric-GSL-Polynomials.html"><code>Numeric.GSL.Polynomials</code> module</a>, which has an interface to a root finding algorithm from <a href="https://www.gnu.org/software/gsl/doc/html/index.html">GSL</a> (<a href="https://www.gnu.org/software/gsl/doc/html/poly.html#c.gsl_poly_complex_solve">apparently</a> using something called “balanced-QR reduction”), but I’d like to avoid pulling in a C library as as dependency, and also, again, GPL.
+</p>
+</li>
+<li>
+<p>
+From the <a href="https://en.wikipedia.org/wiki/Laguerre%27s_method">Wikipedia page for Laguerre’s method</a> I learned that the <a href="https://en.wikipedia.org/wiki/Jenkins%E2%80%93Traub_algorithm">Jenkins-Traub algorithm</a> is another widely used method for polynomial root-finding, and often preferred over Laguerre’s method. However, it seems rather complex, and the only Haskell implementation of Jenkins-Traub I have been able to fnid is <a href="https://github.com/frankwang95/jenkins_traub">this one</a> which seems to be just a toy implementation; I don’t even know if it works correctly.
+</p>
+</li>
+</ul>
+<p>
+If you know of a good place where I can find polynomial solving code in Haskell, can you point me to it? Or if you know more about numerics than me, could you maybe whip up a quick implementation of Laguerre’s method and put it up on Hackage?
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

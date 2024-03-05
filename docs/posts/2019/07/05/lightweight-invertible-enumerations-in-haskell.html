@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Lightweight invertible enumerations in Haskell</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2019/05/22/competitive-programming-in-haskell-scanner.html">« Competitive Programming in Haskell: Scanner</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2019/10/12/competitive-programming-in-haskell-reading-large-inputs-with-bytestring.html">» Competitive Programming in Haskell: reading large inputs with ByteString</a>
+
+</span>
+
+
+<h1>Lightweight invertible enumerations in Haskell</h1>
+
+<div class="info">
+  Posted on July  5, 2019
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'bijection'." href="../../../../tag/bijection.html" rel="tag">bijection</a>, <a title="All pages tagged 'data'." href="../../../../tag/data.html" rel="tag">data</a>, <a title="All pages tagged 'enumeration'." href="../../../../tag/enumeration.html" rel="tag">enumeration</a>, <a title="All pages tagged 'function'." href="../../../../tag/function.html" rel="tag">function</a>, <a title="All pages tagged 'index'." href="../../../../tag/index.html" rel="tag">index</a>, <a title="All pages tagged 'inverse'." href="../../../../tag/inverse.html" rel="tag">inverse</a>, <a title="All pages tagged 'sampling'." href="../../../../tag/sampling.html" rel="tag">sampling</a>
+  
+</div>
+
+<section>
+<p>
+In <a href="https://byorgey.wordpress.com/2019/05/14/lightweight-efficiently-sampleable-enumerations-in-haskell/">a previous post</a> I introduced a new Haskell library for enumerations (now on Hackage as <a href="http://hackage.haskell.org/package/simple-enumeration">simple-enumeration</a>). The <a href="http://hackage.haskell.org/package/simple-enumeration-0.2/docs/Data-Enumeration.html"><code>Data.Enumeration</code> module</a> defines a type <code>Enumeration a</code>, represented simply by a function <code>Integer -&gt; a</code> which picks out the value of type <code>a</code> at a given index. This representation has a number of advantages, including the ability to quickly index into very large enumerations, and the convenience that comes from having <code>Functor</code>, <code>Applicative</code>, and <code>Alternative</code> instances for <code>Enumeration</code>.
+</p>
+<p>
+I’ve just uploaded version 0.2 of the package, which adds a new <a href="http://hackage.haskell.org/package/simple-enumeration-0.2/docs/Data-Enumeration-Invertible.html"><code>Data.Enumeration.Invertible</code></a> module with a new type, <code>IEnumeration a</code>, representing <em>invertible</em> enumerations. Whereas a normal enumeration is just a function from index to value, an invertible enumeration is a <em>bijection</em> between indices and values. In particular, alongside the <code>Integer -&gt; a</code> function for picking out the value at an index, an invertible enumeration also stores an inverse function <code>a -&gt; Integer</code> (called <code>locate</code>) for finding the index of a given value.
+</p>
+<p>
+On the one hand, this comes at a cost: because the type parameter <code>a</code> now occurs both co- and contravariantly, <code>IEnumeration</code> i s no longer an instance of <code>Functor</code>, <code>Applicative</code>, or <code>Alternative</code>. There is a <code>mapE</code> combinator provided for mapping <code>IEnumeration a</code> to <code>IEnumeration b</code>, but in order to work it needs both an <code>a -&gt; b</code> function <em>and</em> an inverse <code>b -&gt; a</code>.
+</p>
+<p>
+On the other hand, we also gain something: of course the ability to look up the index of a value is nifty, and beyond that we also get a combinator
+</p>
+<p>
+<code>functionOf :: IEnumeration a -&gt; IEnumeration b -&gt; IEnumeration (a -&gt; b)</code>
+</p>
+<p>
+which works as long as the <code>IEnumeration a</code> is finite. This is not possible to implement with normal, non-invertible enumerations: we have to take an index and turn it into a function <code>a -&gt; b</code>, but that function has to take an <code>a</code> as input and decide what to do with it. There’s nothing we can possibly do with a value of type <code>a</code> unless we have a way to connect it back to the <code>IEnumeration a</code> it came from.
+</p>
+<p>
+Here’s a simple example of using the <code>functionOf</code> combinator to enumerate all <code>Bool -&gt; Bool</code> functions, and then locating the index of <code>not</code>:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;&gt;&gt;</span> <span>bbs</span> <span style="color:red;">=</span> <span>functionOf</span> <span style="color:red;">(</span><span>boundedEnum</span> <span style="color:red;">@</span><span>Bool</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>boundedEnum</span> <span style="color:red;">@</span><span>Bool</span><span style="color:red;">)</span>
+<span>&gt;&gt;&gt;</span> <span>card</span> <span>bbs</span>
+<span>Finite</span> <span class="hs-num">4</span>
+<span>&gt;&gt;&gt;</span> <span>locate</span> <span>bbs</span> <span>not</span>
+<span class="hs-num">2</span>
+<span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>select</span> <span>bbs</span> <span class="hs-num">2</span><span style="color:red;">)</span> <span style="color:red;">[</span><span>False</span><span style="color:red;">,</span> <span>True</span><span style="color:red;">]</span>
+<span style="color:red;">[</span><span>True</span><span style="color:red;">,</span><span>False</span><span style="color:red;">]</span></code></pre>
+<p>
+And here’s an example of enumerating recursive trees, which is parallel to an example given in <a href="https://byorgey.wordpress.com/2019/05/14/lightweight-efficiently-sampleable-enumerations-in-haskell/">my previous post</a>. Note, however, how we can no longer use combinators like <code>&lt;$&gt;</code>, <code>&lt;*&gt;</code>, and <code>&lt;|&gt;</code>, but must explicitly use <code>&lt;+&gt;</code> (disjoint sum of enumerations) and <code>&gt;&lt;</code> (enumeration product) in combination with <code>mapE</code>. In return, though, we can find the index of any given tree in addition to selecting trees by index.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">data</span> <span>Tree</span> <span style="color:red;">=</span> <span>L</span> <span style="color:red;">|</span> <span>B</span> <span>Tree</span> <span>Tree</span>
+  <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span>
+
+<span>toTree</span> <span style="color:red;">::</span> <span>Either</span> <span>()</span> <span style="color:red;">(</span><span>Tree</span><span style="color:red;">,</span> <span>Tree</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>Tree</span>
+<span>toTree</span> <span style="color:red;">=</span> <span>either</span> <span style="color:red;">(</span><span>const</span> <span>L</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>uncurry</span> <span>B</span><span style="color:red;">)</span>
+
+<span>fromTree</span> <span style="color:red;">::</span> <span>Tree</span> <span style="color:red;">-&gt;</span> <span>Either</span> <span>()</span> <span style="color:red;">(</span><span>Tree</span><span style="color:red;">,</span> <span>Tree</span><span style="color:red;">)</span>
+<span>fromTree</span> <span>L</span>       <span style="color:red;">=</span> <span>Left</span> <span>()</span>
+<span>fromTree</span> <span style="color:red;">(</span><span>B</span> <span>l</span> <span>r</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Right</span> <span style="color:red;">(</span><span>l</span><span style="color:red;">,</span><span>r</span><span style="color:red;">)</span>
+
+<span>trees</span> <span style="color:red;">::</span> <span>IEnumeration</span> <span>Tree</span>
+<span>trees</span> <span style="color:red;">=</span> <span>infinite</span> <span>$</span> <span>mapE</span> <span>toTree</span> <span>fromTree</span> <span style="color:red;">(</span><span>unit</span> <span>&lt;+&gt;</span> <span style="color:red;">(</span><span>trees</span> <span>&gt;&lt;</span> <span>trees</span><span style="color:red;">)</span><span style="color:red;">)</span>
+
+<span>&gt;&gt;&gt;</span> <span>locate</span> <span>trees</span> <span style="color:red;">(</span><span>B</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span>L</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>B</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span>L</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span>L</span><span style="color:red;">)</span><span style="color:red;">)</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span class="hs-num">123</span>
+<span>&gt;&gt;&gt;</span> <span>select</span> <span>trees</span> <span class="hs-num">123</span>
+<span>B</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span>L</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>B</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span>L</span><span style="color:red;">)</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span style="color:red;">(</span><span>B</span> <span>L</span> <span>L</span><span style="color:red;">)</span><span style="color:red;">)</span><span style="color:red;">)</span></code></pre>
+<p>
+Of course, the original <code>Data.Enumeration</code> module remains available; there is clearly an inherent tradeoff to invertibility, and you are free to choose either style depending on your needs. Other than the tradeoffs outlined above and a couple other minor exceptions, the two modules export largely identical APIs.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

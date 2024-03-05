@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Signed sets and ballots, part 1</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2017/02/10/virtual-species-suffice.html">« Virtual species suffice</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2017/02/24/signed-sets-and-ballots-part-2.html">» Signed sets and ballots, part 2</a>
+
+</span>
+
+
+<h1>Signed sets and ballots, part 1</h1>
+
+<div class="info">
+  Posted on February 21, 2017
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'ballots'." href="../../../../tag/ballots.html" rel="tag">ballots</a>, <a title="All pages tagged 'bijection'." href="../../../../tag/bijection.html" rel="tag">bijection</a>, <a title="All pages tagged 'involution'." href="../../../../tag/involution.html" rel="tag">involution</a>, <a title="All pages tagged 'sets'." href="../../../../tag/sets.html" rel="tag">sets</a>, <a title="All pages tagged 'signed'." href="../../../../tag/signed.html" rel="tag">signed</a>, <a title="All pages tagged 'species'." href="../../../../tag/species.html" rel="tag">species</a>, <a title="All pages tagged 'virtual'." href="../../../../tag/virtual.html" rel="tag">virtual</a>
+  
+</div>
+
+<section>
+<p>
+The other day, <a href="http://akc.is/">Anders Claesson</a> wrote a <a href="http://akc.is/blog/2017-02-18-Inverse-species-and-sign-reversing-involutions.html">very nice blog post</a> explaining a more combinatorial way to understand multiplicative inverses of virtual species (as opposed to the <a href="https://byorgey.wordpress.com/2017/02/10/virtual-species-suffice/">rather algebraic way I explained it in my previous post</a>). In the middle of his post he makes an offhanded assumption which I stubbornly refused to take at face value; after thinking about it for a while and discussing it with Anders, I’m very glad I did, because there’s definitely more going on here than meets the eye and it’s given me a lot of interesting things to think about.
+</p>
+<p>
+<a href="https://byorgey.wordpress.com/2013/01/07/the-algebra-of-species-primitives/">Recall</a> that <span class="math inline">\(E\)</span> denotes the species of <em>sets</em>, defined by <span class="math inline">\(E[U] = \{U\}\)</span>, that is, the only <span class="math inline">\(E\)</span>-structure on a given label set <span class="math inline">\(U\)</span> is the set of labels itself. Recall also that the <em>exponential generating function</em> of a species <span class="math inline">\(F\)</span> is given by
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle F(x) = \sum_{n \geq 0} f_n \frac{x^n}{n!}\)</span></p>
+</div>
+</p>
+<p>
+where <span class="math inline">\(f_n\)</span> counts the number of labelled <span class="math inline">\(F\)</span>-structures of size <span class="math inline">\(n\)</span>. In the case of <span class="math inline">\(E\)</span>, we have <span class="math inline">\(f_n = 1\)</span> for all <span class="math inline">\(n\)</span>, so
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle E(x) = \sum_{n \geq 0} \frac{x^n}{n!} = e^x.\)</span></p>
+</div>
+</p>
+<p>
+(This is why <span class="math inline">\(E\)</span> is such a good name for the species of sets—though in a fantastic coincidence, it seems to originally come from the French word for set, <em>ensemble</em>, rather than from the fact that <span class="math inline">\(E(x) = e^x\)</span> (though on the other hand calling it a “coincidence” is probably too strong, since Joyal must surely have picked the notation with the generating function already in mind!).)
+</p>
+<p>
+Now, from <a href="https://byorgey.wordpress.com/2017/02/10/virtual-species-suffice/">my previous post</a> we know that
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle E^{-1} = (1 + E_+)^{-1} = \sum_{k \geq 0} (-1)^k (E_+)^k.\)</span></p>
+</div>
+</p>
+<p>
+Let’s first consider <span class="math inline">\(\sum_k (E_+)^k\)</span> (without the <span class="math inline">\((-1)^k\)</span>). This means that we have, for some <span class="math inline">\(k \geq 0\)</span>, a <span class="math inline">\(k\)</span>-ary product of <span class="math inline">\(E_+\)</span> structures—in other words, a <em>list</em> of nonempty sets. This is the species of <em>ballots</em>, also known as <em>ordered set partitions</em>, and can also be written <span class="math inline">\(L \circ E_+\)</span>. As an example, here is a ballot on the set of labels <span class="math inline">\(\{1, \dots, 8\}\)</span>:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2017/02/c2e7cb4f515e8038.png" />
+</p>
+</div>
+<p>
+The order of the parts matters, so this is a different ballot:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2017/02/59ddb0d0198f3856.png" />
+</p>
+</div>
+<p>
+But the order of labels <em>within</em> each part doesn’t matter (since each part is a set). As another example, here is the complete collection of ballot structures on the labels <span class="math inline">\(\{1,2,3\}\)</span>:
+</p>
+<div style="text-align:center;">
+<p>
+<img src="http://byorgey.files.wordpress.com/2017/02/8b59608fc2f5cd9e.png" />
+</p>
+</div>
+<p>
+We can see that there are 13 in total: six where the labels are each in their own separate part (corresponding to the six possible permutations of the labels); six where two labels share a part and the other label is a singleton part (corresponding to the three ways to choose the solitary label, times the two ways to order the parts); and one final ballot where all three labels are grouped in the same part. (As an exercise, can you verify that there are 75 different ballot structures on a set of four labels?)
+</p>
+<p>
+Returning to <span class="math inline">\(E^{-1} = \sum_k (-1)^k (E_+)^k\)</span>, we can see that it consists of <em>signed</em> ballots, where the sign of a ballot is the parity of its number of parts, that is, a ballot with <span class="math inline">\(k\)</span> parts has sign <span class="math inline">\((-1)^k\)</span>. The second half of <a href="http://akc.is/blog/2017-02-18-Inverse-species-and-sign-reversing-involutions.html">Anders’ post</a> gives a nice combinatorial proof that <span class="math inline">\(E \cdot E^{-1} = 1\)</span>, via a sign-reversing involution: if we consider <span class="math inline">\(E \cdot E^{-1}\)</span>-structures, <em>i.e.</em> pairs of sets and signed ballots, there is a natural<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> way to pair them up, matching positive and negative structures so everything cancels (except in the case of the empty label set, which is why we get <span class="math inline">\(1\)</span> instead of <span class="math inline">\(0\)</span>).
+</p>
+<p>
+However, Anders is trying to do more than that. Note first that since multiplication of EGFs corresponds to multiplication of species, the EGF for <span class="math inline">\(E^{-1}\)</span> is of course <span class="math inline">\(1/e^x = e^{-x}\)</span>. But this ought to also be the EGF for the virtual species <span class="math inline">\(E(-X)\)</span>, and the rest of his post hinges on identifying <span class="math inline">\(E(-X)\)</span> and <span class="math inline">\(E^{-1}\)</span>. As Anders and I discovered, however, this is precisely the point where it is worth being more careful.
+</p>
+<p>
+First of all, what <em>is</em> <span class="math inline">\(E(-X)\)</span>? Intuitively, an <span class="math inline">\(E(-X)\)</span> structure consists of a set of <em>negative</em> atoms; since each set can be thought of as an (unordered) product of atoms, the whole set acquires a sign given by the parity of the number of atoms. In other words, intuitively it seems that <span class="math inline">\(E(-X)\)</span> should be the species of <em>signed sets</em>, where an even-sized set is considered positive and an odd-sized set negative. That is,
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle E(-X) = \sum_{n \geq 0} (-1)^n E_n,\)</span></p>
+</div>
+</p>
+<p>
+where <span class="math inline">\(E_n\)</span> denotes the species of sets of size exactly <span class="math inline">\(n\)</span>. As a sanity check, this makes sense as an EGF equation too, since the EGF of <span class="math inline">\(E_n\)</span> is just <span class="math inline">\(x^n/n!\)</span> and indeed
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle e^{-x} = \sum_{n \geq 0} \frac{(-x)^n}{n!} = \sum_{n \geq 0} (-1)^n \frac{x^n}{n!}.\)</span></p>
+</div>
+</p>
+<p>
+But hold on a minute, what does <span class="math inline">\(E(-X)\)</span> really mean, formally? It is the composition of the species <span class="math inline">\(E\)</span> with the virtual species <span class="math inline">\(-X\)</span>, and it turns out that it is not at all <em>a priori</em> obvious how to define composition for virtual species! We can find the definition on <a href="https://books.google.com/books?id=83odtWY4eogC&amp;q=127#v=snippet&amp;q=127&amp;f=false">p. 127 of Bergeron <em>et al.</em></a> A special case (which is enough for our present purposes) is
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle \Phi(X - Y) = \Phi(X + Y) \times (E(X)E^{-1}(Y))\)</span></p>
+</div>
+</p>
+<p>
+where <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are two sorts of atoms, and <span class="math inline">\(\times\)</span> denotes <em>Cartesian</em> product of species. In our case,
+</p>
+<p>
+<div style="text-align:center;">
+<p><span class="math inline">\(\displaystyle E(0 - X) = E(0 + X) \times ((E(0) E^{-1}(X)) = E(X) \times E^{-1}(X) = E^{-1}(X)\)</span></p>
+</div>
+</p>
+<p>
+since <span class="math inline">\(E\)</span> is the identity for Cartesian product (overlaying an additional <span class="math inline">\(E\)</span> structure on a set of labels does not add any structure, since there is only one possible <span class="math inline">\(E\)</span>-structure).
+</p>
+<p>
+All of this is to say, <span class="math inline">\(E(-X)\)</span> is actually <em>defined as</em> <span class="math inline">\(E^{-1}\)</span>! So at first glance it may seem we actually have nothing to prove: <span class="math inline">\(E(-X)\)</span> and <span class="math inline">\(E^{-1}\)</span> are the same by definition, end of story. …but in fact, all we have done is shift the burden of proof elsewhere: now it is our intuitive idea of <span class="math inline">\(E(-X)\)</span> representing signed sets that requires proof!
+</p>
+<p>
+To sum up, we know that <span class="math inline">\(E(-X) = E^{-1} = \sum_k (-1)^k (E_+)^k\)</span> is the species of signed ballots, with sign given by parity of the number of parts; and intuitively, we also believe that <span class="math inline">\(E(-X)\)</span> should correspond to parity-signed sets, <span class="math inline">\(\sum_n (-1)^n E_n\)</span>. So, is there a nice <em>combinatorial</em> proof showing the correspondence between signed sets and signed ballots?
+</p>
+<p>
+One can use the law of excluded middle to show that the answer must be “yes”: suppose the answer were “no”; but then I would not be writing this blog post, which is a contradiction since I <em>am</em> writing this blog post. But is there a constructive proof? Fear not! This blog post has gotten long enough, so I will stop here for now and let interested readers puzzle over it; in my next post I will explain what I came up with, along with some musings on linear orders and naturality.
+</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1">
+<p>
+I am indeed using the word <em>natural</em> in a technical, categorical sense here! This will play an important role in my second post…<a href="#fnref1">↩︎</a>
+</p>
+</li>
+</ol>
+</div>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

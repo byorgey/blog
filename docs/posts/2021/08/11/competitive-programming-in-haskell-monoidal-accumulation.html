@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: monoidal accumulation</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2021/06/24/types-versus-sets-in-math-and-programming-languages.html">« Types versus sets in math and programming languages</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2021/09/08/implementing-hindley-milner-with-the-unification-fd-library.html">» Implementing Hindley-Milner with the unification-fd library</a>
+
+</span>
+
+
+<h1>Competitive programming in Haskell: monoidal accumulation</h1>
+
+<div class="info">
+  Posted on August 11, 2021
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>
+  
+</div>
+
+<section>
+<p>
+In <a href="https://byorgey.wordpress.com/2021/06/19/competitive-programming-in-haskell-folding-folds/">my last competitive programming post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/pleasegofirst">Please, Go First</a>. In that problem, we are presented with a hypothetical scenario with people waiting in a queue for a ski lift. Each person is part of a friend group (possibly just themselves), but friend groups are not necessarily consecutive in line; when someone gets to the top they will wait for the last person in their friend group to arrive before skiing. We are asked to consider how much waiting time could be saved if people start letting others go ahead of them in line as long as it doesn’t cost them any waiting time and decreases the waiting time for the others.
+</p>
+<p>
+There is actually a bit of ambiguity that we need to resolve first; to be honest, it’s not the most well-written problem statement. Consider this scenario, with three people in group <span class="math inline">\(A\)</span> and two in group <span class="math inline">\(b\)</span>:
+</p>
+<div style="text-align:center;">
+<p>
+<span class="math inline">\(A_1b_1A_2A_3b_2\)</span>
+</p>
+</div>
+<p>
+Consider the person labelled <span class="math inline">\(b_1\)</span>. Should they let <span class="math inline">\(A_2\)</span> pass? Letting <span class="math inline">\(A_2\)</span> pass would not change <span class="math inline">\(b_1\)</span>’s waiting time: they have to wait for <span class="math inline">\(b_2\)</span> anyway and it does not matter whether they do the waiting at the top or bottom of the mountain. But it would not immediately change <span class="math inline">\(A_2\)</span>’s waiting time, either: they still have to wait for <span class="math inline">\(A_3\)</span>. What the problem literally says is “someone lets another pass if doing this doesn’t change his own total waiting time, but saves time for the other person”, so taking this literally would seem to imply that in this scenario <span class="math inline">\(b_1\)</span> does <em>not</em> let <span class="math inline">\(A_2\)</span> pass. However, the given example inputs and outputs imply that in this scenario <span class="math inline">\(b_1\)</span> <em>should</em> let <span class="math inline">\(A_2\)</span> pass; indeed, right after doing so, <span class="math inline">\(b_1\)</span> can then let <span class="math inline">\(A_3\)</span> pass as well, which saves time for both <span class="math inline">\(A_3\)</span> and <span class="math inline">\(A_2\)</span>. So in the end, it seems we really want to say something like “<span class="math inline">\(x\)</span> should let <span class="math inline">\(y\)</span> pass if it doesn’t increase <span class="math inline">\(x\)</span>’s waiting time and will eventually save time for <span class="math inline">\(y\)</span>”.
+</p>
+<h2 id="the-solution-idea">
+The solution idea
+</h2>
+<p>
+It took me an embarrassingly long time to come up with the following key insight: after doing this process as much as possible, I claim that (1) all the friends within each friend group will be consecutive, and (2) the groups will be sorted by the original position of the <em>last</em> person in each group. To see why claim (2) is true, note that whenever someone is last in their friend group, moving backward in the line always increases their waiting time; so any two people who are both last in their friend group will never pass each other, since it would make the waiting time worse for the one who moves backward. That means the people who are last in their friend group will always remain in the same relative order. As for claim (1), I thought about it for a while and am so far unable to come up with a short, convincing proof, though I still believe it is true (and my solution based on it was accepted). If anyone has a good way to show why this must be true, I’d love to hear about it in the comments.
+</p>
+<p>
+My second key insight is that the total amount of time saved for a given friend group depends only on (1) how many people are in the group and (2) how many places the last person in the group got to move up (although there are other ways to solve the problem; more below). In particular, the total time saved for the group will be the product of these two numbers, times five minutes. It’s irrelevant how many places someone moves if they are not last in their group, because they have to wait until that last person arrives, and it makes no difference if they do their waiting at the top or bottom of the mountain.
+</p>
+<h2 id="my-solution">
+My solution
+</h2>
+<p>
+So here’s my solution, based on the above insights. First, let’s set up the main pipeline to read the input, solve each test case, and produce the output.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>main</span> <span style="color:red;">=</span> <span>C.interact</span> <span>$</span>
+  <span>runScanner</span> <span style="color:red;">(</span><span>numberOf</span> <span style="color:red;">(</span><span>int</span> <span>*&gt;</span> <span>str</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>solve</span> <span>&gt;&gt;&gt;</span> <span>showB</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>C.unlines</span></code></pre>
+<p>
+<code>showB</code> is just a utility function I’ve recently added to my solution template which calls <code>show</code> and then converts the result to a <code>ByteString</code> using <code>pack</code>.
+</p>
+<p>
+For a given test case, we need to first do a pass through the lift queue in order to accumulate some information about friend groups: for each group, we need to know how big it is, as well as the index of the last member of the group. In an imperative language, we would make accumulator variables to hold this information (probably two maps, <em>aka</em> dictionaries), and then iterate through the queue, imperatively updating the accumulator variables for each item. We can translate that approach more or less mechanically into Haskell, by having an update function that takes a single item and a tuple of accumulators as input, and returns a new tuple of accumulators as output. This is the <a href="https://gist.github.com/aaronallen8455/5f73e76428bf8ed8566457d032ccf90f">approach taken by Aaron Allen</a>, and sometimes that’s the best way to do something like this. However, in this particular scenario—looping over a list and accumulating some information—the accumulators are often monoidal, which gives us much nicer tools to work with, such as <code>foldMap</code> and <code>Data.Map.fromListWith (&lt;&gt;)</code>.
+</p>
+<p>
+We’ll make a type <code>Group</code> to represent the needed information about a friend group: the number of people and the index of the last person. We can use <a href="https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/deriving_via.html"><code>DerivingVia</code></a> to create an appropriate <code>Semigroup</code> instance for it (in this case we actually don’t need <code>Monoid</code> since there is no such thing as an empty group). Note that we use <code>First Int</code> instead of the expected <code>Last Int</code>; this is explained below.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:blue;font-weight:bold;">newtype</span> <span>Group</span> <span style="color:red;">=</span> <span>Group</span> <span style="color:red;">{</span> <span>unGroup</span> <span style="color:red;">::</span> <span style="color:red;">(</span><span>Int</span><span style="color:red;">,</span> <span>Int</span><span style="color:red;">)</span> <span style="color:red;">}</span>
+  <span style="color:blue;font-weight:bold;">deriving</span> <span>Semigroup</span> <span>via</span> <span style="color:red;">(</span><span>Sum</span> <span>Int</span><span style="color:red;">,</span> <span>First</span> <span>Int</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">deriving</span> <span>Show</span></code></pre>
+<p>
+Now we can write the code to calculate the total time save for a given starting queue.
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color:red;">::</span> <span>ByteString</span> <span style="color:red;">-&gt;</span> <span>Int</span>
+<span>solve</span> <span style="color:red;">(</span><span>C.unpack</span> <span style="color:red;">-&gt;</span> <span>queue</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>timeSaved</span>
+  <span style="color:blue;font-weight:bold;">where</span></code></pre>
+<p>
+We first map over the queue and turn each item into a singleton <code>Group</code> (<code>imap</code> is a utility to do an indexed map, with type <code>(Int -&gt; a -&gt; b) -&gt; [a] -&gt; [b]</code>); then we use <code>M.fromListWith (&lt;&gt;)</code> to build a <code>Map</code> associating each distinct character to a <code>Group</code>. The <code>Semigroup</code> instance will take care of summing the number of friends and keeping only the last index in each group. Note that <code>fromListWith</code> is implemented via a left fold, which explains why we needed to use <code>First Int</code> instead of <code>Last Int</code>: the list items will actually be combined in reverse order. (Alternatively, we could use <code>Last Int</code> and <code>M.fromListWith (flip (&lt;&gt;))</code>; of course, this is only something we need to worry about when using a non-commutative <code>Semigroup</code>).
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>groupInfo</span> <span style="color:red;">::</span> <span>Map</span> <span>Char</span> <span>Group</span>
+    <span>groupInfo</span> <span style="color:red;">=</span> <span>queue</span> <span>&gt;$&gt;</span> <span>imap</span> <span style="color:red;">(</span><span style="color:red;">\</span><span>i</span> <span>c</span> <span style="color:red;">-&gt;</span> <span style="color:red;">(</span><span>c</span><span style="color:red;">,</span> <span>Group</span> <span style="color:red;">(</span><span class="hs-num">1</span><span style="color:red;">,</span> <span>i</span><span style="color:red;">)</span><span style="color:red;">)</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>M.fromListWith</span> <span style="color:red;">(</span><span>&lt;&gt;</span><span style="color:red;">)</span></code></pre>
+<p>
+Now we can sort the queue by index of the last member of each friend group, producing its final form:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>sortedQueue</span> <span style="color:red;">=</span> <span>sortOn</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>groupInfo</span><span>!</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>unGroup</span> <span>&gt;&gt;&gt;</span> <span>snd</span><span style="color:red;">)</span> <span>queue</span></code></pre>
+<p>
+Computing the total time saved is now just a matter of figuring out how much each last friend moved and summing the time save for each friend group:
+</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    <span>timeSaved</span> <span style="color:red;">=</span> <span>sortedQueue</span> <span>&gt;$&gt;</span> <span>zip</span> <span style="color:red;">[</span><span class="hs-num">0</span> <span style="color:red;">::</span> <span>Int</span> <span style="color:red;">..</span><span style="color:red;">]</span>   <span style="color:green;">-- final positions</span>
+      <span>&gt;&gt;&gt;</span> <span>groupBy</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>==</span><span style="color:red;">)</span> <span>`on`</span> <span>snd</span><span style="color:red;">)</span>                   <span style="color:green;">-- put groups together</span>
+      <span>&gt;&gt;&gt;</span> <span>map</span> <span style="color:red;">(</span><span>last</span> <span>&gt;&gt;&gt;</span> <span>timeSaveForGroup</span><span style="color:red;">)</span> <span>&gt;&gt;&gt;</span> <span>sum</span>
+        <span style="color:green;">-- get the time save based on the last person in each group</span>
+
+    <span>timeSaveForGroup</span> <span style="color:red;">(</span><span>i</span><span style="color:red;">,</span><span>c</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span class="hs-num">5</span> <span>*</span> <span>size</span> <span>*</span> <span style="color:red;">(</span><span>idx</span> <span style="color:green;">-</span> <span>i</span><span style="color:red;">)</span>
+      <span style="color:blue;font-weight:bold;">where</span>
+        <span>Group</span> <span style="color:red;">(</span><span>size</span><span style="color:red;">,</span> <span>idx</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>groupInfo</span><span>!</span><span>c</span></code></pre>
+<p>
+This is not the fastest way to solve the problem—in fact, my solution is slowest of the five Haskell solutions so far!—but I wanted to illustrate this technique of accumulating over an array using a <code>Semigroup</code> and <code>M.fromListWith</code>. <code>foldMap</code> can be used similarly when we need just a single result value rather than a <code>Map</code> of some sort.
+</p>
+<h2 id="other-solutions">
+Other solutions
+</h2>
+<p>
+Several people linked to their own solutions. I already mentioned Aaron Allen’s solution above. <a href="https://github.com/anurudhp/CPHaskell/blob/master/contests/kattis/pleasegofirst.hs">Anurudh Peduri’s solution</a> works by computing the initial and final wait time for each group and subtracting; notably, it simply sorts the groups alphabetically, not by index of the final member of the group. I don’t quite understand it, but I <em>think</em> this works because the initial and final wait times would change by the same amount when permuting the groups in line, so ultimately this cancels out.
+</p>
+<p>
+<a href="https://github.com/TimPut/KattisProblems/blob/master/pleasegofirst.hs">Tim Put’s solution</a> is by far the fastest (and, in my opinion, the cleverest). For each friend in a friend group, it computes the number of people in other friend groups who stand between them and the last person in their group (using a clever combination of functions including <code>ByteString.elemIndices</code>). Each such person represents a potential time save of 5 minutes, all of which will be realized once the groups are all consecutive. Hence all we have to do is sum these numbers and multiply by 5. It is instructive thinking about why this works. It does <em>not</em> compute the actual time saved by each group, just the <em>potential time save</em> represented by each group. That potential time save might be realized by the group itself (if the last person in the group gets to move up) or by a different group (if someone in the group lets others go ahead of them). Ultimately, though, it does not matter how much time is saved by each group, only the total amount of time saved.
+</p>
+<h2 id="next-time-purple-rain">
+Next time: Purple Rain
+</h2>
+<p>
+For next time, I invite you to solve <a href="https://open.kattis.com/problems/purplerain">Purple Rain</a>. This problem has a solution which is “well known” in competitive programming (if you need a hint, ybbx hc Xnqnar’f Nytbevguz); the challenge is to translate it into idiomatic (and, ideally, reusable) Haskell.
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Monad transformers: a cautionary tale</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2013/04/25/random-binary-trees-with-a-size-limited-critical-boltzmann-sampler-2.html">« Random binary trees with a size-limited critical Boltzmann sampler</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2013/05/13/workshop-on-functional-art-music-modeling-and-design.html">» Workshop on Functional Art, Music, Modeling and Design</a>
+
+</span>
+
+
+<h1>Monad transformers: a cautionary tale</h1>
+
+<div class="info">
+  Posted on April 29, 2013
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'commutative'." href="../../../../tag/commutative.html" rel="tag">commutative</a>, <a title="All pages tagged 'monad'." href="../../../../tag/monad.html" rel="tag">monad</a>, <a title="All pages tagged 'random'." href="../../../../tag/random.html" rel="tag">random</a>, <a title="All pages tagged 'transformer'." href="../../../../tag/transformer.html" rel="tag">transformer</a>
+  
+</div>
+
+<section>
+<p>
+When writing the code in <a href="http://byorgey.wordpress.com/2013/04/25/random-binary-trees-with-a-size-limited-critical-boltzmann-sampler-2/">my previous post</a>, I wanted to have a monad which combined the ability to generate random numbers with the ability to fail. Naturally, I decided to use <code>RandT Maybe</code>. But when I tried to write a failing computation of this type, I got a type error:
+</p>
+<pre><code>    No instance for (MonadPlus (RandT StdGen Maybe))
+      arising from a use of `mzero'</code></pre>
+<p>
+It seems that no one ever bothered to add a <code>MonadPlus</code> instance for <code>RandT</code>. Well, that’s easy to fix. Since <code>RandT</code> is just a newtype wrapper around <code>StateT</code> we can even derive a <code>MonadPlus</code> instance automatically using <code>-XGeneralizedNewtypeDeriving</code>. So I modified the <code>MonadRandom</code> package, and everything worked great.
+</p>
+<p>
+…That is, everything worked great until I started to get some strange behavior—sometimes computations would hang when I expected them to complete quickly. I finally was able to boil it down to the following minimal example. <code>foo</code> succeeds or fails with equal probability; <code>bar</code> reruns <code>foo</code> until it succeeds.
+</p>
+<pre><code><span>foo</span> <span style="color:red;">::</span> <span>RandT</span> <span>StdGen</span> <span>Maybe</span> <span>()</span>
+<span>foo</span> <span style="color:red;">=</span> <span style="color:blue;font-weight:bold;">do</span>
+  <span>r</span> <span style="color:red;">&lt;-</span> <span>getRandomR</span> <span style="color:red;">(</span><span class="hs-num">0</span><span style="color:red;">,</span><span class="hs-num">1</span><span style="color:red;">)</span>
+  <span style="color:blue;font-weight:bold;">if</span> <span>r</span> <span>&lt;</span> <span class="hs-num">1</span><span>/</span><span class="hs-num">2</span> <span style="color:blue;font-weight:bold;">then</span> <span>return</span> <span>()</span> <span style="color:blue;font-weight:bold;">else</span> <span>mzero</span>
+
+<span>bar</span> <span style="color:red;">::</span> <span>RandT</span> <span>StdGen</span> <span>Maybe</span> <span>()</span>
+<span>bar</span> <span style="color:red;">=</span> <span>foo</span> <span>`mplus`</span> <span>bar</span></code></pre>
+<p>
+Seems straightforward, right? <code>bar</code> should always succeed pretty much instantly, since there’s only a <span class="math inline">\(1/2^n\)</span> chance that it will have to call <code>foo</code> <span class="math inline">\(n\)</span> times.
+</p>
+<p>
+However, this is not what happens: some of the time <code>bar</code> returns instantly as expected, and some of the time it hangs in what seems like an infinite loop! What gives?
+</p>
+<p>
+Have you figured it out yet? (If you like these sorts of puzzles you might want to stop and see if you can figure out what was going on.) The problem is that the <code>mplus</code> operation for <code>RandT StdGen Maybe</code> runs both of its arguments with the same random seed! In other words, when a computation fails the generator state gets thrown away. And if we think about how monad transformers work this is actually not surprising. We have the following isomorphisms:
+</p>
+<pre><code>   RandT StdGen Maybe ()
+== StateT StdGen Maybe ()
+== StdGen -&gt; Maybe ((), StdGen)</code></pre>
+<p>
+So when a computation fails you just get <code>Nothing</code>—in particular you <em>don’t</em> get to see what the new <code>StdGen</code> value would have been, so you can’t (say) pass it along to the second argument of <code>mplus</code>. The upshot is that <code>bar</code> succeeds if the first call to <code>foo</code> happens to succeed; otherwise it simply keeps calling <code>foo</code> with the exact same seed and <code>foo</code> keeps failing every time.
+</p>
+<p>
+The general principle here is that “the effects of inner monad transformers take precedence over the effects of outer transformers”—in this case the failure effect of the inner <code>Maybe</code> takes precedence and causes the random generator state to be lost.
+</p>
+<p>
+So what I really wanted was <code>MaybeT (Rand StdGen)</code>, which—after adding a <code>MonadRandom</code> instance for <code>MaybeT</code>, now released as <a href="http://hackage.haskell.org/package/MonadRandom"><code>MonadRandom</code>-0.1.9</a>—works perfectly.
+</p>
+<p>
+The moral of the story: monad transformers aren’t (in general) commutative! Think carefully about what order you want. (I actually <a href="http://byorgey.wordpress.com/2011/02/24/enumerating-linear-inhabitants/">wrote about this once before</a>; you’d think I would have learned my lesson.)
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

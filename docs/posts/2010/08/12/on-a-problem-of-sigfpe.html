@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - On a Problem of sigfpe</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2010/08/05/typed-type-level-programming-in-haskell-part-iv-collapsing-types-and-kinds.html">« Typed type-level programming in Haskell, part IV: collapsing types and kinds</a>
+
+
+<span style="margin-left: 2em">
+
+<a href="../../../../posts/2010/09/18/the-haskell-alphabet.html">» The Haskell Alphabet</a>
+
+</span>
+
+
+<h1>On a Problem of sigfpe</h1>
+
+<div class="info">
+  Posted on August 12, 2010
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'automata'." href="../../../../tag/automata.html" rel="tag">automata</a>, <a title="All pages tagged 'finite'." href="../../../../tag/finite.html" rel="tag">finite</a>, <a title="All pages tagged 'state'." href="../../../../tag/state.html" rel="tag">state</a>, <a title="All pages tagged 'trees'." href="../../../../tag/trees.html" rel="tag">trees</a>, <a title="All pages tagged 'type-level'." href="../../../../tag/type-level.html" rel="tag">type-level</a>, <a title="All pages tagged 'types'." href="../../../../tag/types.html" rel="tag">types</a>
+  
+</div>
+
+<section>
+<pre><code><span>&gt;</span> <span style="color:green;">{-# LANGUAGE TypeFamilies, EmptyDataDecls, TypeOperators, GADTs #-}</span>
+</code></pre>
+<p>
+At the end of his most recent blog post, <a href="http://blog.sigfpe.com/2010/08/divided-differences-and-tomography-of.html">Divided Differences and the Tomography of Types</a>, Dan Piponi left his readers with a challenge:
+</p>
+<blockquote>
+<p>
+In preparation for the next installment, here’s a problem to think about: consider the tree type above. We can easily build trees whose elements are of type A or of type B. We just need f(A+B). We can scan this tree from left to right building a list of elements of type A+B, ie. whose types are each either A or B. How can we redefine the tree so that the compiler enforces the constraint that at no point in the list, the types of four elements in a row spell the word BABA? Start with a simpler problem, like enforcing the constraint that AA never appears.
+</p>
+</blockquote>
+<p>
+The tree type Dan is referring to is this one:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>F</span> <span>a</span> <span style="color:red;">=</span> <span>Leaf</span> <span>a</span> <span style="color:red;">|</span> <span>Form</span> <span style="color:red;">(</span><span>F</span> <span>a</span><span style="color:red;">)</span> <span style="color:red;">(</span><span>F</span> <span>a</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+This is the type of binary trees with data at the leaves, also sometimes referred to as the type of <em>parenthesizations</em>.
+</p>
+<p>
+(By the way, I highly recommend reading Dan’s whole post, which is brilliant; unfortunately, to really grok it you’ll probably want to first read his previous post <a href="http://blog.sigfpe.com/2009/09/finite-differences-of-types.html">Finite Differences of Types</a> and Conor McBride’s <a href="http://www.cs.nott.ac.uk/~ctm/CJ.pdf">Clowns to the Left of Me, Jokers to the Right</a>.)
+</p>
+<p>
+For now let’s focus on the suggested warmup, to enforce that AA never appears. For example, the following tree is OK:
+</p>
+<pre><code><span>&gt;</span> <span>tree1</span> <span style="color:red;">=</span> <span>Form</span> <span style="color:red;">(</span><span>Form</span> <span style="color:red;">(</span><span>Leaf</span> <span style="color:red;">(</span><span>Right</span> <span style="color:teal;">'x'</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>                    <span style="color:red;">(</span><span>Leaf</span> <span style="color:red;">(</span><span>Left</span> <span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>              <span style="color:red;">(</span><span>Leaf</span> <span style="color:red;">(</span><span>Right</span> <span style="color:teal;">'y'</span><span style="color:red;">)</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+because the types of the elements at its leaves form the sequence BAB. However, we would like to rule out trees like
+</p>
+<pre><code><span>&gt;</span> <span>tree2</span> <span style="color:red;">=</span> <span>Form</span> <span style="color:red;">(</span><span>Form</span> <span style="color:red;">(</span><span>Leaf</span> <span style="color:red;">(</span><span>Right</span> <span style="color:teal;">'x'</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>                    <span style="color:red;">(</span><span>Leaf</span> <span style="color:red;">(</span><span>Left</span> <span class="hs-num">1</span><span style="color:red;">)</span><span style="color:red;">)</span><span style="color:red;">)</span>
+<span>&gt;</span>              <span style="color:red;">(</span><span>Leaf</span> <span style="color:red;">(</span><span>Left</span> <span class="hs-num">2</span><span style="color:red;">)</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+which contains the forbidden sequence AA.
+</p>
+<p>
+Checking strings to see if they contain forbidden subexpressions… sounds like a job for regular expressions and finite state automata! First, we write down a finite state automaton which checks for strings not containing AA:
+</p>
+<p>
+[caption id=“attachment_438” align=“aligncenter” width=“450” caption=“A finite state machine for strings avoiding AA”]<a href="http://byorgey.files.wordpress.com/2010/08/fsm.png"><img src="http://byorgey.files.wordpress.com/2010/08/fsm.png" alt="A finite state machine for strings avoiding AA" title="FSM" width="450" height="179" class="size-full wp-image-438" /></a>[/caption]
+</p>
+<p>
+State 0 is the starting state; the blue circles represent accepting states and the red circle is a rejecting state. (I made this one by hand, but of course there are automatic methods for generating such automata given a regular expression.)
+</p>
+<p>
+The idea now – based on <a href="http://blog.sigfpe.com/2009/01/fast-incremental-regular-expression.html">another post by Dan</a> – is to associate with each tree a <em>transition function</em> <span class="math inline">\(f\)</span> such that if the FSM starts in state <span class="math inline">\(s\)</span>, after processing the string corresponding to the leaves of the tree it will end up in state <span class="math inline">\(f(s)\)</span>. Composing trees then corresponds to composing transition functions.
+</p>
+<p>
+There’s a twist, of course, due to that little phrase "compiler enforces the constraint"… we have to do all of this <em>at the type level</em>! Well, I’m not afraid of a little type-level computation, are you?
+</p>
+<p>
+First, type-level naturals, and some aliases for readability:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Z</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>S</span> <span>n</span>
+<span>&gt;</span> 
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>S0</span> <span style="color:red;">=</span> <span>Z</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>S1</span> <span style="color:red;">=</span> <span>S</span> <span>Z</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>S2</span> <span style="color:red;">=</span> <span>S</span> <span style="color:red;">(</span><span>S</span> <span>Z</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+We’ll use natural numbers to represent FSM states. Now, how can we represent transition functions at the type level? We certainly can’t represent functions in general. But transition functions are just maps from the (finite) set of states to itself, so we can represent one just by enumerating its outputs <span class="math inline">\(f(0), f(1), f(2), \dots\)</span> So, we’ll need some type-level lists:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Nil</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span style="color:red;">(</span><span>x</span> <span>:::</span> <span>xs</span><span style="color:red;">)</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">infixr</span> <span class="hs-num">5</span> <span>:::</span>
+</code></pre>
+<p>
+And a list indexing function:
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>family</span> <span style="color:red;">(</span><span>n</span> <span>:!!</span> <span>l</span><span style="color:red;">)</span> <span style="color:red;">::</span> <span>*</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span style="color:blue;font-weight:bold;">instance</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>x</span> <span>:::</span> <span>xs</span><span style="color:red;">)</span> <span>:!!</span> <span>Z</span><span style="color:red;">)</span>   <span style="color:red;">=</span> <span>x</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span style="color:blue;font-weight:bold;">instance</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>x</span> <span>:::</span> <span>xs</span><span style="color:red;">)</span> <span>:!!</span> <span>S</span> <span>n</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>xs</span> <span>:!!</span> <span>n</span>
+</code></pre>
+<p>
+(Did you know you could have infix type family operators? I didn’t. I just tried it and it worked!)
+</p>
+<p>
+Finally, we need a way to compose transition functions. If <code>f1</code> and <code>f2</code> are transition functions, then <code>f1 :&gt;&gt;&gt; f2</code> is the transition function you get by doing first <code>f1</code> and then <code>f2</code>. This is not hard to compute: we just use each element of <code>f1</code> in turn as an index into <code>f2</code>.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span>family</span> <span style="color:red;">(</span><span>f1</span> <span>:&gt;&gt;&gt;</span> <span>f2</span><span style="color:red;">)</span> <span style="color:red;">::</span> <span>*</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span style="color:blue;font-weight:bold;">instance</span> <span style="color:red;">(</span><span>Nil</span> <span>:&gt;&gt;&gt;</span> <span>f2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span>Nil</span>
+<span>&gt;</span> <span style="color:blue;font-weight:bold;">type</span> <span style="color:blue;font-weight:bold;">instance</span> <span style="color:red;">(</span><span style="color:red;">(</span><span>s</span> <span>:::</span> <span>ss</span><span style="color:red;">)</span> <span>:&gt;&gt;&gt;</span> <span>f2</span><span style="color:red;">)</span> <span style="color:red;">=</span> <span style="color:red;">(</span><span>f2</span> <span>:!!</span> <span>s</span><span style="color:red;">)</span> <span>:::</span> <span style="color:red;">(</span><span>ss</span> <span>:&gt;&gt;&gt;</span> <span>f2</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+Great! Now we can write down a type of trees with two leaf types and a phantom type index indicating the FSM transition function for the tree.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Tree'</span> <span>a</span> <span>b</span> <span>f</span> <span style="color:blue;font-weight:bold;">where</span>
+</code></pre>
+<p>
+A tree containing only an A sends state 0 to state 1 and both remaining states to state 2:
+</p>
+<pre><code><span>&gt;</span>   <span>LeafA</span> <span style="color:red;">::</span> <span>a</span> <span style="color:red;">-&gt;</span> <span>Tree'</span> <span>a</span> <span>b</span> <span style="color:red;">(</span><span>S1</span> <span>:::</span> <span>S2</span> <span>:::</span> <span>S2</span> <span>:::</span> <span>Nil</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+A tree containing only a B sends states 0 and 1 to state 0, and leaves state 2 alone:
+</p>
+<pre><code><span>&gt;</span>   <span>LeafB</span> <span style="color:red;">::</span> <span>b</span> <span style="color:red;">-&gt;</span> <span>Tree'</span> <span>a</span> <span>b</span> <span style="color:red;">(</span><span>S0</span> <span>:::</span> <span>S0</span> <span>:::</span> <span>S2</span> <span>:::</span> <span>Nil</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+Finally, we compose trees by composing their transition functions:
+</p>
+<pre><code><span>&gt;</span>   <span>Branch</span> <span style="color:red;">::</span> <span>Tree'</span> <span>a</span> <span>b</span> <span>f1</span> <span style="color:red;">-&gt;</span> <span>Tree'</span> <span>a</span> <span>b</span> <span>f2</span> <span style="color:red;">-&gt;</span> <span>Tree'</span> <span>a</span> <span>b</span> <span style="color:red;">(</span><span>f1</span> <span>:&gt;&gt;&gt;</span> <span>f2</span><span style="color:red;">)</span>
+</code></pre>
+<p>
+For the final step, we simply note that valid trees are those which send state 0 (the starting state) to either state 0 or state 1 (state 2 means we saw an AA somewhere). We existentially quantify over the rest of the transition functions because we don’t care what the tree does if the FSM starts in some state other than the starting state.
+</p>
+<pre><code><span>&gt;</span> <span style="color:blue;font-weight:bold;">data</span> <span>Tree</span> <span>a</span> <span>b</span> <span style="color:blue;font-weight:bold;">where</span>
+<span>&gt;</span>   <span>T0</span> <span style="color:red;">::</span> <span>Tree'</span> <span>a</span> <span>b</span> <span style="color:red;">(</span><span>S0</span> <span>:::</span> <span>ss</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span>a</span> <span>b</span>
+<span>&gt;</span>   <span>T1</span> <span style="color:red;">::</span> <span>Tree'</span> <span>a</span> <span>b</span> <span style="color:red;">(</span><span>S1</span> <span>:::</span> <span>ss</span><span style="color:red;">)</span> <span style="color:red;">-&gt;</span> <span>Tree</span> <span>a</span> <span>b</span>
+</code></pre>
+<p>
+Does it work? We can write down our example tree with a BAB structure just fine:
+</p>
+<pre><code>*Main&gt; :t T0 $ Branch (Branch (LeafB 'x') (LeafA 1)) (LeafB 'y')
+T0 $ Branch (Branch (LeafB 'x') (LeafA 1)) (LeafB 'y')
+  :: (Num a) =&gt; Tree a Char</code></pre>
+<p>
+But if we try to write down the other example, we simply can’t:
+</p>
+<pre><code>*Main&gt; :t T0 $ Branch (Branch (LeafB 'x') (LeafA 1)) (LeafA 2)
+:1:5:
+    Couldn't match expected type `Z' against inferred type `S (S Z)'
+    ...
+
+*Main&gt; :t T1 $ Branch (Branch (LeafB 'x') (LeafA 1)) (LeafA 2)
+:1:5:
+    Couldn't match expected type `Z' against inferred type `S Z'
+    ...</code></pre>
+<p>
+It’s a bit annoying that for any given tree we have to know whether we ought to use <code>T0</code> or <code>T1</code> as the constructor. However, if we kept a bit more information around at the value level, we could write smart constructors <code>leafA :: a -&gt; Tree a b</code>, <code>leafB :: b -&gt; Tree a b</code>, and <code>branch :: Tree a b -&gt; Tree a b -&gt; Maybe (Tree a b)</code> which would take care of this for us; I leave this as an exercise.
+</p>
+<p>
+This solution can easily be adapted to solve the original problem of avoiding BABA (or any regular expression). All that would need to be changed are the types of <code>LeafA</code> and <code>LeafB</code>, to encode the transitions in an appropriate finite state machine.
+</p>
+<p>
+This has been fun, but I can’t help thinking there must be a cooler and more direct way to do it. I’m looking forward to Dan’s next post with eager anticipation:
+</p>
+<blockquote>
+<p>
+Matrices of types have another deeper and surprising interpretation that will allow me to unify just about everything I’ve ever said on automatic differentiation, divided differences, and derivatives of types as well as solve a wide class of problems relating to building data types with certain constraints on them. I’ll leave that for my next article.
+</p>
+</blockquote>
+<p>
+If that’s not a teaser, I don’t know what is!
+</p>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
