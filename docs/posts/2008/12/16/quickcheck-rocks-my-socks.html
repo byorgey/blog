@@ -52,6 +52,10 @@
 <p>Like any good Haskell programmer writing a nice pure library, today I started adding a suite of <a href="http://www.cs.chalmers.se/~rjmh/QuickCheck/">QuickCheck</a> properties. I set up a framework and added a couple basic properties: 200 tests passed! I added another: 100 tests passed! Now I was on a roll, and added three more. This time… it hung after checking the fourth property only 8 times. OK, no problem, I’ve seen this sort of thing before when there’s some sort of combinatorial explosion in the size of the randomly generated test data… except the test data is so simple that’s definitely not what’s happening here. Hmm… maybe it’s infinite recursion? But I really can’t see where infinite recursion could crop up. Oh, unless… hmm, yes, if function A ever returns an empty list, it would cause an infinite loop. But surely function A can never return an empty list! Well, let’s try it. prop_A_nonempty x = (not . null) (funcA x). And… Falsified! Whoops.</p>
 <p>If you’re curious, the case I forgot was when you specify the empty list as a delimiter – obvious in retrospect, perhaps, but without QuickCheck’s assistance, I probably would have ended up releasing the library with this latent infinite recursion bug!</p>
 
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
 
 
         </article>

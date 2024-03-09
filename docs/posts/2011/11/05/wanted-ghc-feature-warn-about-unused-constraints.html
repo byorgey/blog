@@ -73,6 +73,10 @@ bar x y | x == y    = "yay"
 <p>When elaborating <code>bar</code>, GHC has a free choice of where to get the needed <code>(==)</code> method: from the <code>Eq</code> constraint or from the <code>Eq</code> superclass of the <code>Ord</code> constraint. So we might get a warning about <code>Eq</code> being redundant or about <code>Ord</code> being redundant, depending on which one it decides to use. But I don’t see this as a big problem.</p>
 <p>I think this could make for a nice project for someone wanting to dig into hacking on GHC. Perhaps I’ll do it myself at some point if no one else takes it on.</p>
 
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
 
 
         </article>

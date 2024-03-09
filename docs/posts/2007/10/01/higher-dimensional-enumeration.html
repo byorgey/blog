@@ -157,6 +157,10 @@ prop_simplex k n = (k &gt; 0) ==&gt;
 prop_simplex_components k n = (k &gt; 0) ==&gt;
     (map genericLength . group . sort . flatten . simplex' k $ n) == map (flip binom (k-1)) [k+n-2,k+n-3..(k-1)]</pre>
 
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
 
 
         </article>

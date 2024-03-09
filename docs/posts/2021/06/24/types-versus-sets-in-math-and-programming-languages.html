@@ -124,6 +124,10 @@ The other thing to mention will be the way that when we write the type of a set,
 Now, coming back to the example of <code>{1,2} ⊆ ℕ</code>, it would still be confusing for students if this is a syntax error, and I have some ideas about how to make it work. Briefly, the idea is to allow types to be used in expressions (but not the other way around!), with <code>T : Set T</code>. If I tell them that types are special sets, then logically they will expect to be able to use them as such! However, this is an extremely nontrivial change: it means that Disco would now be able to represent <em>infinite</em> sets, requiring sets to be internally represented via a deep embedding, rather than simply storing their elements (as is currently the case). For example, <code>2 ∈ (ℕ  {3,5})</code> should evaluate to <code>true</code>, but we obviously can’t just enumerate all the elements of <code>ℕ  {3,5}</code> since there are infinitely many. More on this in a future post, perhaps!
 </p>
 
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
 
 
         </article>

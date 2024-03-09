@@ -102,6 +102,10 @@ Nothing</pre>
 <p>Sure seems to! A quick look at the actual library code shows that we did things a little differently, but filterM’ is essentially the same as filterM (I leave a formal proof as an exercise =). All with nothing more than the type and a vague statement of purpose! Of course, this is not the only implementation that fits the type – and I’m not just talking about things like filterM’ = undefined; there are other implementations whose most general type is the same as filterM. But it’s still amazing to me how much information is to be found just in types.</p>
 <p>And now I understand how filterM (const [True,False]) works… do you? (Hint: how does (const [True,False]) match the type a -&gt; m Bool? How does sequencing work in the list monad?)</p>
 
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
 
 
         </article>
