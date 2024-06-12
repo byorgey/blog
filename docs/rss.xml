@@ -7,8 +7,54 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Tue, 28 May 2024 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Wed, 12 Jun 2024 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Swarm swarm III (virtual hackathon)</title>
+    <link>http://byorgey.github.io/blog/posts/2024/06/12/swarm-swarm-3.html</link>
+    <description><![CDATA[
+<h1>Swarm swarm III (virtual hackathon)</h1>
+
+<div class="info">
+  Posted on June 12, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;game&#39;." href="/tag/game.html" rel="tag">game</a>, <a title="All pages tagged &#39;hackathon&#39;." href="/tag/hackathon.html" rel="tag">hackathon</a>, <a title="All pages tagged &#39;programming&#39;." href="/tag/programming.html" rel="tag">programming</a>, <a title="All pages tagged &#39;robot&#39;." href="/tag/robot.html" rel="tag">robot</a>, <a title="All pages tagged &#39;Swarm&#39;." href="/tag/Swarm.html" rel="tag">Swarm</a>
+  
+</div>
+
+<section>
+<p>This Saturday, June 15, we will have the third Swarm swarm, <em>i.e.</em>
+collaborative virtual hackathon. Details can be found <a href="https://github.com/swarm-game/swarm/wiki/Swarm-swarm">here on the
+Swarm wiki</a>.</p>
+<ul>
+<li>Time: <a href="https://www.timeanddate.com/worldclock/fixedtime.html?msg=Swarm+swarm+III&amp;iso=20240615T16&amp;p1=1440&amp;ah=6">11am-5pm CDT / 4pm-10pm UTC / 9:30pm-3:30am
+IST</a>
+(feel free to drop in and out any time)</li>
+<li>Place: <a href="https://app.gather.town/app/SpqG1ic5pNKM7YqS/The%20Swarm%20Hive">The Swarm Hive on
+gather.town</a></li>
+<li>Who: you! Anyone interested in hacking on Swarm is welcome, from
+experienced to first-time contributors. If you’ve been thinking of
+getting involved but haven’t yet, this could be a perfect
+opportunity.</li>
+</ul>
+<p>As a reminder, <a href="https://swarm-game.github.io/">Swarm</a> is a 2D,
+open-world programming and resource gathering game, implemented in
+Haskell, with a strongly-typed, functional programming language and a
+unique upgrade system. Unlocking language features is tied to
+collecting resources, making it an interesting challenge to bootstrap
+your way into the use of the full language.</p>
+
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
+]]></description>
+    <pubDate>Wed, 12 Jun 2024 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2024/06/12/swarm-swarm-3.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Competitive Programming in Haskell: Two Hard Problems</title>
     <link>http://byorgey.github.io/blog/posts/2024/05/28/competitive-programming-in-haskell-two-problems.html</link>
     <description><![CDATA[
@@ -1671,7 +1717,7 @@ Now, how to compute the answer? For this kind of problem the first step is to co
 Otherwise, <span class="math inline">\(s[i]\)</span> had better be an opening bracket of some kind, and we can try matching it with each of <span class="math inline">\(s[i+1]\)</span>, <span class="math inline">\(s[i+3]\)</span>, <span class="math inline">\(s[i+5]\)</span>, …, <span class="math inline">\(s[j-1]\)</span>. In general, matching <span class="math inline">\(s[i]\)</span> with <span class="math inline">\(s[k]\)</span> can be done in either <span class="math inline">\(0\)</span>, <span class="math inline">\(1\)</span>, or <span class="math inline">\(3\)</span> ways depending on whether they are proper opening and closing brackets and whether any question marks are involved; then we have <span class="math inline">\(c(i+1,k)\)</span> ways to make the substring between <span class="math inline">\(s[i]\)</span> and <span class="math inline">\(s[k]\)</span> properly nested, and <span class="math inline">\(c(k+1,j)\)</span> ways for the rest of the string following <span class="math inline">\(s[k]\)</span>. These are all independent, so we multiply them. Overall, we get this:
 </p>
 <p>
-<span class="math inline">\(c(i,j) = \begin{cases} 1 &amp;amp; i = j \\ 0 &amp;amp; i \not \equiv j \pmod 2 \\ \displaystyle \sum_{k \in [i+1, i+3, \dots, j-1]} m(s[i], s[k]) \cdot c(i+1,k) \cdot c(k+1,j) &amp;amp; \text{otherwise} \end{cases}\)</span>
+<span class="math inline">\(c(i,j) = \begin{cases} 1 &amp; i = j \\ 0 &amp; i \not \equiv j \pmod 2 \\ \displaystyle \sum_{k \in [i+1, i+3, \dots, j-1]} m(s[i], s[k]) \cdot c(i+1,k) \cdot c(k+1,j) &amp; \text{otherwise} \end{cases}\)</span>
 </p>
 <p>
 where <span class="math inline">\(m(x,y)\)</span> counts the number of ways to make <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> into a matching pair of brackets: it returns 0 if the two characters cannot possibly be a matching open-close pair (either because they do not match or because one of them is the wrong way around); 1 if they match, and at most one of them is a question mark; and 3 if both are question marks.
@@ -1902,68 +1948,6 @@ For my next post, I challenge you to solve <a href="https://open.kattis.com/prob
 ]]></description>
     <pubDate>2023-05-24T11:03:02Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>New ko-fi page: help me attend ICFP!</title>
-    <link>http://byorgey.github.io/blog/posts/2023/05/22/new-ko-fi-page-help-me-attend-icfp.html</link>
-    <description><![CDATA[
-<h1>New ko-fi page: help me attend ICFP!</h1>
-
-<div class="info">
-  Posted on May 22, 2023
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;community&#39;." href="/tag/community.html" rel="tag">community</a>, <a title="All pages tagged &#39;contribution&#39;." href="/tag/contribution.html" rel="tag">contribution</a>, <a title="All pages tagged &#39;ICFP&#39;." href="/tag/ICFP.html" rel="tag">ICFP</a>, <a title="All pages tagged &#39;ko-fi&#39;." href="/tag/ko-fi.html" rel="tag">ko-fi</a>, <a title="All pages tagged &#39;open-source&#39;." href="/tag/open-source.html" rel="tag">open-source</a>, <a title="All pages tagged &#39;tips&#39;." href="/tag/tips.html" rel="tag">tips</a>
-  
-</div>
-
-<section>
-<p>
-<strong>tl;dr</strong>: if you appreciate my past or ongoing contributions to the Haskell community, please consider helping me get to ICFP by <a href="https://ko-fi.com/byorgey">donating via my new ko-fi page</a>!
-</p>
-<div style="text-align: center">
-<p><a href="https://ko-fi.com/I3I5KYUQX"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" /></a></p>
-</div>
-<p>
-<br />
-</p>
-<p>
-Working at a <a href="https://www.hendrix.edu/">small liberal arts institution</a> has some tremendous benefits (close interaction with motivated students, freedom to pursue the projects I want rather than jump through a bunch of hoops to get tenure, fantastic colleagues), and I love my job. But there are also downsides; the biggest ones for me are the difficulty of securing enough travel funding, and, relatedly, the difficulty of cultivating and maintaining collaborations.
-</p>
-<p>
-I would really like to be able to attend <a href="https://icfp23.sigplan.org/">ICFP in Seattle this September</a>; the last time I was able to attend ICFP in person was 2019 in Berlin. With transportation, lodging, food, and registration fees, it will probably come to about $3000. I can get a grant from my instutition to pay for up to $1200, but that still leaves a big gap.
-</p>
-<p>
-As I was brainstorming other sources of funding, it dawned on me that there are probably many people who have been positively impacted by my contributions to the Haskell community (<em>e.g.</em> <a href="https://www.cis.upenn.edu/~cis1940/spring13/">CIS 194</a>, the <a href="https://wiki.haskell.org/Typeclassopedia">Typeclassopedia</a>, <a href="https://diagrams.github.io/">diagrams</a>, <a href="https://hackage.haskell.org/package/split">split</a>, <a href="https://hackage.haskell.org/package/MonadRandom">MonadRandom</a>, <a href="https://byorgey.wordpress.com/2009/01/12/abstraction-intuition-and-the-monad-tutorial-fallacy/">burrito metaphors</a>…) and/or would like to support my ongoing work (<a href="https://byorgey.wordpress.com/category/competitive-programming/">competitive programming in Haskell</a>, <a href="https://github.com/swarm-game/swarm/#readme">swarm</a>, <a href="https://github.com/disco-lang/disco/#readme">disco</a>, <a href="https://hackage.haskell.org/user/BrentYorgey">ongoing package maintenance</a>…) and would be happy to donate a bit.
-</p>
-<p>
-So, to that end, I have set up a <a href="https://ko-fi.com/byorgey">ko-fi page</a>.
-</p>
-<ul>
-<li>
-<p>
-If you have been positively impacted by my contributions and would like to help me get to ICFP this fall, one-time donations — even very small amounts — are greatly appreciated! I’m not going to promise any particular rewards, but if you’re at ICFP I will definitely find you to say thanks!
-</p>
-</li>
-<li>
-<p>
-Thinking beyond this fall, ideally this could even become a reliable source of funding to help me travel to ICFP or other collaboration opportunities every year. To that end, if you’re willing to sign up for a recurring monthly donation, that would be amazing — think of it as supporting my ongoing work: <a href="https://byorgey.wordpress.com/category/competitive-programming/">blog posts</a> (and <a href="https://github.com/byorgey/cpih">book</a>) on competitive programming in Haskell, <a href="https://github.com/swarm-game/swarm/#readme">Swarm</a> and <a href="https://github.com/disco-lang/disco/#readme">Disco</a> development, and <a href="https://hackage.haskell.org/user/BrentYorgey">ongoing package maintenance</a>. I will <a href="https://ko-fi.com/byorgey/posts">post updates on ko-fi</a> with things I’m thinking about and working on; I am also going to try to publish more frequent blog posts, at least in the near term.
-</p>
-</li>
-</ul>
-<p>
-Thank you, friends — I hope to see many people in Seattle! Next up: back to your regularly scheduled competitive programming!
-</p>
-
-</section>
-
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
-]]></description>
-    <pubDate>2023-05-22T19:27:30Z</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2023/05/22/new-ko-fi-page-help-me-attend-icfp.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 
