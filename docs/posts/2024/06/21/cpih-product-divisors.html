@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive Programming in Haskell: sieving with mutable arrays</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print Things</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2024/06/12/swarm-swarm-3.html">« Swarm swarm III (virtual hackathon)</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Competitive Programming in Haskell: sieving with mutable arrays</h1>
+
+<div class="info">
+  Posted on June 21, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'challenge'." href="../../../../tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'number theory'." href="../../../../tag/number%20theory.html" rel="tag">number theory</a>, <a title="All pages tagged 'sieve'." href="../../../../tag/sieve.html" rel="tag">sieve</a>, <a title="All pages tagged 'mutable array'." href="../../../../tag/mutable%20array.html" rel="tag">mutable array</a>
+  
+</div>
+
+<section>
+<p>In <a href="https://byorgey.github.io/blog/posts/2024/05/28/competitive-programming-in-haskell-two-problems.html">a previous
+post</a>
+I challenged you to solve <a href="https://open.kattis.com/problems/productdivisors">Product
+Divisors</a>. In this
+problem, we are given a sequence of positive integers <span class="math inline">\(a_1, \dots, a_n\)</span>, and we are asked to compute the total number of divisors of
+their product. For example, if we are given the numbers <span class="math inline">\(4, 2, 3\)</span>,
+then the answer should be <span class="math inline">\(8\)</span>, since <span class="math inline">\(4 \times 2 \times 3 = 24\)</span> has
+the <span class="math inline">\(8\)</span> distinct divisors <span class="math inline">\(1, 2, 3, 4, 6, 8, 12, 24\)</span>.</p>
+<section id="counting-divisors" class="level2">
+<h2>Counting divisors</h2>
+<p>In general, if <span class="math inline">\(a\)</span> has the prime factorization <span class="math inline">\(a = p_1^{\alpha_1} p_2^{\alpha_2} \cdots p_k^{\alpha_k}\)</span> (where the <span class="math inline">\(p_i\)</span> are all distinct primes), then
+the number of divisors of <span class="math inline">\(a\)</span> is</p>
+<p><span class="math display">\[(\alpha_1 + 1)(\alpha_2 + 1) \cdots (\alpha_k + 1),\]</span></p>
+<p>since we can independently choose how many powers of each prime to
+include. There are <span class="math inline">\(\alpha_i + 1\)</span> choices for <span class="math inline">\(p_i\)</span> since we can
+choose anything from <span class="math inline">\(p_i^0\)</span> up to <span class="math inline">\(p_i^{\alpha_i}\)</span>, inclusive.</p>
+<p>So at a fundamental level, the solution is clear: factor each <span class="math inline">\(a_i\)</span>,
+count up the number of copies of each prime in their product, then do
+something like <code>map (+1) &gt;&gt;&gt; product</code>. We are also told the answer
+should be given mod <span class="math inline">\(10^9 + 7\)</span>, so we can use a<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle">⊕</label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="marginnote">Using <code>Int</code>
+instead of <code>Integer</code> here is OK as long as we are sure to be running
+on a 64-bit system; multiplying two <code>Int</code> values up to <span class="math inline">\(10^9 + 7\)</span>
+yields a result that still fits within a 64-bit signed <code>Int</code>.
+Otherwise (<em>e.g.</em> <a href="https://byorgey.github.io/blog/posts/2021/09/21/competitive-programming-in-haskell-codeforces-educational-round-114.html">on Codeforces</a>) we would have to use <code>Integer</code>.<br />
+<br />
+</span></span> <a href="https://byorgey.github.io/blog/posts/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1.html"><code>newtype</code> with a
+custom <code>Num</code> instance</a>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">p ::</span> <span class="dt">Int</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>p <span class="ot">=</span> <span class="dv">10</span><span class="op">^</span><span class="dv">9</span> <span class="op">+</span> <span class="dv">7</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">M</span> <span class="ot">=</span> <span class="dt">M</span> {<span class="ot"> unM ::</span> <span class="dt">Int</span> } <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">M</span> <span class="kw">where</span> <span class="fu">show</span> <span class="ot">=</span> <span class="fu">show</span> <span class="op">.</span> unM</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Num</span> <span class="dt">M</span> <span class="kw">where</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fromInteger</span> <span class="ot">=</span> <span class="dt">M</span> <span class="op">.</span> (<span class="ot">`mod`</span> p) <span class="op">.</span> <span class="fu">fromInteger</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">M</span> x <span class="op">+</span> <span class="dt">M</span> y <span class="ot">=</span> <span class="dt">M</span> ((x <span class="op">+</span> y) <span class="ot">`mod`</span> p)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">M</span> x <span class="op">-</span> <span class="dt">M</span> y <span class="ot">=</span> <span class="dt">M</span> ((x <span class="op">-</span> y) <span class="ot">`mod`</span> p)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">M</span> x <span class="op">*</span> <span class="dt">M</span> y <span class="ot">=</span> <span class="dt">M</span> ((x <span class="op">*</span> y) <span class="ot">`mod`</span> p)</span></code></pre></div>
+</section>
+<section id="a-naïve-solution-tle" class="level2">
+<h2>A naïve solution (TLE)</h2>
+<p>Of course, I would not be writing about this problem if it were that
+easy! If we try implementing the above solution idea in a
+straightforward way—for example, if we <a href="https://byorgey.wordpress.com/2020/02/07/competitive-programming-in-haskell-primes-and-factoring/">take the simple factoring code from this blog
+post</a>
+and then do something like <code>map factor &gt;&gt;&gt; M.unionsWith (+) &gt;&gt;&gt; M.elems &gt;&gt;&gt; map (+1) &gt;&gt;&gt; product</code>, we get the dreaded Time Limit Exceeded.</p>
+<p>Why doesn’t this work? I haven’t mentioned how many integers might be
+in the input: in fact, we might be given as many as one million (<span class="math inline">\(10^6\)</span>)! We need
+to be able to factor each number very quickly if we’re going to finish
+within the one second time limit. Factoring each number from scratch
+by trial division is simply too slow.</p>
+</section>
+<section id="factoring-via-sieve" class="level2">
+<h2>Factoring via sieve</h2>
+<p>While <a href="https://cp-algorithms.com/algebra/factorization.html">more sophisticated methods</a> are needed to factor a <em>single</em>
+number more quickly than trial division, there is a standard technique
+we can use to speed things up when we need to factor <em>many</em> numbers.
+We can use a <em>sieve</em> to precompute a lookup table, which we can then
+use to factor numbers very quickly.</p>
+<p>In particular, we will compute a table <span class="math inline">\(\mathit{smallest}\)</span> such that
+<span class="math inline">\(\mathit{smallest}[i]\)</span> will store the <em>smallest prime factor</em> of <span class="math inline">\(i\)</span>.
+Given this table, to factor a positive integer <span class="math inline">\(i\)</span>, we simply look up
+<span class="math inline">\(\mathit{smallest}[i] = p\)</span>, add it to the prime factorization, then
+recurse on <span class="math inline">\(i/p\)</span>; the base case is when <span class="math inline">\(i = 1\)</span>.</p>
+<p>How do we compute <span class="math inline">\(\mathit{smallest}\)</span>? The basic idea is to create an
+array of size <span class="math inline">\(n\)</span>, initializing it with <span class="math inline">\(\mathit{smallest}[k] = k\)</span>. For each <span class="math inline">\(k\)</span> from <span class="math inline">\(2\)</span> up to <span class="math inline">\(n\)</span>,<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle">⊕</label><input type="checkbox" id="sn-1" class="margin-toggle" /><span class="marginnote">We could optimize this even
+further via the <a href="https://codeforces.com/blog/entry/54090">approach in this blog
+post</a>, which takes <span class="math inline">\(O(n)\)</span>
+rather than <span class="math inline">\(O(n \lg n)\)</span> time, but it would complicate our Haskell
+quite a bit and it’s not needed for solving this problem.<br />
+<br />
+</span></span> if
+<span class="math inline">\(\mathit{smallest}[k]\)</span> is still equal to <span class="math inline">\(k\)</span>, then <span class="math inline">\(k\)</span> must be prime;
+iterate through multiples of <span class="math inline">\(k\)</span> (starting with <span class="math inline">\(k^2\)</span>, since any
+smaller multiple of <span class="math inline">\(k\)</span> is already divisible by a smaller prime) and
+set each <span class="math inline">\(\mathit{smallest}[ki]\)</span> to the minimum of <span class="math inline">\(k\)</span> and whatever
+value it had before.</p>
+</section>
+<section id="sieving-in-haskell" class="level2">
+<h2>Sieving in Haskell</h2>
+<p>This is one of those cases where for efficiency’s sake, we actually
+want to use an honest-to-goodness mutable array. Immutable arrays are
+not a good fit for sieving, and using something like a <code>Map</code> would
+introduce a lot of overhead that we would rather avoid. However, we
+only need the table to be mutable while we are computing it; after
+that, it should just be an immutable lookup table. This is a great fit
+for an <code>STUArray</code>:<span class="sidenote-wrapper"><label for="sn-2" class="margin-toggle">⊕</label><input type="checkbox" id="sn-2" class="margin-toggle" /><span class="marginnote">Note that as of this writing, the version of the
+<code>array</code> library installed in the Kattis environment does not have
+<code>modifyArray'</code>, so we actually have to do <code>readArray</code> followed by
+<code>writeArray</code>.<br />
+<br />
+</span></span></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>maxN <span class="ot">=</span> <span class="dv">1000000</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ot">smallest ::</span> <span class="dt">UArray</span> <span class="dt">Int</span> <span class="dt">Int</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>smallest <span class="ot">=</span> runSTUArray <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> newListArray (<span class="dv">2</span>,maxN) [<span class="dv">2</span> <span class="op">..</span>]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  forM_ [<span class="dv">2</span> <span class="op">..</span> maxN] <span class="op">$</span> \k <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    k' <span class="ot">&lt;-</span> readArray a k</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    when (k <span class="op">==</span> k') <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      forM_ [k<span class="op">*</span>k, k<span class="op">*</span>(k<span class="op">+</span><span class="dv">1</span>) <span class="op">..</span> maxN] <span class="op">$</span> \n <span class="ot">-&gt;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        modifyArray' a n (<span class="fu">min</span> k)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> a</span></code></pre></div>
+<p>Haskell, the <a href="http://research.microsoft.com/en-us/um/people/simonpj/papers/marktoberdorf/mark.pdf">world’s finest imperative programming language</a>!</p>
+</section>
+<section id="combining-factorizations" class="level2">
+<h2>Combining factorizations</h2>
+<p>We can now write a new <code>factor</code> function that works by repeatedly
+looking up the smallest prime factor:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">factor ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Int</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>factor <span class="ot">=</span> \<span class="kw">case</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span> <span class="ot">-&gt;</span> M.empty</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">-&gt;</span> M.insertWith (<span class="op">+</span>) p <span class="dv">1</span> (factor (n <span class="ot">`div`</span> p))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>   <span class="kw">where</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">=</span> smallest<span class="op">!</span>n</span></code></pre></div>
+<p>And now we can just do <code>map factor &gt;&gt;&gt; M.unionsWith (+) &gt;&gt;&gt; M.elems &gt;&gt;&gt; map (+1) &gt;&gt;&gt; product</code>
+as before, but since our <code>factor</code> is so much faster this time, it
+should…</p>
+<p>What’s that? Still TLE? Sigh.</p>
+</section>
+<section id="counting-primes-via-a-second-mutable-array" class="level2">
+<h2>Counting primes via a (second) mutable array</h2>
+<p>Unfortunately, creating a bunch of <code>Map</code> values and then doing
+<code>unionsWith</code> one million times still introduces way too much overhead.
+For many problems working with <code>Map</code> (which is impressively fast) is
+good enough, but not in this case. Instead of returning a <code>Map</code> from
+each call to <code>factor</code> and then later combining them, we can write a version of
+<code>factor</code> that directly increments counters for each prime in a
+mutable array:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">factor ::</span> <span class="dt">STUArray</span> s <span class="dt">Int</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s ()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>factor counts n <span class="ot">=</span> go n</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    go <span class="dv">1</span> <span class="ot">=</span> <span class="fu">return</span> ()</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    go n <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> p <span class="ot">=</span> smallest<span class="op">!</span>n</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>      modifyArray' counts p (<span class="op">+</span><span class="dv">1</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      go (n <span class="ot">`div`</span> p)</span></code></pre></div>
+<p>Then we have the following top-level solution, which is finally fast
+enough:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> C.interact <span class="op">$</span> runScanner (numberOf int) <span class="op">&gt;&gt;&gt;</span> solve <span class="op">&gt;&gt;&gt;</span> showB</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solve ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">M</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>solve <span class="ot">=</span> counts <span class="op">&gt;&gt;&gt;</span> elems <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> ((<span class="op">+</span><span class="dv">1</span>) <span class="op">&gt;&gt;&gt;</span> <span class="dt">M</span>) <span class="op">&gt;&gt;&gt;</span> <span class="fu">product</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ot">counts ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">UArray</span> <span class="dt">Int</span> <span class="dt">Int</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>counts ns <span class="ot">=</span> runSTUArray <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  cs <span class="ot">&lt;-</span> newArray (<span class="dv">2</span>,maxN) <span class="dv">0</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  forM_ ns (factor cs)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> cs</span></code></pre></div>
+<p>This solution runs in just over 0.4s for me. Considering that this is
+only about 4x slower than the fastest solution (0.09s, in C++), I’m
+pretty happy with it! We did have to sacrifice a bit of elegance for
+speed, especially with the <code>factor</code> and <code>counts</code> functions instead of
+<code>M.unionsWith</code>, but in the end it’s not too bad.</p>
+<p>I thought we might be able to make this even faster by using a strict
+fold over the <code>counts</code> array instead of converting to a list with
+<code>elems</code> and then doing a <code>map</code> and a <code>product</code>, but (1) there is no
+generic fold operation on <code>UArray</code>, and (2) I trust that GHC is
+already doing a pretty good job optimizing this via list fusion.</p>
+</section>
+<section id="next-time" class="level2">
+<h2>Next time</h2>
+<p>Next time I’ll write about my solution to the <a href="https://byorgey.github.io/blog/posts/2024/05/28/competitive-programming-in-haskell-two-problems.html">other challenge
+problem</a>,
+<a href="https://open.kattis.com/problems/factorfulltree">Factor-Full Tree</a>.
+Until then, give it a try!</p>
+</section>
+
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
