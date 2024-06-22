@@ -14,9 +14,9 @@ $\displaystyle \Phi(\mathbf{X}) = (\Phi_1(\mathbf{X}), \dots, \Phi_n(\mathbf{X})
 <p>where $\mathbf{X} = (X_1, \dots, X_n)$ is a vector in $\mathbb{R}^n$. We want to find the fixed point $\mathbf{Y}$ such that $\Phi(\mathbf{Y}) = \mathbf{Y}$.</p>
 <p>The algorithm (you can <a href="https://github.com/byorgey/boltzmann/blob/master/gen/src/Oracle/Newton.hs#L52">see the code here</a>) now works as follows. First, define $\mathbf{J}$ as the $n \times n$ <a href="https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian matrix</a> of partial derivatives of the $\Phi_i$, that is,</p>
 <p><div style="text-align:center;">
-$\displaystyle \displaystyle \mathbf{J} = \begin{bmatrix} \frac{\partial}{\partial X_1} \Phi_1 &amp; \dots &amp;
-\frac{\partial}{\partial X_n} \Phi_1 \\ \vdots &amp; \ddots &amp; \vdots \\
-\frac{\partial}{\partial X_1} \Phi_n &amp; \dots &amp;
+$\displaystyle \displaystyle \mathbf{J} = \begin{bmatrix} \frac{\partial}{\partial X_1} \Phi_1 & \dots &
+\frac{\partial}{\partial X_n} \Phi_1 \\ \vdots & \ddots & \vdots \\
+\frac{\partial}{\partial X_1} \Phi_n & \dots &
 \frac{\partial}{\partial X_n} \Phi_n\end{bmatrix}$
 </div></p>
 <p>Now let $\mathbf{Y}_0 = (0, \dots, 0)$ and let $\mathbf{U}_0 = I_n$ be the $n \times n$ identity matrix. Then for each $i \geq 0$ define</p>

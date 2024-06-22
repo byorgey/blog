@@ -25,7 +25,7 @@ $\displaystyle G^{-1} = \sum_{k \geq 0} (-1)^k (G_+)^k = 1 - G_+ + G_+^2 - G_+^3
 <p>That is, a $G^{-1}$-structure consists of a list of nonempty $G$-structures, except that even-length lists are considered “positive” and odd-length lists considered “negative”.</p>
 <p>We can easily check that this indeed defines a multiplicative inverse for $G$:</p>
 <p><div style="text-align:center;">
-$\displaystyle \begin{array}{rcl}G G^{-1} &amp;=&amp; (1 + G_+) (1 - G_+ + G_+^2 - G_+^3 + \dots) \\[0.5em] &amp;=&amp; (1 - G_+ + G_+^2 - G_+^3 + \dots) + (G_+ - G_+^2 + G_+^3 - G_+^4 + \dots) \\[0.5em] &amp;=&amp; 1 \end{array}$
+$\displaystyle \begin{array}{rcl}G G^{-1} &=& (1 + G_+) (1 - G_+ + G_+^2 - G_+^3 + \dots) \\[0.5em] &=& (1 - G_+ + G_+^2 - G_+^3 + \dots) + (G_+ - G_+^2 + G_+^3 - G_+^4 + \dots) \\[0.5em] &=& 1 \end{array}$
 </div></p>
 <p>The infinite sums telescope down to leave only $1$. Notice this really isn’t about species in particular, but really about infinite power series (of which species are the categorification): any infinite power series with integer coefficients and a constant term of $1$ has a multiplicative inverse which is also such a power series.</p>
 <p>As an example, consider $1/(1-X) = (1-X)^{-1}$. We know this is “supposed” to be the species of lists (since it results from solving $L = 1 + XL$ for $L$), but let’s see what happens. In this case $G = 1-X$ and $G_+ = -X$. So the inverse ought to be</p>

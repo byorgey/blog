@@ -11,7 +11,7 @@ tags: competitive,number,programming,theory
 <h1 id="modular-exponentiation">Modular exponentiation</h1>
 <p>We start with a simple implementation of <em>modular exponentiation</em>, that is, computing $b^e \pmod m$, via <a href="https://en.wikipedia.org/wiki/Exponentiation_by_squaring">repeated squaring</a>. This comes up occasionally in both number theory problems (unsurprisingly) and combinatorics problems (because such problems often ask for a very large answer to be given modulo $10^9+7$ or some other large prime).</p>
 <p>This works via the recurrence</p>
-<p>$\begin{array}{rcl}x^0 &amp;=&amp; 1 \\[0.5em] x^{2n} &amp;=&amp; (x^n)^2 \\[0.5em] x^{2n+1} &amp;=&amp; x \cdot (x^n)^2\end{array}$</p>
+<p>$\begin{array}{rcl}x^0 &=& 1 \\[0.5em] x^{2n} &=& (x^n)^2 \\[0.5em] x^{2n+1} &=& x \cdot (x^n)^2\end{array}$</p>
 <p>and using the fact that taking the remainder $\pmod m$ commutes with multiplication.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>modexp</span> <span style="color:red;">::</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>Integer</span> <span style="color:red;">-&gt;</span> <span>Integer</span>
 <span>modexp</span> <span style="color:blue;font-weight:bold;">_</span> <span class="hs-num">0</span> <span style="color:blue;font-weight:bold;">_</span> <span style="color:red;">=</span> <span class="hs-num">1</span>
@@ -50,7 +50,7 @@ tags: competitive,number,programming,theory
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>gcd</span> <span>a</span> <span class="hs-num">0</span> <span style="color:red;">=</span> <span>abs</span> <span>a</span>
 <span>gcd</span> <span>a</span> <span>b</span> <span style="color:red;">=</span> <span>gcd</span> <span>b</span> <span style="color:red;">(</span><span>a</span> <span>`mod`</span> <span>b</span><span style="color:red;">)</span></code></pre>
 <p>I won’t explain how this works here; you can go read about it at the link above, and it is well-covered elsewhere. But let’s think how we would find appropriate values $x$ and $y$ at the same time. Suppose the recursive call <code>gcd b (a `mod` b)</code>, in addition to returning the greatest common divisor $g$, were to also return values $x$ and $y$ such that $bx + (a \bmod b)y = g$. Then our goal is to find $x'$ and $y'$ such that $ax' + by' = g$, which we can compute as follows:</p>
-<p>$\begin{array}{rcl}g &amp;=&amp; bx + (a \bmod b)y \\[0.5em] &amp;=&amp; bx + (a - b\lfloor a/b \rfloor)y \\[0.5em] &amp;=&amp; bx + ay - b\lfloor a/b \rfloor y = ay + b(x - \lfloor a/b \rfloor y)\end{array}$</p>
+<p>$\begin{array}{rcl}g &=& bx + (a \bmod b)y \\[0.5em] &=& bx + (a - b\lfloor a/b \rfloor)y \\[0.5em] &=& bx + ay - b\lfloor a/b \rfloor y = ay + b(x - \lfloor a/b \rfloor y)\end{array}$</p>
 <p>Hence $x' = y$ and $y' = x - \lfloor a/b \rfloor y$. Note the key step of writing $a \bmod b = a - b \lfloor a/b \rfloor$: If we take the integer quotient of $a$ divided by $b$ and then multiply by $b$ again, we don’t necessarily get $a$ back exactly, but what we do get is the next smaller multiple of $b$. Subtracting this from the original $a$ gives $a \bmod b$.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color:green;">-- egcd a b = (g,x,y)</span>
 <span style="color:green;">--   g is the gcd of a and b, and ax + by = g</span>

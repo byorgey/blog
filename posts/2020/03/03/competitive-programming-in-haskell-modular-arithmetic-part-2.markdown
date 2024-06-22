@@ -26,7 +26,7 @@ tags: competitive,number,programming,theory
     <span>g</span> <span style="color:red;">=</span> <span>gcd</span> <span>a</span> <span>m</span></code></pre>
 <h1 id="solving-systems-of-congruences-with-crt">Solving systems of congruences with CRT</h1>
 <p>In its most basic form, the <a href="https://mathlesstraveled.com/2019/04/05/more-words-about-pww-25-the-chinese-remainder-theorem/"><em>Chinese remainder theorem</em> (CRT)</a> says that if we have a system of two modular equations</p>
-<p>$\begin{array}{rcl}x &amp;\equiv&amp; a \pmod m \\ x &amp;\equiv&amp; b \pmod n\end{array}$</p>
+<p>$\begin{array}{rcl}x &\equiv& a \pmod m \\ x &\equiv& b \pmod n\end{array}$</p>
 <p>then as long as $m$ and $n$ are relatively prime, there is a <em>unique</em> solution for $x$ modulo the product $mn$; that is, the system of two equations is equivalent to a single equation of the form</p>
 <p>$x \equiv c \pmod {mn}.$</p>
 <p>We first compute the Bézout coefficients $u$ and $v$ such that $mu + nv = 1$ <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">using <code>egcd</code></a>, and then compute the solution as $c = anv + bmu$. Indeed,</p>

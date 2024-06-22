@@ -34,19 +34,19 @@ tags: absolute value,average,derivative,median,optimization
 <p>$S(m) = \sum_i |m - x_i|$</p>
 </div>
 <p>In this scenario, it is much easier to reason out the correct answer. Start with some arbitrary $m$, and imagine nudging it by some small amount $\Delta x$, say, to the right. $m$’s distances to any points on its left will each increase by $\Delta x$, and its distances to any points on its right will each decrease by the same amount. Therefore, if there are more $x_i$ to the left of $m$, then the overall sum of distances distances will increase; if there are more $x_i$ to the right, then the overall sum will decrease. So, to find $m$ which minimizes the sum of absolute differences, we want the same number of $x_i$ on the left and the right, that is, we want the <em>median</em>. Note that if $n$ is odd, then we must pick $m$ to be exactly equal to the $x_i$ in the middle; if $n$ is even, then we can pick $m$ to be anywhere inside the interval between the middle two $x_i$.</p>
-<p>Just for fun, can we derive this answer using calculus, like we did for minimizing squared differences? There is a wrinkle, of course, which is that the absolute value function is not differentiable everywhere: it has a sharp corner at zero. But we won’t let that stop us! Clearly the derivative of $|x|$ is $-1$ when $x &lt; 0$ and $1$ when $x &gt; 0$. So it seems reasonable to just assign the derivative a value of $0$ at $x = 0$. Algebraically, we can define</p>
+<p>Just for fun, can we derive this answer using calculus, like we did for minimizing squared differences? There is a wrinkle, of course, which is that the absolute value function is not differentiable everywhere: it has a sharp corner at zero. But we won’t let that stop us! Clearly the derivative of $|x|$ is $-1$ when $x < 0$ and $1$ when $x > 0$. So it seems reasonable to just assign the derivative a value of $0$ at $x = 0$. Algebraically, we can define</p>
 <div style="text-align:center;">
-<p>$\displaystyle \frac{d}{dx} |x| = [x &gt; 0] - [x &lt; 0]$</p>
+<p>$\displaystyle \frac{d}{dx} |x| = [x > 0] - [x < 0]$</p>
 </div>
-<p>where $[P]$ is equal to $1$ when the proposition $P$ is true, and $0$ when it is false (this notation is called the <a href="https://en.wikipedia.org/wiki/Iverson_bracket"><em>Iverson bracket</em></a>). So when $x &gt; 0$ we get $[x &gt; 0] - [x &lt; 0] = 1 - 0 = 1$; when $x &lt; 0$ we get $0 - 1 = -1$; and when $x = 0$ both propositions are false so we get $0 - 0 = 0$.</p>
+<p>where $[P]$ is equal to $1$ when the proposition $P$ is true, and $0$ when it is false (this notation is called the <a href="https://en.wikipedia.org/wiki/Iverson_bracket"><em>Iverson bracket</em></a>). So when $x > 0$ we get $[x > 0] - [x < 0] = 1 - 0 = 1$; when $x < 0$ we get $0 - 1 = -1$; and when $x = 0$ both propositions are false so we get $0 - 0 = 0$.</p>
 <p>Armed with this definition, we can differentiate $S$ with respect to $m$:</p>
 <div style="text-align:center;">
-<p>$\displaystyle \frac{d}{dm} S(m) = \frac{d}{dm} \sum_i |m - x_i| = \sum_i [m &gt; x_i] - \sum_i [m &lt; x_i]$</p>
+<p>$\displaystyle \frac{d}{dm} S(m) = \frac{d}{dm} \sum_i |m - x_i| = \sum_i [m > x_i] - \sum_i [m < x_i]$</p>
 </div>
-<p>Clearly, this is zero when $\displaystyle \sum_i [m &gt; x_i] = \sum_i [m &lt; x_i]$, that is, when there are the same number of $x_i$ on either side of $m$.</p>
+<p>Clearly, this is zero when $\displaystyle \sum_i [m > x_i] = \sum_i [m < x_i]$, that is, when there are the same number of $x_i$ on either side of $m$.</p>
 <p>The curious thing to me is that even though the derivative of $|x|$ is undefined when $x = 0$, it seems like it “wants” to be 0 here. In general, if we assign the value $k$ to the derivative at $x = 0$, the derivative of $S$ becomes</p>
 <div style="text-align:center;">
-<p>$\displaystyle \frac{d}{dm} S(m) = \sum_i [m &gt; x_i] + k \sum_i [m = x_i] - \sum_i [m &lt; x_i]$</p>
+<p>$\displaystyle \frac{d}{dm} S(m) = \sum_i [m > x_i] + k \sum_i [m = x_i] - \sum_i [m < x_i]$</p>
 </div>
 <p>When $k$ is nonzero and $n$ is odd, there are no values of $m$ for which this derivative is zero, making it more difficult to find the minimum.</p>
 

@@ -11,7 +11,7 @@ tags: cross,geometry,Kattis
 <h2 id="the-2d-cross-product">The 2D cross product</h2>
 <p>In two dimensions, given vectors $\mathbf{u} = (u_x, u_y)$ and $\mathbf{v} = (v_x, v_y)$, we can compute their <em>cross product</em> as</p>
 <div style="text-align:center;">
-<p>$\mathbf{u} \times \mathbf{v} = \begin{vmatrix} u_x &amp; v_x \\ u_y &amp; v_y \end{vmatrix} = u_x v_y - v_x u_y.$</p>
+<p>$\mathbf{u} \times \mathbf{v} = \begin{vmatrix} u_x & v_x \\ u_y & v_y \end{vmatrix} = u_x v_y - v_x u_y.$</p>
 </div>
 <p>One useful way to understand this as giving the <em>signed area</em> of the parallelogram determined by $\mathbf{u}$ and $\mathbf{v}$. The area is positive when $\mathbf{v}$ is counterclockwise from $\mathbf{u}$, negative when it is clockwise, and zero when the two vectors are colinear (<em>i.e.</em> parallel or antiparallel).</p>
 <div style="text-align:center;">

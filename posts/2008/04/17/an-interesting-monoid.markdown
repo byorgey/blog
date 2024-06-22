@@ -40,11 +40,11 @@ In our example from before, we could now begin with $\{1\}$ in our accumulator. 
 
 I like to think of this as the monoid of <i>partial knowledge</i>.  If we consider $P$ to be a set of facts or beliefs, some better (more reliable, useful, correct, complete, etc.) than others, then elements of $P_*$ correspond to possible sets of beliefs.  $\oplus$ describes how a set of beliefs changes upon encountering a new set of facts; some of the new facts may supersede and replace old ones, some may not impart any new information, and some may be completely new facts that aren't related to any currently known.
 
-Now, why can this be thought of as a generalization of the monoid $(P, \max)$ on a totally ordered set?  Well, look what happens when we replace $P$ in the definitions above with a totally ordered set with relation $\leq$: first of all, the restriction on $P_*$ (no two elements of a set in $P_*$ should be related by $\leq$) means that $P_*$ contains only the empty set and singleton sets, so (ignoring the empty set) $P_*$ is isomorphic to $P$.  Now look at the definition of $S \triangleleft T$, with $\lesssim$ replaced by $\leq$ (and $\not \lesssim$ replaced by $&gt;$):
+Now, why can this be thought of as a generalization of the monoid $(P, \max)$ on a totally ordered set?  Well, look what happens when we replace $P$ in the definitions above with a totally ordered set with relation $\leq$: first of all, the restriction on $P_*$ (no two elements of a set in $P_*$ should be related by $\leq$) means that $P_*$ contains only the empty set and singleton sets, so (ignoring the empty set) $P_*$ is isomorphic to $P$.  Now look at the definition of $S \triangleleft T$, with $\lesssim$ replaced by $\leq$ (and $\not \lesssim$ replaced by $>$):
 
-$S \triangleleft T = \{ s \in S \mid \forall t \in T, s = t \mbox{ or } t \leq s \mbox{ or } s &gt; t \}$
+$S \triangleleft T = \{ s \in S \mid \forall t \in T, s = t \mbox{ or } t \leq s \mbox{ or } s > t \}$
 
-But $s = t$ and $s &gt; t$ are both subsumed by $t \leq s$, so we can rewrite this as
+But $s = t$ and $s > t$ are both subsumed by $t \leq s$, so we can rewrite this as
 
 $\{s\} \triangleleft \{t\} = \{s\} \mbox{ if } s \geq t, \mbox{ or } \varnothing \mbox{ otherwise }$.
 

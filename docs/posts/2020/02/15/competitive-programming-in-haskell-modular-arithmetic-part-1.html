@@ -69,7 +69,7 @@ We start with a simple implementation of <em>modular exponentiation</em>, that i
 This works via the recurrence
 </p>
 <p>
-<span class="math inline">\(\begin{array}{rcl}x^0 &amp;amp;=&amp;amp; 1 \\[0.5em] x^{2n} &amp;amp;=&amp;amp; (x^n)^2 \\[0.5em] x^{2n+1} &amp;amp;=&amp;amp; x \cdot (x^n)^2\end{array}\)</span>
+<span class="math inline">\(\begin{array}{rcl}x^0 &amp;=&amp; 1 \\[0.5em] x^{2n} &amp;=&amp; (x^n)^2 \\[0.5em] x^{2n+1} &amp;=&amp; x \cdot (x^n)^2\end{array}\)</span>
 </p>
 <p>
 and using the fact that taking the remainder <span class="math inline">\(\pmod m\)</span> commutes with multiplication.
@@ -132,7 +132,7 @@ First, let’s recall how to compute the GCD via <a href="https://mathlesstravel
 I won’t explain how this works here; you can go read about it at the link above, and it is well-covered elsewhere. But let’s think how we would find appropriate values <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> at the same time. Suppose the recursive call <code>gcd b (a <code>mod</code> b)</code>, in addition to returning the greatest common divisor <span class="math inline">\(g\)</span>, were to also return values <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> such that <span class="math inline">\(bx + (a \bmod b)y = g\)</span>. Then our goal is to find <span class="math inline">\(x'\)</span> and <span class="math inline">\(y'\)</span> such that <span class="math inline">\(ax' + by' = g\)</span>, which we can compute as follows:
 </p>
 <p>
-<span class="math inline">\(\begin{array}{rcl}g &amp;amp;=&amp;amp; bx + (a \bmod b)y \\[0.5em] &amp;amp;=&amp;amp; bx + (a - b\lfloor a/b \rfloor)y \\[0.5em] &amp;amp;=&amp;amp; bx + ay - b\lfloor a/b \rfloor y = ay + b(x - \lfloor a/b \rfloor y)\end{array}\)</span>
+<span class="math inline">\(\begin{array}{rcl}g &amp;=&amp; bx + (a \bmod b)y \\[0.5em] &amp;=&amp; bx + (a - b\lfloor a/b \rfloor)y \\[0.5em] &amp;=&amp; bx + ay - b\lfloor a/b \rfloor y = ay + b(x - \lfloor a/b \rfloor y)\end{array}\)</span>
 </p>
 <p>
 Hence <span class="math inline">\(x' = y\)</span> and <span class="math inline">\(y' = x - \lfloor a/b \rfloor y\)</span>. Note the key step of writing <span class="math inline">\(a \bmod b = a - b \lfloor a/b \rfloor\)</span>: If we take the integer quotient of <span class="math inline">\(a\)</span> divided by <span class="math inline">\(b\)</span> and then multiply by <span class="math inline">\(b\)</span> again, we don’t necessarily get <span class="math inline">\(a\)</span> back exactly, but what we do get is the next smaller multiple of <span class="math inline">\(b\)</span>. Subtracting this from the original <span class="math inline">\(a\)</span> gives <span class="math inline">\(a \bmod b\)</span>.
