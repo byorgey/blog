@@ -6,7 +6,7 @@ categories: haskell,projects
 tags: lifting,programming,type-level,types
 ---
 
-In <a href="http://byorgey.wordpress.com/2010/07/19/typed-type-level-programming-in-haskell-part-iii-i-can-haz-typs-plz/">Part III</a>, we saw how the current state of the art in Haskell type-level programming leaves some things to be desired: it requires duplicating both data declarations and code, and even worse, it's untyped.  What to do?
+In <a href="https://byorgey.github.io/blog/posts/2010/07/19/typed-type-level-programming-in-haskell-part-iii-i-can-haz-typs-plz.html">Part III</a>, we saw how the current state of the art in Haskell type-level programming leaves some things to be desired: it requires duplicating both data declarations and code, and even worse, it's untyped.  What to do?
 
 Currently, GHC's core language has three "levels":
 <ol>

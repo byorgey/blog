@@ -54,7 +54,7 @@
 
 <section>
 <p>
-In a <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-in-haskell-infinite-2d-array/">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. As a reminder, the problem specifies a two-parameter recurrence <span class="math inline">\(F_{x,y}\)</span>, given by
+In a <a href="https://byorgey.github.io/blog/posts/2022/09/01/competitive-programming-in-haskell-infinite-2d-array.html">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. As a reminder, the problem specifies a two-parameter recurrence <span class="math inline">\(F_{x,y}\)</span>, given by
 </p>
 <ul>
 <li>
@@ -74,7 +74,7 @@ In a <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-i
 </li>
 </ul>
 <p>
-<a href="https://byorgey.wordpress.com/2022/12/03/competitive-programming-in-haskell-infinite-2d-array-level-1/">Last time</a>, we derived a formula for <span class="math inline">\(F_{x,y}\)</span> that involves only a linear number of terms:
+<a href="https://byorgey.github.io/blog/posts/2022/12/03/competitive-programming-in-haskell-infinite-2d-array-level-1.html">Last time</a>, we derived a formula for <span class="math inline">\(F_{x,y}\)</span> that involves only a linear number of terms:
 </p>
 <p>
 <span class="math inline">\(\displaystyle F_{x,y} = \left(\sum_{1 \leq k \leq x} F_k \binom{x-k+y-1}{x-k}\right) + \left(\sum_{1 \leq k \leq y} F_k \binom{y-k+x-1}{y-k}\right) \pmod{P}\)</span>
@@ -101,7 +101,7 @@ What about binomial coefficients? Since <span class="math inline">\(n\)</span> a
 (If <span class="math inline">\(n\)</span> and <span class="math inline">\(k\)</span> could be much larger, or if they could be larger than <span class="math inline">\(P\)</span>, we would have to use something like <a href="https://en.wikipedia.org/wiki/Lucas%27s_theorem">Lucas’s Theorem</a> or <a href="https://cp-algorithms.com/combinatorics/binomial-coefficients.html">other techniques</a>; that might make for another interesting blog post sometime.) But how do we handle division in modular arithmtic? Since we’re working modulo a prime, every value <span class="math inline">\(a\)</span> other than zero must have a <em>modular inverse</em>, that is, a value <span class="math inline">\(a^{-1}\)</span> such that <span class="math inline">\(a \cdot a^{-1} \equiv 1 \pmod p\)</span> (this is a corollary of <a href="https://mathlesstraveled.com/2015/11/25/mablowrimo-24-bezouts-identity/">Bézout’s Theorem</a>). To compute the modular inverse for a given <span class="math inline">\(a\)</span>, we have a couple options. One simple way is to use <a href="https://mathlesstraveled.com/2017/10/14/four-formats-for-fermat/">Fermat’s Little Theorem</a>: if <span class="math inline">\(a\)</span> is not divisible by a prime <span class="math inline">\(p\)</span>, then <span class="math inline">\(a^{p-2} \cdot a = a^{p-1} \equiv 1 \pmod p\)</span>, hence <span class="math inline">\(a^{p-2}\)</span> is the modular inverse of <span class="math inline">\(a\)</span> modulo <span class="math inline">\(p\)</span>, and we can compute it efficiently using repeated squaring modulo <span class="math inline">\(p\)</span>. Another option is to use the <a href="https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm">extended Euclidean algorithm</a> to find the <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> (guaranteed to exist by Bézout’s Theorem) such that <span class="math inline">\(ax + py = 1\)</span>; then <span class="math inline">\(x\)</span> is the inverse of <span class="math inline">\(a\)</span> modulo <span class="math inline">\(p\)</span>.
 </p>
 <p>
-Both of these methods take <span class="math inline">\(O(\lg p)\)</span> time. In my experience, computing the <span class="math inline">\(p-2\)</span> power is easier to code (especially in Haskell where we <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">get exponentiation by repeated squaring for free</a>!), but using the extended Euclidean algorithm can be a bit faster when it’s well-optimized. (Note the extended Euclidean algorithm can be faster when <span class="math inline">\(a\)</span> is small, but raising to the <span class="math inline">\(p-2\)</span> power always takes the same number of steps no matter what <span class="math inline">\(a\)</span> is.)
+Both of these methods take <span class="math inline">\(O(\lg p)\)</span> time. In my experience, computing the <span class="math inline">\(p-2\)</span> power is easier to code (especially in Haskell where we <a href="https://byorgey.github.io/blog/posts/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1.html">get exponentiation by repeated squaring for free</a>!), but using the extended Euclidean algorithm can be a bit faster when it’s well-optimized. (Note the extended Euclidean algorithm can be faster when <span class="math inline">\(a\)</span> is small, but raising to the <span class="math inline">\(p-2\)</span> power always takes the same number of steps no matter what <span class="math inline">\(a\)</span> is.)
 </p>
 <h2 id="factorials-modulo-a-prime">
 Factorials modulo a prime

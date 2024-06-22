@@ -54,7 +54,7 @@
 
 <section>
 <p>
-In <a href="https://byorgey.wordpress.com/2023/05/03/competitive-programming-in-haskell-tries/">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/chemistsvows">Chemist’s Vows</a>. In this problem, we have to decide which words can be made by concatenating atomic element symbols. So this is another parsing problem; but unlike the <a href="https://byorgey.wordpress.com/2023/05/03/competitive-programming-in-haskell-tries/">previous problem</a>, element symbols are not prefix-free. For example, <code>B</code> and <code>Be</code> are both element symbols. So, if we see <code>BE…</code>, we don’t immediately know whether we should parse it as <code>Be</code>, or as <code>B</code> followed by an element that starts with <code>E</code> (such as <code>Er</code>).
+In <a href="https://byorgey.github.io/blog/posts/2023/05/03/competitive-programming-in-haskell-tries.html">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/chemistsvows">Chemist’s Vows</a>. In this problem, we have to decide which words can be made by concatenating atomic element symbols. So this is another parsing problem; but unlike the <a href="https://byorgey.github.io/blog/posts/2023/05/03/competitive-programming-in-haskell-tries.html">previous problem</a>, element symbols are not prefix-free. For example, <code>B</code> and <code>Be</code> are both element symbols. So, if we see <code>BE…</code>, we don’t immediately know whether we should parse it as <code>Be</code>, or as <code>B</code> followed by an element that starts with <code>E</code> (such as <code>Er</code>).
 </p>
 <h2 id="a-first-try">
 A first try

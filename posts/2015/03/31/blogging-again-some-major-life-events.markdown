@@ -6,7 +6,7 @@ categories: meta
 tags: blogging,diagrams,dissertation,PhD,publication,tenure
 ---
 
-It's been a <a href="https://byorgey.wordpress.com/2014/08/19/maniac-week-postmortem/">long time</a> since I've written anything here; the blog was on hold while I was finishing my PhD and on the academic job market. Now that things have settled down a bit I plan to <a href="https://www.beeminder.com/byorgey/goals/blog">get back to blogging</a>.
+It's been a <a href="https://byorgey.github.io/blog/posts/2014/08/19/maniac-week-postmortem.html">long time</a> since I've written anything here; the blog was on hold while I was finishing my PhD and on the academic job market. Now that things have settled down a bit I plan to <a href="https://www.beeminder.com/byorgey/goals/blog">get back to blogging</a>.
 
 For starters, here are a few of the major events that have happened in the meantime, that readers of this blog might care about:
 

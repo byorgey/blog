@@ -6,7 +6,7 @@ categories: haskell,learning,projects
 tags: category theory,collaborative editing,groupoid,merge,patch theory
 ---
 
-(Previous posts <a href="http://byorgey.wordpress.com/2008/02/04/gobby-haskell-and-patch-theory/">here</a>, and <a href="http://byorgey.wordpress.com/2008/02/07/patch-theory-thoughts-part-i/">here</a>.)
+(Previous posts <a href="https://byorgey.github.io/blog/posts/2008/02/04/gobby-haskell-and-patch-theory.html">here</a>, and <a href="https://byorgey.github.io/blog/posts/2008/02/07/patch-theory-thoughts-part-i.html">here</a>.)
 
 So, let's talk about patch theory!  I should start by saying that I have obviously drawn a lot of ideas and inspiration from <a href="http://darcs.net/">darcs</a>, and especially from the <a href="http://en.wikibooks.org/wiki/Understanding_darcs">wikibook explanation</a> of darcs patch theory, but I do think there might be some nuggets of original contributions here (in subsequent posts at least), but I'm not yet familiar enough with the literature to really say.
 

@@ -15,7 +15,7 @@ tags: game,programming,resource,robot,Swarm
 </div>
 <h2 id="what-is-it">What is it?</h2>
 <p>Swarm is a 2D, open-world programming and resource gathering game with a strongly-typed, functional programming language and a unique upgrade system. Unlocking language features is tied to collecting resources, making it an interesting challenge to bootstrap your way into the use of the full language.</p>
-<p>Notable changes since the <a href="https://byorgey.wordpress.com/2022/06/20/swarm-status-report/">last progress update</a> include:</p>
+<p>Notable changes since the <a href="https://byorgey.github.io/blog/posts/2022/06/20/swarm-status-report.html">last progress update</a> include:</p>
 <ul>
 <li>An all-new in-game tutorial consisting of a sequence of guided challenges</li>
 <li>Several new challenge scenarios (mazes! towers of hanoi!), and documentation on how to make your own</li>

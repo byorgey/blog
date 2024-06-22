@@ -21,7 +21,7 @@ tags: data,enumeration,function,index,sampling
 <li>Enumerations are represented as <em>functions</em> from index to value, so they can be efficiently indexed (which also enables efficient random sampling).</li>
 <li>The provided combinators will always do something sensible so that every value in the resulting enumeration occurs at a finite index. For example, if you take the disjoint union of two infinite enumerations, the resulting enumeration will alternate between values from the two inputs.</li>
 </ul>
-<p>I <a href="https://byorgey.wordpress.com/2016/10/25/adventures-in-enumerating-balanced-brackets/">wrote about something similar</a> a few years ago. The main difference is that in that post I limited myself to only <em>finite</em> enumerations. There’s a lot more I could say but for now I think I will just show some examples:</p>
+<p>I <a href="https://byorgey.github.io/blog/posts/2016/10/25/adventures-in-enumerating-balanced-brackets.html">wrote about something similar</a> a few years ago. The main difference is that in that post I limited myself to only <em>finite</em> enumerations. There’s a lot more I could say but for now I think I will just show some examples:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;&gt;&gt;</span> <span>enumerate</span> <span>empty</span>
 <span>[]</span>
 <span>&gt;&gt;&gt;</span> <span>enumerate</span> <span>unit</span>

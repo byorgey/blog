@@ -6,7 +6,7 @@ categories: combinatorics
 tags: 
 ---
 
-In a <a href="http://byorgey.wordpress.com/2011/01/26/counting-linear-lambda-terms/">previous post</a> I posed the challenge of coming up with polymorphic types admitting certain numbers of linear inhabitants.  (If you didn't see the previous post and want to puzzle over an interesting lambda-calculus based problem, stop reading now and go read <a href="http://byorgey.wordpress.com/2011/01/26/counting-linear-lambda-terms/">the previous post</a> first.)  In this post I'll outline some solutions and some further questions.
+In a <a href="https://byorgey.github.io/blog/posts/2011/01/26/counting-linear-lambda-terms.html">previous post</a> I posed the challenge of coming up with polymorphic types admitting certain numbers of linear inhabitants.  (If you didn't see the previous post and want to puzzle over an interesting lambda-calculus based problem, stop reading now and go read <a href="https://byorgey.github.io/blog/posts/2011/01/26/counting-linear-lambda-terms.html">the previous post</a> first.)  In this post I'll outline some solutions and some further questions.
 
 First, we can make the easy observation that if we have polymorphic types admitting $m$ and $n$ linear inhabitants respectively, we can easily construct a type with $mn$ inhabitants, by first alpha-varying the types so they have disjoint type parameters, then concatenating their inputs and pairing their outputs.  For example, we can use $\forall a. (a,a) \to (a,a)$, with two linear inhabitants, to construct the type $\forall a b. (a,a) \to (b,b) \to ((a,a),(b,b))$ with four.
 

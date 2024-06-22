@@ -6,7 +6,7 @@ categories: competitive programming,haskell
 tags: challenge,dynamic programming,Kattis
 ---
 
-<p>Continuing the <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">series on dynamic programming</a>, I just have a couple challenge problems for you today. I have indeed solved both of these problems in Haskell, but I don’t yet know how to write <strong>elegant</strong> solutions! There is a reason that the techniques covered in my <a href="https://byorgey.wordpress.com/2023/06/06/dynamic-programming-in-haskell-automatic-memoization/">previous posts</a> aren’t quite good enough.</p>
+<p>Continuing the <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">series on dynamic programming</a>, I just have a couple challenge problems for you today. I have indeed solved both of these problems in Haskell, but I don’t yet know how to write <strong>elegant</strong> solutions! There is a reason that the techniques covered in my <a href="https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html">previous posts</a> aren’t quite good enough.</p>
 <ul>
 <li><a href="https://open.kattis.com/problems/honi">Honi</a></li>
 <li><a href="https://open.kattis.com/problems/assassins">Assassins</a></li>

@@ -24,11 +24,11 @@ $S \oplus T = (S \triangleleft T) \cup (S \triangleright T)$
 
 where
 
-$S \triangleleft T = \{ s \in S \mid \forall t \in T, s = t \mbox{ or } t \lesssim s \mbox{ or } s \not \lesssim t \}$
+$S \triangleleft T = \{ s \in S \mid \forall t \in T, s = t \text{ or } t \lesssim s \text{ or } s \not \lesssim t \}$
 
 and
 
-$S \triangleright T = \{ t \in T \mid \forall s \in S, s = t \mbox{ or } t \not \lesssim s \}$.
+$S \triangleright T = \{ t \in T \mid \forall s \in S, s = t \text{ or } t \not \lesssim s \}$.
 
 In words, we combine subsets $S$ and $T$ by forming the set of objects from $S \cup T$ which are not $\lesssim$ any others, with the exception of objects $s \in S, t \in T$ where both $s \lesssim t$ and $t \lesssim s$; in this case we keep $s$ but not $t$. This introduces a "left bias" to $\oplus$; there is also an equally valid version with right bias (in particular, $S \oplus' T = (T \triangleleft S) \cup (T \triangleright S)$).
 
@@ -42,11 +42,11 @@ I like to think of this as the monoid of <i>partial knowledge</i>.  If we consid
 
 Now, why can this be thought of as a generalization of the monoid $(P, \max)$ on a totally ordered set?  Well, look what happens when we replace $P$ in the definitions above with a totally ordered set with relation $\leq$: first of all, the restriction on $P_*$ (no two elements of a set in $P_*$ should be related by $\leq$) means that $P_*$ contains only the empty set and singleton sets, so (ignoring the empty set) $P_*$ is isomorphic to $P$.  Now look at the definition of $S \triangleleft T$, with $\lesssim$ replaced by $\leq$ (and $\not \lesssim$ replaced by $>$):
 
-$S \triangleleft T = \{ s \in S \mid \forall t \in T, s = t \mbox{ or } t \leq s \mbox{ or } s > t \}$
+$S \triangleleft T = \{ s \in S \mid \forall t \in T, s = t \text{ or } t \leq s \text{ or } s > t \}$
 
 But $s = t$ and $s > t$ are both subsumed by $t \leq s$, so we can rewrite this as
 
-$\{s\} \triangleleft \{t\} = \{s\} \mbox{ if } s \geq t, \mbox{ or } \varnothing \mbox{ otherwise }$.
+$\{s\} \triangleleft \{t\} = \{s\} \text{ if } s \geq t, \text{ or } \varnothing \text{ otherwise }$.
 
 An analysis of $\triangleright$ is similar, and it is clear that $\{s\} \oplus \{t\} = \{\max(s,t)\}$.
 

@@ -6,7 +6,7 @@ categories: haskell,math
 tags: knowledge,monoid,preorder
 ---
 
-In <a href="http://byorgey.wordpress.com/2008/04/17/an-interesting-monoid/">my last post</a>, I described what I'm calling the "monoid of partial knowledge", a way of creating a monoid over sets of elements from a preorder, which is a generalization of the familiar monoid $(S,\max)$ over a set with a total order and a smallest element.
+In <a href="https://byorgey.github.io/blog/posts/2008/04/17/an-interesting-monoid.html">my last post</a>, I described what I'm calling the "monoid of partial knowledge", a way of creating a monoid over sets of elements from a preorder, which is a generalization of the familiar monoid $(S,\max)$ over a set with a total order and a smallest element.
 
 There's actually one situation where a special case of this monoid is commonly used in Haskell.  Suppose you have a record type which contains several fields, and you would like to parse some input to create a value of this type.  The problem is that the input is not very nice: the bits of input which designate values for various fields are not in any particular order; some occur more than once; some might even be missing.  How to deal with this?
 

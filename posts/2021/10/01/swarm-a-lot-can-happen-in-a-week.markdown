@@ -6,7 +6,7 @@ categories: haskell,projects
 tags: game,programming,resource,robot,Swarm
 ---
 
-<p>It’s been about a week since I put out <a href="https://byorgey.wordpress.com/2021/09/23/swarm-preview-and-call-for-collaboration/">an announcement and call for collaboration</a> on a new game, <a href="https://github.com/swarm-game/swarm">Swarm</a>. Since then, the response has been fantastic: lots of people have tried it out, a few have even streamed themselves playing it on Twitch, and there has been lots of development activity.</p>
+<p>It’s been about a week since I put out <a href="https://byorgey.github.io/blog/posts/2021/09/23/swarm-preview-and-call-for-collaboration.html">an announcement and call for collaboration</a> on a new game, <a href="https://github.com/swarm-game/swarm">Swarm</a>. Since then, the response has been fantastic: lots of people have tried it out, a few have even streamed themselves playing it on Twitch, and there has been lots of development activity.</p>
 <ul>
 <li>39 new <a href="https://github.com/swarm-game/swarm/issues">issues opened</a></li>
 <li>27 <a href="https://github.com/swarm-game/swarm/pulls?q=is%3Apr+is%3Aclosed">pull requests merged</a></li>

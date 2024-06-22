@@ -54,10 +54,10 @@
 
 <section>
 <p>
-This is part 1 of a <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">promised multi-part series</a> on dynamic programming in Haskell. As a reminder, we’re using <a href="https://open.kattis.com/problems/zapis">Zapis</a> as a sample problem. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
+This is part 1 of a <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">promised multi-part series</a> on dynamic programming in Haskell. As a reminder, we’re using <a href="https://open.kattis.com/problems/zapis">Zapis</a> as a sample problem. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
 </p>
 <p>
-<a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">Last time</a>, we developed a recurrence for this problem and saw some naive, directly recursive Haskell code for computing it. Although this naive version is technically correct, it is much too slow, so our goal is to implement it more efficiently.
+<a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">Last time</a>, we developed a recurrence for this problem and saw some naive, directly recursive Haskell code for computing it. Although this naive version is technically correct, it is much too slow, so our goal is to implement it more efficiently.
 </p>
 <h2 id="mutable-arrays">
 Mutable arrays?
@@ -72,11 +72,11 @@ This would work, but there is a better way!
 Immutable arrays
 </h2>
 <p>
-While mutable arrays <a href="https://byorgey.wordpress.com/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray/">occasionally have their place</a>, we can surprisingly often get away with <em>immutable</em> arrays, where we completely define the array up front and then only use it for fast lookups afterwards.
+While mutable arrays <a href="https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html">occasionally have their place</a>, we can surprisingly often get away with <em>immutable</em> arrays, where we completely define the array up front and then only use it for fast lookups afterwards.
 </p>
 <ul>
 <li>
-If the type of the array elements is suitable, and we can initialize the array elements all at once from a list using some kind of formula, map, scan, <em>etc.</em>, we should use <code>UArray</code> <a href="https://byorgey.wordpress.com/2023/02/24/competitive-programming-in-haskell-infinite-2d-array-level-4/">since it is much faster</a> than <code>Array</code>.
+If the type of the array elements is suitable, and we can initialize the array elements all at once from a list using some kind of formula, map, scan, <em>etc.</em>, we should use <code>UArray</code> <a href="https://byorgey.github.io/blog/posts/2023/02/24/competitive-programming-in-haskell-infinite-2d-array-level-4.html">since it is much faster</a> than <code>Array</code>.
 </li>
 <li>
 However, <code>UArray</code> is strict in the elements, and the elements must be of a type that can be stored unboxed. If we need a more complex element type, or we need to compute the array recursively (where some elements depend on other elements), we can use <code>Array</code>.
@@ -89,10 +89,10 @@ What about the <a href="http://hackage.haskell.org/package/vector"><code>vector<
 Lazy, recursive, immutable arrays
 </h2>
 <p>
-In <a href="https://byorgey.wordpress.com/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness/">my previous post on topsort</a> we already saw the basic idea: since <code>Array</code>s are lazy in their elements, we can define them recursively; the Haskell runtime then takes care of computing the elements in a suitable order. Previously, we saw this applied to automatically compute a topological sort, but more generally, we can use it to fill out a table of values for any recurrence.
+In <a href="https://byorgey.github.io/blog/posts/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness.html">my previous post on topsort</a> we already saw the basic idea: since <code>Array</code>s are lazy in their elements, we can define them recursively; the Haskell runtime then takes care of computing the elements in a suitable order. Previously, we saw this applied to automatically compute a topological sort, but more generally, we can use it to fill out a table of values for any recurrence.
 </p>
 <p>
-So, as a first attempt, let’s just replace our recursive <code>c</code> function from <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">last time</a> with an array. I’ll only show the <code>solve</code> function for now; the rest of the code remains the same. (Spoiler alert: this solution works, but it’s ugly. We’ll develop much better solutions later.)
+So, as a first attempt, let’s just replace our recursive <code>c</code> function from <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">last time</a> with an array. I’ll only show the <code>solve</code> function for now; the rest of the code remains the same. (Spoiler alert: this solution works, but it’s ugly. We’ll develop much better solutions later.)
 </p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
 <span>solve</span> <span>str</span> <span style="color: red">=</span> <span>c</span><span>!</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
@@ -168,7 +168,7 @@ In fact, we can abstract this into a useful little function to create a lookup t
 The solution so far
 </h2>
 <p>
-Putting it all together, here’s our complete solution so far. It’s pretty good, and in fact it’s organized in a very similar way to <a href="https://gist.github.com/meooow25/8d5441fa54e645c8f2a48f91a750d360">Soumik Sarkar’s dynamic programming solution</a> to <a href="https://byorgey.wordpress.com/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa/">Chemist’s Vows</a>. (However, there’s an even better solution coming in my next post!)
+Putting it all together, here’s our complete solution so far. It’s pretty good, and in fact it’s organized in a very similar way to <a href="https://gist.github.com/meooow25/8d5441fa54e645c8f2a48f91a750d360">Soumik Sarkar’s dynamic programming solution</a> to <a href="https://byorgey.github.io/blog/posts/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa.html">Chemist’s Vows</a>. (However, there’s an even better solution coming in my next post!)
 </p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">import</span> <span>Control.Arrow</span>
 <span style="color: blue;font-weight: bold">import</span> <span>Data.Array</span>

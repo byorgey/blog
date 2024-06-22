@@ -6,7 +6,7 @@ categories: competitive programming,haskell
 tags: Kattis,number
 ---
 
-<p>In my <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-in-haskell-infinite-2d-array/">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. As a reminder, the problem specifies a two-parameter recurrence $F_{x,y}$, given by</p>
+<p>In my <a href="https://byorgey.github.io/blog/posts/2022/09/01/competitive-programming-in-haskell-infinite-2d-array.html">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. As a reminder, the problem specifies a two-parameter recurrence $F_{x,y}$, given by</p>
 <ul>
 <li>$F_{0,0} = 0$</li>
 <li>$F_{0,1} = F_{1,0} = 1$</li>
@@ -22,7 +22,7 @@ tags: Kattis,number
 </div>
 <p>The number of paths from $F_{0,k}$ to $F_{x,y}$ is the number of grid paths from $(1,k)$ to $(x,y)$, which is $\binom{(x-1) + (y-k)}{y-k}$. Likewise the number of paths from $F_{k,0}$ to $F_{x,y}$ is $\binom{(x-k) + (y-1)}{x-k}$. All together, this yields the formula</p>
 <p>$\displaystyle F_{x,y} = \left(\sum_{1 \leq k \leq x} F_k \binom{x-k+y-1}{x-k}\right) + \left(\sum_{1 \leq k \leq y} F_k \binom{y-k+x-1}{y-k}\right) \pmod{P}$</p>
-<p>Commenter <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-in-haskell-infinite-2d-array/#comment-40784">Soumik Sarkar found a different formula</a>,</p>
+<p>Commenter <a href="https://byorgey.github.io/blog/posts/2022/09/01/competitive-programming-in-haskell-infinite-2d-array.html#comment-40784">Soumik Sarkar found a different formula</a>,</p>
 <p>$\displaystyle F_{x,y} = F_{x+2y} + \sum_{1 \leq k \leq y} (F_k - F_{2k}) \binom{y-k+x-1}{y-k} \pmod{P}$</p>
 <p>which clearly has some similarity to mine, but I have not been able to figure out how to derive it, and Soumik did not explain how they found it. Any insights welcome!</p>
 <p>In any case, both of these formulas involve a sum of only $O(x+y)$ terms, instead of $O(xy)$, although the individual terms are going to be much more work to compute. The question now becomes how to efficiently compute Fibonacci numbers and binomial coefficients modulo a prime. I’ll talk about that in the next post!</p>

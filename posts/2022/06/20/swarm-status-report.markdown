@@ -6,7 +6,7 @@ categories: haskell,projects
 tags: game,programming,resource,robot,Swarm
 ---
 
-<a href="https://github.com/swarm-game/swarm/">Swarm</a> is a 2D programming and resource gathering game, written in Haskell. I <a href="https://byorgey.wordpress.com/2021/09/23/swarm-preview-and-call-for-collaboration/">announced it last September</a> and <a href="https://byorgey.wordpress.com/2021/10/01/swarm-a-lot-can-happen-in-a-week/">gave an update one week after that</a>, but haven’t written anything since then. However, that doesn’t mean development has stopped! Since last October, the repo has grown by an additional 4K lines of Haskell code (to 12K). Notable changes since then include:
+<a href="https://github.com/swarm-game/swarm/">Swarm</a> is a 2D programming and resource gathering game, written in Haskell. I <a href="https://byorgey.github.io/blog/posts/2021/09/23/swarm-preview-and-call-for-collaboration.html">announced it last September</a> and <a href="https://byorgey.github.io/blog/posts/2021/10/01/swarm-a-lot-can-happen-in-a-week.html">gave an update one week after that</a>, but haven’t written anything since then. However, that doesn’t mean development has stopped! Since last October, the repo has grown by an additional 4K lines of Haskell code (to 12K). Notable changes since then include:
 <ul>
  	<li>Many UI improvements, like a main menu, ASCII art recipes, and mouse support</li>
  	<li>Many new entities and recipes (multiple types of motors, drills, and mines; new materials like iron, silver, quartz, and glass; new devices like circuits, clocks, cameras, comparators, compasses, …)</li>

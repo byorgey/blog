@@ -6,7 +6,7 @@ categories: haskell,teaching,writing
 tags: feedback,Typeclassopedia,wiki
 ---
 
-Thanks for all the fantastic feedback on the <a href="http://byorgey.wordpress.com/2009/02/16/the-typeclassopedia-request-for-feedback/">Typeclassopedia</a>!  Please keep it coming!
+Thanks for all the fantastic feedback on the <a href="https://byorgey.github.io/blog/posts/2009/02/16/the-typeclassopedia-request-for-feedback.html">Typeclassopedia</a>!  Please keep it coming!
 
 Such an outpouring of helpful comments and suggestions deserves a response, so I just wanted to write a quick note to say that I am reading every piece of feedback---whether here, on haskell-cafe, in #haskell, or on reddit---and fully intend to respond to each as appropriate.  However, I probably won't get around to it for a week or so, as at the moment I am focusing on digging myself out from all the other obligations that piled up while I was finishing the first draft.  In the meantime, please keep sending me your suggestions!
 

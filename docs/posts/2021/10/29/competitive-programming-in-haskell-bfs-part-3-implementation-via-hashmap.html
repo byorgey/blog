@@ -54,7 +54,7 @@
 
 <section>
 <p>
-In <a href="https://byorgey.wordpress.com/2021/10/14/competitive-programming-in-haskell-bfs-part-1/">a previous post</a>, I showed how we can solve <a href="https://open.kattis.com/problems/modulosolitaire">Modulo Solitaire</a> (and hopefully other BFS problems as well) using a certain API for BFS, and we also <a href="https://byorgey.wordpress.com/2021/10/18/competitive-programming-in-haskell-bfs-part-2-alternative-apis/">explored some alternatives</a>. I had a very interesting discussion with <a href="https://blogs.ncl.ac.uk/andreymokhov/about/">Andrey Mokhov</a> in the comments about potential designs for an even more general API; more on that in a future post, perhaps!
+In <a href="https://byorgey.github.io/blog/posts/2021/10/14/competitive-programming-in-haskell-bfs-part-1.html">a previous post</a>, I showed how we can solve <a href="https://open.kattis.com/problems/modulosolitaire">Modulo Solitaire</a> (and hopefully other BFS problems as well) using a certain API for BFS, and we also <a href="https://byorgey.github.io/blog/posts/2021/10/18/competitive-programming-in-haskell-bfs-part-2-alternative-apis.html">explored some alternatives</a>. I had a very interesting discussion with <a href="https://blogs.ncl.ac.uk/andreymokhov/about/">Andrey Mokhov</a> in the comments about potential designs for an even more general API; more on that in a future post, perhaps!
 </p>
 <p>
 For today, though, I want to finally show one way to implement this API efficiently. Spoiler alert: this implementation ultimately won’t be fast enough for us, but it will be a helpful stepping stone on our way to a yet faster implementation (which will of course get its own post in due time).

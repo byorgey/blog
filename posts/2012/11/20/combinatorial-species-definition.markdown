@@ -6,7 +6,7 @@ categories: math,species
 tags: bijection,data structures,definition,functor,labels
 ---
 
-<p><!-- -*- compile-command: "BlogLiteratelyD 03-defn.markdown &gt; 03-defn.html" -*- --> Continuing from <a href="http://byorgey.wordpress.com/2012/10/27/decomposing-data-structures/">my previous post</a>, recall that the goal of species is to have a unified theory of <em>containers</em> with <em>labeled<sup><a href="#fn1" class="footnoteRef" id="fnref1">1</a></sup> locations</em>. So, how do we actually specify such things (leaving aside for the moment the question of how we <em>compute</em> with them)?</p>
+<p><!-- -*- compile-command: "BlogLiteratelyD 03-defn.markdown &gt; 03-defn.html" -*- --> Continuing from <a href="https://byorgey.github.io/blog/posts/2012/10/27/decomposing-data-structures.html">my previous post</a>, recall that the goal of species is to have a unified theory of <em>containers</em> with <em>labeled<sup><a href="#fn1" class="footnoteRef" id="fnref1">1</a></sup> locations</em>. So, how do we actually specify such things (leaving aside for the moment the question of how we <em>compute</em> with them)?</p>
 <p>We might imagine specifying them by:</p>
 <ul>
 <li>using any arbitrary set to represent some family of labeled structures (<em>e.g.</em> the set of labeled binary tree structures, the set of labeled list structures, …), together with</li>

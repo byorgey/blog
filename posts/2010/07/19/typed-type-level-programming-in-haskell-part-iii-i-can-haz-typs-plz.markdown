@@ -6,7 +6,7 @@ categories: haskell
 tags: functional programming,type-level
 ---
 
-In <a href="http://byorgey.wordpress.com/2010/07/06/typed-type-level-programming-in-haskell-part-ii-type-families/">Part II</a>, I showed how <i>type families</i> can be used to do type-level programming in a functional style.  For example, here is addition of natural numbers again:
+In <a href="https://byorgey.github.io/blog/posts/2010/07/06/typed-type-level-programming-in-haskell-part-ii-type-families.html">Part II</a>, I showed how <i>type families</i> can be used to do type-level programming in a functional style.  For example, here is addition of natural numbers again:
 
 <pre>
   data Z

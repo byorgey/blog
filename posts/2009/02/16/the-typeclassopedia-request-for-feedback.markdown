@@ -24,6 +24,6 @@ I am looking for more references for Foldable, Traversable, and Comonad in parti
 
 At 48 pages and 110 citations, the article is rather hefty, so I certainly don't expect most people to read through all of it anytime soon---but even if you only take a look at a section or two about which you are particularly interested and/or knowledgeable, your feedback would be greatly appreciated!  I hope that this can become a valuable reference for the Haskell community.
 
-<i>Edit, 16 March 2009:</i> a <a href="http://byorgey.wordpress.com/2009/03/16/monadreader-13-is-out/">revised and updated version of the Typeclassopedia has now been published</a> in the Monad.Reader.
+<i>Edit, 16 March 2009:</i> a <a href="https://byorgey.github.io/blog/posts/2009/03/16/monadreader-13-is-out.html">revised and updated version of the Typeclassopedia has now been published</a> in the Monad.Reader.
 
 

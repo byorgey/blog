@@ -54,7 +54,7 @@
 
 <section>
 <p>
-In <a href="https://byorgey.wordpress.com/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa/">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/zapis">Zapis</a>. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
+In <a href="https://byorgey.github.io/blog/posts/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa.html">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/zapis">Zapis</a>. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
 </p>
 <p>
 For example, given <code>(??)</code>, the answer is 4: we could replace the question marks with any matched pair (either <code>()</code>, <code>[]</code>, or <code>{}</code>), or we could replace them with <code>)(</code>, resulting in <code>()()</code>.
@@ -141,13 +141,13 @@ In imperative languages, dynamic programming is often carried out by filling in 
 </p>
 <ul>
 <li>
-In <a href="https://byorgey.wordpress.com/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays/">part 1</a>, we will explore the basic idea of using lazy, recursive, immutable arrays (which we have <a href="https://byorgey.wordpress.com/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness/">already seen in a previous post</a>).
+In <a href="https://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html">part 1</a>, we will explore the basic idea of using lazy, recursive, immutable arrays (which we have <a href="https://byorgey.github.io/blog/posts/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness.html">already seen in a previous post</a>).
 </li>
 <li>
-In <a href="https://byorgey.wordpress.com/2023/06/06/dynamic-programming-in-haskell-automatic-memoization/">part 2</a>, we will use ideas from Conal Elliot’s <code>MemoTrie</code> package (and ultimately from <a href="https://citeseerx.ist.psu.edu/doc/10.1.1.43.3272">a paper by Ralf Hinze</a>) to clean up the code and make it a lot closer to the naive version.
+In <a href="https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html">part 2</a>, we will use ideas from Conal Elliot’s <code>MemoTrie</code> package (and ultimately from <a href="https://citeseerx.ist.psu.edu/doc/10.1.1.43.3272">a paper by Ralf Hinze</a>) to clean up the code and make it a lot closer to the naive version.
 </li>
 <li>
-<a href="https://byorgey.wordpress.com/2023/06/20/competitive-programming-in-haskell-two-more-dp-challenges/">This post</a> contains a couple challenge problems that can’t quite be solved using the techniques in the previous posts.
+<a href="https://byorgey.github.io/blog/posts/2023/06/20/competitive-programming-in-haskell-two-more-dp-challenges.html">This post</a> contains a couple challenge problems that can’t quite be solved using the techniques in the previous posts.
 </li>
 <li>
 At some point perhaps we’ll discuss how to memoize functions with infinite (or just very large) domains.

@@ -6,7 +6,7 @@ categories: math
 tags: algorithm,count,inversion,merge,mergesort,monoid,product,sort,spark
 ---
 
-<p>Time for me to reveal the example I had in mind that led to the generalization in <a href="https://byorgey.wordpress.com/2018/10/01/monoidal-sparks/">my previous post</a>. Thanks for all the interesting comments: it seems like there are some interesting connections to be explored (<em>e.g.</em> to the algebra of graphs, formal group laws, …?)!</p>
+<p>Time for me to reveal the example I had in mind that led to the generalization in <a href="https://byorgey.github.io/blog/posts/2018/10/01/monoidal-sparks.html">my previous post</a>. Thanks for all the interesting comments: it seems like there are some interesting connections to be explored (<em>e.g.</em> to the algebra of graphs, formal group laws, …?)!</p>
 <p>This is a literate Haskell post; download it and play along in ghci! (Note it requires GHC 8.6 since I couldn’t resist making use of <code>DerivingVia</code>…)</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>&gt;</span> <span style="color:green;">{-# LANGUAGE DefaultSignatures          #-}</span>
 <span>&gt;</span> <span style="color:green;">{-# LANGUAGE FlexibleInstances          #-}</span>

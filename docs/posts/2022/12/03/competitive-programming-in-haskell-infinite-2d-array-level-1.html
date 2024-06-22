@@ -54,7 +54,7 @@
 
 <section>
 <p>
-In my <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-in-haskell-infinite-2d-array/">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. As a reminder, the problem specifies a two-parameter recurrence <span class="math inline">\(F_{x,y}\)</span>, given by
+In my <a href="https://byorgey.github.io/blog/posts/2022/09/01/competitive-programming-in-haskell-infinite-2d-array.html">previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/infinite2darray">Infinite 2D Array</a> using Haskell. As a reminder, the problem specifies a two-parameter recurrence <span class="math inline">\(F_{x,y}\)</span>, given by
 </p>
 <ul>
 <li>
@@ -94,7 +94,7 @@ The number of paths from <span class="math inline">\(F_{0,k}\)</span> to <span c
 <span class="math inline">\(\displaystyle F_{x,y} = \left(\sum_{1 \leq k \leq x} F_k \binom{x-k+y-1}{x-k}\right) + \left(\sum_{1 \leq k \leq y} F_k \binom{y-k+x-1}{y-k}\right) \pmod{P}\)</span>
 </p>
 <p>
-Commenter <a href="https://byorgey.wordpress.com/2022/09/01/competitive-programming-in-haskell-infinite-2d-array/#comment-40784">Soumik Sarkar found a different formula</a>,
+Commenter <a href="https://byorgey.github.io/blog/posts/2022/09/01/competitive-programming-in-haskell-infinite-2d-array.html#comment-40784">Soumik Sarkar found a different formula</a>,
 </p>
 <p>
 <span class="math inline">\(\displaystyle F_{x,y} = F_{x+2y} + \sum_{1 \leq k \leq y} (F_k - F_{2k}) \binom{y-k+x-1}{y-k} \pmod{P}\)</span>

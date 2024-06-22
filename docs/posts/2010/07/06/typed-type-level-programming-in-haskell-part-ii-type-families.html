@@ -53,7 +53,7 @@
 </div>
 
 <section>
-<p>In my <a href="http://byorgey.wordpress.com/2010/06/29/typed-type-level-programming-in-haskell-part-i-functional-dependencies/">previous post</a>, we saw how multi-parameter type classes with functional dependencies in Haskell allow us to do type-level programming in a logic programming style. (If you’re not clear on why this corresponds to a logic programming style, see the <a href="http://www.reddit.com/r/haskell/comments/ck459/typed_typelevel_programming_in_haskell_part_i/">ensuing discussion on reddit</a>, where others explained it much better than I did in my post.)</p>
+<p>In my <a href="https://byorgey.github.io/blog/posts/2010/06/29/typed-type-level-programming-in-haskell-part-i-functional-dependencies.html">previous post</a>, we saw how multi-parameter type classes with functional dependencies in Haskell allow us to do type-level programming in a logic programming style. (If you’re not clear on why this corresponds to a logic programming style, see the <a href="http://www.reddit.com/r/haskell/comments/ck459/typed_typelevel_programming_in_haskell_part_i/">ensuing discussion on reddit</a>, where others explained it much better than I did in my post.)</p>
 <p>However, MPTCs + FDs weren’t the last word on type-level programming. In 2007, along came <a href="http://www.haskell.org/haskellwiki/GHC/Type_families">type families</a>.</p>
 <p>Essentially, type families allow us to write <i>functions on types</i>. For example, here’s how we would implement the same <code>Plus</code> function from the last post, this time using type families:</p>
 <pre>

@@ -54,7 +54,7 @@
 
 <section>
 <p>
-In <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">my last post</a> I wrote about modular exponentiation and <code>egcd</code>. In this post, I consider the problem of solving modular equivalences, building on code from the previous post.
+In <a href="https://byorgey.github.io/blog/posts/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1.html">my last post</a> I wrote about modular exponentiation and <code>egcd</code>. In this post, I consider the problem of solving modular equivalences, building on code from the previous post.
 </p>
 <h1 id="solving-linear-congruences">
 Solving linear congruences
@@ -101,7 +101,7 @@ then as long as <span class="math inline">\(m\)</span> and <span class="math inl
 <span class="math inline">\(x \equiv c \pmod {mn}.\)</span>
 </p>
 <p>
-We first compute the Bézout coefficients <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> such that <span class="math inline">\(mu + nv = 1\)</span> <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">using <code>egcd</code></a>, and then compute the solution as <span class="math inline">\(c = anv + bmu\)</span>. Indeed,
+We first compute the Bézout coefficients <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> such that <span class="math inline">\(mu + nv = 1\)</span> <a href="https://byorgey.github.io/blog/posts/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1.html">using <code>egcd</code></a>, and then compute the solution as <span class="math inline">\(c = anv + bmu\)</span>. Indeed,
 </p>
 <p>
 <span class="math inline">\(c = anv + bmu = a(1 - mu) + bmu = a - amu + bmu = a + (b-a)mu\)</span>

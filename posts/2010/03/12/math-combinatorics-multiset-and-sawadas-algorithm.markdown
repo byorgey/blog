@@ -6,7 +6,7 @@ categories: haskell,links,math
 tags: algorithm,cycles,multiset,necklaces,Sawada
 ---
 
-I've uploaded a <a href="http://hackage.haskell.org/package/multiset%2Dcomb">new version of my Math.Combinatorics.Multiset library</a> (see the <a href="http://byorgey.wordpress.com/2010/02/20/math-combinatorics-multiset/">previous announcement here</a>).  I've added a few more fairly simple algorithms (splitting a multiset into two pieces in all possible ways; finding all size-k submultisets of a multiset), and one which is decidedly NOT simple.  I wanted to generate all distinct <i>cyclic arrangements</i> of the elements from a multiset -- in other words, sequences which are distinct up to cyclic rotations.  For example, the multiset $\{1,1,2,2,3\}$ has six distinct cyclic arrangements:
+I've uploaded a <a href="http://hackage.haskell.org/package/multiset%2Dcomb">new version of my Math.Combinatorics.Multiset library</a> (see the <a href="https://byorgey.github.io/blog/posts/2010/02/20/math-combinatorics-multiset.html">previous announcement here</a>).  I've added a few more fairly simple algorithms (splitting a multiset into two pieces in all possible ways; finding all size-k submultisets of a multiset), and one which is decidedly NOT simple.  I wanted to generate all distinct <i>cyclic arrangements</i> of the elements from a multiset -- in other words, sequences which are distinct up to cyclic rotations.  For example, the multiset $\{1,1,2,2,3\}$ has six distinct cyclic arrangements:
 
 $\langle 11223\rangle, \langle 11232\rangle, \langle 11322\rangle, \langle 12123\rangle, \langle 12132\rangle, \langle 12213\rangle$
 

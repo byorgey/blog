@@ -6,14 +6,14 @@ categories: haskell,writing
 tags: blogging,BlogLiterately,ghci,images,release,upload
 ---
 
-<p>I have now released version 0.5 of <a href="http://hackage.haskell.org/package/BlogLiterately"><code>BlogLiterately</code></a>. (You can <a href="http://byorgey.wordpress.com/2012/07/02/blogliterately-0-4-release/">read about the 0.4 release here</a>.) This version does uploading of images! Here is proof:</p>
+<p>I have now released version 0.5 of <a href="http://hackage.haskell.org/package/BlogLiterately"><code>BlogLiterately</code></a>. (You can <a href="https://byorgey.github.io/blog/posts/2012/07/02/blogliterately-0-4-release.html">read about the 0.4 release here</a>.) This version does uploading of images! Here is proof:</p>
 
 <div style='text-align:center;'>
 <img src="http://byorgey.files.wordpress.com/2012/07/puppy-small.jpg" />
 </div>
 
 <p>d'awww.</p>
-<p>(<a href="http://byorgey.wordpress.com/2012/07/07/new-haxr-release/">My previous post</a> explains the problem and solution with image uploads.)</p>
+<p>(<a href="https://byorgey.github.io/blog/posts/2012/07/07/new-haxr-release.html">My previous post</a> explains the problem and solution with image uploads.)</p>
 <p>It also allows you to specify <em>expected outputs</em> in a <code>ghci</code> session (a feature <a href="http://www.reddit.com/r/haskell/comments/vz5vn/blogliterately_04_brent_yorgeys_tool_for/c5936th">suggested by Dan Burton</a>). This block</p>
 <pre><code>    [ghci]
     7+6

@@ -6,7 +6,7 @@ categories: haskell,projects
 tags: attributes,diagrams,monoid,overriding,priority
 ---
 
-I'm proceeding with the <a href="http://byorgey.wordpress.com/2009/09/24/diagrams-0-2-1-and-future-plans/">redesign of my diagrams library</a> slowly but surely.  I don't have a lot of time to work on it, hence the "slowly".  But progress is being made.  It's still very much in the design phase, which makes it difficult for others to help, but <a href="http://www.haskell.org/haskellwiki/User:Lenny222">Lennart</a> has created a <a href="http://www.haskell.org/haskellwiki/Diagrams">diagrams page</a> on the Haskell wiki which I hope can be a good way to have an open design process and get input from the community.  There's a lot of stuff I have written down that I haven't gotten around to putting on that page yet, but I hope to do that soon.
+I'm proceeding with the <a href="https://byorgey.github.io/blog/posts/2009/09/24/diagrams-0-2-1-and-future-plans.html">redesign of my diagrams library</a> slowly but surely.  I don't have a lot of time to work on it, hence the "slowly".  But progress is being made.  It's still very much in the design phase, which makes it difficult for others to help, but <a href="http://www.haskell.org/haskellwiki/User:Lenny222">Lennart</a> has created a <a href="http://www.haskell.org/haskellwiki/Diagrams">diagrams page</a> on the Haskell wiki which I hope can be a good way to have an open design process and get input from the community.  There's a lot of stuff I have written down that I haven't gotten around to putting on that page yet, but I hope to do that soon.
 
 Occasionally I plan to write some blog posts about interesting issues that arise in the design; today is the first.
 

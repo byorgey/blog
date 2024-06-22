@@ -6,7 +6,7 @@ categories: haskell
 tags: competitive,parsing,programming,Scanner
 ---
 
-<p>In my <a href="https://byorgey.wordpress.com/2019/04/24/competitive-programming-in-haskell-basic-setup/">previous post</a> I explored solving a simple competitive programming problem in Haskell. The input of the problem just consisted of a bunch of lines containing specific data, so that we could parse it using <code>lines</code> and <code>words</code>. There is another common class of problems, however, which follow this pattern:</p>
+<p>In my <a href="https://byorgey.github.io/blog/posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html">previous post</a> I explored solving a simple competitive programming problem in Haskell. The input of the problem just consisted of a bunch of lines containing specific data, so that we could parse it using <code>lines</code> and <code>words</code>. There is another common class of problems, however, which follow this pattern:</p>
 <p><em>The first line of the input consists of an integer $T$. Each of the next $T$ lines consists of…</em></p>
 <p>That is, the input contains integers which are not input data per se but just tell you how many things are to follow. This is really easy to process in an imperative language like Java or C++. For example, in Java we might write code like this:</p>
 <div class="sourceCode"><pre class="sourceCode java"><code class="sourceCode java"><span class="bu">Scanner</span> in = <span class="kw">new</span> <span class="bu">Scanner</span>(<span class="bu">System</span>.<span class="fu">in</span>);

@@ -6,7 +6,7 @@ categories: combinatorics,haskell,math
 tags: combinatorial species,cycles,sets,singletons
 ---
 
-In <a href="http://byorgey.wordpress.com/2009/07/30/primitive-species-and-species-operations/">my previous post</a>, I began describing the primitive species and species operations supported by my <a href="http://hackage.haskell.org/package/species">combinatorial species library</a>; we looked at the ring structure on species, that is, the primitive species $0$ and $1$, and the operations of species sum and product.  Today we'll continue by looking at a few more primitive species: <i>singletons</i>, <i>sets</i>, and <i>cycles</i>.
+In <a href="https://byorgey.github.io/blog/posts/2009/07/30/primitive-species-and-species-operations.html">my previous post</a>, I began describing the primitive species and species operations supported by my <a href="http://hackage.haskell.org/package/species">combinatorial species library</a>; we looked at the ring structure on species, that is, the primitive species $0$ and $1$, and the operations of species sum and product.  Today we'll continue by looking at a few more primitive species: <i>singletons</i>, <i>sets</i>, and <i>cycles</i>.
 
 [By the way, all the diagrams for this post and the previous one were generated programmatically using my <a href="http://code.haskell.org/diagrams/">diagrams</a> library.  I'll probably put the code up as an example on the diagrams website sometime in the near future.]
 

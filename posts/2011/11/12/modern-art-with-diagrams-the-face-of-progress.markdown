@@ -6,7 +6,7 @@ categories:
 tags: art,bugs,diagrams,modern,tiling
 ---
 
-As an addendum to my <a href="http://byorgey.wordpress.com/2011/11/12/generating-plane-tilings-with-diagrams/" title="Generating plane tilings with diagrams">previous post</a>, here are a few outputs generated while I was debugging:
+As an addendum to my <a href="https://byorgey.github.io/blog/posts/2011/11/12/generating-plane-tilings-with-diagrams.html" title="Generating plane tilings with diagrams">previous post</a>, here are a few outputs generated while I was debugging:
 
 <a href="http://byorgey.files.wordpress.com/2011/11/tiling-wrong2.png"><img src="http://byorgey.files.wordpress.com/2011/11/tiling-wrong2.png" alt="" title="Tiling-wrong2" width="400" height="400" class="aligncenter size-full wp-image-736" /></a>
 

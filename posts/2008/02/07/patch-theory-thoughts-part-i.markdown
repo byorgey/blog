@@ -6,7 +6,7 @@ categories: haskell,learning,projects
 tags: collaborative editing,darcs,patch theory
 ---
 
-So, I still don't know whether I'll actually end up writing a <a href="http://byorgey.wordpress.com/2008/02/04/gobby-haskell-and-patch-theory/">gobby clone in Haskell</a>.  But it's already been a wild ride thinking about the theory behind it and some of the issues involved, and over the next few posts I'd like to share some of my thoughts, complete with illustrative code, in the hopes that others will find them interesting or inspiring. Will this be just a rehashing of stuff that someone else has already written about in much more depth?  Will it be an important contribution to the topic?  Frankly, at this stage, I don't really care. =)
+So, I still don't know whether I'll actually end up writing a <a href="https://byorgey.github.io/blog/posts/2008/02/04/gobby-haskell-and-patch-theory.html">gobby clone in Haskell</a>.  But it's already been a wild ride thinking about the theory behind it and some of the issues involved, and over the next few posts I'd like to share some of my thoughts, complete with illustrative code, in the hopes that others will find them interesting or inspiring. Will this be just a rehashing of stuff that someone else has already written about in much more depth?  Will it be an important contribution to the topic?  Frankly, at this stage, I don't really care. =)
 
 I'll get to the fun stuff soon; today, I'd like to start out simple by just responding to a few of the comments on my previous post.
 

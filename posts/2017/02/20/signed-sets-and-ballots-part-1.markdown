@@ -6,8 +6,8 @@ categories: combinatorics,math
 tags: ballots,bijection,involution,sets,signed,species,virtual
 ---
 
-<p>The other day, <a href="http://akc.is/">Anders Claesson</a> wrote a <a href="http://akc.is/blog/2017-02-18-Inverse-species-and-sign-reversing-involutions.html">very nice blog post</a> explaining a more combinatorial way to understand multiplicative inverses of virtual species (as opposed to the <a href="https://byorgey.wordpress.com/2017/02/10/virtual-species-suffice/">rather algebraic way I explained it in my previous post</a>). In the middle of his post he makes an offhanded assumption which I stubbornly refused to take at face value; after thinking about it for a while and discussing it with Anders, I’m very glad I did, because there’s definitely more going on here than meets the eye and it’s given me a lot of interesting things to think about.</p>
-<p><a href="https://byorgey.wordpress.com/2013/01/07/the-algebra-of-species-primitives/">Recall</a> that $E$ denotes the species of <em>sets</em>, defined by $E[U] = \{U\}$, that is, the only $E$-structure on a given label set $U$ is the set of labels itself. Recall also that the <em>exponential generating function</em> of a species $F$ is given by</p>
+<p>The other day, <a href="http://akc.is/">Anders Claesson</a> wrote a <a href="http://akc.is/blog/2017-02-18-Inverse-species-and-sign-reversing-involutions.html">very nice blog post</a> explaining a more combinatorial way to understand multiplicative inverses of virtual species (as opposed to the <a href="https://byorgey.github.io/blog/posts/2017/02/10/virtual-species-suffice.html">rather algebraic way I explained it in my previous post</a>). In the middle of his post he makes an offhanded assumption which I stubbornly refused to take at face value; after thinking about it for a while and discussing it with Anders, I’m very glad I did, because there’s definitely more going on here than meets the eye and it’s given me a lot of interesting things to think about.</p>
+<p><a href="https://byorgey.github.io/blog/posts/2013/01/07/the-algebra-of-species-primitives.html">Recall</a> that $E$ denotes the species of <em>sets</em>, defined by $E[U] = \{U\}$, that is, the only $E$-structure on a given label set $U$ is the set of labels itself. Recall also that the <em>exponential generating function</em> of a species $F$ is given by</p>
 <p><div style="text-align:center;">
 $\displaystyle F(x) = \sum_{n \geq 0} f_n \frac{x^n}{n!}$
 </div></p>
@@ -16,7 +16,7 @@ $\displaystyle F(x) = \sum_{n \geq 0} f_n \frac{x^n}{n!}$
 $\displaystyle E(x) = \sum_{n \geq 0} \frac{x^n}{n!} = e^x.$
 </div></p>
 <p>(This is why $E$ is such a good name for the species of sets—though in a fantastic coincidence, it seems to originally come from the French word for set, <em>ensemble</em>, rather than from the fact that $E(x) = e^x$ (though on the other hand calling it a “coincidence” is probably too strong, since Joyal must surely have picked the notation with the generating function already in mind!).)</p>
-<p>Now, from <a href="https://byorgey.wordpress.com/2017/02/10/virtual-species-suffice/">my previous post</a> we know that</p>
+<p>Now, from <a href="https://byorgey.github.io/blog/posts/2017/02/10/virtual-species-suffice.html">my previous post</a> we know that</p>
 <p><div style="text-align:center;">
 $\displaystyle E^{-1} = (1 + E_+)^{-1} = \sum_{k \geq 0} (-1)^k (E_+)^k.$
 </div></p>

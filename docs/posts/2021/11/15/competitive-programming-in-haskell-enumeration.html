@@ -54,7 +54,7 @@
 
 <section>
 <p>
-I’m in the middle of a multi-part series on implementing <a href="https://byorgey.wordpress.com/2021/10/14/competitive-programming-in-haskell-bfs-part-1/">BFS</a> in Haskell. In <a href="https://byorgey.wordpress.com/2021/10/29/competitive-programming-in-haskell-bfs-part-3-implementation-via-hashmap/">my last post</a>, we saw one implementation, but I claimed that it is not fast enough to solve <a href="https://open.kattis.com/problems/modulosolitaire">Modulo Solitaire</a>, and I promised to show off a faster implementation in this post, but I lied; we have to take a small detour first.
+I’m in the middle of a multi-part series on implementing <a href="https://byorgey.github.io/blog/posts/2021/10/14/competitive-programming-in-haskell-bfs-part-1.html">BFS</a> in Haskell. In <a href="https://byorgey.github.io/blog/posts/2021/10/29/competitive-programming-in-haskell-bfs-part-3-implementation-via-hashmap.html">my last post</a>, we saw one implementation, but I claimed that it is not fast enough to solve <a href="https://open.kattis.com/problems/modulosolitaire">Modulo Solitaire</a>, and I promised to show off a faster implementation in this post, but I lied; we have to take a small detour first.
 </p>
 <p>
 The main idea to make a faster BFS implementation is to replace the <code>HashMap</code>s from last time with <em>mutable arrays</em>, but hopefully in such a way that we get to keep the same pure API. Using mutable arrays introduces a few wrinkles, though.
@@ -72,7 +72,7 @@ A data structre like <code>HashMap</code> is dynamically sized, but we don’t h
 </li>
 </ol>
 <p>
-In other words, we need to provide a way to bijectively map vertices to a finite prefix of the natural numbers; that is, we need what I call <em>invertible enumerations</em>. This idea has come up for me multiple times: in 2016, I <a href="https://byorgey.wordpress.com/2016/10/25/adventures-in-enumerating-balanced-brackets/">wrote about using such an abstraction to solve another competitive programming problem</a>, and in 2019 I <a href="https://byorgey.wordpress.com/2019/07/05/lightweight-invertible-enumerations-in-haskell/">published a library for working with invertible enumerations</a>. I’ve now put together a lightweight version of that library for use in competitive programming. I’ll walk through the code below, and you can also <a href="https://github.com/byorgey/comprog-hs/blob/master/Enumeration.hs">find the source code in my comprog-hs repository</a>.
+In other words, we need to provide a way to bijectively map vertices to a finite prefix of the natural numbers; that is, we need what I call <em>invertible enumerations</em>. This idea has come up for me multiple times: in 2016, I <a href="https://byorgey.github.io/blog/posts/2016/10/25/adventures-in-enumerating-balanced-brackets.html">wrote about using such an abstraction to solve another competitive programming problem</a>, and in 2019 I <a href="https://byorgey.github.io/blog/posts/2019/07/05/lightweight-invertible-enumerations-in-haskell.html">published a library for working with invertible enumerations</a>. I’ve now put together a lightweight version of that library for use in competitive programming. I’ll walk through the code below, and you can also <a href="https://github.com/byorgey/comprog-hs/blob/master/Enumeration.hs">find the source code in my comprog-hs repository</a>.
 </p>
 <p>
 First, some extensions and imports.

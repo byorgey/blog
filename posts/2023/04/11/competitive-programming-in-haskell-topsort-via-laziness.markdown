@@ -6,7 +6,7 @@ categories: competitive programming,haskell
 tags: challenge,Kattis
 ---
 
-<p>In <a href="https://byorgey.wordpress.com/2023/03/11/competitive-programming-in-haskell-challenge-letter-optimization/">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/brevoptimering">Letter Optimiztion</a>. In this problem, we have a directed acyclic graph where each vertex represents a person, and there is an edge <code>p -&gt; q</code> when person <code>p</code> sends their finished envelopes to person <code>q</code>. Also:</p>
+<p>In <a href="https://byorgey.github.io/blog/posts/2023/03/11/competitive-programming-in-haskell-challenge-letter-optimization.html">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/brevoptimering">Letter Optimiztion</a>. In this problem, we have a directed acyclic graph where each vertex represents a person, and there is an edge <code>p -&gt; q</code> when person <code>p</code> sends their finished envelopes to person <code>q</code>. Also:</p>
 <ul>
 <li>Some people may send their envelopes to multiple other people, in which case they send a certain percentage of their output to each.</li>
 <li>Each person has a maximum speed at which they are able to process envelopes, measured in envelopes per second.</li>
@@ -17,7 +17,7 @@ tags: challenge,Kattis
 <p>The typical way to solve this would be to first <a href="https://en.wikipedia.org/wiki/Topological_sorting">topologically sort</a> the people (<em>e.g.</em> using a DFS or Kahn’s Algorithm), then fill in the speed of each person in order of the topological sort. That way, when we calculate each person’s rate, we already know the rates of anyone that sends them input. This can also be thought of as a particularly simple form of dynamic programming.</p>
 <h2 id="get-rid-of-topological-sort-with-this-one-neat-trick">Get rid of topological sort with this one neat trick</h2>
 <p>However, there is a nice trick we can use in Haskell to save ourselves a bunch of work: instead of doing an explicit topological sort, we can simply define a <strong>lazy, recursive</strong> array or map with the final values we want; laziness will take care of evaluating the array or map entries in the correct order. Essentially, we are co-opting the Haskell runtime into doing a topological sort for us!</p>
-<p>Let’s see some code! First, some pragmas, imports, and boring utility functions. (For an explanation of the <code>Scanner</code> import, see <a href="https://byorgey.wordpress.com/2019/05/22/competitive-programming-in-haskell-scanner/">this post</a> and also <a href="https://byorgey.wordpress.com/2019/10/12/competitive-programming-in-haskell-reading-large-inputs-with-bytestring/">this one</a>.)</p>
+<p>Let’s see some code! First, some pragmas, imports, and boring utility functions. (For an explanation of the <code>Scanner</code> import, see <a href="https://byorgey.github.io/blog/posts/2019/05/22/competitive-programming-in-haskell-scanner.html">this post</a> and also <a href="https://byorgey.github.io/blog/posts/2019/10/12/competitive-programming-in-haskell-reading-large-inputs-with-bytestring.html">this one</a>.)</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: green">{-# LANGUAGE RecordWildCards #-}</span>
 <span style="color: green">{-# LANGUAGE TupleSections   #-}</span>
 

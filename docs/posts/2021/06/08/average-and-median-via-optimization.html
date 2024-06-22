@@ -118,33 +118,33 @@ Now suppose we want to minimize the sum of <em>absolute</em> distances instead, 
 In this scenario, it is much easier to reason out the correct answer. Start with some arbitrary <span class="math inline">\(m\)</span>, and imagine nudging it by some small amount <span class="math inline">\(\Delta x\)</span>, say, to the right. <span class="math inline">\(m\)</span>’s distances to any points on its left will each increase by <span class="math inline">\(\Delta x\)</span>, and its distances to any points on its right will each decrease by the same amount. Therefore, if there are more <span class="math inline">\(x_i\)</span> to the left of <span class="math inline">\(m\)</span>, then the overall sum of distances distances will increase; if there are more <span class="math inline">\(x_i\)</span> to the right, then the overall sum will decrease. So, to find <span class="math inline">\(m\)</span> which minimizes the sum of absolute differences, we want the same number of <span class="math inline">\(x_i\)</span> on the left and the right, that is, we want the <em>median</em>. Note that if <span class="math inline">\(n\)</span> is odd, then we must pick <span class="math inline">\(m\)</span> to be exactly equal to the <span class="math inline">\(x_i\)</span> in the middle; if <span class="math inline">\(n\)</span> is even, then we can pick <span class="math inline">\(m\)</span> to be anywhere inside the interval between the middle two <span class="math inline">\(x_i\)</span>.
 </p>
 <p>
-Just for fun, can we derive this answer using calculus, like we did for minimizing squared differences? There is a wrinkle, of course, which is that the absolute value function is not differentiable everywhere: it has a sharp corner at zero. But we won’t let that stop us! Clearly the derivative of <span class="math inline">\(|x|\)</span> is <span class="math inline">\(-1\)</span> when <span class="math inline">\(x &amp;lt; 0\)</span> and <span class="math inline">\(1\)</span> when <span class="math inline">\(x &amp;gt; 0\)</span>. So it seems reasonable to just assign the derivative a value of <span class="math inline">\(0\)</span> at <span class="math inline">\(x = 0\)</span>. Algebraically, we can define
+Just for fun, can we derive this answer using calculus, like we did for minimizing squared differences? There is a wrinkle, of course, which is that the absolute value function is not differentiable everywhere: it has a sharp corner at zero. But we won’t let that stop us! Clearly the derivative of <span class="math inline">\(|x|\)</span> is <span class="math inline">\(-1\)</span> when <span class="math inline">\(x &lt; 0\)</span> and <span class="math inline">\(1\)</span> when <span class="math inline">\(x &gt; 0\)</span>. So it seems reasonable to just assign the derivative a value of <span class="math inline">\(0\)</span> at <span class="math inline">\(x = 0\)</span>. Algebraically, we can define
 </p>
 <div style="text-align:center;">
 <p>
-<span class="math inline">\(\displaystyle \frac{d}{dx} |x| = [x &amp;gt; 0] - [x &amp;lt; 0]\)</span>
+<span class="math inline">\(\displaystyle \frac{d}{dx} |x| = [x &gt; 0] - [x &lt; 0]\)</span>
 </p>
 </div>
 <p>
-where <span class="math inline">\([P]\)</span> is equal to <span class="math inline">\(1\)</span> when the proposition <span class="math inline">\(P\)</span> is true, and <span class="math inline">\(0\)</span> when it is false (this notation is called the <a href="https://en.wikipedia.org/wiki/Iverson_bracket"><em>Iverson bracket</em></a>). So when <span class="math inline">\(x &amp;gt; 0\)</span> we get <span class="math inline">\([x &amp;gt; 0] - [x &amp;lt; 0] = 1 - 0 = 1\)</span>; when <span class="math inline">\(x &amp;lt; 0\)</span> we get <span class="math inline">\(0 - 1 = -1\)</span>; and when <span class="math inline">\(x = 0\)</span> both propositions are false so we get <span class="math inline">\(0 - 0 = 0\)</span>.
+where <span class="math inline">\([P]\)</span> is equal to <span class="math inline">\(1\)</span> when the proposition <span class="math inline">\(P\)</span> is true, and <span class="math inline">\(0\)</span> when it is false (this notation is called the <a href="https://en.wikipedia.org/wiki/Iverson_bracket"><em>Iverson bracket</em></a>). So when <span class="math inline">\(x &gt; 0\)</span> we get <span class="math inline">\([x &gt; 0] - [x &lt; 0] = 1 - 0 = 1\)</span>; when <span class="math inline">\(x &lt; 0\)</span> we get <span class="math inline">\(0 - 1 = -1\)</span>; and when <span class="math inline">\(x = 0\)</span> both propositions are false so we get <span class="math inline">\(0 - 0 = 0\)</span>.
 </p>
 <p>
 Armed with this definition, we can differentiate <span class="math inline">\(S\)</span> with respect to <span class="math inline">\(m\)</span>:
 </p>
 <div style="text-align:center;">
 <p>
-<span class="math inline">\(\displaystyle \frac{d}{dm} S(m) = \frac{d}{dm} \sum_i |m - x_i| = \sum_i [m &amp;gt; x_i] - \sum_i [m &amp;lt; x_i]\)</span>
+<span class="math inline">\(\displaystyle \frac{d}{dm} S(m) = \frac{d}{dm} \sum_i |m - x_i| = \sum_i [m &gt; x_i] - \sum_i [m &lt; x_i]\)</span>
 </p>
 </div>
 <p>
-Clearly, this is zero when <span class="math inline">\(\displaystyle \sum_i [m &amp;gt; x_i] = \sum_i [m &amp;lt; x_i]\)</span>, that is, when there are the same number of <span class="math inline">\(x_i\)</span> on either side of <span class="math inline">\(m\)</span>.
+Clearly, this is zero when <span class="math inline">\(\displaystyle \sum_i [m &gt; x_i] = \sum_i [m &lt; x_i]\)</span>, that is, when there are the same number of <span class="math inline">\(x_i\)</span> on either side of <span class="math inline">\(m\)</span>.
 </p>
 <p>
 The curious thing to me is that even though the derivative of <span class="math inline">\(|x|\)</span> is undefined when <span class="math inline">\(x = 0\)</span>, it seems like it “wants” to be 0 here. In general, if we assign the value <span class="math inline">\(k\)</span> to the derivative at <span class="math inline">\(x = 0\)</span>, the derivative of <span class="math inline">\(S\)</span> becomes
 </p>
 <div style="text-align:center;">
 <p>
-<span class="math inline">\(\displaystyle \frac{d}{dm} S(m) = \sum_i [m &amp;gt; x_i] + k \sum_i [m = x_i] - \sum_i [m &amp;lt; x_i]\)</span>
+<span class="math inline">\(\displaystyle \frac{d}{dm} S(m) = \sum_i [m &gt; x_i] + k \sum_i [m = x_i] - \sum_i [m &lt; x_i]\)</span>
 </p>
 </div>
 <p>

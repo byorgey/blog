@@ -54,13 +54,13 @@
 
 <section>
 <p>
-In a <a href="https://byorgey.wordpress.com/2016/02/19/the-network-reliability-problem/">previous post</a> I defined the <em>network reliability</em> problem. Briefly, we are given a directed graph whose edges are labelled with probabilities, which we can think of as giving the likelihood of a message successfully traversing a link in a network. The problem is then to compute the probability that a message will successfully traverse the network from a given source node to a given target node.
+In a <a href="https://byorgey.github.io/blog/posts/2016/02/19/the-network-reliability-problem.html">previous post</a> I defined the <em>network reliability</em> problem. Briefly, we are given a directed graph whose edges are labelled with probabilities, which we can think of as giving the likelihood of a message successfully traversing a link in a network. The problem is then to compute the probability that a message will successfully traverse the network from a given source node to a given target node.
 </p>
 <p>
 Several commenters pointed out the connection to <a href="https://en.wikipedia.org/wiki/Bayesian_network">Bayesian networks</a>. I think they are right, and the network reliability problem is a very special case of Bayesian inference. However, so far this hasn’t seemed to help very much, since the things I can find about algorithms for Bayesian inference are either too general (<em>e.g.</em> allowing arbitrary functions at nodes) or too specific (<em>e.g.</em> only working for certain kinds of trees). So I’m going to put aside Bayesian inference for now; perhaps later I can come back to it.
 </p>
 <p>
-In any case, <a href="https://byorgey.wordpress.com/2016/02/19/the-network-reliability-problem/#comment-15064">Derek Elkins also made a comment</a> which pointed to exactly what I wanted to talk about next.
+In any case, <a href="https://byorgey.github.io/blog/posts/2016/02/19/the-network-reliability-problem.html#comment-15064">Derek Elkins also made a comment</a> which pointed to exactly what I wanted to talk about next.
 </p>
 <h1 id="star-semirings-and-path-independence">
 Star semirings and path independence
@@ -75,7 +75,7 @@ Now, given a graph <span class="math inline">\(G = (V,E)\)</span> and labelling 
 In fact, as shown by O’Connor and Dolan, there are many algorithms that can be recast as computing the star of a matrix, for an appropriate choice of semiring: for example, (reflexive-)transitive closure; all-pairs shortest paths; Gaussian elimination; dataflow analysis; and solving certain knapsack problems. One might hope that there is similarly an appropriate semiring for the network reliability problem. But I have spent some time thinking about this and I do not know of one.
 </p>
 <p>
-Consider again the simple example given at the start of the <a href="https://byorgey.wordpress.com/2016/02/19/the-network-reliability-problem/">previous post</a>:
+Consider again the simple example given at the start of the <a href="https://byorgey.github.io/blog/posts/2016/02/19/the-network-reliability-problem.html">previous post</a>:
 </p>
 <div style="text-align:center;">
 <p>

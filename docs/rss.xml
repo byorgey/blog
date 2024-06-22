@@ -1138,7 +1138,7 @@ Turner, D.A. (1979) <span>‘A new implementation technique for applicative lang
 
 <section>
 <p>
-Continuing the <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">series on dynamic programming</a>, I just have a couple challenge problems for you today. I have indeed solved both of these problems in Haskell, but I don’t yet know how to write <strong>elegant</strong> solutions! There is a reason that the techniques covered in my <a href="https://byorgey.wordpress.com/2023/06/06/dynamic-programming-in-haskell-automatic-memoization/">previous posts</a> aren’t quite good enough.
+Continuing the <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">series on dynamic programming</a>, I just have a couple challenge problems for you today. I have indeed solved both of these problems in Haskell, but I don’t yet know how to write <strong>elegant</strong> solutions! There is a reason that the techniques covered in my <a href="https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html">previous posts</a> aren’t quite good enough.
 </p>
 <ul>
 <li>
@@ -1313,10 +1313,10 @@ When I derived this, my eyes bugged out and I started playing around with it, wh
 
 <section>
 <p>
-This is part 2 of a <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">promised multi-part series</a> on dynamic programming in Haskell. As a reminder, we’re using <a href="https://open.kattis.com/problems/zapis">Zapis</a> as a sample problem. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
+This is part 2 of a <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">promised multi-part series</a> on dynamic programming in Haskell. As a reminder, we’re using <a href="https://open.kattis.com/problems/zapis">Zapis</a> as a sample problem. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
 </p>
 <p>
-<a href="https://byorgey.wordpress.com/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays/">Last time</a>, we developed some code to efficiently solve this problem using a mutually recursive pair of a function and a lookup table represented by a lazy, immutable array. This solution is pretty good, but it leaves a few things to be desired:
+<a href="https://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html">Last time</a>, we developed some code to efficiently solve this problem using a mutually recursive pair of a function and a lookup table represented by a lazy, immutable array. This solution is pretty good, but it leaves a few things to be desired:
 </p>
 <ul>
 <li>
@@ -1345,7 +1345,7 @@ This sounds lovely, of course, but there are a few problems:
 <ul>
 <li>
 <p>
-Surely this magic <code>memo</code> function won’t be able to work for <em>any</em> type <code>i</code>. Well, OK, we can add something like an <code>Ix i</code> constraint and/or extra arguments to make sure that values of type <code>i</code> can be used as (or <a href="https://byorgey.wordpress.com/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray/">converted to</a>) array indices.
+Surely this magic <code>memo</code> function won’t be able to work for <em>any</em> type <code>i</code>. Well, OK, we can add something like an <code>Ix i</code> constraint and/or extra arguments to make sure that values of type <code>i</code> can be used as (or <a href="https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html">converted to</a>) array indices.
 </p>
 </li>
 <li>
@@ -1366,7 +1366,7 @@ More fundamentally, though, our dream seems impossible: given a function <code>i
 For now let’s ignore the fact that our dream seems impossible and think about how we could write <code>memo</code>. The idea is to take the given <code>(i -&gt; a)</code> function and first turn it into a lookup table storing a value of type <code>a</code> for each <code>i</code>; then return a new <code>i -&gt; a</code> function which works by just doing a table lookup.
 </p>
 <p>
-From my <a href="https://byorgey.wordpress.com/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays/">previous post</a> we already have a function to create a table for a given function:
+From my <a href="https://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html">previous post</a> we already have a function to create a table for a given function:
 </p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>tabulate</span> <span style="color: red">::</span> <span>Ix</span> <span>i</span> <span style="color: red">=&gt;</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>i</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>i</span> <span style="color: red">-&gt;</span> <span>a</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Array</span> <span>i</span> <span>a</span>
 <span>tabulate</span> <span>rng</span> <span>f</span> <span style="color: red">=</span> <span>listArray</span> <span>rng</span> <span style="color: red">(</span><span>map</span> <span>f</span> <span>$</span> <span>range</span> <span>rng</span><span style="color: red">)</span></code></pre>
@@ -1500,10 +1500,10 @@ So here’s our final solution for Zapis. As you can see, the extra code we have
 
 <section>
 <p>
-This is part 1 of a <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">promised multi-part series</a> on dynamic programming in Haskell. As a reminder, we’re using <a href="https://open.kattis.com/problems/zapis">Zapis</a> as a sample problem. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
+This is part 1 of a <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">promised multi-part series</a> on dynamic programming in Haskell. As a reminder, we’re using <a href="https://open.kattis.com/problems/zapis">Zapis</a> as a sample problem. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
 </p>
 <p>
-<a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">Last time</a>, we developed a recurrence for this problem and saw some naive, directly recursive Haskell code for computing it. Although this naive version is technically correct, it is much too slow, so our goal is to implement it more efficiently.
+<a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">Last time</a>, we developed a recurrence for this problem and saw some naive, directly recursive Haskell code for computing it. Although this naive version is technically correct, it is much too slow, so our goal is to implement it more efficiently.
 </p>
 <h2 id="mutable-arrays">
 Mutable arrays?
@@ -1518,11 +1518,11 @@ This would work, but there is a better way!
 Immutable arrays
 </h2>
 <p>
-While mutable arrays <a href="https://byorgey.wordpress.com/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray/">occasionally have their place</a>, we can surprisingly often get away with <em>immutable</em> arrays, where we completely define the array up front and then only use it for fast lookups afterwards.
+While mutable arrays <a href="https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html">occasionally have their place</a>, we can surprisingly often get away with <em>immutable</em> arrays, where we completely define the array up front and then only use it for fast lookups afterwards.
 </p>
 <ul>
 <li>
-If the type of the array elements is suitable, and we can initialize the array elements all at once from a list using some kind of formula, map, scan, <em>etc.</em>, we should use <code>UArray</code> <a href="https://byorgey.wordpress.com/2023/02/24/competitive-programming-in-haskell-infinite-2d-array-level-4/">since it is much faster</a> than <code>Array</code>.
+If the type of the array elements is suitable, and we can initialize the array elements all at once from a list using some kind of formula, map, scan, <em>etc.</em>, we should use <code>UArray</code> <a href="https://byorgey.github.io/blog/posts/2023/02/24/competitive-programming-in-haskell-infinite-2d-array-level-4.html">since it is much faster</a> than <code>Array</code>.
 </li>
 <li>
 However, <code>UArray</code> is strict in the elements, and the elements must be of a type that can be stored unboxed. If we need a more complex element type, or we need to compute the array recursively (where some elements depend on other elements), we can use <code>Array</code>.
@@ -1535,10 +1535,10 @@ What about the <a href="http://hackage.haskell.org/package/vector"><code>vector<
 Lazy, recursive, immutable arrays
 </h2>
 <p>
-In <a href="https://byorgey.wordpress.com/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness/">my previous post on topsort</a> we already saw the basic idea: since <code>Array</code>s are lazy in their elements, we can define them recursively; the Haskell runtime then takes care of computing the elements in a suitable order. Previously, we saw this applied to automatically compute a topological sort, but more generally, we can use it to fill out a table of values for any recurrence.
+In <a href="https://byorgey.github.io/blog/posts/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness.html">my previous post on topsort</a> we already saw the basic idea: since <code>Array</code>s are lazy in their elements, we can define them recursively; the Haskell runtime then takes care of computing the elements in a suitable order. Previously, we saw this applied to automatically compute a topological sort, but more generally, we can use it to fill out a table of values for any recurrence.
 </p>
 <p>
-So, as a first attempt, let’s just replace our recursive <code>c</code> function from <a href="https://byorgey.wordpress.com/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming/">last time</a> with an array. I’ll only show the <code>solve</code> function for now; the rest of the code remains the same. (Spoiler alert: this solution works, but it’s ugly. We’ll develop much better solutions later.)
+So, as a first attempt, let’s just replace our recursive <code>c</code> function from <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">last time</a> with an array. I’ll only show the <code>solve</code> function for now; the rest of the code remains the same. (Spoiler alert: this solution works, but it’s ugly. We’ll develop much better solutions later.)
 </p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
 <span>solve</span> <span>str</span> <span style="color: red">=</span> <span>c</span><span>!</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
@@ -1614,7 +1614,7 @@ In fact, we can abstract this into a useful little function to create a lookup t
 The solution so far
 </h2>
 <p>
-Putting it all together, here’s our complete solution so far. It’s pretty good, and in fact it’s organized in a very similar way to <a href="https://gist.github.com/meooow25/8d5441fa54e645c8f2a48f91a750d360">Soumik Sarkar’s dynamic programming solution</a> to <a href="https://byorgey.wordpress.com/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa/">Chemist’s Vows</a>. (However, there’s an even better solution coming in my next post!)
+Putting it all together, here’s our complete solution so far. It’s pretty good, and in fact it’s organized in a very similar way to <a href="https://gist.github.com/meooow25/8d5441fa54e645c8f2a48f91a750d360">Soumik Sarkar’s dynamic programming solution</a> to <a href="https://byorgey.github.io/blog/posts/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa.html">Chemist’s Vows</a>. (However, there’s an even better solution coming in my next post!)
 </p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">import</span> <span>Control.Arrow</span>
 <span style="color: blue;font-weight: bold">import</span> <span>Data.Array</span>
@@ -1688,7 +1688,7 @@ Next time, we’ll see how to use some clever ideas from Conal Elliot’s <a hre
 
 <section>
 <p>
-In <a href="https://byorgey.wordpress.com/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa/">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/zapis">Zapis</a>. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
+In <a href="https://byorgey.github.io/blog/posts/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa.html">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/zapis">Zapis</a>. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
 </p>
 <p>
 For example, given <code>(??)</code>, the answer is 4: we could replace the question marks with any matched pair (either <code>()</code>, <code>[]</code>, or <code>{}</code>), or we could replace them with <code>)(</code>, resulting in <code>()()</code>.
@@ -1775,13 +1775,13 @@ In imperative languages, dynamic programming is often carried out by filling in 
 </p>
 <ul>
 <li>
-In <a href="https://byorgey.wordpress.com/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays/">part 1</a>, we will explore the basic idea of using lazy, recursive, immutable arrays (which we have <a href="https://byorgey.wordpress.com/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness/">already seen in a previous post</a>).
+In <a href="https://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html">part 1</a>, we will explore the basic idea of using lazy, recursive, immutable arrays (which we have <a href="https://byorgey.github.io/blog/posts/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness.html">already seen in a previous post</a>).
 </li>
 <li>
-In <a href="https://byorgey.wordpress.com/2023/06/06/dynamic-programming-in-haskell-automatic-memoization/">part 2</a>, we will use ideas from Conal Elliot’s <code>MemoTrie</code> package (and ultimately from <a href="https://citeseerx.ist.psu.edu/doc/10.1.1.43.3272">a paper by Ralf Hinze</a>) to clean up the code and make it a lot closer to the naive version.
+In <a href="https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html">part 2</a>, we will use ideas from Conal Elliot’s <code>MemoTrie</code> package (and ultimately from <a href="https://citeseerx.ist.psu.edu/doc/10.1.1.43.3272">a paper by Ralf Hinze</a>) to clean up the code and make it a lot closer to the naive version.
 </li>
 <li>
-<a href="https://byorgey.wordpress.com/2023/06/20/competitive-programming-in-haskell-two-more-dp-challenges/">This post</a> contains a couple challenge problems that can’t quite be solved using the techniques in the previous posts.
+<a href="https://byorgey.github.io/blog/posts/2023/06/20/competitive-programming-in-haskell-two-more-dp-challenges.html">This post</a> contains a couple challenge problems that can’t quite be solved using the techniques in the previous posts.
 </li>
 <li>
 At some point perhaps we’ll discuss how to memoize functions with infinite (or just very large) domains.
@@ -1820,7 +1820,7 @@ Along the way I’ll also drop more links to relevant background. This will ulti
 
 <section>
 <p>
-In <a href="https://byorgey.wordpress.com/2023/05/03/competitive-programming-in-haskell-tries/">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/chemistsvows">Chemist’s Vows</a>. In this problem, we have to decide which words can be made by concatenating atomic element symbols. So this is another parsing problem; but unlike the <a href="https://byorgey.wordpress.com/2023/05/03/competitive-programming-in-haskell-tries/">previous problem</a>, element symbols are not prefix-free. For example, <code>B</code> and <code>Be</code> are both element symbols. So, if we see <code>BE…</code>, we don’t immediately know whether we should parse it as <code>Be</code>, or as <code>B</code> followed by an element that starts with <code>E</code> (such as <code>Er</code>).
+In <a href="https://byorgey.github.io/blog/posts/2023/05/03/competitive-programming-in-haskell-tries.html">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/chemistsvows">Chemist’s Vows</a>. In this problem, we have to decide which words can be made by concatenating atomic element symbols. So this is another parsing problem; but unlike the <a href="https://byorgey.github.io/blog/posts/2023/05/03/competitive-programming-in-haskell-tries.html">previous problem</a>, element symbols are not prefix-free. For example, <code>B</code> and <code>Be</code> are both element symbols. So, if we see <code>BE…</code>, we don’t immediately know whether we should parse it as <code>Be</code>, or as <code>B</code> followed by an element that starts with <code>E</code> (such as <code>Er</code>).
 </p>
 <h2 id="a-first-try">
 A first try

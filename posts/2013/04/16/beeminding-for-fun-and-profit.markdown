@@ -8,7 +8,7 @@ tags: Beeminder,data,goals,productivity
 
 <p><!-- -*- compile-command: "BlogLiterately beeminder.markdown &gt; beeminder.html" -*- --></p>
 
-<p>I’ve been using <a href="https://www.beeminder.com/">Beeminder</a> (which I’ve <a href="http://byorgey.wordpress.com/2012/10/13/fogbugz-beeminder-and-pure-functions-in-the-cloud/">mentioned once before</a>) for a little over six months now. The verdict?</p>
+<p>I’ve been using <a href="https://www.beeminder.com/">Beeminder</a> (which I’ve <a href="https://byorgey.github.io/blog/posts/2012/10/13/fogbugz-beeminder-and-pure-functions-in-the-cloud.html">mentioned once before</a>) for a little over six months now. The verdict?</p>
 
 <div style='text-align:center;'>
 <strong>Beeminder has changed my life.</strong>
@@ -39,7 +39,7 @@ tags: Beeminder,data,goals,productivity
 <ul>
 <li><p>I use <a href="http://www.fogcreek.com/fogbugz/">FogBugz</a> to keep track of all my tasks and todos. I use three different Beeminder goals in relation to FogBugz:</p>
 <ul>
-<li>As <a href="http://byorgey.wordpress.com/2012/10/13/fogbugz-beeminder-and-pure-functions-in-the-cloud/">described in previous blog post</a>, I have one goal to close a certain number of cases per day (currently 4 per day, which is historically about average for me). This goal is automatically updated every time I close a case in FogBugz.</li>
+<li>As <a href="https://byorgey.github.io/blog/posts/2012/10/13/fogbugz-beeminder-and-pure-functions-in-the-cloud.html">described in previous blog post</a>, I have one goal to close a certain number of cases per day (currently 4 per day, which is historically about average for me). This goal is automatically updated every time I close a case in FogBugz.</li>
 <li>When I get an email requiring me to act or respond in some way, I very often just forward it to FogBugz to deal with later. So I have <a href="https://www.beeminder.com/byorgey/goals/fb-inbox">a goal to spend a certain amount of time</a> dealing with cases in my FogBugz inbox; otherwise it’s too easy to just let these rot.</li>
 <li>It’s way too easy to ignore todo items which have no real deadline and are somehow distasteful, intimidating, or both. To help overcome this inertia, I’ve come up with something that works fairly well. I have a <a href="https://www.beeminder.com/byorgey/goals/fogbugz-review">Beeminder goal to spend a certain amount of time doing “FogBugz review”</a>. It works like this: I have a certain query defined in FogBugz which shows me the five <em>least recently edited</em> open tickets. When working on review, I must pick one of these five cases and make <em>some sort of progress</em> on it (it’s perfectly fine if I don’t complete it). After making some progress I add a note to the ticket explaining what I did. This both helps me pick up where I left off next time I come to work on the ticket, and makes the ticket automatically drop out of the review query, since it has now been edited. I then look at the top five tickets again (including some new ticket that has now moved into the top five), choose one, and repeat.</li>
 </ul></li>

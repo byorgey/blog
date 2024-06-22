@@ -54,7 +54,7 @@
 
 <section>
 <p>
-When writing the code in <a href="http://byorgey.wordpress.com/2013/04/25/random-binary-trees-with-a-size-limited-critical-boltzmann-sampler-2/">my previous post</a>, I wanted to have a monad which combined the ability to generate random numbers with the ability to fail. Naturally, I decided to use <code>RandT Maybe</code>. But when I tried to write a failing computation of this type, I got a type error:
+When writing the code in <a href="https://byorgey.github.io/blog/posts/2013/04/25/random-binary-trees-with-a-size-limited-critical-boltzmann-sampler-2.html">my previous post</a>, I wanted to have a monad which combined the ability to generate random numbers with the ability to fail. Naturally, I decided to use <code>RandT Maybe</code>. But when I tried to write a failing computation of this type, I got a type error:
 </p>
 <pre><code>    No instance for (MonadPlus (RandT StdGen Maybe))
       arising from a use of `mzero'</code></pre>
@@ -93,7 +93,7 @@ The general principle here is that “the effects of inner monad transformers ta
 So what I really wanted was <code>MaybeT (Rand StdGen)</code>, which—after adding a <code>MonadRandom</code> instance for <code>MaybeT</code>, now released as <a href="http://hackage.haskell.org/package/MonadRandom"><code>MonadRandom</code>-0.1.9</a>—works perfectly.
 </p>
 <p>
-The moral of the story: monad transformers aren’t (in general) commutative! Think carefully about what order you want. (I actually <a href="http://byorgey.wordpress.com/2011/02/24/enumerating-linear-inhabitants/">wrote about this once before</a>; you’d think I would have learned my lesson.)
+The moral of the story: monad transformers aren’t (in general) commutative! Think carefully about what order you want. (I actually <a href="https://byorgey.github.io/blog/posts/2011/02/24/enumerating-linear-inhabitants.html">wrote about this once before</a>; you’d think I would have learned my lesson.)
 </p>
 
 </section>

@@ -6,7 +6,7 @@ categories: meta
 tags: Beeminder,commitment,dissertation,maniac,productivity,week
 ---
 
-<p>My <a href="http://byorgey.wordpress.com/2014/08/04/maniac-week/">maniac week</a> was a great success! First things first: here’s a time-lapse video<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> (I recommend watching it at the full size, 1280x720).</p>
+<p>My <a href="https://byorgey.github.io/blog/posts/2014/08/04/maniac-week.html">maniac week</a> was a great success! First things first: here’s a time-lapse video<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> (I recommend watching it at the full size, 1280x720).</p>
 <p>[youtube http://www.youtube.com/watch?v=WH8TiSYplng&w=560&h=315]</p>
 <p>Some statistics<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>:</p>
 <ul>

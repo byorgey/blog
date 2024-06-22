@@ -6,7 +6,7 @@ categories: haskell
 tags: programming,type families,type-level,types
 ---
 
-In my <a href="http://byorgey.wordpress.com/2010/06/29/typed-type-level-programming-in-haskell-part-i-functional-dependencies/">previous post</a>, we saw how multi-parameter type classes with functional dependencies in Haskell allow us to do type-level programming in a logic programming style.  (If you're not clear on why this corresponds to a logic programming style, see the <a href="http://www.reddit.com/r/haskell/comments/ck459/typed_typelevel_programming_in_haskell_part_i/">ensuing discussion on reddit</a>, where others explained it much better than I did in my post.)
+In my <a href="https://byorgey.github.io/blog/posts/2010/06/29/typed-type-level-programming-in-haskell-part-i-functional-dependencies.html">previous post</a>, we saw how multi-parameter type classes with functional dependencies in Haskell allow us to do type-level programming in a logic programming style.  (If you're not clear on why this corresponds to a logic programming style, see the <a href="http://www.reddit.com/r/haskell/comments/ck459/typed_typelevel_programming_in_haskell_part_i/">ensuing discussion on reddit</a>, where others explained it much better than I did in my post.)
 
 However, MPTCs + FDs weren't the last word on type-level programming.  In 2007, along came <a href="http://www.haskell.org/haskellwiki/GHC/Type_families">type families</a>.
 

@@ -54,7 +54,7 @@
 
 <section>
 <p>
-In my <a href="https://byorgey.wordpress.com/2019/04/24/competitive-programming-in-haskell-basic-setup/">previous post</a> about my basic setup for solving competitive programming problems with Haskell, I (somewhat provocatively) used lists to represent pairs, and wrote a partial function to process them. Commenter <a href="https://byorgey.wordpress.com/2019/04/24/competitive-programming-in-haskell-basic-setup/#comment-36250">Yom responded with a proposed alternative that was (less) partial</a>. I was glad for the comment, because it gave me a good opportunity to think more about why I wrote the code in the way I did, and how it fits into larger issues of good coding practices and the reasons behind them.
+In my <a href="https://byorgey.github.io/blog/posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html">previous post</a> about my basic setup for solving competitive programming problems with Haskell, I (somewhat provocatively) used lists to represent pairs, and wrote a partial function to process them. Commenter <a href="https://byorgey.github.io/blog/posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html#comment-36250">Yom responded with a proposed alternative that was (less) partial</a>. I was glad for the comment, because it gave me a good opportunity to think more about why I wrote the code in the way I did, and how it fits into larger issues of good coding practices and the reasons behind them.
 </p>
 <h2 id="good-code-style-as-moral-behavior">
 Good code style as moral behavior
@@ -127,7 +127,7 @@ The combination of optimizing for speed and <em>not</em> caring about things lik
 </p>
 <ul>
 <li>
-Adding code to deal gracefully with inputs that don’t follow the specification would just be a <em>waste of time</em> (a cardinal sin in this context!). My Haskell solutions are full of calls to partial functions like <code>read</code>, <code>head</code>, <code>tail</code>, <code>fromJust</code>, and so on, even though I would almost never use these functions in other contexts. This is also why I used a partial function that was only defined on lists of length two in my previous post (though as I <a href="https://byorgey.wordpress.com/2019/04/24/competitive-programming-in-haskell-basic-setup/#comment-36251">argue in a comment</a>, perhaps it’s not so much that the function is partial as that its type is too big).
+Adding code to deal gracefully with inputs that don’t follow the specification would just be a <em>waste of time</em> (a cardinal sin in this context!). My Haskell solutions are full of calls to partial functions like <code>read</code>, <code>head</code>, <code>tail</code>, <code>fromJust</code>, and so on, even though I would almost never use these functions in other contexts. This is also why I used a partial function that was only defined on lists of length two in my previous post (though as I <a href="https://byorgey.github.io/blog/posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html#comment-36251">argue in a comment</a>, perhaps it’s not so much that the function is partial as that its type is too big).
 </li>
 <li>
 I often just use <code>String</code> for text processing, even though something like <code>Text</code> or <code>ByteString</code> (depending on the scenario) would be faster or more robust. (The exception is problems with a large amount of I/O, when the overhead of <code>String</code> really does become a problem; more on this in a future post.)

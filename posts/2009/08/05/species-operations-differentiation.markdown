@@ -8,7 +8,7 @@ tags: combinatorial species,differentiation
 
 Continuing my series describing my new <a href="http://hackage.haskell.org/package/species">combinatorial species library</a>, today we'll take a look at the operation of <i>differentiation</i>.
 
-You may remember that the <code>Species</code> type class has an <code>Algebra.Differential</code> constraint, which, <a href="http://byorgey.wordpress.com/2009/07/30/primitive-species-and-species-operations/">as I previously explained</a>, transitively implies an <code>Algebra.Ring</code> constraint.  But we haven't yet talked about the <code>Differential</code> contraint itself, which requires a method <code>differentiate :: Species s =&gt; s -&gt; s</code> (which I will abbreviate using the standard "prime" notation), which should satisfy
+You may remember that the <code>Species</code> type class has an <code>Algebra.Differential</code> constraint, which, <a href="https://byorgey.github.io/blog/posts/2009/07/30/primitive-species-and-species-operations.html">as I previously explained</a>, transitively implies an <code>Algebra.Ring</code> constraint.  But we haven't yet talked about the <code>Differential</code> contraint itself, which requires a method <code>differentiate :: Species s =&gt; s -&gt; s</code> (which I will abbreviate using the standard "prime" notation), which should satisfy
 
 $(x * y)' \equiv x' * y + x * y'$
 
@@ -30,7 +30,7 @@ Where does species differentiation show up?  The most well-known place is in def
 $L = C'$,
 
 
-that is, the species $L$ is the derivative of the <a href="http://byorgey.wordpress.com/2009/07/31/primitive-species-and-species-operations-part-ii/">species $C$ of cycles</a>.  A cycle defines an ordering, but there is no distinguished beginning or end; by making a cycle out of some elements with a distinguished extra element $*$, we uniquely identify a beginning/end of the ordering on the original elements: a list!
+that is, the species $L$ is the derivative of the <a href="https://byorgey.github.io/blog/posts/2009/07/31/primitive-species-and-species-operations-part-ii.html">species $C$ of cycles</a>.  A cycle defines an ordering, but there is no distinguished beginning or end; by making a cycle out of some elements with a distinguished extra element $*$, we uniquely identify a beginning/end of the ordering on the original elements: a list!
 
 [caption id="attachment_274" align="aligncenter" width="400" caption="Differentiating a cycle to get a list"]<img src="http://byorgey.files.wordpress.com/2009/08/cyclediff.png" alt="Differentiating a cycle to get a list" title="cyclediff" width="400" height="137" class="size-full wp-image-274" />[/caption]
 

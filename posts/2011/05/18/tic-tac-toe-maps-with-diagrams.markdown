@@ -6,7 +6,7 @@ categories: haskell,projects
 tags: best play,diagrams,example,map,tic-tac-toe
 ---
 
-<p>Inspired by <a href="http://xkcd.com/832/">Randall Munroe</a>, here are some handy guides to optimal tic-tac-toe play, created with the <a href="http://byorgey.wordpress.com/2011/05/17/announcing-diagrams-preview-release/">diagrams EDSL</a>. Click the images to open (zoomable) PDF versions.</p>
+<p>Inspired by <a href="http://xkcd.com/832/">Randall Munroe</a>, here are some handy guides to optimal tic-tac-toe play, created with the <a href="https://byorgey.github.io/blog/posts/2011/05/17/announcing-diagrams-preview-release.html">diagrams EDSL</a>. Click the images to open (zoomable) PDF versions.</p>
 
 <a href="http://byorgey.files.wordpress.com/2011/05/xmap.pdf"><img src="http://byorgey.files.wordpress.com/2011/05/xmap.png" alt="" title="xMap" width="400" height="400" class="aligncenter size-full wp-image-599" /></a>
 

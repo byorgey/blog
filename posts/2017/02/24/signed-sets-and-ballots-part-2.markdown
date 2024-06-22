@@ -6,13 +6,13 @@ categories: combinatorics,math
 tags: ballots,bijection,involution,natural,sets,signed,species,virtual
 ---
 
-<p>Recall, from <a href="https://byorgey.wordpress.com/2017/02/20/signed-sets-and-ballots-part-1/">my previous post</a>, that our goal is to find a <em>combinatorial</em> proof showing the correspondence between signed sets and signed ballots, where a <em>signed set</em> is just a set of $n$ elements, considered positive or negative according to the parity of $n$, and a <em>signed ballot</em> is an ordered list of sets, considered positive or negative according to the parity of the number of sets.</p>
+<p>Recall, from <a href="https://byorgey.github.io/blog/posts/2017/02/20/signed-sets-and-ballots-part-1.html">my previous post</a>, that our goal is to find a <em>combinatorial</em> proof showing the correspondence between signed sets and signed ballots, where a <em>signed set</em> is just a set of $n$ elements, considered positive or negative according to the parity of $n$, and a <em>signed ballot</em> is an ordered list of sets, considered positive or negative according to the parity of the number of sets.</p>
 <p>So, how should such a proof look? For a given number of labels $n$, there is a single signed set structure, which is just the set of labels itself (with a sign depending on the parity of $n$). On the other hand, there are lots of ballots on $n$ labels; the key is that some are positive and some are negative, since the sign of the ballots depends on the parity of the number of parts, not the number of labels. For example, consider $n = 3$. There is a single (negative) signed set structure:</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2017/02/c8dadbdd1a4a1256.png" /></p>
 </div>
 <p>(I will use a dashed blue line to indicate negative things, and a solid black line for positive things.)</p>
-<p>On the other hand, as we saw <a href="https://byorgey.wordpress.com/2017/02/20/signed-sets-and-ballots-part-1/">last time</a>, there are 13 ballot structures on 3 labels, some positive and some negative:</p>
+<p>On the other hand, as we saw <a href="https://byorgey.github.io/blog/posts/2017/02/20/signed-sets-and-ballots-part-1.html">last time</a>, there are 13 ballot structures on 3 labels, some positive and some negative:</p>
 <div style="text-align:center;">
 <p><img src="http://byorgey.files.wordpress.com/2017/02/1c54d7738a0e2be6.png" /></p>
 </div>

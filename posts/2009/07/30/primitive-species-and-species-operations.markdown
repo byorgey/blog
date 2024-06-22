@@ -6,7 +6,7 @@ categories: combinatorics,haskell,math
 tags: combinatorial species,DSL,primitives
 ---
 
-In this second post about my new <a href="http://hackage.haskell.org/package/species">combinatorial species library</a>, I plan to begin writing about the species DSL itself: what are the primitive combinatorial species and the primitive operations on species?  (The <a href="http://byorgey.wordpress.com/2009/07/24/introducing-math-combinatorics-species/">first post described the concept of combinatorial species in general</a>.  Also, for those following along at home, I've just uploaded version 0.2.1 of the species library, which is a vast improvement over 0.1, with many new features and a few bug fixes; just <code>cabal update &amp;&amp; cabal upgrade species</code>.  Also also, note that it currently only builds on ghc 6.10.x.)
+In this second post about my new <a href="http://hackage.haskell.org/package/species">combinatorial species library</a>, I plan to begin writing about the species DSL itself: what are the primitive combinatorial species and the primitive operations on species?  (The <a href="https://byorgey.github.io/blog/posts/2009/07/24/introducing-math-combinatorics-species.html">first post described the concept of combinatorial species in general</a>.  Also, for those following along at home, I've just uploaded version 0.2.1 of the species library, which is a vast improvement over 0.1, with many new features and a few bug fixes; just <code>cabal update &amp;&amp; cabal upgrade species</code>.  Also also, note that it currently only builds on ghc 6.10.x.)
 
 <h3>The Species type class</h3>
 

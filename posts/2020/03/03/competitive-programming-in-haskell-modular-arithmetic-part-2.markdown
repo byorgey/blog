@@ -6,7 +6,7 @@ categories: haskell
 tags: competitive,number,programming,theory
 ---
 
-<p>In <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">my last post</a> I wrote about modular exponentiation and <code>egcd</code>. In this post, I consider the problem of solving modular equivalences, building on code from the previous post.</p>
+<p>In <a href="https://byorgey.github.io/blog/posts/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1.html">my last post</a> I wrote about modular exponentiation and <code>egcd</code>. In this post, I consider the problem of solving modular equivalences, building on code from the previous post.</p>
 <h1 id="solving-linear-congruences">Solving linear congruences</h1>
 <p>A <em>linear congruence</em> is a modular equivalence of the form</p>
 <div style="text-align:center;">
@@ -29,7 +29,7 @@ tags: competitive,number,programming,theory
 <p>$\begin{array}{rcl}x &\equiv& a \pmod m \\ x &\equiv& b \pmod n\end{array}$</p>
 <p>then as long as $m$ and $n$ are relatively prime, there is a <em>unique</em> solution for $x$ modulo the product $mn$; that is, the system of two equations is equivalent to a single equation of the form</p>
 <p>$x \equiv c \pmod {mn}.$</p>
-<p>We first compute the Bézout coefficients $u$ and $v$ such that $mu + nv = 1$ <a href="https://byorgey.wordpress.com/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1/">using <code>egcd</code></a>, and then compute the solution as $c = anv + bmu$. Indeed,</p>
+<p>We first compute the Bézout coefficients $u$ and $v$ such that $mu + nv = 1$ <a href="https://byorgey.github.io/blog/posts/2020/02/15/competitive-programming-in-haskell-modular-arithmetic-part-1.html">using <code>egcd</code></a>, and then compute the solution as $c = anv + bmu$. Indeed,</p>
 <p>$c = anv + bmu = a(1 - mu) + bmu = a - amu + bmu = a + (b-a)mu$</p>
 <p>and hence $c \equiv a \pmod m$; similarly $c \equiv b \pmod n$.</p>
 <p>However, this is not quite general enough: we want to still be able to say something useful even if $\gcd(m,n) &gt; 1$. I won’t go through the whole proof, but it turns out that there is a solution if and only if $a \equiv b \pmod {\gcd(m,n)}$, and we can just divide everything through by $g = \gcd(m,n)$, as we did for solving linear congruences. Here’s the code:</p>
