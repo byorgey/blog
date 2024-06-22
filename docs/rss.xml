@@ -7,8 +7,87 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Fri, 21 Jun 2024 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Tue, 25 Jun 2024 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Products with unordered n-tuples</title>
+    <link>http://byorgey.github.io/blog/posts/2024/06/25/unordered-n-tuple-product.html</link>
+    <description><![CDATA[
+<h1>Products with unordered n-tuples</h1>
+
+<div class="info">
+  Posted on June 25, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;type-level programming&#39;." href="/tag/type-level%20programming.html" rel="tag">type-level programming</a>, <a title="All pages tagged &#39;Haskell&#39;." href="/tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged &#39;product&#39;." href="/tag/product.html" rel="tag">product</a>, <a title="All pages tagged &#39;unordered&#39;." href="/tag/unordered.html" rel="tag">unordered</a>, <a title="All pages tagged &#39;tuples&#39;." href="/tag/tuples.html" rel="tag">tuples</a>
+  
+</div>
+
+<section>
+<p>Recently, Dani Rybe wrote <a href="https://danryba253.github.io/danirybeblog/posts/unordered-n-tuples/">this really cool blog
+post</a>
+(in turn based on <a href="https://gelisam.blogspot.com/2013/07/the-commutative-monad.html">this old post by Samuel
+Gélineau</a>)
+about encoding truly <em>unordered</em> n-tuples in Haskell. This is
+something I thought about a long time ago in my work on
+combinatorial species, but I never came up with a way to represent
+them. Samuel and Dani’s solution is wonderful and clever and totally
+impractical, and I love it.</p>
+<p>I won’t go into more detail than that; I’ll let you go read it if
+you’re interested. This blog post exists solely to respond to Dani’s
+statement towards the end of her post:</p>
+<blockquote>
+<p>I’m not sure how to, for example, write a function that multiplies
+the inputs.</p>
+</blockquote>
+<p>Challenge accepted!</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">primes ::</span> [<span class="dt">Int</span>]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>primes <span class="ot">=</span> <span class="dv">2</span> <span class="op">:</span> sieve primes [<span class="dv">3</span> <span class="op">..</span>]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  sieve (p <span class="op">:</span> ps) xs <span class="ot">=</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (h, t) <span class="ot">=</span> <span class="fu">span</span> (<span class="op">&lt;</span> p <span class="op">*</span> p) xs</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> h <span class="op">++</span> sieve ps (<span class="fu">filter</span> ((<span class="op">/=</span> <span class="dv">0</span>) <span class="op">.</span> (<span class="ot">`mod`</span> p)) t)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ot">mul ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>mul <span class="ot">=</span> unfuck mulU</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ot">  mulU ::</span> <span class="dt">U</span> n <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  mulU <span class="ot">=</span> ufold <span class="dv">1</span> <span class="fu">id</span> (<span class="op">&lt;</span> <span class="dv">0</span>) \(<span class="dt">US</span> neg nonNeg) <span class="ot">-&gt;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    mulNonNeg nonNeg <span class="op">*</span> mulPos primes (<span class="fu">abs</span> <span class="op">&lt;$&gt;</span> neg) <span class="op">*</span> (<span class="op">-</span><span class="dv">1</span>) <span class="op">^</span> ulen neg</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="ot">  mulNonNeg ::</span> <span class="dt">U</span> n <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  mulNonNeg <span class="ot">=</span> ufold <span class="dv">1</span> <span class="fu">id</span> (<span class="op">==</span> <span class="dv">0</span>) \(<span class="dt">US</span> zero pos) <span class="ot">-&gt;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> ulen zero <span class="op">&gt;</span> <span class="dv">0</span> <span class="kw">then</span> <span class="dv">0</span> <span class="kw">else</span> mulPos primes pos</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ot">  mulPos ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">U</span> n <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  mulPos ps <span class="ot">=</span> ufold <span class="dv">1</span> <span class="fu">id</span> (<span class="op">==</span> <span class="dv">1</span>) \(<span class="dt">US</span> _ pos) <span class="ot">-&gt;</span> mulGTOne ps pos</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="ot">  mulGTOne ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">U</span> n <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  mulGTOne (p <span class="op">:</span> ps) <span class="ot">=</span> ufold <span class="dv">1</span> <span class="fu">id</span> ((<span class="op">==</span> <span class="dv">0</span>) <span class="op">.</span> (<span class="ot">`mod`</span> p)) \(<span class="dt">US</span> divP nondivP) <span class="ot">-&gt;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    mulPos (p <span class="op">:</span> ps) ((<span class="ot">`div`</span> p) <span class="op">&lt;$&gt;</span> divP) <span class="op">*</span> (p <span class="op">^</span> ulen divP) <span class="op">*</span> mulGTOne ps nondivP</span></code></pre></div>
+<p>Since every integer has a unique prime factorization, at each step we
+split the remaining numbers into those divisible by <span class="math inline">\(p\)</span> and those not
+divisible by <span class="math inline">\(p\)</span>. For the ones that are, we divide out <span class="math inline">\(p\)</span> from all
+of them, multiply by the appropriate power of <span class="math inline">\(p\)</span>, and recurse on
+what’s left; for those that are not, we move on to trying the next
+prime.</p>
+<p>Dani also speculates about <code>ubind :: U n (U m a) -&gt; U (n :*: m) a</code>. I
+believe in my heart this should be possible to implement, but after
+playing with it a bit, I concluded it would require an astounding feat
+of type-fu.</p>
+<p>PS I’m working on getting comments set up here on my new
+blog… hopefully coming soon!</p>
+
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
+]]></description>
+    <pubDate>Tue, 25 Jun 2024 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2024/06/25/unordered-n-tuple-product.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Competitive Programming in Haskell: sieving with mutable arrays</title>
     <link>http://byorgey.github.io/blog/posts/2024/06/21/cpih-product-divisors.html</link>
     <description><![CDATA[
@@ -1862,138 +1941,6 @@ Next time, we’ll see how to use some clever ideas from Conal Elliot’s <a hre
 ]]></description>
     <pubDate>2023-06-02T16:09:44Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Competitive programming in Haskell: introduction to dynamic programming</title>
-    <link>http://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html</link>
-    <description><![CDATA[
-<h1>Competitive programming in Haskell: introduction to dynamic programming</h1>
-
-<div class="info">
-  Posted on May 31, 2023
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;dynamic programming&#39;." href="/tag/dynamic%20programming.html" rel="tag">dynamic programming</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>
-  
-</div>
-
-<section>
-<p>
-In <a href="https://byorgey.github.io/blog/posts/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa.html">my previous post</a>, I challenged you to solve <a href="https://open.kattis.com/problems/zapis">Zapis</a>. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
-</p>
-<p>
-For example, given <code>(??)</code>, the answer is 4: we could replace the question marks with any matched pair (either <code>()</code>, <code>[]</code>, or <code>{}</code>), or we could replace them with <code>)(</code>, resulting in <code>()()</code>.
-</p>
-<h2 id="an-annoying-aside">
-An annoying aside
-</h2>
-<p>
-One very annoying thing to mention about this problem is that it requires us to output the <em>last 5 digits</em> of the answer. At first, I interpreted that to mean “output the answer modulo <span class="math inline">\(10^5\)</span>”, which would be a standard sort of condition for a combinatorics problem, but that’s not quite the same thing, in a very annoying way: for example, if the answer is <span class="math inline">\(2\)</span>, we are supposed to output <code>2</code>; but if the answer is <span class="math inline">\(1000000002\)</span>, we are supposed to output <code>00002</code>, not <code>2</code>! So simply computing the answer modulo <span class="math inline">\(10^5\)</span> is not good enough; if we get a final answer of <span class="math inline">\(2\)</span>, we don’t know whether we are supposed to pad it with zeros. I could imagine keeping track of both the result modulo <span class="math inline">\(10^5\)</span> along with a Boolean flag telling us whether the number has ever overflowed; we have to pad with zeros iff the flag is set at the end. I’m pretty sure this would work. But for this problem, it turns out that the final answer is at most “only” about 100 digits, so we can just compute the answer exactly as an <code>Integer</code> and then literally show the last 5 digits.
-</p>
-<h2 id="a-recurrence">
-A recurrence
-</h2>
-<p>
-Now, how to compute the answer? For this kind of problem the first step is to come up with a recurrence. Let <span class="math inline">\(s[0 \dots n-1]\)</span> be the given string, and let <span class="math inline">\(c(i,j)\)</span> be the number of ways to turn the substring <span class="math inline">\(s[i \dots j-1]\)</span> into a properly nested sequence of brackets, so ultimately we want to compute the value of <span class="math inline">\(c(0,n)\)</span>. (Note we make <span class="math inline">\(c(i,j)\)</span> correspond to the substring which includes <span class="math inline">\(i\)</span> but excludes <span class="math inline">\(j\)</span>, which means, for example, that the length of the substring is <span class="math inline">\(j-i\)</span>.) First, some base cases:
-</p>
-<ul>
-<li>
-<span class="math inline">\(c(i,i) = 1\)</span> since the empty string always counts as properly nested.
-</li>
-<li>
-<span class="math inline">\(c(i,j) = 0\)</span> if <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> have different parity, since any properly nested string must have even length.
-</li>
-</ul>
-<p>
-Otherwise, <span class="math inline">\(s[i]\)</span> had better be an opening bracket of some kind, and we can try matching it with each of <span class="math inline">\(s[i+1]\)</span>, <span class="math inline">\(s[i+3]\)</span>, <span class="math inline">\(s[i+5]\)</span>, …, <span class="math inline">\(s[j-1]\)</span>. In general, matching <span class="math inline">\(s[i]\)</span> with <span class="math inline">\(s[k]\)</span> can be done in either <span class="math inline">\(0\)</span>, <span class="math inline">\(1\)</span>, or <span class="math inline">\(3\)</span> ways depending on whether they are proper opening and closing brackets and whether any question marks are involved; then we have <span class="math inline">\(c(i+1,k)\)</span> ways to make the substring between <span class="math inline">\(s[i]\)</span> and <span class="math inline">\(s[k]\)</span> properly nested, and <span class="math inline">\(c(k+1,j)\)</span> ways for the rest of the string following <span class="math inline">\(s[k]\)</span>. These are all independent, so we multiply them. Overall, we get this:
-</p>
-<p>
-<span class="math inline">\(c(i,j) = \begin{cases} 1 &amp; i = j \\ 0 &amp; i \not \equiv j \pmod 2 \\ \displaystyle \sum_{k \in [i+1, i+3, \dots, j-1]} m(s[i], s[k]) \cdot c(i+1,k) \cdot c(k+1,j) &amp; \text{otherwise} \end{cases}\)</span>
-</p>
-<p>
-where <span class="math inline">\(m(x,y)\)</span> counts the number of ways to make <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> into a matching pair of brackets: it returns 0 if the two characters cannot possibly be a matching open-close pair (either because they do not match or because one of them is the wrong way around); 1 if they match, and at most one of them is a question mark; and 3 if both are question marks.
-</p>
-<p>
-How do we come up with such recurrences in the first place? Unfortunately, Haskell doesn’t really make this any easier—it requires some experience and insight. However, what we can say is that Haskell makes it very easy to directly code a recurrence as a recursive function, to play with it and ensure that it gives correct results for small input values.
-</p>
-<h2 id="a-naive-solution">
-A naive solution
-</h2>
-<p>
-To that end, if we directly code up our recurrence in Haskell, we get the following naive solution:
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">import</span> <span>Control.Arrow</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Data.Array</span>
-
-<span>main</span> <span style="color: red">=</span> <span>interact</span> <span>$</span> <span>lines</span> <span>&gt;&gt;&gt;</span> <span>last</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>format</span>
-
-<span>format</span> <span style="color: red">::</span> <span>Integer</span> <span style="color: red">-&gt;</span> <span>String</span>
-<span>format</span> <span style="color: red">=</span> <span>show</span> <span>&gt;&gt;&gt;</span> <span>reverse</span> <span>&gt;&gt;&gt;</span> <span>take</span> <span class="hs-num">5</span> <span>&gt;&gt;&gt;</span> <span>reverse</span>
-
-<span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
-<span>solve</span> <span>str</span> <span style="color: red">=</span> <span>c</span> <span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
-  <span style="color: blue;font-weight: bold">where</span>
-    <span>n</span> <span style="color: red">=</span> <span>length</span> <span>str</span>
-    <span>s</span> <span style="color: red">=</span> <span>listArray</span> <span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">)</span> <span>str</span>
-
-    <span>c</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Integer</span>
-    <span>c</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
-      <span style="color: red">|</span> <span>i</span> <span>==</span> <span>j</span>           <span style="color: red">=</span> <span class="hs-num">1</span>
-      <span style="color: red">|</span> <span>even</span> <span>i</span> <span>/=</span> <span>even</span> <span>j</span> <span style="color: red">=</span> <span class="hs-num">0</span>
-      <span style="color: red">|</span> <span>otherwise</span>        <span style="color: red">=</span> <span>sum</span>
-        <span style="color: red">[</span> <span>m</span> <span style="color: red">(</span><span>s</span><span>!</span><span>i</span><span style="color: red">)</span> <span style="color: red">(</span><span>s</span><span>!</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>c</span> <span style="color: red">(</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>c</span> <span style="color: red">(</span><span>k</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
-        <span style="color: red">|</span> <span>k</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span> <span>i</span><span>+</span><span class="hs-num">3</span> <span style="color: red">..</span> <span>j</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">]</span>
-        <span style="color: red">]</span>
-
-<span>m</span> <span style="color: teal">'('</span> <span style="color: teal">')'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: teal">'['</span> <span style="color: teal">']'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: teal">'{'</span> <span style="color: teal">'}'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: teal">'?'</span> <span style="color: teal">'?'</span>                <span style="color: red">=</span> <span class="hs-num">3</span>
-<span>m</span> <span>b</span> <span style="color: teal">'?'</span> <span style="color: red">|</span> <span>b</span> <span>`elem`</span> <span style="color: teal">"([{"</span> <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: teal">'?'</span> <span>b</span> <span style="color: red">|</span> <span>b</span> <span>`elem`</span> <span style="color: teal">")]}"</span> <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: blue;font-weight: bold">_</span>                    <span style="color: red">=</span> <span class="hs-num">0</span></code></pre>
-<p>
-This solution is correct, but much too slow—it passes the first four test cases but then fails with a <em>Time Limit Exceeded</em> error. In fact, it takes exponential time in the length of the input string, because it has a classic case of <a href="https://en.wikipedia.org/wiki/Overlapping_subproblems">overlapping subproblems</a>. Our goal is to compute the same function, but in a way that is actually efficient.
-</p>
-<h2 id="dynamic-programming-aka-memoizing-recurrences">
-Dynamic programming, aka memoizing recurrences
-</h2>
-<p>
-I hate the name “dynamic programming”—it conveys zero information about the thing that it names, and was essentially <a href="https://www.linkedin.com/pulse/origins-name-dynamic-programming-ashwin-rao/">invented as a marketing gimmick</a>. Dynamic programming is really just memoizing recurrences in order to compute them more efficiently. By <em>memoizing</em> we mean caching some kind of mapping from input to output values, so that we only have to compute a function once for each given input value; on subsequent calls with a repeated input we can just look up the corresponding output. There are many, many variations on the theme, but memoizing recurrences is really the heart of it.
-</p>
-<p>
-In imperative languages, dynamic programming is often carried out by filling in tables via nested loops—the fact that there is a <em>recurrence</em> involved is obscured by the implementation. However, in Haskell, our goal will be to write code that is <em>as close as possible</em> to the above naive recursive version, but still actually efficient. Over the next few posts we will discuss several techniques for doing just that.
-</p>
-<ul>
-<li>
-In <a href="https://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html">part 1</a>, we will explore the basic idea of using lazy, recursive, immutable arrays (which we have <a href="https://byorgey.github.io/blog/posts/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness.html">already seen in a previous post</a>).
-</li>
-<li>
-In <a href="https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html">part 2</a>, we will use ideas from Conal Elliot’s <code>MemoTrie</code> package (and ultimately from <a href="https://citeseerx.ist.psu.edu/doc/10.1.1.43.3272">a paper by Ralf Hinze</a>) to clean up the code and make it a lot closer to the naive version.
-</li>
-<li>
-<a href="https://byorgey.github.io/blog/posts/2023/06/20/competitive-programming-in-haskell-two-more-dp-challenges.html">This post</a> contains a couple challenge problems that can’t quite be solved using the techniques in the previous posts.
-</li>
-<li>
-At some point perhaps we’ll discuss how to memoize functions with infinite (or just very large) domains.
-</li>
-<li>
-There may very well end up being more parts… we’ll see where it ends up!
-</li>
-</ul>
-<p>
-Along the way I’ll also drop more links to relevant background. This will ultimately end up as a chapter in the book I’m slowly writing, and I’d like to make it into the definitive reference on dynamic programming in Haskell—so any thoughts, comments, links, etc. are most welcome!
-</p>
-
-</section>
-
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
-]]></description>
-    <pubDate>2023-05-31T14:47:46Z</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 

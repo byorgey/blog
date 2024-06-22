@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Products with unordered n-tuples</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print Things</a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2024/06/21/cpih-product-divisors.html">« Competitive Programming in Haskell: sieving with mutable arrays</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Products with unordered n-tuples</h1>
+
+<div class="info">
+  Posted on June 25, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'type-level programming'." href="../../../../tag/type-level%20programming.html" rel="tag">type-level programming</a>, <a title="All pages tagged 'Haskell'." href="../../../../tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged 'product'." href="../../../../tag/product.html" rel="tag">product</a>, <a title="All pages tagged 'unordered'." href="../../../../tag/unordered.html" rel="tag">unordered</a>, <a title="All pages tagged 'tuples'." href="../../../../tag/tuples.html" rel="tag">tuples</a>
+  
+</div>
+
+<section>
+<p>Recently, Dani Rybe wrote <a href="https://danryba253.github.io/danirybeblog/posts/unordered-n-tuples/">this really cool blog
+post</a>
+(in turn based on <a href="https://gelisam.blogspot.com/2013/07/the-commutative-monad.html">this old post by Samuel
+Gélineau</a>)
+about encoding truly <em>unordered</em> n-tuples in Haskell. This is
+something I thought about a long time ago in my work on
+combinatorial species, but I never came up with a way to represent
+them. Samuel and Dani’s solution is wonderful and clever and totally
+impractical, and I love it.</p>
+<p>I won’t go into more detail than that; I’ll let you go read it if
+you’re interested. This blog post exists solely to respond to Dani’s
+statement towards the end of her post:</p>
+<blockquote>
+<p>I’m not sure how to, for example, write a function that multiplies
+the inputs.</p>
+</blockquote>
+<p>Challenge accepted!</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">primes ::</span> [<span class="dt">Int</span>]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>primes <span class="ot">=</span> <span class="dv">2</span> <span class="op">:</span> sieve primes [<span class="dv">3</span> <span class="op">..</span>]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  sieve (p <span class="op">:</span> ps) xs <span class="ot">=</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (h, t) <span class="ot">=</span> <span class="fu">span</span> (<span class="op">&lt;</span> p <span class="op">*</span> p) xs</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> h <span class="op">++</span> sieve ps (<span class="fu">filter</span> ((<span class="op">/=</span> <span class="dv">0</span>) <span class="op">.</span> (<span class="ot">`mod`</span> p)) t)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ot">mul ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>mul <span class="ot">=</span> unfuck mulU</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ot">  mulU ::</span> <span class="dt">U</span> n <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  mulU <span class="ot">=</span> ufold <span class="dv">1</span> <span class="fu">id</span> (<span class="op">&lt;</span> <span class="dv">0</span>) \(<span class="dt">US</span> neg nonNeg) <span class="ot">-&gt;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    mulNonNeg nonNeg <span class="op">*</span> mulPos primes (<span class="fu">abs</span> <span class="op">&lt;$&gt;</span> neg) <span class="op">*</span> (<span class="op">-</span><span class="dv">1</span>) <span class="op">^</span> ulen neg</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="ot">  mulNonNeg ::</span> <span class="dt">U</span> n <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  mulNonNeg <span class="ot">=</span> ufold <span class="dv">1</span> <span class="fu">id</span> (<span class="op">==</span> <span class="dv">0</span>) \(<span class="dt">US</span> zero pos) <span class="ot">-&gt;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> ulen zero <span class="op">&gt;</span> <span class="dv">0</span> <span class="kw">then</span> <span class="dv">0</span> <span class="kw">else</span> mulPos primes pos</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ot">  mulPos ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">U</span> n <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  mulPos ps <span class="ot">=</span> ufold <span class="dv">1</span> <span class="fu">id</span> (<span class="op">==</span> <span class="dv">1</span>) \(<span class="dt">US</span> _ pos) <span class="ot">-&gt;</span> mulGTOne ps pos</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="ot">  mulGTOne ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">U</span> n <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  mulGTOne (p <span class="op">:</span> ps) <span class="ot">=</span> ufold <span class="dv">1</span> <span class="fu">id</span> ((<span class="op">==</span> <span class="dv">0</span>) <span class="op">.</span> (<span class="ot">`mod`</span> p)) \(<span class="dt">US</span> divP nondivP) <span class="ot">-&gt;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    mulPos (p <span class="op">:</span> ps) ((<span class="ot">`div`</span> p) <span class="op">&lt;$&gt;</span> divP) <span class="op">*</span> (p <span class="op">^</span> ulen divP) <span class="op">*</span> mulGTOne ps nondivP</span></code></pre></div>
+<p>Since every integer has a unique prime factorization, at each step we
+split the remaining numbers into those divisible by <span class="math inline">\(p\)</span> and those not
+divisible by <span class="math inline">\(p\)</span>. For the ones that are, we divide out <span class="math inline">\(p\)</span> from all
+of them, multiply by the appropriate power of <span class="math inline">\(p\)</span>, and recurse on
+what’s left; for those that are not, we move on to trying the next
+prime.</p>
+<p>Dani also speculates about <code>ubind :: U n (U m a) -&gt; U (n :*: m) a</code>. I
+believe in my heart this should be possible to implement, but after
+playing with it a bit, I concluded it would require an astounding feat
+of type-fu.</p>
+<p>PS I’m working on getting comments set up here on my new
+blog… hopefully coming soon!</p>
+
+</section>
+
+<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
+<section id="isso-thread"></section>
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

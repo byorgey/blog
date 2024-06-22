@@ -172,6 +172,8 @@ blockquote {
 blockquote p {
     width: 55%;
     margin-right: 40px;
+    font-size: 1.3rem;
+    font-style: italic;
 }
 
 blockquote footer {
