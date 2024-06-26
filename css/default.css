@@ -21,6 +21,8 @@ div#logo a {
 
 div#header #navigation {
     text-align: right;
+    display: flex;
+    align-items: center;
 }
 
 div#header #navigation a {

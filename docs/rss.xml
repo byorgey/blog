@@ -80,8 +80,11 @@ blog… hopefully coming soon!</p>
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>Tue, 25 Jun 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/06/25/unordered-n-tuple-product.html</guid>
@@ -273,8 +276,11 @@ Until then, give it a try!</p>
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>Fri, 21 Jun 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/06/21/cpih-product-divisors.html</guid>
@@ -319,8 +325,11 @@ your way into the use of the full language.</p>
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>Wed, 12 Jun 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/06/12/swarm-swarm-3.html</guid>
@@ -362,8 +371,11 @@ two!</p>
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>Tue, 28 May 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/05/28/competitive-programming-in-haskell-two-problems.html</guid>
@@ -590,8 +602,11 @@ Valentin Golev
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>2023-08-22T17:37:34Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/08/22/swarm-0-4-release.html</guid>
@@ -1386,8 +1401,11 @@ Turner, D.A. (1979) <span>‘A new implementation technique for applicative lang
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>2023-07-13T20:55:18Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/07/13/compiling-to-intrinsically-typed-combinators.html</guid>
@@ -1426,8 +1444,11 @@ Feel free to discuss in the comments! I’m hoping that I can learn some new app
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>2023-06-20T20:42:24Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/06/20/competitive-programming-in-haskell-two-more-dp-challenges.html</guid>
@@ -1561,8 +1582,11 @@ When I derived this, my eyes bugged out and I started playing around with it, wh
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>2023-06-17T21:54:56Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/06/17/nested-folds.html</guid>
@@ -1748,8 +1772,11 @@ So here’s our final solution for Zapis. As you can see, the extra code we have
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>2023-06-06T14:21:04Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html</guid>
@@ -1936,8 +1963,11 @@ Next time, we’ll see how to use some clever ideas from Conal Elliot’s <a hre
 
 </section>
 
-<script data-isso="http://155.138.238.211" src="http://155.138.238.211/js/embed.min.js"></script>
-<section id="isso-thread"></section>
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
 ]]></description>
     <pubDate>2023-06-02T16:09:44Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html</guid>
