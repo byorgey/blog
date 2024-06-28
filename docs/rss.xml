@@ -81,7 +81,7 @@ blog… hopefully coming soon!</p>
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Products with unordered n-tuples" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -277,7 +277,7 @@ Until then, give it a try!</p>
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Competitive Programming in Haskell: sieving with mutable arrays" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -326,7 +326,7 @@ your way into the use of the full language.</p>
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Swarm swarm III (virtual hackathon)" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -372,7 +372,7 @@ two!</p>
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Competitive Programming in Haskell: Two Hard Problems" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -603,7 +603,7 @@ Valentin Golev
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Swarm 0.4 release" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -1402,7 +1402,7 @@ Turner, D.A. (1979) <span>‘A new implementation technique for applicative lang
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Compiling to Intrinsically Typed Combinators" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -1445,7 +1445,7 @@ Feel free to discuss in the comments! I’m hoping that I can learn some new app
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Competitive Programming in Haskell: two more DP challenges" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -1583,7 +1583,7 @@ When I derived this, my eyes bugged out and I started playing around with it, wh
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Nested folds" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -1773,7 +1773,7 @@ So here’s our final solution for Zapis. As you can see, the extra code we have
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Dynamic programming in Haskell: automatic memoization" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
@@ -1964,7 +1964,7 @@ Next time, we’ll see how to use some clever ideas from Conal Elliot’s <a hre
 </section>
 
 <script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread">
+<section id="isso-thread"  data-title="Dynamic programming in Haskell: lazy immutable arrays" >
   <noscript>Javascript needs to be activated to view comments.</noscript>
 </section>
 
