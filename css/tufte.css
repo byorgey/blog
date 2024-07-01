@@ -497,3 +497,8 @@ section > p.isso-post-action {
 .isso-postbox {
     margin: 0 0 2em !important;
 }
+
+.isso-comment {
+    margin: 0 0 !important;
+}
+
