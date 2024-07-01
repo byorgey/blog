@@ -55,3 +55,8 @@ div.info {
     font-size: 14px;
     font-style: italic;
 }
+
+.isso-postbox {
+    margin: 0 0 2em !important;
+}
+
