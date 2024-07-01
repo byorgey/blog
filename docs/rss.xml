@@ -7,8 +7,284 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Tue, 25 Jun 2024 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Thu, 11 Jul 2024 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Competitive Programming in Haskell: tree path decomposition, part I</title>
+    <link>http://byorgey.github.io/blog/posts/2024/07/11/cpih-factor-full-tree.html</link>
+    <description><![CDATA[
+<h1>Competitive Programming in Haskell: tree path decomposition, part I</h1>
+
+<div class="info">
+  Posted on July 11, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged &#39;number theory&#39;." href="/tag/number%20theory.html" rel="tag">number theory</a>, <a title="All pages tagged &#39;tree&#39;." href="/tag/tree.html" rel="tag">tree</a>, <a title="All pages tagged &#39;path&#39;." href="/tag/path.html" rel="tag">path</a>, <a title="All pages tagged &#39;decomposition&#39;." href="/tag/decomposition.html" rel="tag">decomposition</a>
+  
+</div>
+
+<section>
+<p>In <a href="https://byorgey.github.io/blog/posts/2024/05/28/competitive-programming-in-haskell-two-problems.html">a previous
+post</a>
+I challenged you to solve <a href="https://open.kattis.com/problems/factorfulltree">Factor-Full
+Tree</a>. In this
+problem, we are given an unlabelled rooted tree, and asked to create a <em>divisor
+labelling</em>. That is, we must label the vertices with positive
+integers in such a way that <span class="math inline">\(v\)</span> is an ancestor of <span class="math inline">\(u\)</span> if and only if
+<span class="math inline">\(v\)</span>’s label evenly divides <span class="math inline">\(u\)</span>’s label.</p>
+<p>For example, here is a tree with a divisor labelling:</p>
+<p><span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="marginnote">Divisor labelling of a tree<br />
+<br />
+</span></span></p>
+<figure>
+<img src="/diagrams/0d43c38705f7e411.svg" />
+</figure>
+<p>The interesting point (though irrelevant to solving the problem) is
+that this is a method for encoding a tree as a set of integers:
+because <span class="math inline">\(v\)</span> is an ancestor of <span class="math inline">\(u\)</span> <em>if and only if</em> <span class="math inline">\(v\)</span>’s label divides
+<span class="math inline">\(u\)</span>’s, all the information about the tree’s structure is fully
+contained in the set of labels. For example, if we simply write
+down the set <span class="math inline">\(\{1, 5, 6, 7, 12, 14, 21, 49, 63\}\)</span>, it is possible to
+fully reconstruct the above tree from this set.<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-1" class="margin-toggle"/><span class="marginnote">Note that we
+consider trees equivalent up to reordering of siblings, that is, each
+node has a <em>bag</em>, not a <em>list</em>, of children.<br />
+<br />
+</span></span> This is not a
+particularly <em>efficient</em> way to encode a tree, but it is certainly
+interesting!</p>
+<section id="basic-setup" class="level2">
+<h2>Basic setup</h2>
+<p>First, some basic setup.<span class="sidenote-wrapper"><label for="sn-2" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-2" class="margin-toggle"/><span class="marginnote"><a href="https://byorgey.github.io/blog/posts/2019/05/22/competitive-programming-in-haskell-scanner.html">See here</a> for the <code>Scanner</code>
+abstraction, and
+<a href="https://byorgey.github.io/blog/posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html">here</a>
+for the basics of how I organize solutions.<br />
+<br />
+</span></span> The first line of
+input specifies the number of nodes <span class="math inline">\(N\)</span>, and after that there are
+<span class="math inline">\(N-1\)</span> lines, each specifying a single undirected edge.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Category</span> ((&gt;&gt;&gt;))</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bifunctor</span> (second)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Map</span> (<span class="dt">Map</span>, (!?))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Map</span> <span class="kw">as</span> <span class="dt">M</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Tuple</span> (swap)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> C.interact <span class="op">$</span> runScanner tc <span class="op">&gt;&gt;&gt;</span> solve <span class="op">&gt;&gt;&gt;</span> format</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">TC</span> <span class="ot">=</span> <span class="dt">TC</span> {<span class="ot"> n ::</span> <span class="dt">Int</span>,<span class="ot"> edges ::</span> [<span class="dt">Edge</span>] }</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ot">tc ::</span> <span class="dt">Scanner</span> <span class="dt">TC</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>tc <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> int</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  edges <span class="ot">&lt;-</span> (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">&gt;&lt;</span> pair int int</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> <span class="dt">TC</span>{<span class="op">..</span>}</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ot">format ::</span> [<span class="dt">Integer</span>] <span class="ot">-&gt;</span> <span class="dt">ByteString</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>format <span class="ot">=</span> <span class="fu">map</span> showB <span class="op">&gt;&gt;&gt;</span> C.unwords</span></code></pre></div>
+<p>We are guaranteed that the edges describe a tree; next we will
+actually build a tree data structure from the input.</p>
+</section>
+<section id="building-trees" class="level2">
+<h2>Building trees</h2>
+<p>There are many
+similar problems which specify a tree structure by giving a list of
+edges, so it’s worthwhile trying to write some generic code to
+transform such an input into an actual tree. In an imperative language
+we would do this by building a map from each node to its neighbors,
+then doing a DFS to orient the tree. Our Haskell code will be
+similar, except building the map and doing a DFS will both be
+one-liners!</p>
+<p>First, a function to turn a list of undirected edges into a <code>Map</code>
+associating each vertex to all its neighbors. It’s convenient to
+decompose this into a function to turn a list of <em>directed</em> edges into
+a <code>Map</code>, and a function to duplicate and swap each pair. We won’t
+need <code>dirEdgesToMap</code> for this problem, but we can certainly imagine
+wanting it elsewhere.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">edgesToMap ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> [(a, a)] <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>edgesToMap <span class="ot">=</span> <span class="fu">concatMap</span> (\p <span class="ot">-&gt;</span> [p, swap p]) <span class="op">&gt;&gt;&gt;</span> dirEdgesToMap</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">dirEdgesToMap ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> [(a, a)] <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dirEdgesToMap <span class="ot">=</span> <span class="fu">map</span> (second (<span class="op">:</span> [])) <span class="op">&gt;&gt;&gt;</span> M.fromListWith (<span class="op">++</span>)</span></code></pre></div>
+<p>Next, we can turn such a neighbor <code>Map</code> into a tree. Rather than
+returning a literal <code>Tree</code> data structure, it’s convenient to
+incorporate a tree fold: that is, given a function <code>a -&gt; [b] -&gt; b</code>, a neighbor
+map, and a root node, we fold over the whole tree and return the
+resulting <code>b</code> value. (Of course, if we want an actual <code>Tree</code> we can use
+<code>mapToTree Node</code>.) We can also compose these into a single function <code>edgesToTree</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">mapToTree ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> [b] <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a] <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>mapToTree nd m root <span class="ot">=</span> dfs root root</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  dfs parent root <span class="ot">=</span> nd root (<span class="fu">maybe</span> [] (<span class="fu">map</span> (dfs root) <span class="op">.</span> <span class="fu">filter</span> (<span class="op">/=</span> parent)) (m <span class="op">!?</span> root))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ot">edgesToTree ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> [b] <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [(a, a)] <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>edgesToTree nd <span class="ot">=</span> mapToTree nd <span class="op">.</span> edgesToMap</span></code></pre></div>
+</section>
+<section id="inventing-divisor-labellings" class="level2">
+<h2>Inventing divisor labellings</h2>
+<p>So how do we create a divisor labelling for a given tree? Clearly, we
+might as well choose the root to have label <span class="math inline">\(1\)</span>, and every time we
+descend from a parent to a child, we must multiply by some integer,
+which might as well be a prime. Of course, we need to multiply by a
+<em>different</em> prime for each sibling. We might at first imagine simply
+multiplying by 2 for each (arbitrarily chosen) leftmost child, 3 for
+each second child, 5 for each third child, and so on, but this does
+not work—the second child of the first child ends up with the same
+label as the first child of the second child, and so on.</p>
+<p>Each node <span class="math inline">\(u\)</span>’s label is some prime <span class="math inline">\(p\)</span> times its parent’s label; call
+<span class="math inline">\(p\)</span> the <em>factor</em> of node <span class="math inline">\(u\)</span>. It is OK for one child of <span class="math inline">\(u\)</span> to also
+have factor <span class="math inline">\(p\)</span>, but the other children must get different factors.
+To be safe, we can give each additional child a new <em>globally unique</em>
+prime factor. This is not always necessary—in some cases it can be
+OK to reuse a factor if it does not lead to identically numbered
+nodes—but it is certainly sufficient. As an example, below is a
+divisor labelling of the example tree from before, via this scheme.
+Each edge is labelled with the factor of its child.</p>
+<p><span class="sidenote-wrapper"><label for="sn-3" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-3" class="margin-toggle"/><span class="marginnote">Divisor labelling of a tree with consecutive primes<br />
+<br />
+</span></span></p>
+<figure>
+<img src="/diagrams/13d7ee7b4e591669.svg" />
+</figure>
+<p>Notice how we use <span class="math inline">\(2\)</span> for the first child of the root, and <span class="math inline">\(3\)</span> for the
+next child. <span class="math inline">\(3\)</span>’s first child can also use a factor of <span class="math inline">\(3\)</span>, yielding
+a label of <span class="math inline">\(3^2 = 9\)</span>. <span class="math inline">\(3\)</span>’s next child uses a new, globally unique
+prime <span class="math inline">\(5\)</span>, and its third child uses <span class="math inline">\(7\)</span>; the final child of <span class="math inline">\(1\)</span> uses
+the next available prime, <span class="math inline">\(11\)</span>.</p>
+<p>We can code this up via a simple stateful traversal of the tree. (For
+<code>primes</code>, see <a href="https://byorgey.github.io/blog/posts/2020/02/07/competitive-programming-in-haskell-primes-and-factoring.html">this
+post</a>.)
+It’s a bit fiddly since we have to switch to the next prime <em>between</em>
+consecutive children, but not <em>after</em> the last child.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">primes ::</span> [<span class="dt">Integer</span>]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>primes <span class="ot">=</span> <span class="dv">2</span> <span class="op">:</span> sieve primes [<span class="dv">3</span> <span class="op">..</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  sieve (p <span class="op">:</span> ps) xs <span class="ot">=</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (h, t) <span class="ot">=</span> <span class="fu">span</span> (<span class="op">&lt;</span> p <span class="op">*</span> p) xs</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> h <span class="op">++</span> sieve ps (<span class="fu">filter</span> ((<span class="op">/=</span> <span class="dv">0</span>) <span class="op">.</span> (<span class="ot">`mod`</span> p)) t)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ot">curPrime ::</span> <span class="dt">State</span> [<span class="dt">Integer</span>] <span class="dt">Integer</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>curPrime <span class="ot">=</span> gets <span class="fu">head</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="ot">nextPrime ::</span> <span class="dt">State</span> [<span class="dt">Integer</span>] ()</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>nextPrime <span class="ot">=</span> modify <span class="fu">tail</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="ot">labelTree ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> (<span class="dt">Integer</span>, a)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>labelTree <span class="ot">=</span> <span class="fu">flip</span> evalState primes <span class="op">.</span> go <span class="dv">1</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="ot">  go ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">State</span> [<span class="dt">Integer</span>] (<span class="dt">Tree</span> (<span class="dt">Integer</span>, a))</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  go x (<span class="dt">Node</span> a ts) <span class="ot">=</span> <span class="dt">Node</span> (x, a) <span class="op">&lt;$&gt;</span> labelChildren x ts</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="ot">  labelChildren ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> [<span class="dt">Tree</span> a] <span class="ot">-&gt;</span> <span class="dt">State</span> [<span class="dt">Integer</span>] [<span class="dt">Tree</span> (<span class="dt">Integer</span>, a)]</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  labelChildren _ [] <span class="ot">=</span> <span class="fu">pure</span> []</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  labelChildren x (t <span class="op">:</span> ts) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> curPrime</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    t&#39; <span class="ot">&lt;-</span> go (x <span class="op">*</span> p) t</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> ts <span class="kw">of</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>      [] <span class="ot">-&gt;</span> <span class="fu">pure</span> [t&#39;]</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      _ <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        nextPrime</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        (t&#39; <span class="op">:</span>) <span class="op">&lt;$&gt;</span> labelChildren x ts</span></code></pre></div>
+<p>There is a bit of additional glue code we need get the parsed tree
+from the input, apply <code>labelTree</code>, and then print out the node
+labels in order. However, I’m not going to bother showing it,
+because—this solution is not accepted! It fails with a WA (Wrong
+Answer) verdict. What gives?</p>
+</section>
+<section id="keeping-things-small" class="level2">
+<h2>Keeping things small</h2>
+<p>The key is one of the last sentences in the problem statement, which I
+haven’t mentioned so far: all the labels in our output must be at most
+<span class="math inline">\(10^{18}\)</span>. Why is this a problem? Multiplying by primes over and
+over again, it’s not hard to get rather large numbers. For example,
+consider the tree below:</p>
+<p><span class="sidenote-wrapper"><label for="sn-4" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-4" class="margin-toggle"/><span class="marginnote">Tree for which our naïve scheme generates labels that are too large<br />
+<br />
+</span></span></p>
+<figure>
+<img src="/diagrams/93210957d4a3e60e.svg" />
+</figure>
+<p>Under our scheme, the root gets label <span class="math inline">\(1\)</span>, and the children of the
+root get consecutive primes <span class="math inline">\(2, 3, 5, \dots, 29\)</span>. Then the nodes
+in the long chain hanging off the last sibling get labels <span class="math inline">\(29^2, 29^3, \dots, 29^{13}\)</span>, and <span class="math inline">\(29^{13}\)</span> is too big—in fact, it is
+approximately <span class="math inline">\(10^{19}\)</span>. And this tree has only 23 nodes; in general
+the input can have up to 60.</p>
+<p>Of course, <span class="math inline">\(29\)</span> was a poor choice of factor for such a long chain—we
+should have instead labelled the long chain with powers of,
+say, 2. Notice that if we have a “tree” consisting of a single long
+chain of 60 nodes (and you can bet this is one of the secret test
+inputs!), we just barely get by labelling it with powers of two from
+<span class="math inline">\(2^0\)</span> up to <span class="math inline">\(2^{59}\)</span>: in fact <span class="math inline">\(2^{59} &lt; 10^{18} &lt; 2^{60}\)</span>. So in
+general, we want to find a way to label long chains with small primes,
+and reserve larger primes for shorter chains.</p>
+</section>
+<section id="attempt-1-sorting-by-height" class="level2">
+<h2>Attempt 1: sorting by height</h2>
+<p>One obvious approach is to simply sort the children at each node by
+decreasing height, before traversing the tree to assign prime
+factors. This handles the above example correctly, since the long
+chain would be sorted to the front and assigned the factor 2.
+However, this does not work in general! It can still fail to assign
+the smallest primes to the longest chains. As a simple example,
+consider this tree, in which the children of every node are already
+sorted by decreasing height from left to right:</p>
+<p><span class="sidenote-wrapper"><label for="sn-5" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-5" class="margin-toggle"/><span class="marginnote">Tree for which sorting by height first does not work<br />
+<br />
+</span></span></p>
+<figure>
+<img src="/diagrams/6bb8ef474a78c853.svg" />
+</figure>
+<p>The straightforward traversal algorithm indeed assigns powers of 2 to
+the left spine of the tree, but it then assigns 3, 5, 7, and so on to
+all the tiny spurs hanging off it. So by the time we get to other long
+chain hanging off the root, it is assigned powers of <span class="math inline">\(43\)</span>, which are
+too big. In fact, we want to assign powers of 2 to the left spine,
+powers of 3 to the chain on the right, and then use the rest of the
+primes for all the short spurs. But this sort of “non-local”
+labelling means we can’t assign primes via a tree traversal.</p>
+<p>To drive this point home, here’s another example tree. This one is
+small enough that it probably doesn’t matter too much how we label it,
+but it’s worth thinking about how to label the longest chains with the
+smallest primes. I’ve drawn it in a “left-leaning” style to further
+emphasize the different chains that are involved.</p>
+<p><span class="sidenote-wrapper"><label for="sn-6" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-6" class="margin-toggle"/><span class="marginnote">Tree for which XXX<br />
+<br />
+</span></span></p>
+<figure>
+<img src="/diagrams/45540cc73cab6222.svg" />
+</figure>
+<p>In fact, we want to assign the factor 2 to the long chain on the left;
+then the factor 3 to the second-longest chain, in the fourth column;
+then 5 to the length-6 chain in the second column; 7 to the length-3
+chain all the way on the right; and finally 11 to the smallest chain, in column 3.</p>
+<p>In general, then, we want a way to <em>decompose</em> an arbitrary tree into
+chains, where we repeatedly identify the longest chain, remove it from
+consideration, and then identify the longest chain from the remaining
+nodes, and so on. Once we have decomposed a tree into chains, it will
+be a relatively simple matter to sort the chains by length and assign
+consecutive prime factors.</p>
+<p>This decomposition occasionally comes in handy (for example, see
+<a href="https://open.kattis.com/problems/floatingformation">Floating
+Formation</a> and
+<a href="https://open.kattis.com/problems/deadend">Dead-End Detector</a>), and
+belongs to a larger family of important tree decomposition techniques
+such as <a href="https://cp-algorithms.com/graph/hld.html">heavy-light
+decomposition</a>. Next time,
+I’ll demonstrate how to implement such tree decompositions in Haskell!</p>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Competitive Programming in Haskell: tree path decomposition, part I" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Thu, 11 Jul 2024 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2024/07/11/cpih-factor-full-tree.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Products with unordered n-tuples</title>
     <link>http://byorgey.github.io/blog/posts/2024/06/25/unordered-n-tuple-product.html</link>
     <description><![CDATA[
@@ -1780,197 +2056,6 @@ So here’s our final solution for Zapis. As you can see, the extra code we have
 ]]></description>
     <pubDate>2023-06-06T14:21:04Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Dynamic programming in Haskell: lazy immutable arrays</title>
-    <link>http://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html</link>
-    <description><![CDATA[
-<h1>Dynamic programming in Haskell: lazy immutable arrays</h1>
-
-<div class="info">
-  Posted on June  2, 2023
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;dynamic programming&#39;." href="/tag/dynamic%20programming.html" rel="tag">dynamic programming</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>
-  
-</div>
-
-<section>
-<p>
-This is part 1 of a <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">promised multi-part series</a> on dynamic programming in Haskell. As a reminder, we’re using <a href="https://open.kattis.com/problems/zapis">Zapis</a> as a sample problem. In this problem, we are given a sequence of opening and closing brackets (parens, square brackets, and curly braces) with question marks, and have to compute the number of different ways in which the question marks could be replaced by brackets to create valid, properly nested bracket sequences.
-</p>
-<p>
-<a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">Last time</a>, we developed a recurrence for this problem and saw some naive, directly recursive Haskell code for computing it. Although this naive version is technically correct, it is much too slow, so our goal is to implement it more efficiently.
-</p>
-<h2 id="mutable-arrays">
-Mutable arrays?
-</h2>
-<p>
-Someone coming from an imperative background might immediately reach for some kind of mutable array, <em>e.g.</em> <code>STUArray</code>. Every time we call the function, we check whether the corresponding array index has already been filled in. If so, we simply return the stored value; if not, we compute the value recursively, and then fill in the array before returning it.
-</p>
-<p>
-This would work, but there is a better way!
-</p>
-<h2 id="immutable-arrays">
-Immutable arrays
-</h2>
-<p>
-While mutable arrays <a href="https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html">occasionally have their place</a>, we can surprisingly often get away with <em>immutable</em> arrays, where we completely define the array up front and then only use it for fast lookups afterwards.
-</p>
-<ul>
-<li>
-If the type of the array elements is suitable, and we can initialize the array elements all at once from a list using some kind of formula, map, scan, <em>etc.</em>, we should use <code>UArray</code> <a href="https://byorgey.github.io/blog/posts/2023/02/24/competitive-programming-in-haskell-infinite-2d-array-level-4.html">since it is much faster</a> than <code>Array</code>.
-</li>
-<li>
-However, <code>UArray</code> is strict in the elements, and the elements must be of a type that can be stored unboxed. If we need a more complex element type, or we need to compute the array recursively (where some elements depend on other elements), we can use <code>Array</code>.
-</li>
-</ul>
-<p>
-What about the <a href="http://hackage.haskell.org/package/vector"><code>vector</code> library</a>, you ask? Well, it’s a very nice library, and quite fast, but unfortunately it is not available on many judging platforms, so I tend to stick to <code>array</code> to be safe. However, if you’re doing something like <a href="https://adventofcode.com/">Advent of Code</a> or <a href="https://projecteuler.net/">Project Euler</a> where you get to run the code on your own machine, then you should definitely reach for <code>vector</code>.
-</p>
-<h2 id="lazy-recursive-immutable-arrays">
-Lazy, recursive, immutable arrays
-</h2>
-<p>
-In <a href="https://byorgey.github.io/blog/posts/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness.html">my previous post on topsort</a> we already saw the basic idea: since <code>Array</code>s are lazy in their elements, we can define them recursively; the Haskell runtime then takes care of computing the elements in a suitable order. Previously, we saw this applied to automatically compute a topological sort, but more generally, we can use it to fill out a table of values for any recurrence.
-</p>
-<p>
-So, as a first attempt, let’s just replace our recursive <code>c</code> function from <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">last time</a> with an array. I’ll only show the <code>solve</code> function for now; the rest of the code remains the same. (Spoiler alert: this solution works, but it’s ugly. We’ll develop much better solutions later.)
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
-<span>solve</span> <span>str</span> <span style="color: red">=</span> <span>c</span><span>!</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
-  <span style="color: blue;font-weight: bold">where</span>
-    <span>n</span> <span style="color: red">=</span> <span>length</span> <span>str</span>
-    <span>s</span> <span style="color: red">=</span> <span>listArray</span> <span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">)</span> <span>str</span>
-
-    <span>c</span> <span style="color: red">::</span> <span>Array</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span>Integer</span>
-    <span>c</span> <span style="color: red">=</span> <span>array</span> <span style="color: red">(</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span><span style="color: red">,</span><span style="color: red">(</span><span>n</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span><span style="color: red">)</span> <span>$</span>
-      <span style="color: red">[</span> <span style="color: red">(</span><span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>i</span><span style="color: red">)</span><span style="color: red">,</span> <span class="hs-num">1</span><span style="color: red">)</span> <span style="color: red">|</span> <span>i</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span> <span style="color: red">]</span>
-      <span>++</span>
-      <span style="color: red">[</span> <span style="color: red">(</span><span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span> <span style="color: red">|</span> <span>i</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>j</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>even</span> <span>i</span> <span>/=</span> <span>even</span> <span>j</span> <span style="color: red">]</span>
-      <span>++</span>
-      <span style="color: red">[</span> <span style="color: red">(</span><span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span><span style="color: red">,</span><span>v</span><span style="color: red">)</span>
-      <span style="color: red">|</span> <span>i</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>j</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span><span style="color: red">..</span><span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>i</span> <span>/=</span> <span>j</span><span style="color: red">,</span> <span>even</span> <span>i</span> <span>==</span> <span>even</span> <span>j</span>
-      <span style="color: red">,</span> <span style="color: blue;font-weight: bold">let</span> <span>v</span> <span style="color: red">=</span> <span>sum</span> <span style="color: red">[</span> <span>m</span> <span style="color: red">(</span><span>s</span><span>!</span><span>i</span><span style="color: red">)</span> <span style="color: red">(</span><span>s</span><span>!</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>c</span><span>!</span><span style="color: red">(</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>c</span><span>!</span><span style="color: red">(</span><span>k</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span> <span style="color: red">|</span> <span>k</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span> <span>i</span><span>+</span><span class="hs-num">3</span> <span style="color: red">..</span> <span>j</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">]</span><span style="color: red">]</span>
-      <span style="color: red">]</span></code></pre>
-<p>
-We use the <code>array</code> function to create an array, which takes first a pair of indices specifying the index range, and then a list of (index, value) pairs. (The <code>listArray</code> function can also be particularly useful, when we have a list of values which are already in index order, as in the definition of <code>s</code>.)
-</p>
-<p>
-This solution is accepted, and it’s quite fast (0.04s for me). However, it’s really ugly, and although it’s <em>conceptually</em> close to our directly recursive function from before, the code is almost unrecognizably different. It’s ugly that we have to repeat conditions like <code>i /= j</code> and <code>even i == even j</code>, and binders like <code>i &lt;- [0..n]</code>; the multiple list comprehensions and nested pairs like <code>((i,j),v)</code> are kind of ugly, and the fact that this is implementing a recurrence is completely obscured.
-</p>
-<p>
-However, I included this solution as a first step because for a long time, after I learned about using lazy immutable arrays to implement dynamic programming in Haskell, this was the kind of solution I wrote! Indeed, if you just think about the idea of creating a recursively defined array, this might be the kind of thing you come up with: we define an array <code>c</code> using the <code>array</code> function, then we have to list all its elements, and we get to refer to <code>c</code> along the way.
-</p>
-<h2 id="mutual-recursion-to-the-rescue">
-Mutual recursion to the rescue
-</h2>
-<p>
-Most of the ugliness comes from losing sight of the fact that there is a <em>function</em> mapping indices to values: we simply listed out all the function’s input/output pairs without getting to use any of Haskell’s very nice facilities for defining functions! So we can clean up the code considerably if we make a <em>mutually recursive</em> pair of an array and a function: the array values are defined using the function, and the function definition can look up values in the array.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
-<span>solve</span> <span>str</span> <span style="color: red">=</span> <span>cA</span><span>!</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
-  <span style="color: blue;font-weight: bold">where</span>
-    <span>n</span> <span style="color: red">=</span> <span>length</span> <span>str</span>
-    <span>s</span> <span style="color: red">=</span> <span>listArray</span> <span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">)</span> <span>str</span>
-
-    <span>cA</span> <span style="color: red">::</span> <span>Array</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span>Integer</span>
-    <span>cA</span> <span style="color: red">=</span> <span>array</span> <span style="color: red">(</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span><span style="color: red">,</span><span style="color: red">(</span><span>n</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span><span style="color: red">)</span> <span>$</span>
-      <span style="color: red">[</span> <span style="color: red">(</span><span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span><span style="color: red">,</span> <span>c</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span><span style="color: red">)</span> <span style="color: red">|</span> <span>i</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span> <span style="color: red">..</span> <span>n</span><span style="color: red">]</span><span style="color: red">,</span> <span>j</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span class="hs-num">0</span> <span style="color: red">..</span> <span>n</span><span style="color: red">]</span> <span style="color: red">]</span>
-
-    <span>c</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Integer</span>
-    <span>c</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
-      <span style="color: red">|</span> <span>i</span> <span>==</span> <span>j</span>           <span style="color: red">=</span> <span class="hs-num">1</span>
-      <span style="color: red">|</span> <span>even</span> <span>i</span> <span>/=</span> <span>even</span> <span>j</span> <span style="color: red">=</span> <span class="hs-num">0</span>
-      <span style="color: red">|</span> <span>otherwise</span>        <span style="color: red">=</span> <span>sum</span>
-        <span style="color: red">[</span> <span>m</span> <span style="color: red">(</span><span>s</span><span>!</span><span>i</span><span style="color: red">)</span> <span style="color: red">(</span><span>s</span><span>!</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>cA</span> <span>!</span> <span style="color: red">(</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>cA</span> <span>!</span> <span style="color: red">(</span><span>k</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
-        <span style="color: red">|</span> <span>k</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span> <span>i</span><span>+</span><span class="hs-num">3</span> <span style="color: red">..</span> <span>j</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">]</span>
-        <span style="color: red">]</span></code></pre>
-<p>
-Much better! The <code>c</code> function looks much the same as our naive version from before, with the one difference that instead of calling itself recursively, it looks up values in the array <code>cA</code>. The array, in turn, is simply defined as a lookup table for the outputs of the function.
-</p>
-<h2 id="generalized-tabulation">
-Generalized tabulation
-</h2>
-<p>
-One nice trick we can use to simplify the code a bit more is to use the <code>range</code> function to generate the list of all valid array indices, and then just <code>map</code> the <code>c</code> function over this. This also allows us to use the <code>listArray</code> function, since we know that the <code>range</code> will generate the indices in the right order.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>cA</span> <span style="color: red">::</span> <span>Array</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span>Integer</span>
-<span>cA</span> <span style="color: red">=</span> <span>listArray</span> <span>rng</span> <span>$</span> <span>map</span> <span>c</span> <span style="color: red">(</span><span>range</span> <span>rng</span><span style="color: red">)</span>
-  <span style="color: blue;font-weight: bold">where</span>
-    <span>rng</span> <span style="color: red">=</span> <span style="color: red">(</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span><span style="color: red">,</span> <span style="color: red">(</span><span>n</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span><span style="color: red">)</span></code></pre>
-<p>
-In fact, we can abstract this into a useful little function to create a lookup table for a function:
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>tabulate</span> <span style="color: red">::</span> <span>Ix</span> <span>i</span> <span style="color: red">=&gt;</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>i</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>i</span> <span style="color: red">-&gt;</span> <span>a</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Array</span> <span>i</span> <span>a</span>
-<span>tabulate</span> <span>rng</span> <span>f</span> <span style="color: red">=</span> <span>listArray</span> <span>rng</span> <span style="color: red">(</span><span>map</span> <span>f</span> <span>$</span> <span>range</span> <span>rng</span><span style="color: red">)</span></code></pre>
-<p>
-(We can generalize this even more to make it work for <code>UArray</code> as well as <code>Array</code>, but I’ll stop here for now. And yes, I intentionally named this to echo the <a href="https://hackage.haskell.org/package/adjunctions-4.4.2/docs/Data-Functor-Rep.html#v:tabulate"><code>tabulate</code> function from the <code>adjunctions</code> package</a>; <code>Array i</code> is indeed a representable functor, though it’s not really possible to express without dependent types.)
-</p>
-<h2 id="the-solution-so-far">
-The solution so far
-</h2>
-<p>
-Putting it all together, here’s our complete solution so far. It’s pretty good, and in fact it’s organized in a very similar way to <a href="https://gist.github.com/meooow25/8d5441fa54e645c8f2a48f91a750d360">Soumik Sarkar’s dynamic programming solution</a> to <a href="https://byorgey.github.io/blog/posts/2023/05/24/competitive-programming-in-haskell-parsing-with-an-nfa.html">Chemist’s Vows</a>. (However, there’s an even better solution coming in my next post!)
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">import</span> <span>Control.Arrow</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Data.Array</span>
-
-<span>main</span> <span style="color: red">=</span> <span>interact</span> <span>$</span> <span>lines</span> <span>&gt;&gt;&gt;</span> <span>last</span> <span>&gt;&gt;&gt;</span> <span>solve</span> <span>&gt;&gt;&gt;</span> <span>format</span>
-
-<span>format</span> <span style="color: red">::</span> <span>Integer</span> <span style="color: red">-&gt;</span> <span>String</span>
-<span>format</span> <span style="color: red">=</span> <span>show</span> <span>&gt;&gt;&gt;</span> <span>reverse</span> <span>&gt;&gt;&gt;</span> <span>take</span> <span class="hs-num">5</span> <span>&gt;&gt;&gt;</span> <span>reverse</span>
-
-<span>tabulate</span> <span style="color: red">::</span> <span>Ix</span> <span>i</span> <span style="color: red">=&gt;</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>i</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>i</span> <span style="color: red">-&gt;</span> <span>a</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Array</span> <span>i</span> <span>a</span>
-<span>tabulate</span> <span>rng</span> <span>f</span> <span style="color: red">=</span> <span>listArray</span> <span>rng</span> <span style="color: red">(</span><span>map</span> <span>f</span> <span>$</span> <span>range</span> <span>rng</span><span style="color: red">)</span>
-
-<span>solve</span> <span style="color: red">::</span> <span>String</span> <span style="color: red">-&gt;</span> <span>Integer</span>
-<span>solve</span> <span>str</span> <span style="color: red">=</span> <span>cA</span><span>!</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span>
-  <span style="color: blue;font-weight: bold">where</span>
-    <span>n</span> <span style="color: red">=</span> <span>length</span> <span>str</span>
-    <span>s</span> <span style="color: red">=</span> <span>listArray</span> <span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span>n</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">)</span> <span>str</span>
-
-    <span>cA</span> <span style="color: red">::</span> <span>Array</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span>Integer</span>
-    <span>cA</span> <span style="color: red">=</span> <span>tabulate</span> <span style="color: red">(</span><span style="color: red">(</span><span class="hs-num">0</span><span style="color: red">,</span><span class="hs-num">0</span><span style="color: red">)</span><span style="color: red">,</span><span style="color: red">(</span><span>n</span><span style="color: red">,</span><span>n</span><span style="color: red">)</span><span style="color: red">)</span> <span>c</span>
-
-    <span>c</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Int</span><span style="color: red">,</span> <span>Int</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Integer</span>
-    <span>c</span> <span style="color: red">(</span><span>i</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
-      <span style="color: red">|</span> <span>i</span> <span>==</span> <span>j</span>           <span style="color: red">=</span> <span class="hs-num">1</span>
-      <span style="color: red">|</span> <span>even</span> <span>i</span> <span>/=</span> <span>even</span> <span>j</span> <span style="color: red">=</span> <span class="hs-num">0</span>
-      <span style="color: red">|</span> <span>otherwise</span>        <span style="color: red">=</span> <span>sum</span>
-        <span style="color: red">[</span> <span>m</span> <span style="color: red">(</span><span>s</span><span>!</span><span>i</span><span style="color: red">)</span> <span style="color: red">(</span><span>s</span><span>!</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>cA</span> <span>!</span> <span style="color: red">(</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>k</span><span style="color: red">)</span> <span>*</span> <span>cA</span> <span>!</span> <span style="color: red">(</span><span>k</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span><span>j</span><span style="color: red">)</span>
-        <span style="color: red">|</span> <span>k</span> <span style="color: red">&lt;-</span> <span style="color: red">[</span><span>i</span><span>+</span><span class="hs-num">1</span><span style="color: red">,</span> <span>i</span><span>+</span><span class="hs-num">3</span> <span style="color: red">..</span> <span>j</span><span style="color: green">-</span><span class="hs-num">1</span><span style="color: red">]</span>
-        <span style="color: red">]</span>
-
-<span>m</span> <span style="color: teal">'('</span> <span style="color: teal">')'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: teal">'['</span> <span style="color: teal">']'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: teal">'{'</span> <span style="color: teal">'}'</span>                <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: teal">'?'</span> <span style="color: teal">'?'</span>                <span style="color: red">=</span> <span class="hs-num">3</span>
-<span>m</span> <span>b</span> <span style="color: teal">'?'</span> <span style="color: red">|</span> <span>b</span> <span>`elem`</span> <span style="color: teal">"([{"</span> <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: teal">'?'</span> <span>b</span> <span style="color: red">|</span> <span>b</span> <span>`elem`</span> <span style="color: teal">")]}"</span> <span style="color: red">=</span> <span class="hs-num">1</span>
-<span>m</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: blue;font-weight: bold">_</span>                    <span style="color: red">=</span> <span class="hs-num">0</span></code></pre>
-<h2 id="coming-up-next-automatic-memoization">
-Coming up next: automatic memoization!
-</h2>
-<p>
-So what’s not to like about this solution? Well, I still don’t like the fact that we have to define a mutually recursive array and function. Conceptually, I want to name them both <code>c</code> (or whatever) since they are really isomorphic representations of the exact same mathematical function. It’s annoying that I have to make up a name like <code>cA</code> or <code>c’</code> or whatever for one of them. I also don’t like that we have to remember to do array lookups instead of recursive calls in the function—and if we forget, Haskell will not complain! It will just be really slow.
-</p>
-<p>
-Next time, we’ll see how to use some clever ideas from Conal Elliot’s <a href="https://hackage.haskell.org/package/MemoTrie"><code>MemoTrie</code> package</a> (which themselves ultimately came from <a href="https://citeseerx.ist.psu.edu/doc/10.1.1.43.3272">a paper by Ralf Hinze</a>) to solve these remaining issues and end up with some really beautiful code!
-</p>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Dynamic programming in Haskell: lazy immutable arrays" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>2023-06-02T16:09:44Z</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 
