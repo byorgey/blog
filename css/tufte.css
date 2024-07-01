@@ -188,10 +188,6 @@ section > table {
     width: 55%;
 }
 
-section > p.isso-post-action {
-    width: 10%;
-}
-
 /* 50 + 5 == 55, to be the same width as paragraph */
 section > dl,
 section > ol,
@@ -489,4 +485,15 @@ label.margin-toggle:not(.sidenote-number) {
     img {
         width: 100%;
     }
+}
+
+/* Isso stuff */
+
+
+section > p.isso-post-action {
+    width: 10%;
+}
+
+.isso-postbox {
+    margin: 0 0 2em !important;
 }
