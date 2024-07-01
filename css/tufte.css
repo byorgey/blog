@@ -189,7 +189,7 @@ section > table {
 }
 
 section > p.isso-post-action {
-    width: none;
+    width: 10%;
 }
 
 /* 50 + 5 == 55, to be the same width as paragraph */
