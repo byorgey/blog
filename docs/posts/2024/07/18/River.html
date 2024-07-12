@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Rivers: eventually constant streams in Haskell</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2024/07/11/cpih-factor-full-tree.html">« Competitive Programming in Haskell: tree path decomposition, part I</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Rivers: eventually constant streams in Haskell</h1>
+
+<div class="info">
+  Posted on July 18, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Haskell'." href="../../../../tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged 'stream'." href="../../../../tag/stream.html" rel="tag">stream</a>, <a title="All pages tagged 'river'." href="../../../../tag/river.html" rel="tag">river</a>, <a title="All pages tagged 'eventually'." href="../../../../tag/eventually.html" rel="tag">eventually</a>, <a title="All pages tagged 'constant'." href="../../../../tag/constant.html" rel="tag">constant</a>, <a title="All pages tagged 'binary'." href="../../../../tag/binary.html" rel="tag">binary</a>, <a title="All pages tagged '2-adic'." href="../../../../tag/2-adic.html" rel="tag">2-adic</a>, <a title="All pages tagged 'p-adic'." href="../../../../tag/p-adic.html" rel="tag">p-adic</a>
+  
+</div>
+
+<section>
+<p>Lately I’ve been thinking about representing <em>eventually constant
+streams</em> in Haskell. An eventually constant stream is an infinite
+stream which eventually, after some finite prefix, starts repeating
+the same value forever. For example,</p>
+<p><span class="math inline">\(6, 8, 2, 9, 3, 1, 1, 1, 1, \dots\)</span></p>
+<p>There are many things we can do in a
+decidable way with eventually constant streams that we can’t do with
+infinite streams in general—for example, test them for equality.</p>
+<p>This is a work in progress. I only have one specific use case in mind
+(infinite-precision two’s complement arithmetic, explained at the end
+of the post), so I would love to hear of other potential use cases, or
+any other feedback. Depending on the feedback I may eventually turn
+this into a package on Hackage.</p>
+<p>This blog post is typeset from a literate Haskell file; if you want to
+play along you can <a href="https://github.com/byorgey/blog/blob/main/posts/2024/07/16/River.lhs">download the source from GitHub</a>.</p>
+<section id="the-river-type" class="level2">
+<h2>The <code>River</code> type</h2>
+<p>Some preliminaries:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE LambdaCase #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE PatternSynonyms #-}</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE ViewPatterns #-}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">River</span> <span class="kw">where</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Monoid</span> (<span class="dt">All</span> (..), <span class="dt">Any</span> (..))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Semigroup</span> (<span class="dt">Max</span> (..), <span class="dt">Min</span> (..))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Prelude</span> <span class="kw">hiding</span> (all, and, any, drop, foldMap, maximum, minimum, or, repeat, take, zipWith, (!!))</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Prelude</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">P</span></span></code></pre></div>
+<p>Now let’s get to the main definition. A value of type <code>River a</code> is
+either a constant <code>C a</code>, representing an infinite stream of copies of
+<code>a</code>, or a <code>Cons</code> with an <code>a</code> and a <code>River a</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">River</span> a <span class="ot">=</span> <span class="dt">C</span> <span class="op">!</span>a <span class="op">|</span> <span class="dt">Cons</span> <span class="op">!</span>a <span class="op">!</span>(<span class="dt">River</span> a)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> <span class="dt">Functor</span></span></code></pre></div>
+<p>I call this a <code>River</code> since “all <code>River</code>s flow to the <code>C</code>”!</p>
+<p>The <a href="https://tech.fpcomplete.com/haskell/tutorial/all-about-strictness/">strictness annotations</a> on the <code>a</code> values just seem like a good
+idea in general. The strictness annotation on the <code>River a</code> tail,
+however, is more interesting: it’s there to rule out infinite streams<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle">⊕</label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="marginnote">Although the strictness annotation on the <code>River a</code> is semantically correct, I could imagine not wanting it there for performance reasons; I’d be happy to hear any feedback on this point.<br />
+<br />
+</span></span>
+constructed using only <code>Cons</code>, such as <code>flipflop = Cons 0 (Cons 1 flipflop)</code>. In
+other words, the only way to make a non-<a href="https://en.wikibooks.org/wiki/Haskell/Denotational_semantics">bottom</a> value of type <code>Stream a</code> is
+to have a finite sequence of <code>Cons</code> finally terminated by <code>C</code>.</p>
+<p>We need to be a bit careful here, since there are multiple ways to
+represent streams which are semantically supposed to be the same. For
+example, <code>Cons 1 (Cons 1 (C 1))</code> and <code>C 1</code> both represent an infinite stream of
+all <code>1</code>’s. In general, we have the law</p>
+<p><code>C a === Cons a (C a)</code>,</p>
+<p>and want to make sure that any functions we write respect this
+<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle">⊕</label><input type="checkbox" id="sn-1" class="margin-toggle" /><span class="marginnote">It would be interesting to try implementing rivers as a higher inductive type, say, in <a href="https://agda.readthedocs.io/en/v2.6.20240714/language/cubical.html">Cubical Agda</a>.<br />
+<br />
+</span></span>
+equivalence, <em>i.e.</em> do not distinguish between such values. This is
+the reason I did not derive an <code>Eq</code> instance; we will have to write
+our own.</p>
+<p>We can partially solve this problem with a <a href="https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/pattern_synonyms.html"><em>bidirectional pattern
+synonym</em></a>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">expand ::</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>expand (<span class="dt">C</span> a) <span class="ot">=</span> <span class="dt">Cons</span> a (<span class="dt">C</span> a)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>expand as <span class="ot">=</span> as</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">infixr</span> <span class="dv">5</span> <span class="op">:::</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">pattern</span><span class="ot"> (:::) ::</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">pattern</span> (<span class="op">:::</span>) a as <span class="ot">&lt;-</span> (expand <span class="ot">-&gt;</span> <span class="dt">Cons</span> a as)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    a <span class="op">:::</span> as <span class="ot">=</span> <span class="dt">Cons</span> a as</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# COMPLETE (:::) #-}</span></span></code></pre></div>
+<p>Matching with the pattern <code>(a ::: as)</code> uses a <a href="https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/view_patterns.html"><em>view pattern</em></a>
+to potentially expand a <code>C</code> one step into a <code>Cons</code>, so that we can
+pretend all <code>River</code> values are always constructed with <code>(:::)</code>.
+In the other direction, <code>(:::)</code> merely constructs a <code>Cons</code>.</p>
+<p>We mark <code>(:::)</code> as <a href="https://downloads.haskell.org/ghc/latest/docs/users_guide/exts/pragmas.html#complete-pragmas"><code>COMPLETE</code></a> on its own since it is, in fact,
+sufficient to handle every possible input of type <code>River</code>. However,
+in order to obtain terminating algorithms we will often include one or
+more special cases for <code>C</code>.</p>
+</section>
+<section id="normalization-by-construction" class="level2">
+<h2>Normalization by construction?</h2>
+<p>As an alternative, we could use a variant pattern synonym:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">infixr</span> <span class="dv">5</span> <span class="op">::=</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pattern</span><span class="ot"> (::=) ::</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pattern</span> (<span class="op">::=</span>) a as <span class="ot">&lt;-</span> (expand <span class="ot">-&gt;</span> <span class="dt">Cons</span> a as)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    a' <span class="op">::=</span> <span class="dt">C</span> a <span class="op">|</span> a' <span class="op">==</span> a <span class="ot">=</span> <span class="dt">C</span> a</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    a <span class="op">::=</span> as <span class="ot">=</span> <span class="dt">Cons</span> a as</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# COMPLETE (::=) #-}</span></span></code></pre></div>
+<p>As compared to <code>(:::)</code>, this has an extra <code>Eq a</code> constraint: when we
+construct a <code>River</code> with <code>(::=)</code>, it checks to see whether we are
+consing an identical value onto an existing <code>C a</code>, and if so, simply
+returns the <code>C a</code> unchanged. If we always use <code>(::=)</code> instead of
+directly using <code>Cons</code>, it ensures that <code>River</code> values are always
+<em>normalized</em>—that is, for every eventually constant stream, we
+always use the canonical representative where the element immediately
+preciding the constant tail is not equal to it.</p>
+<p>This, in turn, <em>technically</em> makes it impossible to write functions
+which do not respect the equivalence <code>C a === Cons a (C a)</code>, simply
+because they will only ever be given canonical rivers as input.
+However, as we will see when we discuss folds, it is still possible to
+write “bad” functions, <em>i.e.</em> functions that are semantically
+questionable as functions on eventually constant streams—it would
+just mean we cannot directly observe them behaving badly.</p>
+<p>The big downside of using this formulation is that the <code>Eq</code> constraint
+infects absolutely everything—we even end up with <code>Eq</code> constraints
+in places where we would not expect them (for example, on <code>head :: River a -&gt; a</code>), because the pattern synonym incurs an <code>Eq</code> constraint
+anywhere we use it, regardless of whether we are using it to construct
+or destruct <code>River</code> values. As you can see from the definition above,
+we only do an equality check when using <code>(::=)</code> to construct a
+<code>River</code>, not when using it to pattern-match, but there is no way to
+give the pattern synonym different types in the two directions.<span class="sidenote-wrapper"><label for="sn-2" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-2" class="margin-toggle" /><span class="sidenote">Of course, we could make it a unidirectional pattern synonym and just make a differently named smart constructor, but that seems somewhat ugly, as we would have to remember which to use in which situation.<br />
+<br />
+</span></span></p>
+<p>So, because this normalizing variant does not really go far enough in
+removing our burden of proof, and has some big downsides in the form
+of leaking <code>Eq</code> constraints everywhere, I have chosen to stick with
+the simpler <code>(:::)</code> in this post. But I am still a bit unsure about this
+choice; in fact, I went back and forth two times while writing.</p>
+<p>We can at least provide a <code>normalize</code> function, which we can use when
+we want to ensure normalization:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">normalize ::</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>normalize (<span class="dt">C</span> a) <span class="ot">=</span> <span class="dt">C</span> a</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>normalize (a <span class="op">::=</span> as) <span class="ot">=</span> a <span class="op">::=</span> as</span></code></pre></div>
+</section>
+<section id="some-standard-functions-on-rivers" class="level2">
+<h2>Some standard functions on rivers</h2>
+<p>With the preliminary definitions out of the way, we can now build up a
+library of standard functions and instances for working with <code>River a</code>
+values. To start, we can write an <code>Eq</code> instance as follows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> <span class="dt">Eq</span> (<span class="dt">River</span> a) <span class="kw">where</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">C</span> a <span class="op">==</span> <span class="dt">C</span> b <span class="ot">=</span> a <span class="op">==</span> b</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  (a <span class="op">:::</span> as) <span class="op">==</span> (b <span class="op">:::</span> bs) <span class="ot">=</span> a <span class="op">==</span> b <span class="op">&amp;&amp;</span> as <span class="op">==</span> bs</span></code></pre></div>
+<p>Notice that we only need two cases, not four: if we compare two values
+whose finite prefixes are different lengths, the shorter one will
+automatically expand (via matching on <code>(:::)</code>) to the length of the
+longer.</p>
+<p>We already derived a <code>Functor</code> instance; we can also define a “zippy”
+<code>Applicative</code> instance like so:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">repeat</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">repeat</span> <span class="ot">=</span> <span class="dt">C</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Applicative</span> <span class="dt">River</span> <span class="kw">where</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pure</span> <span class="ot">=</span> <span class="fu">repeat</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">C</span> f <span class="op">&lt;*&gt;</span> <span class="dt">C</span> x <span class="ot">=</span> <span class="dt">C</span> (f x)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  (f <span class="op">:::</span> fs) <span class="op">&lt;*&gt;</span> (x <span class="op">:::</span> xs) <span class="ot">=</span> f x <span class="op">:::</span> (fs <span class="op">&lt;*&gt;</span> xs)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">zipWith</span><span class="ot"> ::</span> (a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> b <span class="ot">-&gt;</span> <span class="dt">River</span> c</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="fu">zipWith</span> <span class="ot">=</span> liftA2</span></code></pre></div>
+<p>We can write safe <code>head</code>, <code>tail</code>, and index functions:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span><span class="ot"> ::</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> (a <span class="op">:::</span> _) <span class="ot">=</span> a</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span><span class="ot"> ::</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> (_ <span class="op">:::</span> as) <span class="ot">=</span> as</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">infixl</span> <span class="dv">9</span> <span class="op">!!</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ot">(!!) ::</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> a</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="dt">C</span> a <span class="op">!!</span> _ <span class="ot">=</span> a</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>(a <span class="op">:::</span> _) <span class="op">!!</span> <span class="dv">0</span> <span class="ot">=</span> a</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>(_ <span class="op">:::</span> as) <span class="op">!!</span> n <span class="ot">=</span> as <span class="op">!!</span> (n <span class="op">-</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>We can also write <code>take</code> and <code>drop</code> variants. Note that <code>take</code>
+returns a finite prefix of a <code>River</code>, which is a list, not another
+<code>River</code>. The special case for <code>drop _ (C a)</code> is not strictly
+necessary, but makes it more efficient.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">take</span><span class="ot"> ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> [a]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">take</span> n _ <span class="op">|</span> n <span class="op">&lt;=</span> <span class="dv">0</span> <span class="ot">=</span> []</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">take</span> n (a <span class="op">:::</span> as) <span class="ot">=</span> a <span class="op">:</span> <span class="fu">take</span> (n <span class="op">-</span> <span class="dv">1</span>) as</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">drop</span><span class="ot"> ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">drop</span> n r <span class="op">|</span> n <span class="op">&lt;=</span> <span class="dv">0</span> <span class="ot">=</span> r</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">drop</span> _ (<span class="dt">C</span> a) <span class="ot">=</span> <span class="dt">C</span> a</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">drop</span> n (_ <span class="op">:::</span> as) <span class="ot">=</span> <span class="fu">drop</span> (n <span class="op">-</span> <span class="dv">1</span>) as</span></code></pre></div>
+<p>There are many other such functions we could implement (<em>e.g.</em> <code>span</code>,
+<code>dropWhile</code>, <code>tails</code>…); if I eventually put this on Hackage I would
+be sure to have a much more thorough selection of functions. Which
+functions would you want to see?</p>
+</section>
+<section id="folds-for-river" class="level2">
+<h2>Folds for <code>River</code></h2>
+<p>How do we fold over a <code>River a</code>? The <code>Foldable</code> type class requires us
+to define either <code>foldMap</code> or <code>foldr</code>; let’s think about <code>foldMap</code>,
+which would have type</p>
+<pre><code>foldMap :: Monoid m =&gt; (a -&gt; m) -&gt; River a -&gt; m</code></pre>
+<p>However, this doesn’t really make sense. For example, suppose we have
+a <code>River Int</code>; if we had <code>foldMap</code> with the above type, we could use
+<code>foldMap Sum</code> to turn our <code>River Int</code> into a <code>Sum Int</code>. But what is
+the sum of an infinite stream of <code>Int</code>? Unless the eventually
+repeating part is <code>C 0</code>, this is not well-defined. If we simply write
+a function to add up all the <code>Int</code> values in a <code>River</code>, including
+(once) the value contained in the final <code>C</code>, this would be a good
+example of a semantically “bad” function: it does not respect the law
+<code>C a === a ::: C a</code>. If we ensure <code>River</code> values are always
+normalized, we would not be able to directly observe anything amiss,
+but the function still seems suspect.</p>
+<p>Thinking about the law <code>C a === a ::: C a</code> again is the key.
+Supposing <code>foldMap f (C a) = f a</code> (since it’s unclear what else it
+could possibly do), applying <code>foldMap</code> to both sides of the law we
+obtain <code>f a == f a &lt;&gt; f a</code>, that is, the combining operation must be
+<em>idempotent</em>. This makes sense: with an idempotent operation,
+continuing to apply the operation to the infinite constant tail will
+not change the answer, so we can simply stop once we reach the <code>C</code>.</p>
+<p>We can create a subclass of <code>Semigroup</code> to represent <em>idempotent</em>
+semigroups, that is, semigroups for which <code>a &lt;&gt; a = a</code>. There are
+several idempotent semigroups in <code>base</code>; we list a few below. Note
+that since rivers are never empty, we can get away with just a
+semigroup and not a monoid, since we do not need an identity value
+onto which to map an empty structure.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Semigroup</span> m <span class="ot">=&gt;</span> <span class="dt">Idempotent</span> m</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- No methods, since Idempotent represents adding only a law,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- namely, ∀ a. a &lt;&gt; a == a</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- Exercise for the reader: convince yourself that these are all</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- idempotent</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Idempotent</span> <span class="dt">All</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Idempotent</span> <span class="dt">Any</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Idempotent</span> <span class="dt">Ordering</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Idempotent</span> (<span class="dt">Max</span> a)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Idempotent</span> (<span class="dt">Min</span> a)</span></code></pre></div>
+<p>Now, although we cannot make a <code>Foldable</code> instance, we can write our own
+variant of <code>foldMap</code> which requires an idempotent semigroup instead of
+a monoid:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">foldMap</span><span class="ot"> ::</span> <span class="dt">Idempotent</span> m <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> m) <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> m</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">foldMap</span> f (<span class="dt">C</span> a) <span class="ot">=</span> f a</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">foldMap</span> f (a <span class="op">:::</span> as) <span class="ot">=</span> f a <span class="op">&lt;&gt;</span> <span class="fu">foldMap</span> f as</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ot">fold ::</span> <span class="dt">Idempotent</span> m <span class="ot">=&gt;</span> <span class="dt">River</span> m <span class="ot">-&gt;</span> m</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>fold <span class="ot">=</span> <span class="fu">foldMap</span> <span class="fu">id</span></span></code></pre></div>
+<p>We can then instantiate it at some of the semigroups listed above to
+get some useful folds. These are all guaranteed to terminate and
+yield a sensible answer on any <code>River</code>.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">and</span><span class="ot"> ::</span> <span class="dt">River</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">and</span> <span class="ot">=</span> getAll <span class="op">.</span> <span class="fu">foldMap</span> <span class="dt">All</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">or</span><span class="ot"> ::</span> <span class="dt">River</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">or</span> <span class="ot">=</span> getAny <span class="op">.</span> <span class="fu">foldMap</span> <span class="dt">Any</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="fu">all</span><span class="ot"> ::</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">all</span> f <span class="ot">=</span> <span class="fu">and</span> <span class="op">.</span> <span class="fu">fmap</span> f</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">any</span><span class="ot"> ::</span> (a <span class="ot">-&gt;</span> <span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="fu">any</span> f <span class="ot">=</span> <span class="fu">or</span> <span class="op">.</span> <span class="fu">fmap</span> f</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="fu">maximum</span><span class="ot"> ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="fu">maximum</span> <span class="ot">=</span> getMax <span class="op">.</span> <span class="fu">foldMap</span> <span class="dt">Max</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="fu">minimum</span><span class="ot"> ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">minimum</span> <span class="ot">=</span> getMin <span class="op">.</span> <span class="fu">foldMap</span> <span class="dt">Min</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="ot">lexicographic ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">River</span> a <span class="ot">-&gt;</span> <span class="dt">Ordering</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>lexicographic xs ys <span class="ot">=</span> fold <span class="op">$</span> <span class="fu">zipWith</span> <span class="fu">compare</span> xs ys</span></code></pre></div>
+<p>We could make an <code>instance Ord a =&gt; Ord (River a)</code> with <code>compare = lexicographic</code>; however, in the next section I want to make a
+different <code>Ord</code> instance for a specific instantiation of <code>River</code>.</p>
+</section>
+<section id="application-2-adic-numbers" class="level2">
+<h2>Application: <span class="math inline">\(2\)</span>-adic numbers</h2>
+<p>Briefly, here’s the particular application I have in mind:
+infinite-precision two’s complement arithmetic, <em>i.e.</em> <span class="math inline">\(2\)</span>-adic
+numbers. <a href="https://cdsmithus.medium.com/the-collatz-step-and-2-adic-integers-6f003efaf81c">Chris Smith also wrote about <span class="math inline">\(2\)</span>-adic numbers
+recently</a>;
+however, unlike Chris, I am not interested in <span class="math inline">\(2\)</span>-adic numbers in
+general, but only specifically those <span class="math inline">\(2\)</span>-adic numbers which represent
+an embedded copy of <span class="math inline">\(\mathbb{Z}\)</span>. These are precisely the eventually
+constant ones: nonnegative integers are represented in binary as
+usual, with an infinite tail of <span class="math inline">\(0\)</span> bits, and negative integers are
+represented with an infinite tail of <span class="math inline">\(1\)</span> bits. For example, <span class="math inline">\(-1\)</span> is
+represented as an infinite string of all <span class="math inline">\(1\)</span>’s. The amazing thing
+about this representation (and the reason it is commonly used in
+hardware) is that the usual addition and multiplication algorithms
+continue to work without needing special cases to handle negative
+integers. If you’ve never seen how this works, you should definitely
+<a href="https://www.cs.cornell.edu/~tomf/notes/cps104/twoscomp.html">read</a>
+<a href="https://en.wikipedia.org/wiki/Two%27s_complement">about it</a>.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Bit</span> <span class="ot">=</span> <span class="dt">O</span> <span class="op">|</span> <span class="dt">I</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Enum</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Bits</span> <span class="ot">=</span> <span class="dt">River</span> <span class="dt">Bit</span></span></code></pre></div>
+<p>First, some functions to convert to and from integers. We only need
+special cases for <span class="math inline">\(0\)</span> and <span class="math inline">\(-1\)</span>, and beyond that it is just the usual
+business with <code>mod</code> and <code>div</code> to peel off one bit at a time, or
+multiplying by two and adding to build up one bit at a time. (I am a <a href="https://ro-che.info/articles/2014-05-09-clauses">big fan of</a> <a href="https://downloads.haskell.org/ghc/latest/docs/users_guide/exts/lambda_case.html"><code>LambdaCase</code></a>.)</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ot">toBits ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>toBits <span class="ot">=</span> \<span class="kw">case</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="dv">0</span>  <span class="ot">-&gt;</span> <span class="dt">C</span> <span class="dt">O</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">-</span><span class="dv">1</span> <span class="ot">-&gt;</span> <span class="dt">C</span> <span class="dt">I</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  n  <span class="ot">-&gt;</span> <span class="fu">toEnum</span> (<span class="fu">fromIntegral</span> (n <span class="ot">`mod`</span> <span class="dv">2</span>)) <span class="op">:::</span> toBits (n <span class="ot">`div`</span> <span class="dv">2</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="ot">fromBits ::</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>fromBits <span class="ot">=</span> \<span class="kw">case</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">C</span> <span class="dt">O</span> <span class="ot">-&gt;</span> <span class="dv">0</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">C</span> <span class="dt">I</span> <span class="ot">-&gt;</span> <span class="op">-</span><span class="dv">1</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  b <span class="op">:::</span> bs <span class="ot">-&gt;</span> <span class="dv">2</span> <span class="op">*</span> fromBits bs <span class="op">+</span> <span class="fu">fromIntegral</span> (<span class="fu">fromEnum</span> b)</span></code></pre></div>
+<p>For testing, we can also make a <code>Show</code> instance. When it comes to
+showing the infinite constant tail, I chose to repeat the bit 3 times
+and then show an ellipsis; this is not really necessary but somehow
+helps my brain more easily see whether it is an infinite tail of zeros
+or ones.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">Bits</span> <span class="kw">where</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">show</span> <span class="ot">=</span> <span class="fu">reverse</span> <span class="op">.</span> go</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>   <span class="kw">where</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">C</span> b) <span class="ot">=</span> <span class="fu">replicate</span> <span class="dv">3</span> (showBit b) <span class="op">++</span> <span class="st">&quot;...&quot;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    go (b <span class="op">:::</span> bs) <span class="ot">=</span> showBit b <span class="op">:</span> go bs</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    showBit <span class="ot">=</span> (<span class="st">&quot;01&quot;</span> <span class="op">P.!!</span>) <span class="op">.</span> <span class="fu">fromEnum</span></span></code></pre></div>
+<p>Let’s try it out:</p>
+<pre><code>ghci&gt; toBits 26
+...00011010
+ghci&gt; toBits (-30)
+...11100010
+ghci&gt; fromBits (toBits (-30))
+-30
+ghci&gt; quickCheck $ \x -&gt; fromBits (toBits x) == x
++++ OK, passed 100 tests.</code></pre>
+</section>
+<section id="arithmetic-on-2-adic-numbers" class="level2">
+<h2>Arithmetic on <span class="math inline">\(2\)</span>-adic numbers</h2>
+<p>Let’s implement some arithmetic. First, incrementing. It is standard
+except for a special case for <code>C I</code> (without which, incrementing <code>C I</code>
+would diverge). Notice that we use <code>(::=)</code> instead of <code>(:::)</code>, which
+ensures our <code>Bits</code> values remain normalized.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ot">inc ::</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>inc <span class="ot">=</span> \<span class="kw">case</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">C</span> <span class="dt">I</span>      <span class="ot">-&gt;</span> <span class="dt">C</span> <span class="dt">O</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">O</span> <span class="op">::=</span> bs <span class="ot">-&gt;</span> <span class="dt">I</span> <span class="op">::=</span> bs</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">I</span> <span class="op">::=</span> bs <span class="ot">-&gt;</span> <span class="dt">O</span> <span class="op">::=</span> inc bs</span></code></pre></div>
+<p><code>dec</code> is similar, just the opposite:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ot">dec ::</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>dec <span class="ot">=</span> \<span class="kw">case</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">C</span> <span class="dt">O</span>      <span class="ot">-&gt;</span> <span class="dt">C</span> <span class="dt">I</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">I</span> <span class="op">::=</span> bs <span class="ot">-&gt;</span> <span class="dt">O</span> <span class="op">::=</span> bs</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">O</span> <span class="op">::=</span> bs <span class="ot">-&gt;</span> <span class="dt">I</span> <span class="op">::=</span> dec bs</span></code></pre></div>
+<p>Then we can write <code>inv</code> to invert all bits, and <code>neg</code> as the
+composition of <code>inc</code> and <code>inv</code>.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ot">inv ::</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>inv <span class="ot">=</span> <span class="fu">fmap</span> <span class="op">$</span> \<span class="kw">case</span> { <span class="dt">O</span> <span class="ot">-&gt;</span> <span class="dt">I</span>; <span class="dt">I</span> <span class="ot">-&gt;</span> <span class="dt">O</span> }</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="ot">neg ::</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>neg <span class="ot">=</span> inc <span class="op">.</span> inv</span></code></pre></div>
+<p>Trying it out:</p>
+<pre><code>λ&gt; toBits 3
+...00011
+λ&gt; neg it
+...11101
+λ&gt; inc it
+...1110
+λ&gt; inc it
+...111
+λ&gt; inc it
+...000
+λ&gt; inc it
+...0001
+λ&gt; dec it
+...000
+λ&gt; dec it
+...111</code></pre>
+<p>Finally, addition, multiplication, and <code>Ord</code> and <code>Num</code> instances:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ot">add ::</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>add <span class="ot">=</span> \cases</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">C</span> <span class="dt">O</span>)      y          <span class="ot">-&gt;</span> y</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  x          (<span class="dt">C</span> <span class="dt">O</span>)      <span class="ot">-&gt;</span> x</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">C</span> <span class="dt">I</span>)      (<span class="dt">C</span> <span class="dt">I</span>)      <span class="ot">-&gt;</span> <span class="dt">O</span> <span class="op">::=</span> <span class="dt">C</span> <span class="dt">I</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">I</span> <span class="op">::=</span> xs) (<span class="dt">I</span> <span class="op">::=</span> ys) <span class="ot">-&gt;</span> <span class="dt">O</span> <span class="op">::=</span> inc (add xs ys)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  (x <span class="op">::=</span> xs) (y <span class="op">::=</span> ys) <span class="ot">-&gt;</span> (x <span class="op">.|.</span> y) <span class="op">::=</span> add xs ys</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">I</span> <span class="op">.|.</span> _ <span class="ot">=</span> <span class="dt">I</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  _ <span class="op">.|.</span> y <span class="ot">=</span> y</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="ot">mul ::</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>mul <span class="ot">=</span> \cases</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">C</span> <span class="dt">O</span>)      _     <span class="ot">-&gt;</span> <span class="dt">C</span> <span class="dt">O</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>  _          (<span class="dt">C</span> <span class="dt">O</span>) <span class="ot">-&gt;</span> <span class="dt">C</span> <span class="dt">O</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">C</span> <span class="dt">I</span>)      y     <span class="ot">-&gt;</span> neg y</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>  x          (<span class="dt">C</span> <span class="dt">I</span>) <span class="ot">-&gt;</span> neg x</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">O</span> <span class="op">::=</span> xs) ys    <span class="ot">-&gt;</span>         <span class="dt">O</span> <span class="op">::=</span> mul xs ys</span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>  (<span class="dt">I</span> <span class="op">::=</span> xs) ys    <span class="ot">-&gt;</span> add ys (<span class="dt">O</span> <span class="op">::=</span> mul xs ys)</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> <span class="dt">Bits</span> <span class="kw">where</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- It's a bit mind-boggling that this works</span></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compare</span> (<span class="dt">C</span> x) (<span class="dt">C</span> y) <span class="ot">=</span> <span class="fu">compare</span> y x</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compare</span> (x <span class="op">::=</span> xs) (y <span class="op">::=</span> ys) <span class="ot">=</span> <span class="fu">compare</span> xs ys <span class="op">&lt;&gt;</span> <span class="fu">compare</span> x y</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Num</span> <span class="dt">Bits</span> <span class="kw">where</span></span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fromInteger</span> <span class="ot">=</span> toBits</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">negate</span> <span class="ot">=</span> neg</span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>  (<span class="op">+</span>) <span class="ot">=</span> add</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>  (<span class="op">*</span>) <span class="ot">=</span> mul</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abs</span> <span class="ot">=</span> toBits <span class="op">.</span> <span class="fu">abs</span> <span class="op">.</span> fromBits</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">signum</span> <span class="ot">=</span> toBits <span class="op">.</span> <span class="fu">signum</span> <span class="op">.</span> fromBits</span></code></pre></div>
+<pre><code>λ&gt; quickCheck $ withMaxSuccess 1000 $ \x y -&gt; fromBits (mul (toBits x) (toBits y)) == x * y
++++ OK, passed 1000 tests.
+λ&gt; quickCheck $ \x y -&gt; compare (toBits x) (toBits y) == compare x y
++++ OK, passed 100 tests.</code></pre>
+<p>Just for fun, let’s implement the Collatz map:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ot">collatz ::</span> <span class="dt">Bits</span> <span class="ot">-&gt;</span> <span class="dt">Bits</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>collatz (<span class="dt">O</span> <span class="op">::=</span> bs) <span class="ot">=</span> bs</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>collatz bs<span class="op">@</span>(<span class="dt">I</span> <span class="op">::=</span> _) <span class="ot">=</span> <span class="dv">3</span><span class="op">*</span>bs <span class="op">+</span> <span class="dv">1</span></span></code></pre></div>
+<pre><code>λ&gt; P.take 20 $ map fromBits (iterate collatz (toBits (-13)))
+[-13,-38,-19,-56,-28,-14,-7,-20,-10,-5,-14,-7,-20,-10,-5,-14,-7,-20,-10,-5]
+λ&gt; P.take 20 $ map fromBits (iterate collatz (toBits 7))
+[7,22,11,34,17,52,26,13,40,20,10,5,16,8,4,2,1,4,2,1]</code></pre>
+</section>
+<section id="questions-future-work" class="level2">
+<h2>Questions / future work</h2>
+<ul>
+<li><p>Is <code>(:::)</code> or <code>(::=)</code> the better default? It’s tempting to just say
+“provide both and let the user decide”. I don’t disagree with that;
+however, the question is which one we use to implement various basic
+functions such as <code>map</code>/<code>fmap</code>. For example, if we use <code>(:::)</code>, we
+can make a <code>Functor</code> instance, but values may not be normalized
+after mapping.</p></li>
+<li><p>Can we generalize from eventually constant to eventually <em>periodic</em>?
+That is, instead of repeating the same value forever, we cycle
+through a repeating period of some finite length. I think this
+is possible, but it would make the implementation more
+complex, and I don’t know the right way to generalize <code>foldMap</code>. (We
+could insist that it only works for <em>commutative</em> idempotent
+semigroups, but in that case what’s the point of having a <em>sequence</em>
+of values rather than just a set?)</p></li>
+</ul>
+<p>Happy to hear any comments or suggestions!</p>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="Rivers: eventually constant streams in Haskell">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
