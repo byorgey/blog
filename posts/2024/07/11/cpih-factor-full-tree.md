@@ -356,8 +356,7 @@ consecutive prime factors.
 
 This decomposition occasionally comes in handy (for example, see
 [Floating
-Formation](https://open.kattis.com/problems/floatingformation) and
-[Dead-End Detector](https://open.kattis.com/problems/deadend)), and
+Formation](https://open.kattis.com/problems/floatingformation)), and
 belongs to a larger family of important tree decomposition techniques
 such as [heavy-light
 decomposition](https://cp-algorithms.com/graph/hld.html). Next time,
