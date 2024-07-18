@@ -1,5 +1,5 @@
 ---
-katex: true
+katex: false
 title: 'Competitive programming in Haskell: BFS, part 3 (implementation via HashMap)'
 published: 2021-10-29T21:55:52Z
 categories: competitive programming,haskell
@@ -22,7 +22,7 @@ tags: BFS,graph,HashMap,Kattis,search
 <span style="color: blue;font-weight: bold">import</span>           <span>Data.List</span>                   <span style="color: red">(</span><span>foldl'</span><span style="color: red">)</span>
 <span style="color: blue;font-weight: bold">import</span>           <span>Data.Sequence</span>               <span style="color: red">(</span><span>Seq</span> <span style="color: red">(</span><span style="color: red">..</span><span style="color: red">)</span><span style="color: red">,</span> <span>ViewL</span> <span style="color: red">(</span><span style="color: red">..</span><span style="color: red">)</span><span style="color: red">,</span> <span style="color: red">(</span><span>|&gt;</span><span style="color: red">)</span><span style="color: red">)</span>
 <span style="color: blue;font-weight: bold">import</span> <span style="color: blue;font-weight: bold">qualified</span> <span>Data.Sequence</span>               <span style="color: blue;font-weight: bold">as</span> <span>Seq</span></code></pre>
-<p>Now a couple utility functions: <code>(&gt;$&gt;)</code> is just flipped function application, and <code>exhaust</code> iterates an <code>(a -&gt; Maybe a)</code> function as many times as possible, returning the last non-<code>Nothing</code> value.</p>
+<p>Now a couple utility functions: <code>(&gt;&dollar;&gt;)</code> is just flipped function application, and <code>exhaust</code> iterates an <code>(a -&gt; Maybe a)</code> function as many times as possible, returning the last non-<code>Nothing</code> value.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">infixl</span> <span class="hs-num">0</span> <span>&gt;$&gt;</span>
 <span style="color: red">(</span><span>&gt;$&gt;</span><span style="color: red">)</span> <span style="color: red">::</span> <span>a</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>a</span> <span style="color: red">-&gt;</span> <span>b</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>b</span>
 <span style="color: red">(</span><span>&gt;$&gt;</span><span style="color: red">)</span> <span style="color: red">=</span> <span>flip</span> <span style="color: red">(</span><span>$</span><span style="color: red">)</span>
