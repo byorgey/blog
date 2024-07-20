@@ -301,7 +301,7 @@ but it's worth thinking about how to label the longest chains with the
 smallest primes.  I've drawn it in a "left-leaning" style to further
 emphasize the different chains that are involved.
 
-^[{-} Tree for which XXX]
+^[{-} Tree with chains of various lengths]
 ```{.diagram width=400 height=400 caption=""}
 import Data.Tree
 import Diagrams.TwoD.Layout.Tree

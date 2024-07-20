@@ -1,0 +1,172 @@
+---
+title: 'Competitive Programming in Haskell: tree path decomposition, part II'
+categories: competitive programming,haskell
+tags: challenge,Kattis,number theory,tree,path,decomposition
+katex: true
+---
+
+In [a previous
+post](https://byorgey.github.io/blog/posts/2024/07/11/cpih-factor-full-tree.html)
+I discussed the first half of my solution to [Factor-Full
+Tree](https://open.kattis.com/problems/factorfulltree).  In this post,
+I will demonstrate how to *decompose a tree into disjoint paths*.
+^[{-} Technically, we should clarify that we are looking for *directed*
+paths in a rooted tree, that is, paths that only proceed down the
+tree.  One could also ask about decomposing an unrooted tree into
+disjoint undirected paths; I haven't thought about how to do that in
+general but intuitively I expect it is not too much more difficult.] For
+this particular problem, we want to decompose a tree into
+*maximum-length* paths (*i.e.* we start by taking the longest possible
+path, then take the longest path from what remains, and so on); I call
+this the *max-chain decomposition* (I don't know if there is a
+standard term for it).  However, there are other types of path
+decomposition, such as heavy-light decomposition, so we will try to
+keep the decomposition code somewhat generic.
+
+XXX preliminary imports.  Make this lhs file to make sure the whole
+thing compiles correctly?  Actually submit it to Kattis? =D
+
+XXX example diagram showing tree decomposed into disjoint directed paths
+
+In general, what do we need in order to specify a decomposition of a
+tree into disjoint paths?  Really, all we need is to choose *at most
+one linked child* for each node.  In other words, at every node we can
+choose to continue the current path into a single child node (in which
+case all the other children will start their own new paths), or we
+could choose to terminate the current path (in which case every child
+will be the start of its own new path).  We can represent such a
+choice with a function of type
+
+```haskell
+type SubtreeSelector a = a -> [Tree a] -> Maybe (Tree a, [Tree a])
+```
+
+which takes as input the value at a node and the list of all the
+subtrees, and possibly returns a selected subtree along with the list
+of remaining subtrees. XXX mention that it doesn't have to return a
+single subtree + remainder
+
+Given such a subtree selection function, a generic path decomposition
+function will then take a tree and turn it into a list of non-empty
+paths:
+
+```haskell
+pathDecomposition :: SubtreeSelector a -> Tree a -> [NonEmpty a]
+```
+
+Let's implement this. XXX nice exercise!  XXX explain it more.
+
+```haskell
+pathDecomposition :: SubtreeSelector a -> Tree a -> [NonEmpty a]
+pathDecomposition select = go
+ where
+  go = unzipPath select >>> second (concatMap go) >>> uncurry (:)
+
+unzipPath :: SubtreeSelector a -> Tree a -> (NonEmpty a, [Tree a])
+unzipPath select = go
+ where
+  go (Node a ts) = case select a ts of
+    Nothing -> (NE.singleton a, ts)
+    Just (t, ts') -> ((a NE.<|) *** (ts' ++)) (go t)
+```
+
+XXX Now, how can we use this to implement max-chain decomposition?  At
+each node we want to select the tallest subtree, so we need to first
+annotate each tree with its height.  We can do this with a
+straightforward fold.
+
+```haskell
+type Height = Int
+
+labelHeight :: Tree a -> Tree (Height, a)
+labelHeight = foldTree node
+ where
+  node a ts = case ts of
+    [] -> Node (0, a) []
+    _ -> Node (1 + maximum (map (fst . rootLabel) ts), a) ts
+```
+
+XXX Also need a generic function to select the largest element from a
+list according to a custom comparison:
+
+```haskell
+selectMaxBy :: (a -> a -> Ordering) -> [a] -> Maybe (a, [a])
+selectMaxBy _ [] = Nothing
+selectMaxBy cmp (a : as) = case selectMaxBy cmp as of
+  Nothing -> Just (a, [])
+  Just (b, bs) -> case cmp a b of
+    LT -> Just (b, a : bs)
+    _ -> Just (a, b : bs)
+```
+
+XXX finally we can put the pieces together to implement a max-chain
+decomposition.  Label the tree by height, then do a path decomposition that
+selects the tallest subtree at each node.  We leave in the height
+annotations since they might be useful---for example, we can tell how
+long each path is just by looking at the `Height` annotation on the
+first element.  Of course, if we don't want them we can easily get rid
+of them later.  XXX sort by descending `Height`?
+
+```haskell
+maxChainDecomposition :: Tree a -> [NonEmpty (Height, a)]
+maxChainDecomposition =
+  labelHeight >>>
+  pathDecomposition (const (selectMaxBy (comparing (fst . rootLabel)))) >>>
+  sortBy (comparing (Down . fst . NE.head))
+```
+
+XXX to finish off solution, assign factors to different chains.  Also
+have to know value given to parent of each chain.  XXX `parentMap`
+function, another fold XXX explain.  Note that if we already know
+all the edges are oriented the right way, we can build this much
+more simply as *e.g.* `map swap >>> M.fromList`; but when (as in general) we
+don't know which way the edges should be oriented first, we might as
+well first build a `Tree a` via DFS with `edgesToTree` and then
+construct the `parentMap` like this afterwards.
+
+```haskell
+parentMap :: Ord a => Tree a -> Map a a
+parentMap = foldTree node >>> snd
+ where
+  node a b = (a, M.fromList (map (,a) as) <> mconcat ms)
+   where
+    (as, ms) = unzip b
+```
+
+Heavy-light decomposition
+-------------------------
+
+[heavy-light
+decomposition](https://cp-algorithms.com/graph/hld.html)
+
+XXX define heavy-light decomposition (both kinds).  Let $s(t)$ be the
+size (total number of nodes) of a tree.
+Given a tree $t$:
+
+- Select a child $c$ of $t$ such that $s(c) \geq s(t)/2$ (if there is one).
+- Select the child $c$ of largest size.
+
+XXX I may write more about this in a later blog post.  for fun, can
+you prove: (1) using criterion 1, any path from the root to a leaf encounters at most
+$\lg(n)$ heavy paths; (2) the paths generated by criterion 2 contain
+all those generated by criterion 1 as subpaths.
+
+<!-- The first selection criterion is simple to reason about.  First, note -->
+<!-- that there can be at most one child satisfying the criterion (if there -->
+<!-- were two, the size of $t$ would be at least $2\cdot(s(t)/2) + 1$, -->
+<!-- which is absurd).  Note also that every time we move from a node to a -->
+<!-- non-selected child (*i.e.* a child which is the start of a new, -->
+<!-- distinct path), the size of the current subtree decreases by a factor -->
+<!-- of at least 2;  -->
+
+```haskell
+type Size = Int
+
+labelSize :: Tree a -> Tree (Size, a)
+labelSize = foldTree $ \a ts -> Node (1 + sum (map (fst . rootLabel) ts), a) ts
+
+heavyLightDecomposition :: Tree a -> [NonEmpty (Size, a)]
+heavyLightDecomposition =
+  labelSize >>>
+  pathDecomposition (const (selectMaxBy (comparing (fst . rootLabel))))
+```

@@ -7,8 +7,272 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sat, 20 Jul 2024 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Thu, 08 Aug 2024 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Competitive Programming in Haskell: tree path decomposition, part II</title>
+    <link>http://byorgey.github.io/blog/posts/2024/08/08/TreeDecomposition.html</link>
+    <description><![CDATA[
+<h1>Competitive Programming in Haskell: tree path decomposition, part II</h1>
+
+<div class="info">
+  Posted on August  8, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged &#39;number theory&#39;." href="/tag/number%20theory.html" rel="tag">number theory</a>, <a title="All pages tagged &#39;tree&#39;." href="/tag/tree.html" rel="tag">tree</a>, <a title="All pages tagged &#39;path&#39;." href="/tag/path.html" rel="tag">path</a>, <a title="All pages tagged &#39;decomposition&#39;." href="/tag/decomposition.html" rel="tag">decomposition</a>
+  
+</div>
+
+<section>
+<p>In <a href="https://byorgey.github.io/blog/posts/2024/07/11/cpih-factor-full-tree.html">a previous
+post</a>
+I discussed the first half of my solution to <a href="https://open.kattis.com/problems/factorfulltree">Factor-Full
+Tree</a>. In this post,
+I will demonstrate how to <em>decompose a tree into disjoint paths</em>.
+<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="marginnote">Technically, we should clarify that we are looking for <em>directed</em>
+paths in a rooted tree, that is, paths that only proceed down the
+tree. One could also ask about decomposing an unrooted tree into
+disjoint undirected paths; I haven’t thought about how to do that in
+general but intuitively I expect it is not too much more difficult.<br />
+<br />
+</span></span> For
+this particular problem, we want to decompose a tree into
+<em>maximum-length</em> paths (<em>i.e.</em> we start by taking the longest possible
+path, then take the longest path from what remains, and so on); I will call
+this the <em>max-chain decomposition</em> (I don’t know if there is a
+standard term). However, there are other types of path
+decomposition, such as heavy-light decomposition, so we will try to
+keep the decomposition code somewhat generic.</p>
+<section id="preliminaries" class="level2">
+<h2>Preliminaries</h2>
+<p>This post is literate Haskell; you can <a href="https://github.com/byorgey/blog/blob/main/posts/2024/08/08/TreeDecomposition.lhs">find the source code on GitHub</a>.
+We begin with some language pragmas and imports.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE ImportQualifiedPost #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TupleSections #-}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">TreeDecomposition</span> <span class="kw">where</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;), (***))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bifunctor</span> (second)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.ByteString.Lazy.Char8</span> (<span class="dt">ByteString</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.ByteString.Lazy.Char8</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">BS</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sortBy)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List.NonEmpty</span> (<span class="dt">NonEmpty</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List.NonEmpty</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">NE</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Map</span> (<span class="dt">Map</span>, (!), (!?))</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Map</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">M</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Ord</span> (<span class="dt">Down</span>(..), comparing)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Tree</span> (<span class="dt">Tree</span>(..), foldTree)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Tuple</span> (swap)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">ScannerBS</span></span></code></pre></div>
+<p><a href="https://github.com/byorgey/comprog-hs/blob/master/ScannerBS.hs">See here for the <code>ScannerBS</code> module</a>.</p>
+</section>
+<section id="generic-path-decomposition" class="level2">
+<h2>Generic path decomposition</h2>
+<p>Remember, our goal is to split up a tree into a collection of linear
+paths; that is, in general, something like this:</p>
+<figure>
+<img src="/diagrams/0ff41d66358cc1f5.svg" />
+</figure>
+<p>What do we need in order to specify a decomposition of a
+tree into disjoint paths this way? Really, all we need is to choose <em>at most
+one linked child</em> for each node. In other words, at every node we can
+choose to continue the current path into a single child node (in which
+case all the other children will start their own new paths), or we
+could choose to terminate the current path (in which case every child
+will be the start of its own new path). We can represent such a
+choice with a function of type</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">SubtreeSelector</span> a <span class="ot">=</span> a <span class="ot">-&gt;</span> [<span class="dt">Tree</span> a] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Tree</span> a, [<span class="dt">Tree</span> a])</span></code></pre></div>
+<p>which takes as input the value at a node and the list of all the
+subtrees, and possibly returns a selected subtree along with the list of remaining
+subtrees.<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-1" class="margin-toggle"/><span class="marginnote">Of course, there is nothing in the
+type that actually requires a <code>SubtreeSelector</code> to return one of the
+trees from its input paired with the rest, but nothing we will do
+depends on this being true. In fact, I expect there may be some
+interesting algorithms obtainable by running a “path decomposition”
+with a “selector” function that actually makes up new trees instead of just
+selecting one, similar to <a href="https://hackage.haskell.org/package/split-0.2.5/docs/Data-List-Split.html#v:chop">the <code>chop</code> function</a>.<br />
+<br />
+</span></span></p>
+<p>Given such a subtree selection function, a generic path decomposition
+function will then take a tree and turn it into a list of non-empty
+paths:<span class="sidenote-wrapper"><label for="sn-2" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-2" class="margin-toggle"/><span class="marginnote">We could also imagine wanting information about the parent of each
+path, and a mapping from tree nodes to some kind of path ID, but we
+will keep things simple for now.<br />
+<br />
+</span></span></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">pathDecomposition ::</span> <span class="dt">SubtreeSelector</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> [<span class="dt">NonEmpty</span> a]</span></code></pre></div>
+<p>Implementing <code>pathDecomposition</code> is a nice exercise; you might like to
+try it yourself! You can find my implementation at the end of this
+blog post.</p>
+</section>
+<section id="max-chain-decomposition" class="level2">
+<h2>Max-chain decomposition</h2>
+<p>Now, let’s use our generic path decomposition to implement a max-chain
+decomposition. At each node we want to select the <em>tallest</em> subtree;
+in order to do this efficiently, we can first annotate each tree node with
+its height, via a straightforward <a href="https://hackage.haskell.org/package/containers-0.7/docs/Data-Tree.html#v:foldTree">tree fold</a>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Height</span> <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ot">labelHeight ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> (<span class="dt">Height</span>, a)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>labelHeight <span class="ot">=</span> foldTree node</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  node a ts <span class="ot">=</span> <span class="kw">case</span> ts <span class="kw">of</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    [] <span class="ot">-&gt;</span> <span class="dt">Node</span> (<span class="dv">0</span>, a) []</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    _ <span class="ot">-&gt;</span> <span class="dt">Node</span> (<span class="dv">1</span> <span class="op">+</span> <span class="fu">maximum</span> (<span class="fu">map</span> (<span class="fu">fst</span> <span class="op">.</span> rootLabel) ts), a) ts</span></code></pre></div>
+<p>Our subtree selection function can now select the subtree with the
+largest <code>Height</code> annotation. Instead of implementing this directly,
+we might as well make a generic function for selecting the “best”
+element from a list (we will reuse it later):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">selectMaxBy ::</span> (a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Ordering</span>) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (a, [a])</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>selectMaxBy _ [] <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>selectMaxBy cmp (a <span class="op">:</span> as) <span class="ot">=</span> <span class="kw">case</span> selectMaxBy cmp as <span class="kw">of</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> (a, [])</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Just</span> (b, bs) <span class="ot">-&gt;</span> <span class="kw">case</span> cmp a b <span class="kw">of</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">LT</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> (b, a <span class="op">:</span> bs)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    _ <span class="ot">-&gt;</span> <span class="dt">Just</span> (a, b <span class="op">:</span> bs)</span></code></pre></div>
+<p>We can now put the pieces together to implement max-chain
+decomposition. We first label the tree by height, then do a path
+decomposition that selects the tallest subtree at each node. We leave
+the height annotations in the final output since they might be
+useful—for example, we can tell how long each path is just by
+looking at the <code>Height</code> annotation on the first element. If we don’t
+need them we can easily get rid of them later. We also sort by
+descending <code>Height</code>, since getting the longest chains first was kind
+of the whole point.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">maxChainDecomposition ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> [<span class="dt">NonEmpty</span> (<span class="dt">Height</span>, a)]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>maxChainDecomposition <span class="ot">=</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  labelHeight <span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  pathDecomposition (<span class="fu">const</span> (selectMaxBy (comparing (<span class="fu">fst</span> <span class="op">.</span> rootLabel)))) <span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  sortBy (comparing (<span class="dt">Down</span> <span class="op">.</span> <span class="fu">fst</span> <span class="op">.</span> NE.head))</span></code></pre></div>
+</section>
+<section id="factor-full-tree-solution" class="level2">
+<h2>Factor-full tree solution</h2>
+<p>To flesh this out into a full solution to <a href="https://open.kattis.com/problems/factorfulltree">Factor-Full
+Tree</a>, after
+computing the chain decomposition we need to assign prime factors to
+the chains. From those, we can compute the value for each node if we
+know which chain it is in and the value of its parent. To this end,
+we will need one more function which computes a <code>Map</code> recording the
+parent of each node in a tree. Note that if we already know all the
+edges in a given edge list are oriented the same way, we can build
+this much more simply as <em>e.g.</em> <code>map swap &gt;&gt;&gt; M.fromList</code>; but when
+(as in general) we don’t know which way the edges should be oriented
+first, we might as well first build a <code>Tree a</code> via DFS with
+<code>edgesToTree</code> and then construct the <code>parentMap</code> like this afterwards.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parentMap ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Map</span> a a</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>parentMap <span class="ot">=</span> foldTree node <span class="op">&gt;&gt;&gt;</span> <span class="fu">snd</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  node ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> [(a, <span class="dt">Map</span> a a)] <span class="ot">-&gt;</span> (a, <span class="dt">Map</span> a a)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  node a b <span class="ot">=</span> (a, M.fromList (<span class="fu">map</span> (,a) as) <span class="op">&lt;&gt;</span> <span class="fu">mconcat</span> ms)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>   <span class="kw">where</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    (as, ms) <span class="ot">=</span> <span class="fu">unzip</span> b</span></code></pre></div>
+<p>Finally, we can solve Factor-Full tree. Note that some code from my
+<a href="https://byorgey.github.io/blog/posts/2024/07/11/cpih-factor-full-tree.html">previous blog
+post</a>
+is needed as well, and is included at the end of the post for
+completeness. Once we compute the max chain decomposition and the
+prime factor for each node, we use a <a href="https://byorgey.github.io/blog/posts/2023/04/11/competitive-programming-in-haskell-topsort-via-laziness.html">lazy recursive
+<code>Map</code></a>
+to compute the value assigned to each node.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solve ::</span> <span class="dt">TC</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>solve <span class="dt">TC</span>{<span class="op">..</span>} <span class="ot">=</span> M.elems assignment</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Build the tree and compute its parent map</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    t <span class="ot">=</span> edgesToTree <span class="dt">Node</span> edges <span class="dv">1</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    parent <span class="ot">=</span> parentMap t</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Compute the max chain decomposition, and use it to assign a prime factor</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- to each non-root node</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ot">    paths ::</span> [[<span class="dt">Node</span>]]</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    paths <span class="ot">=</span> <span class="fu">map</span> (NE.toList <span class="op">.</span> <span class="fu">fmap</span> <span class="fu">snd</span>) <span class="op">$</span> maxChainDecomposition t</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="ot">    factor ::</span> <span class="dt">Map</span> <span class="dt">Node</span> <span class="dt">Int</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    factor <span class="ot">=</span> M.fromList <span class="op">.</span> <span class="fu">concat</span> <span class="op">$</span> <span class="fu">zipWith</span> (\p <span class="ot">-&gt;</span> <span class="fu">map</span> (,p)) primes paths</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Compute an assignment of each node to a value, using a lazy map</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="ot">    assignment ::</span> <span class="dt">Map</span> <span class="dt">Node</span> <span class="dt">Int</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    assignment <span class="ot">=</span> M.fromList <span class="op">$</span> (<span class="dv">1</span>,<span class="dv">1</span>) <span class="op">:</span> [(v, factor<span class="op">!</span>v <span class="op">*</span> assignment<span class="op">!</span>(parent<span class="op">!</span>v)) <span class="op">|</span> v <span class="ot">&lt;-</span> [<span class="dv">2</span><span class="op">..</span>n]]</span></code></pre></div>
+<p>For an explanation of this code for <code>primes</code>, see <a href="https://byorgey.github.io/blog/posts/2020/02/07/competitive-programming-in-haskell-primes-and-factoring.html">this old blog post</a>.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">primes ::</span> [<span class="dt">Int</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>primes <span class="ot">=</span> <span class="dv">2</span> <span class="op">:</span> sieve primes [<span class="dv">3</span> <span class="op">..</span>]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  sieve (p <span class="op">:</span> ps) xs <span class="ot">=</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (h, t) <span class="ot">=</span> <span class="fu">span</span> (<span class="op">&lt;</span> p <span class="op">*</span> p) xs</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> h <span class="op">++</span> sieve ps (<span class="fu">filter</span> ((<span class="op">/=</span> <span class="dv">0</span>) <span class="op">.</span> (<span class="ot">`mod`</span> p)) t)</span></code></pre></div>
+</section>
+<section id="bonus-heavy-light-decomposition" class="level2">
+<h2>Bonus: heavy-light decomposition</h2>
+<p>We can easily use our generic path decomposition to compute a <a href="https://cp-algorithms.com/graph/hld.html">heavy-light
+decomposition</a> as well:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Size</span> <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ot">labelSize ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> (<span class="dt">Size</span>, a)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>labelSize <span class="ot">=</span> foldTree <span class="op">$</span> \a ts <span class="ot">-&gt;</span> <span class="dt">Node</span> (<span class="dv">1</span> <span class="op">+</span> <span class="fu">sum</span> (<span class="fu">map</span> (<span class="fu">fst</span> <span class="op">.</span> rootLabel) ts), a) ts</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ot">heavyLightDecomposition ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> [<span class="dt">NonEmpty</span> (<span class="dt">Size</span>, a)]</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>heavyLightDecomposition <span class="ot">=</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  labelSize <span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  pathDecomposition (<span class="fu">const</span> (selectMaxBy (comparing (<span class="fu">fst</span> <span class="op">.</span> rootLabel))))</span></code></pre></div>
+<p>I plan to write about this in a future post.</p>
+</section>
+<section id="leftover-code" class="level2">
+<h2>Leftover code</h2>
+<p>Here’s my implementation of <code>pathDecomposition</code>; how did you do?</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>pathDecomposition select <span class="ot">=</span> go</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">=</span> selectPath select <span class="op">&gt;&gt;&gt;</span> second (<span class="fu">concatMap</span> go) <span class="op">&gt;&gt;&gt;</span> <span class="fu">uncurry</span> (<span class="op">:</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ot">selectPath ::</span> <span class="dt">SubtreeSelector</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> (<span class="dt">NonEmpty</span> a, [<span class="dt">Tree</span> a])</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>selectPath select <span class="ot">=</span> go</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  go (<span class="dt">Node</span> a ts) <span class="ot">=</span> <span class="kw">case</span> select a ts <span class="kw">of</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Nothing</span> <span class="ot">-&gt;</span> (NE.singleton a, ts)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Just</span> (t, ts&#39;) <span class="ot">-&gt;</span> ((a <span class="op">NE.&lt;|</span>) <span class="op">***</span> (ts&#39; <span class="op">++</span>)) (go t)</span></code></pre></div>
+<p>We also include some input parsing and tree-building code from <a href="https://byorgey.github.io/blog/posts/2024/07/11/cpih-factor-full-tree.html">last time</a>.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> BS.interact <span class="op">$</span> runScanner tc <span class="op">&gt;&gt;&gt;</span> solve <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (<span class="fu">show</span> <span class="op">&gt;&gt;&gt;</span> BS.pack) <span class="op">&gt;&gt;&gt;</span> BS.unwords</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Node</span> <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">TC</span> <span class="ot">=</span> <span class="dt">TC</span> {<span class="ot"> n ::</span> <span class="dt">Int</span>,<span class="ot"> edges ::</span> [(<span class="dt">Node</span>, <span class="dt">Node</span>)] }</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ot">tc ::</span> <span class="dt">Scanner</span> <span class="dt">TC</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>tc <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> int</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  edges <span class="ot">&lt;-</span> (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">&gt;&lt;</span> pair int int</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> <span class="dt">TC</span>{<span class="op">..</span>}</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="ot">edgesToMap ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> [(a, a)] <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a]</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>edgesToMap <span class="ot">=</span> <span class="fu">concatMap</span> (\p <span class="ot">-&gt;</span> [p, swap p]) <span class="op">&gt;&gt;&gt;</span> dirEdgesToMap</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="ot">dirEdgesToMap ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> [(a, a)] <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a]</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>dirEdgesToMap <span class="ot">=</span> <span class="fu">map</span> (second (<span class="op">:</span> [])) <span class="op">&gt;&gt;&gt;</span> M.fromListWith (<span class="op">++</span>)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="ot">mapToTree ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> [b] <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a] <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>mapToTree nd m root <span class="ot">=</span> dfs root root</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  dfs parent root <span class="ot">=</span> nd root (<span class="fu">maybe</span> [] (<span class="fu">map</span> (dfs root) <span class="op">.</span> <span class="fu">filter</span> (<span class="op">/=</span> parent)) (m <span class="op">!?</span> root))</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="ot">edgesToTree ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> [b] <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [(a, a)] <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>edgesToTree nd <span class="ot">=</span> mapToTree nd <span class="op">.</span> edgesToMap</span></code></pre></div>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Competitive Programming in Haskell: tree path decomposition, part II" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Thu, 08 Aug 2024 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2024/08/08/TreeDecomposition.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Help me attend ICFP in Milan!</title>
     <link>http://byorgey.github.io/blog/posts/2024/07/20/ko-fi-help-me-attend-icfp.html</link>
     <description><![CDATA[
@@ -758,7 +1022,7 @@ small enough that it probably doesn’t matter too much how we label it,
 but it’s worth thinking about how to label the longest chains with the
 smallest primes. I’ve drawn it in a “left-leaning” style to further
 emphasize the different chains that are involved.</p>
-<p><span class="sidenote-wrapper"><label for="sn-6" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-6" class="margin-toggle"/><span class="marginnote">Tree for which XXX<br />
+<p><span class="sidenote-wrapper"><label for="sn-6" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-6" class="margin-toggle"/><span class="marginnote">Tree with chains of various lengths<br />
 <br />
 </span></span></p>
 <figure>
@@ -2196,49 +2460,6 @@ Turner, D.A. (1979) <span>‘A new implementation technique for applicative lang
 ]]></description>
     <pubDate>2023-07-13T20:55:18Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/07/13/compiling-to-intrinsically-typed-combinators.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Competitive Programming in Haskell: two more DP challenges</title>
-    <link>http://byorgey.github.io/blog/posts/2023/06/20/competitive-programming-in-haskell-two-more-dp-challenges.html</link>
-    <description><![CDATA[
-<h1>Competitive Programming in Haskell: two more DP challenges</h1>
-
-<div class="info">
-  Posted on June 20, 2023
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;dynamic programming&#39;." href="/tag/dynamic%20programming.html" rel="tag">dynamic programming</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>
-  
-</div>
-
-<section>
-<p>
-Continuing the <a href="https://byorgey.github.io/blog/posts/2023/05/31/competitive-programming-in-haskell-introduction-to-dynamic-programming.html">series on dynamic programming</a>, I just have a couple challenge problems for you today. I have indeed solved both of these problems in Haskell, but I don’t yet know how to write <strong>elegant</strong> solutions! There is a reason that the techniques covered in my <a href="https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html">previous posts</a> aren’t quite good enough.
-</p>
-<ul>
-<li>
-<a href="https://open.kattis.com/problems/honi">Honi</a>
-</li>
-<li>
-<a href="https://open.kattis.com/problems/assassins">Assassins</a>
-</li>
-</ul>
-<p>
-Feel free to discuss in the comments! I’m hoping that I can learn some new approaches from some of my readers. I will probably post some hints in the comments towards the right recurrences, so don’t look at the comments if you don’t want any spoilers.
-</p>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Competitive Programming in Haskell: two more DP challenges" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>2023-06-20T20:42:24Z</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2023/06/20/competitive-programming-in-haskell-two-more-dp-challenges.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 
