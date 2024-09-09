@@ -7,8 +7,269 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Thu, 08 Aug 2024 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 09 Sep 2024 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Decidable equality for indexed data types</title>
+    <link>http://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html</link>
+    <description><![CDATA[
+<h1>Decidable equality for indexed data types</h1>
+
+<div class="info">
+  Posted on September  9, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;agda&#39;." href="/tag/agda.html" rel="tag">agda</a>, <a title="All pages tagged &#39;equality&#39;." href="/tag/equality.html" rel="tag">equality</a>, <a title="All pages tagged &#39;indexed&#39;." href="/tag/indexed.html" rel="tag">indexed</a>
+  
+</div>
+
+<section>
+<p>Recently, as part of a larger project, I wanted to define decidable
+equality for an indexed data type in Agda. I struggled quite a bit to
+figure out the right way to encode it to make Agda happy, and wasn’t
+able to find much help online, so I’m recording the results here.</p>
+<p>The <strong>tl;dr</strong> is to use mutual recursion to define the indexed data
+type along with a sigma type that hides the index, and to use the
+sigma type in any recursive positions where we don’t care about the
+index! Read on for more motivation and details (and wrong turns I
+took along the way).</p>
+<p>This post is literate Agda; you can <a href="https://github.com/byorgey/blog/blob/main/posts/2024/09/09/OneLevelTypesIndexed.lagda.md">download it here</a> if you want to play along. I tested everything here with Agda version 2.6.4.3 and version 2.0 of the standard library.</p>
+<section id="background" class="level2">
+<h2>Background</h2>
+<p>First, some imports and a module declaration. Note that the entire
+development is parameterized by some abstract set <code>B</code> of base types,
+which must have decidable equality.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Data<span class="ot">.</span>Product <span class="kw">using</span> <span class="ot">(</span>Σ <span class="ot">;</span> <span class="ot">_</span>×<span class="ot">_</span> <span class="ot">;</span> <span class="ot">_</span>,<span class="ot">_</span> <span class="ot">;</span> -,<span class="ot">_</span> <span class="ot">;</span> proj₁ <span class="ot">;</span> proj₂<span class="ot">)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Data<span class="ot">.</span>Product<span class="ot">.</span>Properties <span class="kw">using</span> <span class="ot">(</span>≡-dec<span class="ot">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Function <span class="kw">using</span> <span class="ot">(_</span>∘<span class="ot">_)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Binary <span class="kw">using</span> <span class="ot">(</span>DecidableEquality<span class="ot">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Binary<span class="ot">.</span>PropositionalEquality <span class="kw">using</span> <span class="ot">(_</span>≡<span class="ot">_</span> <span class="ot">;</span> refl<span class="ot">)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Nullary<span class="ot">.</span>Decidable <span class="kw">using</span> <span class="ot">(</span>yes<span class="ot">;</span> no<span class="ot">;</span> Dec<span class="ot">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> OneLevelTypesIndexed <span class="ot">(</span>B <span class="ot">:</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">(</span>≟B <span class="ot">:</span> DecidableEquality B<span class="ot">)</span> <span class="kw">where</span></span></code></pre></div>
+<p>We’ll work with a simple type system containing base types, function
+types, and some distinguished type constructor □. So far, this is
+just to give some context; it is not the final version of the code we
+will end up with, so we stick it in a local module so it won’t end up
+in the top-level namespace.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Unindexed <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> Ty</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty <span class="ot">→</span> Ty</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty</span></code></pre></div>
+<p>For example, if <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are base types, then we could write down a
+type like <span class="math inline">\(\square ((\square \square X \to Y) \to \square Y)\)</span>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">infixr</span> <span class="dv">2</span> <span class="ot">_</span>⇒<span class="ot">_</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">infix</span> <span class="dv">30</span> □<span class="ot">_</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">postulate</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    BX BY <span class="ot">:</span> B</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">:</span> Ty</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">=</span> base BX</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">:</span> Ty</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">=</span> base BY</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">:</span> Ty</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">=</span> □ <span class="ot">((</span>□ □ X ⇒ Y<span class="ot">)</span> ⇒ □ Y<span class="ot">)</span></span></code></pre></div>
+<p>However, for reasons that would take us too far afield in this blog
+post, I <em>don’t</em> want to allow immediately nested boxes, like <span class="math inline">\(\square \square X\)</span>. We can still have multiple boxes in a type, and even
+boxes nested inside of other boxes, as long as there is at least one
+arrow in between. In other words, I only want to rule out boxes
+immediately applied to another type with an outermost box. So we
+don’t want to allow the example type given above (since it contains
+<span class="math inline">\(\square \square X\)</span>), but, for example, <span class="math inline">\(\square ((\square X \to Y) \to \square Y)\)</span> would be OK.</p>
+</section>
+<section id="encoding-invariants" class="level2">
+<h2>Encoding invariants</h2>
+<p>How can we encode this invariant so it holds by construction? One way
+would be to have two mutually recursive data types, like so:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Mutual <span class="kw">where</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> <span class="dt">Set</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> UTy <span class="ot">:</span> <span class="dt">Set</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="kw">where</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> UTy <span class="ot">→</span> Ty</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    ∙<span class="ot">_</span> <span class="ot">:</span> UTy <span class="ot">→</span> Ty</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> UTy <span class="kw">where</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> UTy</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty <span class="ot">→</span> UTy</span></code></pre></div>
+<p><code>UTy</code> consists of types which have no top-level box; the constructors
+of <code>Ty</code> just inject <code>UTy</code> into <code>Ty</code> by adding either one or zero
+boxes. This works, and defining decidable equality for <code>Ty</code> and <code>UTy</code>
+is relatively straightforward (again by mutual recursion). However,
+it seemed to me that having to deal with <code>Ty</code> and <code>UTy</code> everywhere
+through the rest of the development was probably going to be super
+annoying.</p>
+<p>The other option would be to index <code>Ty</code> by values indicating whether a
+type has zero or one top-level boxes; then we can use the indices to
+enforce the appropriate rules. First, we define a data type <code>Boxity</code>
+to act as the index for <code>Ty</code>, and show that it has decidable equality:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Boxity <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  [0] <span class="ot">:</span> Boxity</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  [1] <span class="ot">:</span> Boxity</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>Boxity-≟ <span class="ot">:</span> DecidableEquality Boxity</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>Boxity-≟ [0] [0] <span class="ot">=</span> yes refl</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>Boxity-≟ [0] [1] <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>Boxity-≟ [1] [0] <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>Boxity-≟ [1] [1] <span class="ot">=</span> yes refl</span></code></pre></div>
+<p>My first attempt to write down a version of <code>Ty</code> indexed by <code>Boxity</code>
+looked like this:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> IndexedTry1 <span class="kw">where</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> Boxity <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> Ty [0]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> <span class="ot">{</span>b₁ b₂ <span class="ot">:</span> Boxity<span class="ot">}</span> <span class="ot">→</span> Ty b₁ <span class="ot">→</span> Ty b₂ <span class="ot">→</span> Ty [0]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> Ty [0] <span class="ot">→</span> Ty [1]</span></code></pre></div>
+<p><code>base</code> always introduces a type with no top-level box; the <code>□</code>
+constructor requires a type with no top-level box, and produces a type
+with one (this is what ensures we cannot nest boxes); and the arrow
+constructor does not care how many boxes its arguments have, but
+constructs a type with no top-level box.</p>
+<p>This is logically correct, but I found it very difficult to work with.
+The sticking point for me was injectivity of the arrow constructor.
+When defining decidable equality we need to prove lemmas that each of
+the constructors are injective, but I was not even able to write down
+the <em>type</em> of injectivity for <code>_⇒_</code>. We would want something like this:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>⇒<span class="op">-</span>inj <span class="op">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  {bσ₁ bσ₂ bτ₁ bτ₂ <span class="op">:</span> <span class="dt">Boxity</span>}</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  {σ₁ <span class="op">:</span> <span class="dt">Ty</span> bσ₁} {σ₂ <span class="op">:</span> <span class="dt">Ty</span> bσ₂} {τ₁ <span class="op">:</span> <span class="dt">Ty</span> bτ₁} {τ₂ <span class="op">:</span> <span class="dt">Ty</span> bτ₂} →</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  (σ₁ ⇒ σ₂) ≡ (τ₁ ⇒ τ₂) →</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  (σ₁ ≡ τ₁) × (σ₂ ≡ τ₂)</span></code></pre></div>
+<p>but this does not even typecheck! The problem is that, for example,
+<code>σ₁</code> and <code>τ₁</code> have different types, so the equality proposition <code>σ₁ ≡ τ₁</code> is not well-typed.</p>
+<p>At this point I tried turning to <a href="https://agda.github.io/agda-stdlib/experimental/Relation.Binary.HeterogeneousEquality.html">heterogeneous
+equality</a>,
+but it didn’t seem to help. I won’t record here all the things I
+tried, but the same issues seemed to persist, just pushed around to
+different places (for example, I was not able to pattern-match on
+witnesses of heterogeneous equality because of types that didn’t
+match).</p>
+</section>
+<section id="sigma-types-to-the-rescue" class="level2">
+<h2>Sigma types to the rescue</h2>
+<p>At ICFP last week I asked <a href="https://jesper.sikanda.be/">Jesper Cockx</a>
+for advice,<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">which felt a bit like asking Rory McIlroy to give some
+tips on your mini-golf game<br />
+<br />
+</span></span> and he suggested trying to prove
+decidable equality for the sigma type pairing an index with a type
+having that index, like this:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  ΣTy <span class="ot">:</span> <span class="dt">Set</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  ΣTy <span class="ot">=</span> Σ Boxity Ty</span></code></pre></div>
+<p>This turned out to be the key idea, but it still took me a long time
+to figure out the right way to make it work. Given the above
+definitions, if we go ahead and try to define decidable equality for
+<code>ΣTy</code>, injectivity of the arrow constructor is still a problem.</p>
+<p>After days of banging my head against this off and on, I finally
+realized that the way to solve this is to define <code>Ty</code> and <code>ΣTy</code> by
+mutual recursion: the arrow constructor should just take two <code>ΣTy</code>
+arguments! This perfectly captures the idea that we <em>don’t care</em>
+about the indices of the arrow constructor’s argument types, so we
+hide them by bundling them up in a sigma type.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ΣTy <span class="ot">:</span> <span class="dt">Set</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Ty <span class="ot">:</span> Boxity <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>ΣTy <span class="ot">=</span> Σ Boxity Ty</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Ty <span class="kw">where</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  □<span class="ot">_</span> <span class="ot">:</span> Ty [0] <span class="ot">→</span> Ty [1]</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  base <span class="ot">:</span> B <span class="ot">→</span> Ty [0]</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> ΣTy <span class="ot">→</span> ΣTy <span class="ot">→</span> Ty [0]</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="kw">infixr</span> <span class="dv">2</span> <span class="ot">_</span>⇒<span class="ot">_</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="kw">infix</span> <span class="dv">30</span> □<span class="ot">_</span></span></code></pre></div>
+<p>Now we’re cooking! We now make quick work of the required injectivity
+lemmas, which all go through trivially by matching on <code>refl</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>□-inj <span class="ot">:</span> <span class="ot">{</span>τ₁ τ₂ <span class="ot">:</span> Ty [0]<span class="ot">}</span> <span class="ot">→</span> <span class="ot">(</span>□ τ₁ ≡ □ τ₂<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>τ₁ ≡ τ₂<span class="ot">)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>□-inj refl <span class="ot">=</span> refl</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>base-inj <span class="ot">:</span> <span class="ot">{</span>b₁ b₂ <span class="ot">:</span> B<span class="ot">}</span> <span class="ot">→</span> base b₁ ≡ base b₂ <span class="ot">→</span> b₁ ≡ b₂</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>base-inj refl <span class="ot">=</span> refl</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>⇒-inj <span class="ot">:</span> <span class="ot">{</span>σ₁ σ₂ τ₁ τ₂ <span class="ot">:</span> ΣTy<span class="ot">}</span> <span class="ot">→</span> <span class="ot">(</span>σ₁ ⇒ σ₂<span class="ot">)</span> ≡ <span class="ot">(</span>τ₁ ⇒ τ₂<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>σ₁ ≡ τ₁<span class="ot">)</span> × <span class="ot">(</span>σ₂ ≡ τ₂<span class="ot">)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>⇒-inj refl <span class="ot">=</span> refl , refl</span></code></pre></div>
+<p>Notice how the type of <code>⇒-inj</code> is now perfectly fine: we just have a
+bunch of <code>ΣTy</code> values that hide their indices, so we can talk about
+propositional equality between them with no trouble.</p>
+<p>Finally, we can define decidable equality for <code>Ty</code> and <code>ΣTy</code> by mutual
+recursion.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ΣTy-≟ <span class="ot">:</span> DecidableEquality ΣTy</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="pp">{-# TERMINATING #-}</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">:</span> <span class="ot">∀</span> <span class="ot">{</span>b<span class="ot">}</span> <span class="ot">→</span> DecidableEquality <span class="ot">(</span>Ty b<span class="ot">)</span></span></code></pre></div>
+<p>Sadly, I had to reassure Agda that the definition of <code>Ty-≟</code> is terminating—more on this later.</p>
+<p>To define <code>ΣTy-≟</code> we can just use a lemma from
+<code>Data.Product.Properties</code> which derives decidable equality for a sigma
+type from decidable equality for both components.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ΣTy-≟ <span class="ot">=</span> ≡-dec Boxity-≟ Ty-≟</span></code></pre></div>
+<p>The only thing left is to define decidable equality for any two values
+of type <code>Ty b</code> (given a specific boxity <code>b</code>), making use of our
+injectivity lemmas; now that we have the right definitions, this falls
+out straightforwardly.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(</span>□ σ<span class="ot">)</span> <span class="ot">(</span>□ τ<span class="ot">)</span> <span class="kw">with</span> Ty-≟ σ τ</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ≢τ <span class="ot">=</span> no <span class="ot">(</span>σ≢τ ∘ □-inj<span class="ot">)</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">=</span> yes refl</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(</span>base x<span class="ot">)</span> <span class="ot">(</span>base y<span class="ot">)</span> <span class="kw">with</span> ≟B x y</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no x≢y <span class="ot">=</span> no <span class="ot">(</span>x≢y ∘ base-inj<span class="ot">)</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">=</span> yes refl</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(</span>σ₁ ⇒ σ₂<span class="ot">)</span> <span class="ot">(</span>τ₁ ⇒ τ₂<span class="ot">)</span> <span class="kw">with</span> ΣTy-≟ σ₁ τ₁ <span class="ot">|</span> ΣTy-≟ σ₂ τ₂</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ₁≢τ₁ <span class="ot">|</span> <span class="ot">_</span> <span class="ot">=</span> no <span class="ot">(</span>σ₁≢τ₁ ∘ proj₁ ∘ ⇒-inj<span class="ot">)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> no σ₂≢τ₂ <span class="ot">=</span> no <span class="ot">(</span>σ₂≢τ₂ ∘ proj₂ ∘ ⇒-inj<span class="ot">)</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">|</span> yes refl <span class="ot">=</span> yes refl</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span></code></pre></div>
+</section>
+<section id="final-thoughts" class="level2">
+<h2>Final thoughts</h2>
+<p>First, the one remaining infelicity is that Agda could not tell that
+<code>Ty-≟</code> is terminating. I am not entirely sure why, but I think it may
+be that the way the recursion works is just too convoluted for it to
+analyze properly: <code>Ty-≟</code> calls <code>ΣTy-≟</code> on structural subterms of its
+inputs, but then <code>ΣTy-≟</code> works by providing <code>Ty-≟</code> <em>as a higher-order
+parameter</em> to <code>≡-dec</code>. If you look at the definition of <code>≡-dec</code>, all
+it does is call its function parameters on structural subterms of its
+input, so everything should be nicely terminating, but I guess I am
+not surprised that Agda is not able to figure this out. If anyone has
+suggestions on how to make this pass the termination checker without
+using a <code>TERMINATING</code> pragma, I would love to hear it!</p>
+<p>As a final aside, I note that converting back and forth between <code>Ty</code>
+(with <code>ΣTy</code> arguments to the arrow constructor) and <code>IndexedTry1.Ty</code>
+(with expanded-out <code>Boxity</code> and <code>Ty</code> arguments to arrow) is trivial:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>Ty→Ty1 <span class="ot">:</span> <span class="ot">{</span>b <span class="ot">:</span> Boxity<span class="ot">}</span> <span class="ot">→</span> Ty b <span class="ot">→</span> IndexedTry1<span class="ot">.</span>Ty b</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>Ty→Ty1 <span class="ot">(</span>□ σ<span class="ot">)</span> <span class="ot">=</span> IndexedTry1<span class="ot">.</span>□ <span class="ot">(</span>Ty→Ty1 σ<span class="ot">)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>Ty→Ty1 <span class="ot">(</span>base x<span class="ot">)</span> <span class="ot">=</span> IndexedTry1<span class="ot">.</span>base x</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>Ty→Ty1 <span class="ot">((</span>b₁ , σ₁<span class="ot">)</span> ⇒ <span class="ot">(</span>b₂ , σ₂<span class="ot">))</span> <span class="ot">=</span> <span class="ot">(</span>Ty→Ty1 σ₁<span class="ot">)</span> IndexedTry1<span class="ot">.</span>⇒ <span class="ot">(</span>Ty→Ty1 σ₂<span class="ot">)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>Ty1→Ty <span class="ot">:</span> <span class="ot">{</span>b <span class="ot">:</span> Boxity<span class="ot">}</span> <span class="ot">→</span> IndexedTry1<span class="ot">.</span>Ty b <span class="ot">→</span> Ty b</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>Ty1→Ty <span class="ot">(</span>IndexedTry1<span class="ot">.</span>base x<span class="ot">)</span> <span class="ot">=</span> base x</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>Ty1→Ty <span class="ot">(</span>σ₁ IndexedTry1<span class="ot">.</span>⇒ σ₂<span class="ot">)</span> <span class="ot">=</span> -, <span class="ot">(</span>Ty1→Ty σ₁<span class="ot">)</span> ⇒ -, <span class="ot">(</span>Ty1→Ty σ₂<span class="ot">)</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>Ty1→Ty <span class="ot">(</span>IndexedTry1<span class="ot">.</span>□ σ<span class="ot">)</span> <span class="ot">=</span> □ <span class="ot">(</span>Ty1→Ty σ<span class="ot">)</span></span></code></pre></div>
+<p>I expect it is also trivial to prove this is an isomorphism, though
+I’m not particularly motivated to do it. The point is that, as anyone
+who has spent any time proving things with proof assistants knows, two
+types can be completely isomorphic, and yet one can be vastly easier
+to work with than the other in certain contexts. Often when I’m
+trying to prove something in Agda it feels like at least half the
+battle is just coming up with the right representation that makes the
+proofs go through easily.</p>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Decidable equality for indexed data types" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Mon, 09 Sep 2024 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Competitive Programming in Haskell: tree path decomposition, part II</title>
     <link>http://byorgey.github.io/blog/posts/2024/08/08/TreeDecomposition.html</link>
     <description><![CDATA[
@@ -1661,805 +1922,6 @@ Valentin Golev
 ]]></description>
     <pubDate>2023-08-22T17:37:34Z</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2023/08/22/swarm-0-4-release.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Compiling to Intrinsically Typed Combinators</title>
-    <link>http://byorgey.github.io/blog/posts/2023/07/13/compiling-to-intrinsically-typed-combinators.html</link>
-    <description><![CDATA[
-<h1>Compiling to Intrinsically Typed Combinators</h1>
-
-<div class="info">
-  Posted on July 13, 2023
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;bracket&#39;." href="/tag/bracket.html" rel="tag">bracket</a>, <a title="All pages tagged &#39;combinators&#39;." href="/tag/combinators.html" rel="tag">combinators</a>, <a title="All pages tagged &#39;compile&#39;." href="/tag/compile.html" rel="tag">compile</a>, <a title="All pages tagged &#39;DSL&#39;." href="/tag/DSL.html" rel="tag">DSL</a>, <a title="All pages tagged &#39;indexed&#39;." href="/tag/indexed.html" rel="tag">indexed</a>, <a title="All pages tagged &#39;typed&#39;." href="/tag/typed.html" rel="tag">typed</a>
-  
-</div>
-
-<section>
-<p>
-<strong>tl;dr</strong>: <em>How to compile a functional language via combinators (and evaluate via the Haskell runtime) while keeping the entire process type-indexed, with a bibliography and lots of references for further reading</em>
-</p>
-<p>
-There is a long history, starting with Schönfinkel and Curry, of abstracting away variable names from lambda calculus terms by converting to combinators, aka <em>bracket abstraction</em>. This was popular in the 80’s as a compilation technique for functional languages <span class="citation">(Turner, 1979; Augustsson, 1986; Jones, 1987; Diller, 1988)</span>, then apparently abandoned. More recently, however, it has been making a bit of a comeback. For example, see <a href="https://citeseerx.ist.psu.edu/document?repid=rep1&amp;type=pdf&amp;doi=f801c21b2630df3094c9c800c18ebc1e969865da">Naylor</a> <span class="citation">(2008)</span>, <a href="https://jozefg.bitbucket.io/posts/2015-05-01-brackets.html">Gratzer</a> <span class="citation">(2015)</span>, <a href="https://crypto.stanford.edu/~blynn/lambda/sk.html">Lynn</a> <span class="citation">(2017)</span>, and <a href="https://thma.github.io/posts/2021-04-04-Lambda-Calculus-Combinatory-Logic-and-Cartesian-Closed-Categories.html">Mahler</a> <span class="citation">(2021)</span>. Bracket abstraction is intimately related to compiling to cartesian closed categories <span class="citation">(Elliott, 2017; Mahler, 2021)</span>, and also enables cool tricks like doing evaluation via the Haskell runtime system <span class="citation">(Naylor, 2008; Seo, 2016; Mahler, 2022)</span>.
-</p>
-<p>
-However, it always bothered me that the conversion to combinators was invariably described in an untyped way. Partly to gain some assurance that we are doing things correctly, but mostly for fun, I wondered if it would be possible to do the whole pipeline in an explicitly type-indexed way. I eventually found <a href="http://okmij.org/ftp/tagless-final/ski.pdf">a nice paper by Oleg Kiselyov</a> <span class="citation">(2018)</span> which explains exactly how to do it (it even came with <a href="http://okmij.org/ftp/tagless-final/skconv.ml">OCaml code</a> that I was easily able to port to Haskell!).
-</p>
-<p>
-In this blog post, I:
-</p>
-<ul>
-<li>
-Show an example of typechecking and elaboration for a functional language into explicitly type-indexed terms, such that it is impossible to write down ill-typed terms
-</li>
-<li>
-Demonstrate a Haskell port of Oleg Kiselyov’s typed bracket abstraction algorithm
-</li>
-<li>
-Demonstrate type-indexed evaluation of terms via the Haskell runtime
-</li>
-<li>
-Put together an extensive bibliography with references for further reading
-</li>
-</ul>
-<p>
-This blog post is rendered automatically from a literate Haskell file; you can <a href="https://github.com/byorgey/typed-combinators">find the complete working source code and blog post on GitHub</a>. I’m always happy to receive comments, fixes, or suggestions for improvement.
-</p>
-<h2 id="but-first-a-message-from-our-sponsors">
-But First, A Message From Our Sponsors
-</h2>
-<p>
-So many yummy language extensions.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: green">{-# LANGUAGE ConstraintKinds #-}</span>
-<span style="color: green">{-# LANGUAGE DataKinds #-}</span>
-<span style="color: green">{-# LANGUAGE ExplicitForAll #-}</span>
-<span style="color: green">{-# LANGUAGE FlexibleContexts #-}</span>
-<span style="color: green">{-# LANGUAGE GADTs #-}</span>
-<span style="color: green">{-# LANGUAGE ImportQualifiedPost #-}</span>
-<span style="color: green">{-# LANGUAGE InstanceSigs #-}</span>
-<span style="color: green">{-# LANGUAGE KindSignatures #-}</span>
-<span style="color: green">{-# LANGUAGE LambdaCase #-}</span>
-<span style="color: green">{-# LANGUAGE OverloadedStrings #-}</span>
-<span style="color: green">{-# LANGUAGE PatternSynonyms #-}</span>
-<span style="color: green">{-# LANGUAGE RankNTypes #-}</span>
-<span style="color: green">{-# LANGUAGE StandaloneDeriving #-}</span>
-<span style="color: green">{-# LANGUAGE TypeApplications #-}</span>
-<span style="color: green">{-# LANGUAGE TypeFamilies #-}</span>
-<span style="color: green">{-# LANGUAGE TypeOperators #-}</span>
-<span style="color: green">{-# LANGUAGE UnicodeSyntax #-}</span>
-<span style="color: green">{-# LANGUAGE ViewPatterns #-}</span>
-
-<span style="color: blue;font-weight: bold">module</span> <span>TypedCombinators</span> <span style="color: blue;font-weight: bold">where</span>
-
-<span style="color: blue;font-weight: bold">import</span> <span>Control.Monad.Combinators.Expr</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Data.Functor.Const</span> <span style="color: blue;font-weight: bold">qualified</span> <span style="color: blue;font-weight: bold">as</span> <span>F</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Data.Void</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Data.Text</span> <span style="color: red">(</span> <span>Text</span> <span style="color: red">)</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Data.Text</span> <span style="color: blue;font-weight: bold">qualified</span> <span style="color: blue;font-weight: bold">as</span> <span>T</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Data.Kind</span> <span style="color: red">(</span><span>Type</span><span style="color: red">)</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Data.Type.Equality</span> <span style="color: red">(</span> <span style="color: blue;font-weight: bold">type</span> <span style="color: red">(</span><span>:~:</span><span style="color: red">)</span><span style="color: red">(</span><span>Refl</span><span style="color: red">)</span><span style="color: red">,</span> <span>TestEquality</span><span style="color: red">(</span><span style="color: red">..</span><span style="color: red">)</span> <span style="color: red">)</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Text.Megaparsec</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Text.Megaparsec.Char</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Text.Megaparsec.Char.Lexer</span> <span style="color: blue;font-weight: bold">qualified</span> <span style="color: blue;font-weight: bold">as</span> <span>L</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Witch</span> <span style="color: red">(</span><span>into</span><span style="color: red">)</span>
-<span style="color: blue;font-weight: bold">import</span> <span>Prelude</span> <span>hiding</span> <span style="color: red">(</span><span>lookup</span><span style="color: red">)</span></code></pre>
-<h2 id="raw-terms-and-types">
-Raw terms and types
-</h2>
-<p>
-Here’s an algebraic data type to represent raw terms of our DSL, something which might come directly out of a parser. The exact language we use here isn’t all that important; I’ve put in just enough features to make it nontrivial, but not much beyond that. We have integer literals, variables, lambdas, application, <code>let</code> and <code>if</code> expressions, addition, and comparison with <code>&gt;</code>. Of course, it would be easy to add more types, constants, and language features.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>Term</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>Lit</span> <span style="color: red">::</span> <span>Int</span> <span style="color: red">-&gt;</span> <span>Term</span>
-  <span>Var</span> <span style="color: red">::</span> <span>Text</span> <span style="color: red">-&gt;</span> <span>Term</span>
-  <span>Lam</span> <span style="color: red">::</span> <span>Text</span> <span style="color: red">-&gt;</span> <span>Ty</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span>
-  <span>App</span> <span style="color: red">::</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span>
-  <span>Let</span> <span style="color: red">::</span> <span>Text</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span>
-  <span>If</span>  <span style="color: red">::</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span>
-  <span>Add</span> <span style="color: red">::</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span>
-  <span>Gt</span>  <span style="color: red">::</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Term</span>
-  <span style="color: blue;font-weight: bold">deriving</span> <span>Show</span></code></pre>
-<p>
-A few things to note:
-</p>
-<ul>
-<li>
-<p>
-In order to keep things simple, notice that lambdas must be annotated with the type of the argument. There are other choices we could make, but this is the simplest for now. I’ll have more to say about other choices later.
-</p>
-</li>
-<li>
-<p>
-I included <code>if</code> not only because it gives us something to do with Booleans, but also because it is <em>polymorphic</em>, which adds an interesting twist to our typechecking.
-</p>
-</li>
-<li>
-<p>
-I included <code>&gt;</code>, not only because it gives us a way to produce Boolean values, but also because it uses <em>ad-hoc</em> polymorphism, that is, we can compare at any type which is an instance of <code>Ord</code>. This is an even more interesting twist.
-</p>
-</li>
-</ul>
-<p>
-Here are our types: integers, booleans, and functions.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>Ty</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>TyInt</span>  <span style="color: red">::</span> <span>Ty</span>
-  <span>TyBool</span> <span style="color: red">::</span> <span>Ty</span>
-  <span>TyFun</span>  <span style="color: red">::</span> <span>Ty</span> <span style="color: red">-&gt;</span> <span>Ty</span> <span style="color: red">-&gt;</span> <span>Ty</span>
-  <span style="color: blue;font-weight: bold">deriving</span> <span>Show</span></code></pre>
-<p>
-Finally, here’s an example term that uses all the features of our language (I’ve included a simple parser in an appendix at the end of this post):
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>example</span> <span style="color: red">::</span> <span>Term</span>
-<span>example</span> <span style="color: red">=</span> <span>readTerm</span> <span>$</span> <span>T.unlines</span>
-  <span style="color: red">[</span> <span style="color: teal">"let twice = \\f:Int -&gt; Int. \\x:Int. f (f x) in"</span>
-  <span style="color: red">,</span> <span style="color: teal">"let z = 1 in"</span>
-  <span style="color: red">,</span> <span style="color: teal">"if 7 &gt; twice (\\x:Int. x + 3) z then z else z + 1"</span>
-  <span style="color: red">]</span></code></pre>
-<p>
-Since 7 is not, in fact, strictly greater than 1 + 3 + 3, this should evaluate to 2.
-</p>
-<h2 id="type-indexed-constants">
-Type-indexed constants
-</h2>
-<p>
-That was the end of our raw, untyped representations—from now on, everything is going to be type-indexed! First of all, we’ll declare an enumeration of constants, with each constant indexed by its corresponding host language type. These will include both any special language built-ins (like <code>if</code>, <code>+</code>, and <code>&gt;</code>) as well as a set of <a href="https://en.wikipedia.org/wiki/Combinatory_logic">combinators</a> which we’ll be using as a compilation target—more on these later.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>Const</span> <span style="color: red">::</span> <span>Type</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>CInt</span> <span style="color: red">::</span> <span>Int</span> <span style="color: red">-&gt;</span> <span>Const</span> <span>Int</span>
-  <span>CIf</span> <span style="color: red">::</span> <span>Const</span> <span style="color: red">(</span><span>Bool</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span><span style="color: red">)</span>
-  <span>CAdd</span> <span style="color: red">::</span> <span>Const</span> <span style="color: red">(</span><span>Int</span> <span style="color: red">-&gt;</span> <span>Int</span> <span style="color: red">-&gt;</span> <span>Int</span><span style="color: red">)</span>
-  <span>CGt</span> <span style="color: red">::</span> <span>Ord</span> <span>α</span> <span style="color: red">=&gt;</span> <span>Const</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>Bool</span><span style="color: red">)</span>
-  <span>I</span> <span style="color: red">::</span> <span>Const</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>α</span><span style="color: red">)</span>
-  <span>K</span> <span style="color: red">::</span> <span>Const</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>b</span> <span style="color: red">-&gt;</span> <span>α</span><span style="color: red">)</span>
-  <span>S</span> <span style="color: red">::</span> <span>Const</span> <span style="color: red">(</span><span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>b</span> <span style="color: red">-&gt;</span> <span>c</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>b</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>c</span><span style="color: red">)</span>
-  <span>B</span> <span style="color: red">::</span> <span>Const</span> <span style="color: red">(</span><span style="color: red">(</span>     <span>b</span> <span style="color: red">-&gt;</span> <span>c</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>b</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>c</span><span style="color: red">)</span>
-  <span>C</span> <span style="color: red">::</span> <span>Const</span> <span style="color: red">(</span><span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>b</span> <span style="color: red">-&gt;</span> <span>c</span><span style="color: red">)</span> <span style="color: red">-&gt;</span>       <span>b</span>  <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>c</span><span style="color: red">)</span>
-
-<span style="color: blue;font-weight: bold">deriving</span> <span style="color: blue;font-weight: bold">instance</span> <span>Show</span> <span style="color: red">(</span><span>Const</span> <span>α</span><span style="color: red">)</span></code></pre>
-<p>
-The polymorphism of <code>if</code> (and the combinators <code>I</code>, <code>K</code>, <em>etc.</em>, for that matter) poses no real problems. If we really wanted the type of <code>CIf</code> to be indexed by the exact type of <code>if</code>, it would be something like
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>CIf</span> <span style="color: red">::</span> <span>Const</span> <span style="color: red">(</span><span class="hs-sel">∀</span> <span>α</span><span>.</span> <span>Bool</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span><span style="color: red">)</span></code></pre>
-<p>
-but this would require <a href="https://downloads.haskell.org/ghc/latest/docs/users_guide/exts/impredicative_types.html">impredicative types</a> which can be something of a minefield. However, what we actually get is
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>CIf</span> <span style="color: red">::</span> <span class="hs-sel">∀</span> <span>α</span><span>.</span> <span>Const</span> <span style="color: red">(</span><span>Bool</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span><span style="color: red">)</span></code></pre>
-<p>
-which is unproblematic and works just as well for our purposes.
-</p>
-<p>
-The type of <code>CGt</code> is more interesting: it includes an <code>Ord α</code> constraint. That means that at the time we construct a <code>CGt</code> value, we must have in scope an <code>Ord</code> instance for whatever type <code>α</code> is; conversely, when we pattern-match on <code>CGt</code>, we will bring that instance into scope. We will see how to deal with this later.
-</p>
-<p>
-For convenience, we make a type class <code>HasConst</code> for type-indexed things that can contain embedded constants (we will end up with several instances of this class).
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">class</span> <span>HasConst</span> <span>t</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>embed</span> <span style="color: red">::</span> <span>Const</span> <span>α</span> <span style="color: red">-&gt;</span> <span>t</span> <span>α</span></code></pre>
-<p>
-Also for convenience, here’s a type class for type-indexed things that support some kind of application operation. (Note that we don’t necessarily want to require <code>t</code> to support a <code>pure :: a -&gt; t a</code> operation, or even be a <code>Functor</code>, so using <code>Applicative</code> would not be appropriate, even though <code>$$</code> has the same type as <code>&lt;*&gt;</code>.)
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">infixl</span> <span class="hs-num">1</span> <span>&#36;&#36;</span>
-<span style="color: blue;font-weight: bold">class</span> <span>Applicable</span> <span>t</span> <span style="color: blue;font-weight: bold">where</span>
-  <span style="color: red">(</span><span>&#36;&#36;</span><span style="color: red">)</span> <span style="color: red">::</span> <span>t</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>t</span> <span>α</span> <span style="color: red">-&gt;</span> <span>t</span> <span>β</span></code></pre>
-<p>
-Note that, unlike the standard <code>$</code> operator, <code>$$</code> is <em>left</em>-associative, so, for example, <code>f $$ x $$ y</code> should be read just like <code>f x y</code>, that is, <code>f $$ x $$ y = (f $$ x) $$ y</code>.
-</p>
-<p>
-Finally, we’ll spend a bunch of time applying constants to things, or applying things to constants, so here are a few convenience operators for combining <code>$$</code> and <code>embed</code>:
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">infixl</span> <span class="hs-num">1</span> <span>.&#36;&#36;</span>
-<span style="color: red">(</span><span>.&#36;&#36;</span><span style="color: red">)</span> <span style="color: red">::</span> <span style="color: red">(</span><span>HasConst</span> <span>t</span><span style="color: red">,</span> <span>Applicable</span> <span>t</span><span style="color: red">)</span> <span style="color: red">=&gt;</span> <span>Const</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>t</span> <span>α</span> <span style="color: red">-&gt;</span> <span>t</span> <span>β</span>
-<span>c</span> <span>.&#36;&#36;</span> <span>t</span> <span style="color: red">=</span> <span>embed</span> <span>c</span> <span>&#36;&#36;</span> <span>t</span>
-
-<span style="color: blue;font-weight: bold">infixl</span> <span class="hs-num">1</span> <span>&#36;&#36;.</span>
-<span style="color: red">(</span><span>&#36;&#36;.</span><span style="color: red">)</span> <span style="color: red">::</span> <span style="color: red">(</span><span>HasConst</span> <span>t</span><span style="color: red">,</span> <span>Applicable</span> <span>t</span><span style="color: red">)</span> <span style="color: red">=&gt;</span> <span>t</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Const</span> <span>α</span> <span style="color: red">-&gt;</span> <span>t</span> <span>β</span>
-<span>t</span> <span>&#36;&#36;.</span> <span>c</span> <span style="color: red">=</span> <span>t</span> <span>&#36;&#36;</span> <span>embed</span> <span>c</span>
-
-<span style="color: blue;font-weight: bold">infixl</span> <span class="hs-num">1</span> <span>.&#36;&#36;.</span>
-<span style="color: red">(</span><span>.&#36;&#36;.</span><span style="color: red">)</span> <span style="color: red">::</span> <span style="color: red">(</span><span>HasConst</span> <span>t</span><span style="color: red">,</span> <span>Applicable</span> <span>t</span><span style="color: red">)</span> <span style="color: red">=&gt;</span> <span>Const</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Const</span> <span>α</span> <span style="color: red">-&gt;</span> <span>t</span> <span>β</span>
-<span>c1</span> <span>.&#36;&#36;.</span> <span>c2</span> <span style="color: red">=</span> <span>embed</span> <span>c1</span> <span>&#36;&#36;</span> <span>embed</span> <span>c2</span></code></pre>
-<h2 id="type-indexed-types-and-terms">
-Type-indexed types and terms
-</h2>
-<p>
-Now let’s build up our type-indexed core language. First, we’ll need a data type for type-indexed de Bruijn indices. A value of type <code>Idx γ α</code> is a variable with type <code>α</code> in the context <code>γ</code> (represented as a type-level list of types). For example, <code>Idx [Int,Bool,Int] Int</code> would represent a variable of type <code>Int</code> (and hence must either be variable 0 or 2).
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>Idx</span> <span style="color: red">::</span> <span style="color: red">[</span><span>Type</span><span style="color: red">]</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>VZ</span> <span style="color: red">::</span> <span>Idx</span> <span style="color: red">(</span><span>α</span> <span style="color: teal">'</span><span>:</span> <span>γ</span><span style="color: red">)</span> <span>α</span>
-  <span>VS</span> <span style="color: red">::</span> <span>Idx</span> <span>γ</span> <span>α</span> <span style="color: red">-&gt;</span> <span>Idx</span> <span style="color: red">(</span><span>β</span> <span style="color: teal">'</span><span>:</span> <span>γ</span><span style="color: red">)</span> <span>α</span>
-
-<span style="color: blue;font-weight: bold">deriving</span> <span style="color: blue;font-weight: bold">instance</span> <span>Show</span> <span style="color: red">(</span><span>Idx</span> <span>γ</span> <span>α</span><span style="color: red">)</span></code></pre>
-<p>
-Now we can build our type-indexed terms. Just like variables, terms are indexed by a typing context and a type; <code>t : TTerm γ α</code> can be read as “<code>t</code> is a term with type <code>α</code>, possibly containing variables whose types are described by the context <code>γ</code>”. Our core language has only variables, constants, lambdas, and application. Note we’re not just making a type-indexed version of our original term language; for simplicity, we’re going to simultaneously typecheck and elaborate down to this much simpler core language. (Of course, it would also be entirely possible to introduce another intermediate data type for type-indexed terms, and separate the typechecking and elaboration phases.)
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>TTerm</span> <span style="color: red">::</span> <span style="color: red">[</span><span>Type</span><span style="color: red">]</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>TVar</span> <span style="color: red">::</span> <span>Idx</span> <span>γ</span> <span>α</span> <span style="color: red">-&gt;</span> <span>TTerm</span> <span>γ</span> <span>α</span>
-  <span>TConst</span> <span style="color: red">::</span> <span>Const</span> <span>α</span> <span style="color: red">-&gt;</span> <span>TTerm</span> <span>γ</span> <span>α</span>
-  <span>TLam</span> <span style="color: red">::</span> <span>TTerm</span> <span style="color: red">(</span><span>α</span> <span style="color: teal">'</span><span>:</span> <span>γ</span><span style="color: red">)</span> <span>β</span> <span style="color: red">-&gt;</span> <span>TTerm</span> <span>γ</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span>
-  <span>TApp</span> <span style="color: red">::</span> <span>TTerm</span> <span>γ</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>TTerm</span> <span>γ</span> <span>α</span> <span style="color: red">-&gt;</span> <span>TTerm</span> <span>γ</span> <span>β</span>
-
-<span style="color: blue;font-weight: bold">deriving</span> <span style="color: blue;font-weight: bold">instance</span> <span>Show</span> <span style="color: red">(</span><span>TTerm</span> <span>γ</span> <span>α</span><span style="color: red">)</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>Applicable</span> <span style="color: red">(</span><span>TTerm</span> <span>γ</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">where</span>
-  <span style="color: red">(</span><span>&#36;&#36;</span><span style="color: red">)</span> <span style="color: red">=</span> <span>TApp</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>HasConst</span> <span style="color: red">(</span><span>TTerm</span> <span>γ</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>embed</span> <span style="color: red">=</span> <span>TConst</span></code></pre>
-<p>
-Now for some type-indexed types!
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>TTy</span> <span style="color: red">::</span> <span>Type</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>TTyInt</span> <span style="color: red">::</span> <span>TTy</span> <span>Int</span>
-  <span>TTyBool</span> <span style="color: red">::</span> <span>TTy</span> <span>Bool</span>
-  <span style="color: red">(</span><span>:-&gt;:</span><span style="color: red">)</span> <span style="color: red">::</span> <span>TTy</span> <span>α</span> <span style="color: red">-&gt;</span> <span>TTy</span> <span>β</span> <span style="color: red">-&gt;</span> <span>TTy</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span>
-
-<span style="color: blue;font-weight: bold">deriving</span> <span style="color: blue;font-weight: bold">instance</span> <span>Show</span> <span style="color: red">(</span><span>TTy</span> <span>ty</span><span style="color: red">)</span></code></pre>
-<p>
-<code>TTy</code> is a term-level representation of our DSL’s types, indexed by corresponding host language types. In other words, <code>TTy</code> is a <em>singleton</em>: for a given type <code>α</code> there is a single value of type <code>TTy α</code>. Put another way, pattern-matching on a value of type <code>TTy α</code> lets us learn what the type <code>α</code> is. (See <span class="citation">(Le, 2017)</span> for a <a href="https://blog.jle.im/entry/introduction-to-singletons-1.html">nice introduction to the idea of singleton types</a>.)
-</p>
-<p>
-We will need to be able to test two value-level type representations for equality and have that reflected at the level of type indices; the <code>TestEquality</code> class from <code>Data.Type.Equality</code> is perfect for this. The <code>testEquality</code> function takes two type-indexed things and returns a type equality proof wrapped in <code>Maybe</code>.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">instance</span> <span>TestEquality</span> <span>TTy</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>testEquality</span> <span style="color: red">::</span> <span>TTy</span> <span>α</span> <span style="color: red">-&gt;</span> <span>TTy</span> <span>β</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span style="color: red">(</span><span>α</span> <span>:~:</span> <span>β</span><span style="color: red">)</span>
-  <span>testEquality</span> <span>TTyInt</span> <span>TTyInt</span> <span style="color: red">=</span> <span>Just</span> <span>Refl</span>
-  <span>testEquality</span> <span>TTyBool</span> <span>TTyBool</span> <span style="color: red">=</span> <span>Just</span> <span>Refl</span>
-  <span>testEquality</span> <span style="color: red">(</span><span>α₁</span> <span>:-&gt;:</span> <span>β₁</span><span style="color: red">)</span> <span style="color: red">(</span><span>α₂</span> <span>:-&gt;:</span> <span>β₂</span><span style="color: red">)</span> <span style="color: red">=</span>
-    <span style="color: blue;font-weight: bold">case</span> <span style="color: red">(</span><span>testEquality</span> <span>α₁</span> <span>α₂</span><span style="color: red">,</span> <span>testEquality</span> <span>β₁</span> <span>β₂</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">of</span>
-      <span style="color: red">(</span><span>Just</span> <span>Refl</span><span style="color: red">,</span> <span>Just</span> <span>Refl</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Just</span> <span>Refl</span>
-      <span style="color: blue;font-weight: bold">_</span> <span style="color: red">-&gt;</span> <span>Nothing</span>
-  <span>testEquality</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: red">=</span> <span>Nothing</span></code></pre>
-<p>
-Recall that the <code>CGt</code> constant requires an <code>Ord</code> instance; the <code>checkOrd</code> function pattern-matches on a <code>TTy</code> and witnesses the fact that the corresponding host-language type has an <code>Ord</code> instance (if, in fact, it does).
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>checkOrd</span> <span style="color: red">::</span> <span>TTy</span> <span>α</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>Ord</span> <span>α</span> <span style="color: red">=&gt;</span> <span>r</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span>r</span>
-<span>checkOrd</span> <span>TTyInt</span> <span>r</span> <span style="color: red">=</span> <span>Just</span> <span>r</span>
-<span>checkOrd</span> <span>TTyBool</span> <span>r</span> <span style="color: red">=</span> <span>Just</span> <span>r</span>
-<span>checkOrd</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: red">=</span> <span>Nothing</span></code></pre>
-<p>
-As a quick aside, for simplicity’s sake, I am going to use <code>Maybe</code> throughout the rest of this post to indicate possible failure. In a real implementation, one would of course want to return more information about any error(s) that occur.
-</p>
-<h2 id="existential-wrappers">
-Existential wrappers
-</h2>
-<p>
-Sometimes we will need to wrap type-indexed things inside an existential wrapper to hide the type index. For example, when converting from a <code>Ty</code> to a <code>TTy</code>, or when running type inference, we can’t know in advance which type we’re going to get. So we create the <code>Some</code> data type which wraps up a type-indexed thing along with a corresponding <code>TTy</code>. Pattern-matching on the singleton <code>TTy</code> will allow us to recover the type information later.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>Some</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Type</span> <span style="color: red">-&gt;</span> <span>Type</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>Some</span> <span style="color: red">::</span> <span>TTy</span> <span>α</span> <span style="color: red">-&gt;</span> <span>t</span> <span>α</span> <span style="color: red">-&gt;</span> <span>Some</span> <span>t</span>
-
-<span>mapSome</span> <span style="color: red">::</span> <span style="color: red">(</span><span class="hs-sel">∀</span> <span>α</span><span>.</span> <span>s</span> <span>α</span> <span style="color: red">-&gt;</span> <span>t</span> <span>α</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Some</span> <span>s</span> <span style="color: red">-&gt;</span> <span>Some</span> <span>t</span>
-<span>mapSome</span> <span>f</span> <span style="color: red">(</span><span>Some</span> <span>α</span> <span>t</span><span style="color: red">)</span> <span style="color: red">=</span> <span>Some</span> <span>α</span> <span style="color: red">(</span><span>f</span> <span>t</span><span style="color: red">)</span></code></pre>
-<p>
-The first instantiation we’ll create is an existentially wrapped type, where the <code>TTy</code> itself is the only thing we care about, and the corresponding <code>t</code> will just be the constant unit type functor. It would be annoying to keep writing <code>F.Const ()</code> everywhere so we create some type and pattern synonyms for convenience.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">type</span> <span>SomeTy</span> <span style="color: red">=</span> <span>Some</span> <span style="color: red">(</span><span>F.Const</span> <span>()</span><span style="color: red">)</span>
-
-<span>pattern</span> <span>SomeTy</span> <span style="color: red">::</span> <span>TTy</span> <span>α</span> <span style="color: red">-&gt;</span> <span>SomeTy</span>
-<span>pattern</span> <span>SomeTy</span> <span>α</span> <span style="color: red">=</span> <span>Some</span> <span>α</span> <span style="color: red">(</span><span>F.Const</span> <span>()</span><span style="color: red">)</span>
-<span style="color: green">{-# COMPLETE SomeTy #-}</span></code></pre>
-<p>
-The <code>someType</code> function converts from a raw <code>Ty</code> to a type-indexed <code>TTy</code>, wrapped up in an existential wrapper.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>someType</span> <span style="color: red">::</span> <span>Ty</span> <span style="color: red">-&gt;</span> <span>SomeTy</span>
-<span>someType</span> <span>TyInt</span> <span style="color: red">=</span> <span>SomeTy</span> <span>TTyInt</span>
-<span>someType</span> <span>TyBool</span> <span style="color: red">=</span> <span>SomeTy</span> <span>TTyBool</span>
-<span>someType</span> <span style="color: red">(</span><span>TyFun</span> <span>a</span> <span>b</span><span style="color: red">)</span> <span style="color: red">=</span> <span style="color: blue;font-weight: bold">case</span> <span style="color: red">(</span><span>someType</span> <span>a</span><span style="color: red">,</span> <span>someType</span> <span>b</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">of</span>
-  <span style="color: red">(</span><span>SomeTy</span> <span>α</span><span style="color: red">,</span> <span>SomeTy</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>SomeTy</span> <span style="color: red">(</span><span>α</span> <span>:-&gt;:</span> <span>β</span><span style="color: red">)</span></code></pre>
-<h2 id="type-inference-and-elaboration">
-Type inference and elaboration
-</h2>
-<p>
-Now that we have our type-indexed core language all set, it’s time to do type inference, that is, translate from untyped terms to type-indexed ones! First, let’s define type contexts, <em>i.e.</em> mappings from variables to their types. We store contexts simply as a (fancy, type-indexed) list of variable names paired with their types. This is inefficient—it takes linear time to do a lookup—but we don’t care, because this is an intermediate representation used only during typechecking. By the time we actually get around to running terms, variables won’t even exist any more.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>Ctx</span> <span style="color: red">::</span> <span style="color: red">[</span><span>Type</span><span style="color: red">]</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-
-  <span style="color: green">-- CNil represents an empty context.</span>
-  <span>CNil</span> <span style="color: red">::</span> <span>Ctx</span> <span style="color: teal">'</span><span>[]</span>
-
-  <span style="color: green">-- A cons stores a variable name and its type,</span>
-  <span style="color: green">-- and then the rest of the context.</span>
-  <span style="color: red">(</span><span>:::</span><span style="color: red">)</span> <span style="color: red">::</span> <span style="color: red">(</span><span>Text</span><span style="color: red">,</span> <span>TTy</span> <span>α</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>Ctx</span> <span>γ</span> <span style="color: red">-&gt;</span> <span>Ctx</span> <span style="color: red">(</span><span>α</span> <span style="color: teal">'</span><span>:</span> <span>γ</span><span style="color: red">)</span></code></pre>
-<p>
-Now we can define the <code>lookup</code> function, which takes a variable name and a context and tries to return a corresponding de Bruijn index into the context. When looking up a variable name in the context, we can’t know in advance what index we will get and what type it will have, so we wrap the returned <code>Idx</code> in <code>Some</code>.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>lookup</span> <span style="color: red">::</span> <span>Text</span> <span style="color: red">-&gt;</span> <span>Ctx</span> <span>γ</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span style="color: red">(</span><span>Some</span> <span style="color: red">(</span><span>Idx</span> <span>γ</span><span style="color: red">)</span><span style="color: red">)</span>
-<span>lookup</span> <span style="color: blue;font-weight: bold">_</span> <span>CNil</span> <span style="color: red">=</span> <span>Nothing</span>
-<span>lookup</span> <span>x</span> <span style="color: red">(</span><span style="color: red">(</span><span>y</span><span style="color: red">,</span> <span>α</span><span style="color: red">)</span> <span>:::</span> <span>ctx</span><span style="color: red">)</span>
-  <span style="color: red">|</span> <span>x</span> <span>==</span> <span>y</span> <span style="color: red">=</span> <span>Just</span> <span style="color: red">(</span><span>Some</span> <span>α</span> <span>VZ</span><span style="color: red">)</span>
-  <span style="color: red">|</span> <span>otherwise</span> <span style="color: red">=</span> <span>mapSome</span> <span>VS</span> <span>&lt;$&gt;</span> <span>lookup</span> <span>x</span> <span>ctx</span></code></pre>
-<p>
-Now we’re finally ready to define the <code>infer</code> function! It takes a type context and a raw term, and tries to compute a corresponding type-indexed term. Note that there’s no particular guarantee that the term we return corresponds to the input term—we will just have to be careful—but at least the Haskell type system guarantees that we can’t return a type-incorrect term, which is especially important when we have some nontrivial elaboration to do. Of course, just as with variable lookups, when inferring the type of a term we can’t know in advance what type it will have, so we will need to return an existential wrapper around a type-indexed term.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>infer</span> <span style="color: red">::</span> <span>Ctx</span> <span>γ</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span style="color: red">(</span><span>Some</span> <span style="color: red">(</span><span>TTerm</span> <span>γ</span><span style="color: red">)</span><span style="color: red">)</span>
-<span>infer</span> <span>ctx</span> <span style="color: red">=</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">case</span></code></pre>
-<p>
-To infer the type of a literal integer value, just return <code>TTyInt</code> with a literal integer constant.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>Lit</span> <span>i</span> <span style="color: red">-&gt;</span> <span>return</span> <span>$</span> <span>Some</span> <span>TTyInt</span> <span style="color: red">(</span><span>embed</span> <span style="color: red">(</span><span>CInt</span> <span>i</span><span style="color: red">)</span><span style="color: red">)</span></code></pre>
-<p>
-To infer the type of a variable, look it up in the context and wrap the result in <code>TVar</code>. Notice how we are allowed to pattern-match on the <code>Some</code> returned from <code>lookup</code> (revealing the existentially quantified type inside) since we immediately wrap it back up in another <code>Some</code> when returning the <code>TVar</code>.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>Var</span> <span>x</span> <span style="color: red">-&gt;</span> <span>mapSome</span> <span>TVar</span> <span>&lt;$&gt;</span> <span>lookup</span> <span>x</span> <span>ctx</span></code></pre>
-<p>
-To infer the type of a lambda, we convert the argument type annotation to a type-indexed type, infer the type of the body under an extended context, and then return a lambda with an appropriate function type. (If lambdas weren’t required to have type annotations, then we would either have to move the lambda case to the <code>check</code> function, or else use unification variables and solve type equality constraints. The former would be straightforward, but I don’t know how to do the latter in a type-indexed way—sounds like a fun problem for later.)
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>Lam</span> <span>x</span> <span>a</span> <span>t</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">do</span>
-    <span style="color: blue;font-weight: bold">case</span> <span>someType</span> <span>a</span> <span style="color: blue;font-weight: bold">of</span>
-      <span>Some</span> <span>α</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">do</span>
-        <span>Some</span> <span>β</span> <span>t'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span style="color: red">(</span><span style="color: red">(</span><span>x</span><span style="color: red">,</span><span>α</span><span style="color: red">)</span> <span>:::</span> <span>ctx</span><span style="color: red">)</span> <span>t</span>
-        <span>return</span> <span>$</span> <span>Some</span> <span style="color: red">(</span><span>α</span> <span>:-&gt;:</span> <span>β</span><span style="color: red">)</span> <span style="color: red">(</span><span>TLam</span> <span>t'</span><span style="color: red">)</span></code></pre>
-<p>
-To infer the type of an application, we infer the type of the left-hand side, ensure it is a function type, and <code>check</code> that the right-hand side has the correct type. We will see the <code>check</code> function later.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>App</span> <span>t1</span> <span>t2</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">do</span>
-    <span>Some</span> <span>τ</span> <span>t1'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span>ctx</span> <span>t1</span>
-    <span style="color: blue;font-weight: bold">case</span> <span>τ</span> <span style="color: blue;font-weight: bold">of</span>
-      <span>α</span> <span>:-&gt;:</span> <span>β</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">do</span>
-        <span>t2'</span> <span style="color: red">&lt;-</span> <span>check</span> <span>ctx</span> <span>α</span> <span>t2</span>
-        <span>return</span> <span>$</span> <span>Some</span> <span>β</span> <span style="color: red">(</span><span>TApp</span> <span>t1'</span> <span>t2'</span><span style="color: red">)</span>
-      <span style="color: blue;font-weight: bold">_</span> <span style="color: red">-&gt;</span> <span>Nothing</span></code></pre>
-<p>
-To infer the type of a <code>let</code>-expression, we infer the type of the definition, infer the type of the body under an extended context, and then desugar it into an application of a lambda. That is, <code>let x = t1 in t2</code> desugars to <code>(\x.t2) t1</code>.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>Let</span> <span>x</span> <span>t1</span> <span>t2</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">do</span>
-    <span>Some</span> <span>α</span> <span>t1'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span>ctx</span> <span>t1</span>
-    <span>Some</span> <span>β</span> <span>t2'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span style="color: red">(</span><span style="color: red">(</span><span>x</span><span style="color: red">,</span> <span>α</span><span style="color: red">)</span> <span>:::</span> <span>ctx</span><span style="color: red">)</span> <span>t2</span>
-    <span>return</span> <span>$</span> <span>Some</span> <span>β</span> <span style="color: red">(</span><span>TApp</span> <span style="color: red">(</span><span>TLam</span> <span>t2'</span><span style="color: red">)</span> <span>t1'</span><span style="color: red">)</span></code></pre>
-<p>
-Note again that we can’t accidentally get mixed up here—for example, if we incorrectly desugar to <code>(\x.t1) t2</code> we get a Haskell type error, like this:
-</p>
-<pre><code>    • Couldn't match type ‘γ’ with ‘α : γ’
-      Expected: TTerm γ α1
-        Actual: TTerm (α : γ) α1</code></pre>
-<p>
-To infer an <code>if</code>-expression, we can check that the test has type <code>Bool</code>, infer the types of the two branches, and ensure that they are the same. If so, we return the <code>CIf</code> constant applied to the three arguments. The reason this typechecks is that pattern-matching on the <code>Refl</code> from the <code>testEquality</code> call brings into scope the fact that the types of <code>t2</code> and <code>t3</code> are equal, so we can apply <code>CIf</code> which requires them to be so.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>If</span> <span>t1</span> <span>t2</span> <span>t3</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">do</span>
-    <span>t1'</span> <span style="color: red">&lt;-</span> <span>check</span> <span>ctx</span> <span>TTyBool</span> <span>t1</span>
-    <span>Some</span> <span>α</span> <span>t2'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span>ctx</span> <span>t2</span>
-    <span>Some</span> <span>β</span> <span>t3'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span>ctx</span> <span>t3</span>
-    <span style="color: blue;font-weight: bold">case</span> <span>testEquality</span> <span>α</span> <span>β</span> <span style="color: blue;font-weight: bold">of</span>
-      <span>Nothing</span> <span style="color: red">-&gt;</span> <span>Nothing</span>
-      <span>Just</span> <span>Refl</span> <span style="color: red">-&gt;</span> <span>return</span> <span>$</span> <span>Some</span> <span>α</span> <span style="color: red">(</span><span>CIf</span> <span>.&#36;&#36;</span> <span>t1'</span> <span>&#36;&#36;</span> <span>t2'</span> <span>&#36;&#36;</span> <span>t3'</span><span style="color: red">)</span></code></pre>
-<p>
-Addition is simple; we just check that both arguments have type <code>Int</code>.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>Add</span> <span>t1</span> <span>t2</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">do</span>
-    <span>t1'</span> <span style="color: red">&lt;-</span> <span>check</span> <span>ctx</span> <span>TTyInt</span> <span>t1</span>
-    <span>t2'</span> <span style="color: red">&lt;-</span> <span>check</span> <span>ctx</span> <span>TTyInt</span> <span>t2</span>
-    <span>return</span> <span>$</span> <span>Some</span> <span>TTyInt</span> <span style="color: red">(</span><span>CAdd</span> <span>.&#36;&#36;</span> <span>t1'</span> <span>&#36;&#36;</span> <span>t2'</span><span style="color: red">)</span></code></pre>
-<p>
-“Greater than” is a bit interesting because we allow it to be used at both <code>Int</code> and <code>Bool</code>. So, just as with <code>if</code>, we must infer the types of the arguments and check that they match. But then we must also use the <code>checkOrd</code> function to ensure that the argument types are an instance of <code>Ord</code>. In particular, we wrap <code>CGt</code> (which requires an <code>Ord</code> constraint) in a call to <code>checkOrd α</code> (which provides one).
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">  <span>Gt</span> <span>t1</span> <span>t2</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">do</span>
-    <span>Some</span> <span>α</span> <span>t1'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span>ctx</span> <span>t1</span>
-    <span>Some</span> <span>β</span> <span>t2'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span>ctx</span> <span>t2</span>
-    <span style="color: blue;font-weight: bold">case</span> <span>testEquality</span> <span>α</span> <span>β</span> <span style="color: blue;font-weight: bold">of</span>
-      <span>Nothing</span> <span style="color: red">-&gt;</span> <span>Nothing</span>
-      <span>Just</span> <span>Refl</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span style="color: red">\</span><span>c</span> <span style="color: red">-&gt;</span> <span>Some</span> <span>TTyBool</span> <span style="color: red">(</span><span>c</span> <span>.&#36;&#36;</span> <span>t1'</span> <span>&#36;&#36;</span> <span>t2'</span><span style="color: red">)</span><span style="color: red">)</span> <span>&lt;$&gt;</span> <span>checkOrd</span> <span>α</span> <span>CGt</span></code></pre>
-<p>
-Finally, here’s the <code>check</code> function: to check that an expression has an expected type, just infer its type and make sure it’s the one we expected. (With more interesting languages we might also have more cases here for terms which can be checked but not inferred.) Notice how this also allows us to return the type-indexed term without using an existential wrapper, since the expected type is an input.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>check</span> <span style="color: red">::</span> <span>Ctx</span> <span>γ</span> <span style="color: red">-&gt;</span> <span>TTy</span> <span>α</span> <span style="color: red">-&gt;</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span style="color: red">(</span><span>TTerm</span> <span>γ</span> <span>α</span><span style="color: red">)</span>
-<span>check</span> <span>ctx</span> <span>α</span> <span>t</span> <span style="color: red">=</span> <span style="color: blue;font-weight: bold">do</span>
-  <span>Some</span> <span>β</span> <span>t'</span> <span style="color: red">&lt;-</span> <span>infer</span> <span>ctx</span> <span>t</span>
-  <span style="color: blue;font-weight: bold">case</span> <span>testEquality</span> <span>α</span> <span>β</span> <span style="color: blue;font-weight: bold">of</span>
-    <span>Nothing</span> <span style="color: red">-&gt;</span> <span>Nothing</span>
-    <span>Just</span> <span>Refl</span> <span style="color: red">-&gt;</span> <span>Just</span> <span>t'</span></code></pre>
-<p>
-Putting this all together so far, we can check that the <code>example</code> term has type <code>Int</code> and see what it elaborates to (I’ve included a simple pretty-printer for <code>TTerm</code> in an appendix):
-</p>
-<pre><code>λ&gt; putStrLn . pretty . fromJust . check CNil TTyInt $ example
-(λ. (λ. if (gt 7 (x1 (λ. plus x0 3) x0)) x0 (plus x0 1)) 1) (λ. λ. x1 (x1 x0))</code></pre>
-<h2 id="an-aside-a-typed-interpreter">
-An aside: a typed interpreter
-</h2>
-<p>
-We can now easily write an interpreter. However, this is pretty inefficient (it has to carry around an environment and do linear-time variable lookups), and later we’re going to compile our terms directly to host language terms. So this interpreter is just a nice aside, for fun and testing.
-</p>
-<p>
-With that said, given a closed term, we can interpret it directly to a value of its corresponding host language type. We need typed environments and a indexing function (note that for some reason GHC can’t see that the last case of the indexing function is impossible; if we tried implementing it in, say, Agda, we wouldn’t have to write that case).
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>Env</span> <span style="color: red">::</span> <span style="color: red">[</span><span>Type</span><span style="color: red">]</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>ENil</span> <span style="color: red">::</span> <span>Env</span> <span style="color: teal">'</span><span>[]</span>
-  <span>ECons</span> <span style="color: red">::</span> <span>α</span> <span style="color: red">-&gt;</span> <span>Env</span> <span>γ</span> <span style="color: red">-&gt;</span> <span>Env</span> <span style="color: red">(</span><span>α</span> <span style="color: teal">'</span><span>:</span> <span>γ</span><span style="color: red">)</span>
-
-<span style="color: red">(</span><span>!</span><span style="color: red">)</span> <span style="color: red">::</span> <span>Env</span> <span>γ</span> <span style="color: red">-&gt;</span> <span>Idx</span> <span>γ</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span>
-<span style="color: red">(</span><span>ECons</span> <span>x</span> <span style="color: blue;font-weight: bold">_</span><span style="color: red">)</span> <span>!</span> <span>VZ</span> <span style="color: red">=</span> <span>x</span>
-<span style="color: red">(</span><span>ECons</span> <span style="color: blue;font-weight: bold">_</span> <span>e</span><span style="color: red">)</span> <span>!</span> <span style="color: red">(</span><span>VS</span> <span>x</span><span style="color: red">)</span> <span style="color: red">=</span> <span>e</span> <span>!</span> <span>x</span>
-<span>ENil</span> <span>!</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: red">=</span> <span>error</span> <span style="color: teal">"GHC can't tell this is impossible"</span></code></pre>
-<p>
-Now the interpreter is straightforward. Look how beautifully everything works out with the type indexing.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>interpTTerm</span> <span style="color: red">::</span> <span>TTerm</span> <span style="color: teal">'</span><span>[]</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span>
-<span>interpTTerm</span> <span style="color: red">=</span> <span>go</span> <span>ENil</span>
-  <span style="color: blue;font-weight: bold">where</span>
-    <span>go</span> <span style="color: red">::</span> <span>Env</span> <span>γ</span> <span style="color: red">-&gt;</span> <span>TTerm</span> <span>γ</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span>
-    <span>go</span> <span>e</span> <span style="color: red">=</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">case</span>
-      <span>TVar</span> <span>x</span> <span style="color: red">-&gt;</span> <span>e</span> <span>!</span> <span>x</span>
-      <span>TLam</span> <span>body</span> <span style="color: red">-&gt;</span> <span style="color: red">\</span><span>x</span> <span style="color: red">-&gt;</span> <span>go</span> <span style="color: red">(</span><span>ECons</span> <span>x</span> <span>e</span><span style="color: red">)</span> <span>body</span>
-      <span>TApp</span> <span>f</span> <span>x</span> <span style="color: red">-&gt;</span> <span>go</span> <span>e</span> <span>f</span> <span style="color: red">(</span><span>go</span> <span>e</span> <span>x</span><span style="color: red">)</span>
-      <span>TConst</span> <span>c</span> <span style="color: red">-&gt;</span> <span>interpConst</span> <span>c</span>
-
-<span>interpConst</span> <span style="color: red">::</span> <span>Const</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span>
-<span>interpConst</span> <span style="color: red">=</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">case</span>
-  <span>CInt</span> <span>i</span> <span style="color: red">-&gt;</span> <span>i</span>
-  <span>CIf</span> <span style="color: red">-&gt;</span> <span style="color: red">\</span><span>b</span> <span>t</span> <span>e</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">if</span> <span>b</span> <span style="color: blue;font-weight: bold">then</span> <span>t</span> <span style="color: blue;font-weight: bold">else</span> <span>e</span>
-  <span>CAdd</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>+</span><span style="color: red">)</span>
-  <span>CGt</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>&gt;</span><span style="color: red">)</span>
-  <span>K</span> <span style="color: red">-&gt;</span> <span>const</span>
-  <span>S</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>&lt;*&gt;</span><span style="color: red">)</span>
-  <span>I</span> <span style="color: red">-&gt;</span> <span>id</span>
-  <span>B</span> <span style="color: red">-&gt;</span> <span style="color: red">(</span><span>.</span><span style="color: red">)</span>
-  <span>C</span> <span style="color: red">-&gt;</span> <span>flip</span></code></pre>
-<pre><code>λ&gt; interpTTerm . fromJust . check CNil TTyInt $ example
-2</code></pre>
-<h2 id="compiling-to-combinators-type-indexed-bracket-abstraction">
-Compiling to combinators: type-indexed bracket abstraction
-</h2>
-<p>
-Now, on with the main attraction! It’s well-known that certain sets of <a href="https://en.wikipedia.org/wiki/Combinatory_logic">combinators</a> are Turing-complete: for example, <a href="https://en.wikipedia.org/wiki/SKI_combinator_calculus">SKI is the most well-known complete set</a> (or just SK if you’re trying to be minimal). There are well-known algorithms for compiling lambda calculus terms into combinators, known generally as <em>bracket abstraction</em> (for further reading about bracket abstraction in general, see <a href="https://www.cantab.net/users/antoni.diller/brackets/intro.html">Diller</a> <span class="citation">(2014)</span>; for some in-depth history along with illustrative Haskell code, see <a href="https://crypto.stanford.edu/~blynn/lambda/cl.html">Ben Lynn’s page on Combinatory Logic</a> <span class="citation">(2022)</span>; for nice example implementations in Haskell, see blog posts by <a href="gratzer2015bracket">Gratzer</a> <span class="citation">(2015)</span>, <a href="http://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html">Seo</a> <span class="citation">(2016)</span>, and <a href="https://thma.github.io/posts/2021-12-27-Implementing-a-functional-language-with-Graph-Reduction.html">Mahler</a> <span class="citation">(2021)</span>.)
-</p>
-<p>
-So the idea is to compile our typed core language down to combinators. The resulting terms will have <em>no</em> lambdas or variables—only constants and application! The point is that by making environments implicit, with a few more tricks we can make use of the host language runtime’s ability to do beta reduction, which will be <em>much</em> more efficient than our interpreter.
-</p>
-<p>
-The <code>BTerm</code> type below will be the compilation target. Again for illustration and/or debugging we can easily write a direct interpreter for <code>BTerm</code>—but this still isn’t the intended code path. There will still be one more step to convert <code>BTerm</code>s directly into host language terms.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>BTerm</span> <span style="color: red">::</span> <span>Type</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>BApp</span> <span style="color: red">::</span> <span>BTerm</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>BTerm</span> <span>α</span> <span style="color: red">-&gt;</span> <span>BTerm</span> <span>β</span>
-  <span>BConst</span> <span style="color: red">::</span> <span>Const</span> <span>α</span> <span style="color: red">-&gt;</span> <span>BTerm</span> <span>α</span>
-
-<span style="color: blue;font-weight: bold">deriving</span> <span style="color: blue;font-weight: bold">instance</span> <span>Show</span> <span style="color: red">(</span><span>BTerm</span> <span>ty</span><span style="color: red">)</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>Applicable</span> <span>BTerm</span> <span style="color: blue;font-weight: bold">where</span>
-  <span style="color: red">(</span><span>&#36;&#36;</span><span style="color: red">)</span> <span style="color: red">=</span> <span>BApp</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>HasConst</span> <span>BTerm</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>embed</span> <span style="color: red">=</span> <span>BConst</span>
-
-<span>interpBTerm</span> <span style="color: red">::</span> <span>BTerm</span> <span>ty</span> <span style="color: red">-&gt;</span> <span>ty</span>
-<span>interpBTerm</span> <span style="color: red">(</span><span>BApp</span> <span>f</span> <span>x</span><span style="color: red">)</span> <span style="color: red">=</span> <span>interpBTerm</span> <span>f</span> <span style="color: red">(</span><span>interpBTerm</span> <span>x</span><span style="color: red">)</span>
-<span>interpBTerm</span> <span style="color: red">(</span><span>BConst</span> <span>c</span><span style="color: red">)</span> <span style="color: red">=</span> <span>interpConst</span> <span>c</span></code></pre>
-<p>
-We will use the usual SKI combinators as well as <code>B</code> and <code>C</code>, which are like special-case variants of <code>S</code>:
-</p>
-<ul>
-<li>
-<code>S x y z = x z (y z)</code>
-</li>
-<li>
-<code>B x y z = x (y z)</code>
-</li>
-<li>
-<code>C x y z = x z (y )</code>
-</li>
-</ul>
-<p>
-<code>S</code> handles the application of <code>x</code> to <code>y</code> in the case where they both need access to a shared parameter <code>z</code>; <code>B</code> and <code>C</code> are similar, but <code>B</code> is used when only <code>y</code>, and not <code>x</code>, needs access to <code>z</code>, and <code>C</code> is for when only <code>x</code> needs access to <code>z</code>. Using <code>B</code> and <code>C</code> will allow for more efficient encodings than would be possible with <code>S</code> alone. If you want to compile a language with recursion you can also easily add the usual <code>Y</code> combinator (“<code>SICKBY</code>”), although the example language in this post has no recursion so we won’t use it.
-</p>
-<p>
-Bracket abstraction is often presented in an untyped way, but I found this <a href="http://okmij.org/ftp/tagless-final/ski.pdf">really cool paper by Oleg Kiselyov</a> <span class="citation">(2018)</span> where he shows how to do bracket abstraction in a completely compositional, type-indexed way. I found the paper a bit hard to understand, but fortunately it came with <a href="http://okmij.org/ftp/tagless-final/skconv.ml">working OCaml code</a>! Translating it to Haskell was straightforward. Much later, after writing most of this blog post, I found a <a href="https://crypto.stanford.edu/~blynn/lambda/kiselyov.html">a nice explanation of Kiselyov’s paper</a> by <span class="citation">Lynn (2022)</span> which helped me make more sense of the paper.
-</p>
-<p>
-First, a data type for open terms, which represent an intermediate stage in the bracket abstraction algorithm, where some parts have been converted to closed combinator terms (the <code>E</code> constructor embeds <code>BTerm</code> values), and some parts still have not. This corresponds to Kiselyov’s eta-optimized version (section 4.1 of the paper). A simplified version that does not include <code>V</code> is possible, but results in longer combinator expressions.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>OTerm</span> <span style="color: red">::</span> <span style="color: red">[</span><span>Type</span><span style="color: red">]</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: red">-&gt;</span> <span>Type</span> <span style="color: blue;font-weight: bold">where</span>
-
-  <span style="color: green">-- E contains embedded closed (i.e. already abstracted) terms.</span>
-  <span>E</span> <span style="color: red">::</span> <span>BTerm</span> <span>α</span> <span style="color: red">-&gt;</span> <span>OTerm</span> <span>γ</span> <span>α</span>
-
-  <span style="color: green">-- V represents a reference to the innermost/top environment</span>
-  <span style="color: green">-- variable, i.e. Z</span>
-  <span>V</span> <span style="color: red">::</span> <span>OTerm</span> <span style="color: red">(</span><span>α</span> <span style="color: teal">'</span><span>:</span> <span>γ</span><span style="color: red">)</span> <span>α</span>
-
-  <span style="color: green">-- N represents internalizing the innermost bound variable as a</span>
-  <span style="color: green">-- function argument. In other words, we can represent an open</span>
-  <span style="color: green">-- term referring to a certain variable as a function which</span>
-  <span style="color: green">-- takes that variable as an argument.</span>
-  <span>N</span> <span style="color: red">::</span> <span>OTerm</span> <span>γ</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>OTerm</span> <span style="color: red">(</span><span>α</span> <span style="color: teal">'</span><span>:</span> <span>γ</span><span style="color: red">)</span> <span>β</span>
-
-  <span style="color: green">-- For efficiency, there is also a special variant of N for the</span>
-  <span style="color: green">-- case where the term does not refer to the topmost variable at</span>
-  <span style="color: green">-- all.</span>
-  <span>W</span> <span style="color: red">::</span> <span>OTerm</span> <span>γ</span> <span>β</span> <span style="color: red">-&gt;</span> <span>OTerm</span> <span style="color: red">(</span><span>α</span> <span style="color: teal">'</span><span>:</span> <span>γ</span><span style="color: red">)</span> <span>β</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>HasConst</span> <span style="color: red">(</span><span>OTerm</span> <span>γ</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>embed</span> <span style="color: red">=</span> <span>E</span> <span>.</span> <span>embed</span></code></pre>
-<p>
-Now for the bracket abstraction algorithm. First, a function to do type- and environment-preserving conversion from <code>TTerm</code> to <code>OTerm</code>. The <code>conv</code> function handles the variable, lambda, and constant cases. The application case is handled by the <code>Applicable</code> instance.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>conv</span> <span style="color: red">::</span> <span>TTerm</span> <span>γ</span> <span>α</span> <span style="color: red">-&gt;</span> <span>OTerm</span> <span>γ</span> <span>α</span>
-<span>conv</span> <span style="color: red">=</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">case</span>
-  <span>TVar</span> <span>VZ</span> <span style="color: red">-&gt;</span> <span>V</span>
-  <span>TVar</span> <span style="color: red">(</span><span>VS</span> <span>x</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>W</span> <span style="color: red">(</span><span>conv</span> <span style="color: red">(</span><span>TVar</span> <span>x</span><span style="color: red">)</span><span style="color: red">)</span>
-  <span>TLam</span> <span>t</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">case</span> <span>conv</span> <span>t</span> <span style="color: blue;font-weight: bold">of</span>
-    <span>V</span> <span style="color: red">-&gt;</span> <span>E</span> <span style="color: red">(</span><span>embed</span> <span>I</span><span style="color: red">)</span>
-    <span>E</span> <span>d</span> <span style="color: red">-&gt;</span> <span>E</span> <span style="color: red">(</span><span>K</span> <span>.&#36;&#36;</span> <span>d</span><span style="color: red">)</span>
-    <span>N</span> <span>e</span> <span style="color: red">-&gt;</span> <span>e</span>
-    <span>W</span> <span>e</span> <span style="color: red">-&gt;</span> <span>K</span> <span>.&#36;&#36;</span> <span>e</span>
-  <span>TApp</span> <span>t1</span> <span>t2</span> <span style="color: red">-&gt;</span> <span>conv</span> <span>t1</span> <span>&#36;&#36;</span> <span>conv</span> <span>t2</span>
-  <span>TConst</span> <span>c</span> <span style="color: red">-&gt;</span> <span>embed</span> <span>c</span></code></pre>
-<p>
-The <code>Applicable</code> instance for <code>OTerm</code> has 15 cases—one for each combination of <code>OTerm</code> constructors. Why not 16, you ask? Because the <code>V $$ V</code> case is impossible (exercise for the reader: why?). The cool thing is that GHC can tell that case would be ill-typed, and agrees that this definition is total—that is, it does not give a non-exhaustive pattern match warning. This is a lot of code, but understanding each individual case is not too hard if you understand the meaning of the constructors <code>E</code>, <code>V</code>, <code>N</code>, and <code>W</code>. For example, if we have one term that ignores the innermost bound variable being applied to another term that also ignores the innermost bound variable (<code>W e1 $$ W e2</code>), we can apply one term to the other and wrap the result in <code>W</code> again (<code>W (e1 $$ e2)</code>). Other cases use the combinators <code>B</code>, <code>C</code>, <code>S</code> to route the input to the proper places in an application.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">instance</span> <span>Applicable</span> <span style="color: red">(</span><span>OTerm</span> <span>γ</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">where</span>
-  <span style="color: red">(</span><span>&#36;&#36;</span><span style="color: red">)</span> <span style="color: red">::</span> <span>OTerm</span> <span>γ</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>OTerm</span> <span>γ</span> <span>α</span> <span style="color: red">-&gt;</span> <span>OTerm</span> <span>γ</span> <span>β</span>
-  <span>W</span> <span>e1</span> <span>&#36;&#36;</span> <span>W</span> <span>e2</span> <span style="color: red">=</span> <span>W</span> <span style="color: red">(</span><span>e1</span> <span>&#36;&#36;</span> <span>e2</span><span style="color: red">)</span>
-  <span>W</span> <span>e</span> <span>&#36;&#36;</span> <span>E</span> <span>d</span> <span style="color: red">=</span> <span>W</span> <span style="color: red">(</span><span>e</span> <span>&#36;&#36;</span> <span>E</span> <span>d</span><span style="color: red">)</span>
-  <span>E</span> <span>d</span> <span>&#36;&#36;</span> <span>W</span> <span>e</span> <span style="color: red">=</span> <span>W</span> <span style="color: red">(</span><span>E</span> <span>d</span> <span>&#36;&#36;</span> <span>e</span><span style="color: red">)</span>
-  <span>W</span> <span>e</span> <span>&#36;&#36;</span> <span>V</span> <span style="color: red">=</span> <span>N</span> <span>e</span>
-  <span>V</span> <span>&#36;&#36;</span> <span>W</span> <span>e</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>E</span> <span style="color: red">(</span><span>C</span> <span>.&#36;&#36;.</span> <span>I</span><span style="color: red">)</span> <span>&#36;&#36;</span> <span>e</span><span style="color: red">)</span>
-  <span>W</span> <span>e1</span> <span>&#36;&#36;</span> <span>N</span> <span>e2</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>B</span> <span>.&#36;&#36;</span> <span>e1</span> <span>&#36;&#36;</span> <span>e2</span><span style="color: red">)</span>
-  <span>N</span> <span>e1</span> <span>&#36;&#36;</span> <span>W</span> <span>e2</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>C</span> <span>.&#36;&#36;</span> <span>e1</span> <span>&#36;&#36;</span> <span>e2</span><span style="color: red">)</span>
-  <span>N</span> <span>e1</span> <span>&#36;&#36;</span> <span>N</span> <span>e2</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>S</span> <span>.&#36;&#36;</span> <span>e1</span> <span>&#36;&#36;</span> <span>e2</span><span style="color: red">)</span>
-  <span>N</span> <span>e</span> <span>&#36;&#36;</span> <span>V</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>S</span> <span>.&#36;&#36;</span> <span>e</span> <span>&#36;&#36;.</span> <span>I</span><span style="color: red">)</span>
-  <span>V</span> <span>&#36;&#36;</span> <span>N</span> <span>e</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>E</span> <span style="color: red">(</span><span>S</span> <span>.&#36;&#36;.</span> <span>I</span><span style="color: red">)</span> <span>&#36;&#36;</span> <span>e</span><span style="color: red">)</span>
-  <span>E</span> <span>d</span> <span>&#36;&#36;</span> <span>N</span> <span>e</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>E</span> <span style="color: red">(</span><span>B</span> <span>.&#36;&#36;</span> <span>d</span><span style="color: red">)</span> <span>&#36;&#36;</span> <span>e</span><span style="color: red">)</span>
-  <span>E</span> <span>d</span> <span>&#36;&#36;</span> <span>V</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>E</span> <span>d</span><span style="color: red">)</span>
-  <span>V</span> <span>&#36;&#36;</span> <span>E</span> <span>d</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>E</span> <span style="color: red">(</span><span>C</span> <span>.&#36;&#36;.</span> <span>I</span> <span>&#36;&#36;</span> <span>d</span><span style="color: red">)</span><span style="color: red">)</span>
-  <span>N</span> <span>e</span> <span>&#36;&#36;</span> <span>E</span> <span>d</span> <span style="color: red">=</span> <span>N</span> <span style="color: red">(</span><span>E</span> <span style="color: red">(</span><span>C</span> <span>.&#36;&#36;.</span> <span>C</span> <span>&#36;&#36;</span> <span>d</span><span style="color: red">)</span> <span>&#36;&#36;</span> <span>e</span><span style="color: red">)</span>
-  <span>E</span> <span>d1</span> <span>&#36;&#36;</span> <span>E</span> <span>d2</span> <span style="color: red">=</span> <span>E</span> <span style="color: red">(</span><span>d1</span> <span>&#36;&#36;</span> <span>d2</span><span style="color: red">)</span></code></pre>
-<p>
-The final bracket abstraction algorithm consists of calling <code>conv</code> on a closed <code>TTerm</code>—this must result in a term of type <code>OTerm ’[] α</code>, and the only constructor which could possibly produce such a type is <code>E</code>, containing an embedded <code>BTerm</code>. So we can just extract that <code>BTerm</code>, and GHC can see that this is total.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>bracket</span> <span style="color: red">::</span> <span>TTerm</span> <span style="color: teal">'</span><span>[]</span> <span>α</span> <span style="color: red">-&gt;</span> <span>BTerm</span> <span>α</span>
-<span>bracket</span> <span>t</span> <span style="color: red">=</span> <span style="color: blue;font-weight: bold">case</span> <span>conv</span> <span>t</span> <span style="color: blue;font-weight: bold">of</span> <span style="color: red">{</span> <span>E</span> <span>t'</span> <span style="color: red">-&gt;</span> <span>t'</span> <span style="color: red">}</span></code></pre>
-<p>
-Let’s apply this to our <code>example</code> term and see what we get:
-</p>
-<pre><code>λ&gt; putStrLn . pretty . bracket . fromJust . check CNil TTyInt $ example
-C C 1 (C C (C C 1 plus) (B S (C C I (B S (B (B if) (B (B (gt 7)) (C I (C C 3 plus)))))))) (S B I)
-λ&gt; interpBTerm . bracket . fromJust . check CNil TTyInt $ example
-2</code></pre>
-<p>
-Neat! This is not too much longer than the original term, which is the point of using the optimized version. Interestingly, this example happens to not use <code>K</code> at all, but a more complex term certainly would.
-</p>
-<p>
-Kiselyov also presents an even better algorithm using <span class="math inline">\(n\)</span>-ary combinators which uses guaranteed linear time and space. For simplicity, he presents it in an untyped way and claims in passing that it “can be backported to the typed case”, though I am not aware of anyone who has actually done this yet (perhaps I will, later). <span class="citation">Lynn (2022)</span> has <a href="https://crypto.stanford.edu/~blynn/lambda/kiselyov.html">a nice explanation of Kiselyov’s paper</a>, including a section that explores several alternatives to Kiselyov’s linear-time algorithm.
-</p>
-<h2 id="compiling-type-indexed-combinators-to-haskell">
-Compiling type-indexed combinators to Haskell
-</h2>
-<p>
-So at this point we can take a <code>Term</code>, typecheck it to produce a <code>TTerm</code>, then use bracket abstraction to convert that to a <code>BTerm</code>. We have an interpreter for <code>BTerm</code>s, but we’re instead going to do one more compilation step, to turn <code>BTerm</code>s directly into native Haskell values. This idea originates with <span class="citation">Naylor (2008)</span> and is well-explained in blog posts by <a href="http://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html">Seo</a> <span class="citation">(2016)</span> and <a href="https://thma.github.io/posts/2022-02-05-Evaluating-SKI-combinators-as-native-Haskell-functions.html">Mahler</a> <span class="citation">(2022)</span>. This still feels a little like black magic to me, and I am actually unclear on whether it is really faster than calling <code>interpBTerm</code>; some benchmarking would be needed. In any case I include it here for completeness.
-</p>
-<p>
-Our target for this final compilation step is the following <code>CTerm</code> type, which has only functions, represented by <code>CFun</code>, and constants. Note, however, that <code>CConst</code> is intended to be used only for non-function types, <em>i.e.</em> base types, although there’s no nice way (that I know of, at least) to use the Haskell type system to enforce this.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">data</span> <span>CTerm</span> <span>α</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>CFun</span> <span style="color: red">::</span> <span style="color: red">(</span><span>CTerm</span> <span>α</span> <span style="color: red">-&gt;</span> <span>CTerm</span> <span>β</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>CTerm</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>β</span><span style="color: red">)</span>
-  <span>CConst</span> <span style="color: red">::</span> <span>α</span> <span style="color: red">-&gt;</span> <span>CTerm</span> <span>α</span> <span style="color: green">-- CConst invariant: α is not a function type</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>Applicable</span> <span>CTerm</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>CFun</span> <span>f</span> <span>&#36;&#36;</span> <span>x</span> <span style="color: red">=</span> <span>f</span> <span>x</span>
-  <span>CConst</span> <span style="color: blue;font-weight: bold">_</span> <span>&#36;&#36;</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: red">=</span> <span>error</span> <span style="color: teal">"CConst should never contain a function!"</span>
-
-<span>compile</span> <span style="color: red">::</span> <span>BTerm</span> <span>α</span> <span style="color: red">-&gt;</span> <span>CTerm</span> <span>α</span>
-<span>compile</span> <span style="color: red">(</span><span>BApp</span> <span>b1</span> <span>b2</span><span style="color: red">)</span> <span style="color: red">=</span> <span>compile</span> <span>b1</span> <span>&#36;&#36;</span> <span>compile</span> <span>b2</span>
-<span>compile</span> <span style="color: red">(</span><span>BConst</span> <span>c</span><span style="color: red">)</span> <span style="color: red">=</span> <span>compileConst</span> <span>c</span>
-
-<span>compileConst</span> <span style="color: red">::</span> <span>Const</span> <span>α</span> <span style="color: red">-&gt;</span> <span>CTerm</span> <span>α</span>
-<span>compileConst</span> <span style="color: red">=</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">case</span>
-  <span style="color: red">(</span><span>CInt</span> <span>i</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>CConst</span> <span>i</span>
-  <span>CIf</span>      <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span style="color: red">(</span><span>CConst</span> <span>b</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>t</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>e</span> <span style="color: red">-&gt;</span> <span style="color: blue;font-weight: bold">if</span> <span>b</span> <span style="color: blue;font-weight: bold">then</span> <span>t</span> <span style="color: blue;font-weight: bold">else</span> <span>e</span>
-  <span>CAdd</span>     <span style="color: red">-&gt;</span> <span>binary</span> <span style="color: red">(</span><span>+</span><span style="color: red">)</span>
-  <span>CGt</span>      <span style="color: red">-&gt;</span> <span>binary</span> <span style="color: red">(</span><span>&gt;</span><span style="color: red">)</span>
-  <span>K</span>        <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>x</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">_</span> <span style="color: red">-&gt;</span> <span>x</span>
-  <span>S</span>        <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>f</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>g</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>x</span> <span style="color: red">-&gt;</span> <span>f</span> <span>&#36;&#36;</span> <span>x</span> <span>&#36;&#36;</span> <span style="color: red">(</span><span>g</span> <span>&#36;&#36;</span> <span>x</span><span style="color: red">)</span>
-  <span>I</span>        <span style="color: red">-&gt;</span> <span>CFun</span> <span>id</span>
-  <span>B</span>        <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>f</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>g</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>x</span> <span style="color: red">-&gt;</span> <span>f</span> <span>&#36;&#36;</span> <span style="color: red">(</span><span>g</span> <span>&#36;&#36;</span> <span>x</span><span style="color: red">)</span>
-  <span>C</span>        <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>f</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>x</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span>y</span> <span style="color: red">-&gt;</span> <span>f</span> <span>&#36;&#36;</span> <span>y</span> <span>&#36;&#36;</span> <span>x</span>
-
-<span>binary</span> <span style="color: red">::</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>b</span> <span style="color: red">-&gt;</span> <span>c</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>CTerm</span> <span style="color: red">(</span><span>α</span> <span style="color: red">-&gt;</span> <span>b</span> <span style="color: red">-&gt;</span> <span>c</span><span style="color: red">)</span>
-<span>binary</span> <span>op</span> <span style="color: red">=</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span style="color: red">(</span><span>CConst</span> <span>x</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>CFun</span> <span>$</span> <span style="color: red">\</span><span style="color: red">(</span><span>CConst</span> <span>y</span><span style="color: red">)</span> <span style="color: red">-&gt;</span> <span>CConst</span> <span style="color: red">(</span><span>op</span> <span>x</span> <span>y</span><span style="color: red">)</span></code></pre>
-<p>
-Finally, we can “run” a <code>CTerm α</code> to extract a value of type <code>α</code>. Typically, if <code>α</code> is some kind of base type like <code>Int</code>, <code>runCTerm</code> doesn’t actually do any work—all the work is done by the Haskell runtime itself. However, for completeness, I include a case for <code>CFun</code> as well.
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>runCTerm</span> <span style="color: red">::</span> <span>CTerm</span> <span>α</span> <span style="color: red">-&gt;</span> <span>α</span>
-<span>runCTerm</span> <span style="color: red">(</span><span>CConst</span> <span>a</span><span style="color: red">)</span> <span style="color: red">=</span> <span>a</span>
-<span>runCTerm</span> <span style="color: red">(</span><span>CFun</span> <span>f</span><span style="color: red">)</span> <span style="color: red">=</span> <span>runCTerm</span> <span>.</span> <span>f</span> <span>.</span> <span>CConst</span></code></pre>
-<p>
-We can put this all together into our final pipeline:
-</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span>evalInt</span> <span style="color: red">::</span> <span>Term</span> <span style="color: red">-&gt;</span> <span>Maybe</span> <span>Int</span>
-<span>evalInt</span> <span style="color: red">=</span> <span>fmap</span> <span style="color: red">(</span><span>runCTerm</span> <span>.</span> <span>compile</span> <span>.</span> <span>bracket</span><span style="color: red">)</span> <span>.</span> <span>check</span> <span>CNil</span> <span>TTyInt</span></code></pre>
-<pre><code>λ&gt; evalInt example
-Just 2</code></pre>
-<h1 id="appendices">
-Appendices
-</h1>
-<p>
-There’s nothing interesting to see here—unless you’ve never written a parser or pretty-printer before, in which case perhaps it is very interesting! If you want to learn how to write parsers, see <a href="https://markkarpov.com/tutorial/megaparsec.html">this very nice Megaparsec tutorial</a>. And <a href="https://hendrix-cs.github.io/csci360/modules/05-pretty-parse.html">see here for some help writing a basic pretty-printer</a>.
-</p>
-<h2 id="parsing">
-Parsing
-</h2>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">type</span> <span>Parser</span> <span style="color: red">=</span> <span>Parsec</span> <span>Void</span> <span>Text</span>
-<span style="color: blue;font-weight: bold">type</span> <span>ParserError</span> <span style="color: red">=</span> <span>ParseErrorBundle</span> <span>Text</span> <span>Void</span>
-
-<span>reservedWords</span> <span style="color: red">::</span> <span style="color: red">[</span><span>Text</span><span style="color: red">]</span>
-<span>reservedWords</span> <span style="color: red">=</span> <span style="color: red">[</span><span style="color: teal">"let"</span><span style="color: red">,</span> <span style="color: teal">"in"</span><span style="color: red">,</span> <span style="color: teal">"if"</span><span style="color: red">,</span> <span style="color: teal">"then"</span><span style="color: red">,</span> <span style="color: teal">"else"</span><span style="color: red">,</span> <span style="color: teal">"Int"</span><span style="color: red">,</span> <span style="color: teal">"Bool"</span><span style="color: red">]</span>
-
-<span>sc</span> <span style="color: red">::</span> <span>Parser</span> <span>()</span>
-<span>sc</span> <span style="color: red">=</span> <span>L.space</span> <span>space1</span> <span style="color: red">(</span><span>L.skipLineComment</span> <span style="color: teal">"--"</span><span style="color: red">)</span> <span>empty</span>
-
-<span>lexeme</span> <span style="color: red">::</span> <span>Parser</span> <span>a</span> <span style="color: red">-&gt;</span> <span>Parser</span> <span>a</span>
-<span>lexeme</span> <span style="color: red">=</span> <span>L.lexeme</span> <span>sc</span>
-
-<span>symbol</span> <span style="color: red">::</span> <span>Text</span> <span style="color: red">-&gt;</span> <span>Parser</span> <span>Text</span>
-<span>symbol</span> <span style="color: red">=</span> <span>L.symbol</span> <span>sc</span>
-
-<span>reserved</span> <span style="color: red">::</span> <span>Text</span> <span style="color: red">-&gt;</span> <span>Parser</span> <span>()</span>
-<span>reserved</span> <span>w</span> <span style="color: red">=</span> <span style="color: red">(</span><span>lexeme</span> <span>.</span> <span>try</span><span style="color: red">)</span> <span>$</span> <span>string'</span> <span>w</span> <span>*&gt;</span> <span>notFollowedBy</span> <span>alphaNumChar</span>
-
-<span>identifier</span> <span style="color: red">::</span> <span>Parser</span> <span>Text</span>
-<span>identifier</span> <span style="color: red">=</span> <span style="color: red">(</span><span>lexeme</span> <span>.</span> <span>try</span><span style="color: red">)</span> <span style="color: red">(</span><span>p</span> <span>&gt;&gt;=</span> <span>nonReserved</span><span style="color: red">)</span> <span>&lt;?&gt;</span> <span style="color: teal">"variable name"</span>
- <span style="color: blue;font-weight: bold">where</span>
-  <span>p</span> <span style="color: red">=</span> <span style="color: red">(</span><span>:</span><span style="color: red">)</span> <span>&lt;$&gt;</span> <span>letterChar</span> <span>&lt;*&gt;</span> <span>many</span> <span>alphaNumChar</span>
-  <span>nonReserved</span> <span style="color: red">(</span><span>into</span> <span style="color: red">@</span><span>Text</span> <span style="color: red">-&gt;</span> <span>t</span><span style="color: red">)</span>
-    <span style="color: red">|</span> <span>t</span> <span>`elem`</span> <span>reservedWords</span> <span style="color: red">=</span>
-        <span>fail</span> <span>.</span> <span>into</span> <span style="color: red">@</span><span>String</span> <span>$</span>
-          <span>T.concat</span> <span style="color: red">[</span><span style="color: teal">"reserved word '"</span><span style="color: red">,</span> <span>t</span><span style="color: red">,</span> <span style="color: teal">"' cannot be used as variable name"</span><span style="color: red">]</span>
-    <span style="color: red">|</span> <span>otherwise</span> <span style="color: red">=</span> <span>return</span> <span>t</span>
-
-<span>integer</span> <span style="color: red">::</span> <span>Parser</span> <span>Int</span>
-<span>integer</span> <span style="color: red">=</span> <span>lexeme</span> <span>L.decimal</span>
-
-<span>parens</span> <span style="color: red">::</span> <span>Parser</span> <span>a</span> <span style="color: red">-&gt;</span> <span>Parser</span> <span>a</span>
-<span>parens</span> <span style="color: red">=</span> <span>between</span> <span style="color: red">(</span><span>symbol</span> <span style="color: teal">"("</span><span style="color: red">)</span> <span style="color: red">(</span><span>symbol</span> <span style="color: teal">")"</span><span style="color: red">)</span>
-
-<span>parseTermAtom</span> <span style="color: red">::</span> <span>Parser</span> <span>Term</span>
-<span>parseTermAtom</span> <span style="color: red">=</span>
-      <span>Lit</span> <span>&lt;$&gt;</span> <span>integer</span>
-  <span>&lt;|&gt;</span> <span>Var</span> <span>&lt;$&gt;</span> <span>identifier</span>
-  <span>&lt;|&gt;</span> <span>Lam</span> <span>&lt;$&gt;</span> <span style="color: red">(</span><span>symbol</span> <span style="color: teal">"\\"</span> <span>*&gt;</span> <span>identifier</span><span style="color: red">)</span>
-          <span>&lt;*&gt;</span> <span style="color: red">(</span><span>symbol</span> <span style="color: teal">":"</span> <span>*&gt;</span> <span>parseType</span><span style="color: red">)</span>
-          <span>&lt;*&gt;</span> <span style="color: red">(</span><span>symbol</span> <span style="color: teal">"."</span> <span>*&gt;</span> <span>parseTerm</span><span style="color: red">)</span>
-  <span>&lt;|&gt;</span> <span>Let</span> <span>&lt;$&gt;</span> <span style="color: red">(</span><span>reserved</span> <span style="color: teal">"let"</span> <span>*&gt;</span> <span>identifier</span><span style="color: red">)</span>
-          <span>&lt;*&gt;</span> <span style="color: red">(</span><span>symbol</span> <span style="color: teal">"="</span> <span>*&gt;</span> <span>parseTerm</span><span style="color: red">)</span>
-          <span>&lt;*&gt;</span> <span style="color: red">(</span><span>reserved</span> <span style="color: teal">"in"</span> <span>*&gt;</span> <span>parseTerm</span><span style="color: red">)</span>
-  <span>&lt;|&gt;</span> <span>If</span>  <span>&lt;$&gt;</span> <span style="color: red">(</span><span>reserved</span> <span style="color: teal">"if"</span> <span>*&gt;</span> <span>parseTerm</span><span style="color: red">)</span>
-          <span>&lt;*&gt;</span> <span style="color: red">(</span><span>reserved</span> <span style="color: teal">"then"</span> <span>*&gt;</span> <span>parseTerm</span><span style="color: red">)</span>
-          <span>&lt;*&gt;</span> <span style="color: red">(</span><span>reserved</span> <span style="color: teal">"else"</span> <span>*&gt;</span> <span>parseTerm</span><span style="color: red">)</span>
-  <span>&lt;|&gt;</span> <span>parens</span> <span>parseTerm</span>
-
-<span>parseTerm</span> <span style="color: red">::</span> <span>Parser</span> <span>Term</span>
-<span>parseTerm</span> <span style="color: red">=</span> <span>makeExprParser</span> <span>parseTermAtom</span>
-  <span style="color: red">[</span> <span style="color: red">[</span><span>InfixL</span> <span style="color: red">(</span><span>App</span> <span>&lt;$</span> <span>symbol</span> <span style="color: teal">""</span><span style="color: red">)</span><span style="color: red">]</span>
-  <span style="color: red">,</span> <span style="color: red">[</span><span>InfixL</span> <span style="color: red">(</span><span>Add</span> <span>&lt;$</span> <span>symbol</span> <span style="color: teal">"+"</span><span style="color: red">)</span><span style="color: red">]</span>
-  <span style="color: red">,</span> <span style="color: red">[</span><span>InfixL</span> <span style="color: red">(</span><span>Gt</span> <span>&lt;$</span> <span>symbol</span> <span style="color: teal">"&gt;"</span><span style="color: red">)</span><span style="color: red">]</span>
-  <span style="color: red">]</span>
-
-<span>parseTypeAtom</span> <span style="color: red">::</span> <span>Parser</span> <span>Ty</span>
-<span>parseTypeAtom</span> <span style="color: red">=</span>
-  <span>TyInt</span> <span>&lt;$</span> <span>reserved</span> <span style="color: teal">"Int"</span>
-  <span>&lt;|&gt;</span> <span>TyBool</span> <span>&lt;$</span> <span>reserved</span> <span style="color: teal">"Bool"</span>
-  <span>&lt;|&gt;</span> <span>parens</span> <span>parseType</span>
-
-<span>parseType</span> <span style="color: red">::</span> <span>Parser</span> <span>Ty</span>
-<span>parseType</span> <span style="color: red">=</span> <span>makeExprParser</span> <span>parseTypeAtom</span>
-  <span style="color: red">[</span> <span style="color: red">[</span><span>InfixR</span> <span style="color: red">(</span><span>TyFun</span> <span>&lt;$</span> <span>symbol</span> <span style="color: teal">"-&gt;"</span><span style="color: red">)</span><span style="color: red">]</span> <span style="color: red">]</span>
-
-<span>readTerm</span> <span style="color: red">::</span> <span>Text</span> <span style="color: red">-&gt;</span> <span>Term</span>
-<span>readTerm</span> <span style="color: red">=</span> <span>either</span> <span>undefined</span> <span>id</span> <span>.</span> <span>runParser</span> <span>parseTerm</span> <span style="color: teal">""</span></code></pre>
-<h2 id="pretty-printing">
-Pretty-printing
-</h2>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span style="color: blue;font-weight: bold">type</span> <span>Prec</span> <span style="color: red">=</span> <span>Int</span>
-
-<span style="color: blue;font-weight: bold">class</span> <span>Pretty</span> <span>p</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>pretty</span> <span style="color: red">::</span> <span>p</span> <span style="color: red">-&gt;</span> <span>String</span>
-  <span>pretty</span> <span style="color: red">=</span> <span>prettyPrec</span> <span class="hs-num">0</span>
-
-  <span>prettyPrec</span> <span style="color: red">::</span> <span>Prec</span> <span style="color: red">-&gt;</span> <span>p</span> <span style="color: red">-&gt;</span> <span>String</span>
-  <span>prettyPrec</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: red">=</span> <span>pretty</span>
-
-<span>mparens</span> <span style="color: red">::</span> <span>Bool</span> <span style="color: red">-&gt;</span> <span>String</span> <span style="color: red">-&gt;</span> <span>String</span>
-<span>mparens</span> <span>True</span>  <span style="color: red">=</span> <span style="color: red">(</span><span style="color: teal">"("</span><span>++</span><span style="color: red">)</span> <span>.</span> <span style="color: red">(</span><span>++</span><span style="color: teal">")"</span><span style="color: red">)</span>
-<span>mparens</span> <span>False</span> <span style="color: red">=</span> <span>id</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>Pretty</span> <span style="color: red">(</span><span>Const</span> <span>α</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>prettyPrec</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: red">=</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">case</span>
-    <span>CInt</span> <span>i</span> <span style="color: red">-&gt;</span> <span>show</span> <span>i</span>
-    <span>CIf</span> <span style="color: red">-&gt;</span> <span style="color: teal">"if"</span>
-    <span>CAdd</span> <span style="color: red">-&gt;</span> <span style="color: teal">"plus"</span>
-    <span>CGt</span>  <span style="color: red">-&gt;</span> <span style="color: teal">"gt"</span>
-    <span>c</span> <span style="color: red">-&gt;</span> <span>show</span> <span>c</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>Pretty</span> <span style="color: red">(</span><span>Idx</span> <span>γ</span> <span>α</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>prettyPrec</span> <span style="color: blue;font-weight: bold">_</span> <span style="color: red">=</span> <span style="color: red">(</span><span style="color: teal">"x"</span> <span>++</span><span style="color: red">)</span> <span>.</span> <span>show</span> <span>.</span> <span>toNat</span>
-    <span style="color: blue;font-weight: bold">where</span>
-      <span>toNat</span> <span style="color: red">::</span> <span>Idx</span> <span>γ</span> <span>α</span> <span style="color: red">-&gt;</span> <span>Int</span>
-      <span>toNat</span> <span>VZ</span> <span style="color: red">=</span> <span class="hs-num">0</span>
-      <span>toNat</span> <span style="color: red">(</span><span>VS</span> <span>i</span><span style="color: red">)</span> <span style="color: red">=</span> <span class="hs-num">1</span> <span>+</span> <span>toNat</span> <span>i</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>Pretty</span> <span style="color: red">(</span><span>TTerm</span> <span>γ</span> <span>α</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>prettyPrec</span> <span>p</span> <span style="color: red">=</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">case</span>
-    <span>TVar</span> <span>x</span> <span style="color: red">-&gt;</span> <span>pretty</span> <span>x</span>
-    <span>TConst</span> <span>c</span> <span style="color: red">-&gt;</span> <span>pretty</span> <span>c</span>
-    <span>TLam</span> <span>t</span> <span style="color: red">-&gt;</span> <span>mparens</span> <span style="color: red">(</span><span>p</span><span>&gt;</span><span class="hs-num">0</span><span style="color: red">)</span> <span>$</span> <span style="color: teal">"λ. "</span> <span>++</span> <span>prettyPrec</span> <span class="hs-num">0</span> <span>t</span>
-    <span>TApp</span> <span>t1</span> <span>t2</span> <span style="color: red">-&gt;</span> <span>mparens</span> <span style="color: red">(</span><span>p</span><span>&gt;</span><span class="hs-num">1</span><span style="color: red">)</span> <span>$</span>
-      <span>prettyPrec</span> <span class="hs-num">1</span> <span>t1</span> <span>++</span> <span style="color: teal">" "</span> <span>++</span> <span>prettyPrec</span> <span class="hs-num">2</span> <span>t2</span>
-
-<span style="color: blue;font-weight: bold">instance</span> <span>Pretty</span> <span style="color: red">(</span><span>BTerm</span> <span>α</span><span style="color: red">)</span> <span style="color: blue;font-weight: bold">where</span>
-  <span>prettyPrec</span> <span>p</span> <span style="color: red">=</span> <span style="color: red">\</span><span style="color: blue;font-weight: bold">case</span>
-    <span>BConst</span> <span>c</span> <span style="color: red">-&gt;</span> <span>pretty</span> <span>c</span>
-    <span>BApp</span> <span>t1</span> <span>t2</span> <span style="color: red">-&gt;</span> <span>mparens</span> <span style="color: red">(</span><span>p</span><span>&gt;</span><span class="hs-num">0</span><span style="color: red">)</span> <span>$</span>
-      <span>prettyPrec</span> <span class="hs-num">0</span> <span>t1</span> <span>++</span> <span style="color: teal">" "</span> <span>++</span> <span>prettyPrec</span> <span class="hs-num">1</span> <span>t2</span></code></pre>
-<h1 class="unnumbered" id="references">
-References
-</h1>
-<div id="refs" class="references csl-bib-body" role="doc-bibliography">
-<div id="ref-augustsson1986small" class="csl-entry" role="doc-biblioentry">
-Augustsson, L. (1986) <em>SMALL: A small interactive functional system</em>. Chalmers Tekniska H<span>ö</span>gskola/G<span>ö</span>teborgs Universitet. Programming Methodology Group.
-</div>
-<div id="ref-diller1988compiling" class="csl-entry" role="doc-biblioentry">
-Diller, A. (1988) <em>Compiling functional languages</em>. John Wiley &amp; Sons, Inc.
-</div>
-<div id="ref-diller2014bracket" class="csl-entry" role="doc-biblioentry">
-Diller, A. (2014) <em><span class="nocase">Bracket abstraction algorithms</span></em>. Available at: <a href="https://www.cantab.net/users/antoni.diller/brackets/intro.html">https://www.cantab.net/users/antoni.diller/brackets/intro.html</a>.
-</div>
-<div id="ref-elliott2017compiling" class="csl-entry" role="doc-biblioentry">
-Elliott, C. (2017) <span>‘Compiling to categories’</span>, <em>Proceedings of the ACM on Programming Languages</em>, 1(ICFP), pp. 1–27.
-</div>
-<div id="ref-gratzer2015bracket" class="csl-entry" role="doc-biblioentry">
-Gratzer, D. (2015) <em><span class="nocase">Bracket Abstraction: The Smallest PL You’ve Ever Seen</span></em>. Available at: <a href="https://jozefg.bitbucket.io/posts/2015-05-01-brackets.html">https://jozefg.bitbucket.io/posts/2015-05-01-brackets.html</a>.
-</div>
-<div id="ref-spj1987implementation" class="csl-entry" role="doc-biblioentry">
-Jones, S.L.P. (1987) <em><span class="nocase">The Implementation of Functional Programming Languages</span></em>. Prentice-Hall, Inc.
-</div>
-<div id="ref-kiselyov2018lambda" class="csl-entry" role="doc-biblioentry">
-Kiselyov, O. (2018) <span>‘<span class="math inline"><em>λ</em></span> to ski, semantically: Declarative pearl’</span>, in <em>International symposium on functional and logic programming</em>. Springer, pp. 33–50.
-</div>
-<div id="ref-le2017singletons" class="csl-entry" role="doc-biblioentry">
-Le, J. (2017) <em><span class="nocase">Introduction to Singletons (Part 1)</span></em>. Available at: <a href="https://blog.jle.im/entry/introduction-to-singletons-1.html">https://blog.jle.im/entry/introduction-to-singletons-1.html</a>.
-</div>
-<div id="ref-lynncompiler" class="csl-entry" role="doc-biblioentry">
-Lynn, B. (2017) <em><span>A Combinatory Compiler</span></em>. Available at: <a href="https://crypto.stanford.edu/~blynn/lambda/sk.html">https://crypto.stanford.edu/~blynn/lambda/sk.html</a>.
-</div>
-<div id="ref-lynncl" class="csl-entry" role="doc-biblioentry">
-Lynn, B. (2022) <em><span>Combinatory Logic</span></em>. Available at: <a href="https://crypto.stanford.edu/~blynn/lambda/cl.html">https://crypto.stanford.edu/~blynn/lambda/cl.html</a>.
-</div>
-<div id="ref-lynnkiselyov" class="csl-entry" role="doc-biblioentry">
-Lynn, B. (2022) <em><span>Kiselyov Combinator Translation</span></em>. Available at: <a href="https://crypto.stanford.edu/~blynn/lambda/kiselyov.html">https://crypto.stanford.edu/~blynn/lambda/kiselyov.html</a>.
-</div>
-<div id="ref-mahler2021graph" class="csl-entry" role="doc-biblioentry">
-Mahler, T. (2021) <em><span class="nocase">Implementing a Functional Language with Graph Reduction</span></em>. Available at: <a href="https://thma.github.io/posts/2021-12-27-Implementing-a-functional-language-with-Graph-Reduction.html">https://thma.github.io/posts/2021-12-27-Implementing-a-functional-language-with-Graph-Reduction.html</a>.
-</div>
-<div id="ref-mahler2021ccc" class="csl-entry" role="doc-biblioentry">
-Mahler, T. (2021) <em><span class="nocase">λ-Calculus, Combinatory Logic and Cartesian Closed Categories</span></em>. Available at: <a href="https://thma.github.io/posts/2021-04-04-Lambda-Calculus-Combinatory-Logic-and-Cartesian-Closed-Categories.html">https://thma.github.io/posts/2021-04-04-Lambda-Calculus-Combinatory-Logic-and-Cartesian-Closed-Categories.html</a>.
-</div>
-<div id="ref-mahler2022evaluating" class="csl-entry" role="doc-biblioentry">
-Mahler, T. (2022) <em><span class="nocase">Evaluating SKI combinators as native Haskell functions</span></em>. Available at: <a href="https://thma.github.io/posts/2022-02-05-Evaluating-SKI-combinators-as-native-Haskell-functions.html">https://thma.github.io/posts/2022-02-05-Evaluating-SKI-combinators-as-native-Haskell-functions.html</a>.
-</div>
-<div id="ref-naylor2008evaluating" class="csl-entry" role="doc-biblioentry">
-Naylor, M. (2008) <span>‘<span class="nocase">Evaluating Haskell in Haskell</span>’</span>, <em>The Monad.Reader</em>. Edited by W. Swierstra, Issue 10.
-</div>
-<div id="ref-seo2016interpreter" class="csl-entry" role="doc-biblioentry">
-Seo, K.Y. (2016) <em><span class="nocase">Write you an interpreter</span></em>. Available at: <a href="http://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html">http://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html</a>.
-</div>
-<div id="ref-turner1979new" class="csl-entry" role="doc-biblioentry">
-Turner, D.A. (1979) <span>‘A new implementation technique for applicative languages’</span>, <em>Software: Practice and Experience</em>, 9(1), pp. 31–49.
-</div>
-</div>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Compiling to Intrinsically Typed Combinators" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>2023-07-13T20:55:18Z</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2023/07/13/compiling-to-intrinsically-typed-combinators.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 
