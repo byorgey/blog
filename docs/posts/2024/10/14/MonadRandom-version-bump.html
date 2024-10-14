@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - MonadRandom: major or minor version bump?</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2024/10/01/BlogLiterately-unmaintained.html">« Retiring BlogLiterately</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>MonadRandom: major or minor version bump?</h1>
+
+<div class="info">
+  Posted on October 14, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Hackage'." href="../../../../tag/Hackage.html" rel="tag">Hackage</a>, <a title="All pages tagged 'MonadRandom'." href="../../../../tag/MonadRandom.html" rel="tag">MonadRandom</a>, <a title="All pages tagged 'random'." href="../../../../tag/random.html" rel="tag">random</a>, <a title="All pages tagged 'version'." href="../../../../tag/version.html" rel="tag">version</a>, <a title="All pages tagged 'PVP'." href="../../../../tag/PVP.html" rel="tag">PVP</a>
+  
+</div>
+
+<section>
+<p><strong>tl;dr</strong>: a fix to the <code>MonadRandom</code> package may cause <code>fromListMay</code>
+and related functions to <em>extremely rarely</em> output different results than
+they used to. This could only possibly affect anyone who is using
+fixed seed(s) to generate random values and is depending on the
+specific values being produced, <em>e.g.</em> a unit test where you use a
+specific seed and test that you get a specific result. Do you think
+this should be a major or minor version bump?</p>
+<hr />
+<section id="the-fix" class="level2">
+<h2>The Fix</h2>
+<p>Since 2013 I have been the maintainer of
+<a href="https://hackage.haskell.org/package/MonadRandom"><code>MonadRandom</code></a>,
+which defines a monad and monad transformer for generating random
+values, along with a number of related utilities.</p>
+<p>Recently, <a href="https://github.com/Flupp">Toni Dietze</a> pointed out <a href="https://github.com/byorgey/MonadRandom/issues/53">a rare
+situation that could cause the <code>fromListMay</code> function to
+crash</a> (as well as
+the other functions which depend on it: <code>fromList</code>, <code>weighted</code>,
+<code>weightedMay</code>, <code>uniform</code>, and <code>uniformMay</code>). This function is
+supposed to draw a weighted random sample from a list of values
+decorated with weights. I’m not going to explain the details of the
+issue here; suffice it to say that it has to do with conversions
+between <code>Rational</code> (the type of the weights) and <code>Double</code> (the type
+that was being used internally for generating random numbers).</p>
+<p>Even though this could only happen in rare and/or strange
+circumstances, fixing it definitely seemed like the right thing to
+do. After a bit of discussion, Toni came up with a good suggestion
+for a fix: we should no longer use <code>Double</code> internally for generating
+random numbers, but rather <code>Word64</code>, which avoids conversion and
+rounding issues.</p>
+<p>In fact, <code>Word64</code> is already used internally in the generation of
+random <code>Double</code> values, so we can emulate the behavior of the <code>Double</code>
+instance (which was <a href="https://github.com/byorgey/MonadRandom/issues/53#issuecomment-2294862625">slightly
+tricky</a>
+to figure out)
+so that we make exactly the same random choices as before, but without
+actually converting to <code>Double</code>.</p>
+</section>
+<section id="the-change" class="level2">
+<h2>The Change</h2>
+<p>…well, not <em>exactly</em> the same random choices as before, and therein
+lies the rub! If <code>fromListMay</code> happens to pick a random value which
+is extremely close to a boundary between choices, it’s possible that
+the value will fall on one side of the boundary when using exact
+calculations with <code>Word64</code> and <code>Rational</code>, whereas before it would
+have fallen on the other side of the boundary after converting to
+<code>Double</code> due to rounding. In other words, it will output the
+same results <em>almost all the time</em>, but for a list of <span class="math inline">\(n\)</span> weighted
+choices there is something like an <span class="math inline">\(n/2^{64}\)</span> chance (or less) that
+any given random choice will be different from what it used to be. I
+have never observed this happening in my tests, and indeed, I do not
+expect to ever observe it! If we generated one billion random samples
+per second continuously for a thousand years, we might expect to see
+it happen once or twice. I am not even sure how to engineer a test
+scenario to force it to happen, because we would have to pick an
+initial PRNG seed that forces a certain <code>Word64</code> value to be
+generated.</p>
+</section>
+<section id="to-pvp-or-not-to-pvp" class="level2">
+<h2>To PVP or not to PVP?</h2>
+<p>Technically, a function exported by <code>MonadRandom</code> has changed
+behavior, so <a href="https://pvp.haskell.org/">according to the Haskell PVP
+specification</a> this should be a major
+version bump (<em>i.e.</em> <code>0.6</code> to <code>0.7</code>).<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="sidenote">Actually, I am not even
+100% clear on this. <a href="https://pvp.haskell.org/#decision-tree">The decision
+tree</a> on the PVP page says
+that changing the <em>behavior</em> of an exported function necessitates a
+major version bump; but the <a href="https://pvp.haskell.org/#version-numbers">actual
+specification</a> does not
+refer to <em>behavior</em> at all—as I read it, it is exclusively concerned
+with API compatibility, <em>i.e.</em> whether things will still compile.<br />
+<br />
+</span></span> But
+there seem to be some good arguments for doing just a minor version
+bump (<em>i.e.</em> <code>0.6</code> to <code>0.6.1</code>).</p>
+<ul>
+<li><p>Arguments in favor of a minor version bump:</p>
+<ul>
+<li><p>A major version bump would cause a lot of (probably unnecessary)
+breakage! <code>MonadRandom</code> has <a href="https://hackage.haskell.org/package/MonadRandom/reverse/verbose">149 direct reverse dependencies,
+and about 3500 distinct transitive reverse
+dependencies</a>. Forcing
+all those packages to update their upper bound on <code>MonadRandom</code>
+would be a lot of churn.</p></li>
+<li><p>What exactly constitutes the “behavior” of a function to
+generate random values? It depends on your point of view. If
+we view the function as a pure mathematical function which
+takes a PRNG state as input and produces some value as
+output, then its behavior is defined precisely by which outputs
+it returns for which input seeds, and its behavior has changed.
+However, if we think of it in more effectful terms, we could say
+its “behavior” is just to output random values according to a
+certain distribution, in which case its behavior has <em>not</em>
+changed.</p></li>
+<li><p>It’s extremely unlikely that this change will cause any
+breakage; moreover, <a href="https://mathstodon.xyz/@BoydStephenSmithJr@hachyderm.io/113250878388960212">as argued by Boyd Stephen Smith</a>, anyone who cares enough about
+reproducibility to be relying on specific outputs for specific
+seeds is probably already pinning all their package versions.</p></li>
+</ul></li>
+<li><p>Arguments in favor of a major version bump:</p>
+<ul>
+<li><p>It’s what the PVP specifies; what’s the point of having a
+specification if we don’t follow it?</p></li>
+<li><p>In the unlikely event that this change <em>does</em> cause any
+breakage, it could be extremely difficult for package
+maintainers to track down. If the behavior of a random
+generation function completely changes, the source of the issue
+is obvious. But if it only changes for very rare inputs, you
+might reasonably think the problem is something else. A major
+version bump will force maintainers to read the changelog for
+<code>MonadRandom</code> and assess whether this is a change that could
+possibly affect them.</p></li>
+</ul></li>
+</ul>
+<p>So, do you have opinions on this? Would the release affect you one
+way or the other? Feel free to leave a comment here, or send me an
+email with your thoughts. Note there has already been <a href="https://mathstodon.xyz/@byorgey/113250843195905599">a bit of discussion on
+Mastodon</a> as well.</p>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="MonadRandom: major or minor version bump?">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
