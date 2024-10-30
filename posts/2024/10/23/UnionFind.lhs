@@ -8,10 +8,11 @@ katex: true
 Union-find
 ----------
 
-A *union-find* data structure (also known as a *disjoint set* data
-structure) keeps track of a *collection of disjoint sets*, typically
-with elements drawn from $\{0, \dots, n-1\}$.  For example, we might
-have the sets
+A [*union-find* data
+structure](https://en.wikipedia.org/wiki/Disjoint-set_data_structure)
+(also known as a *disjoint set* data structure) keeps track of a
+*collection of disjoint sets*, typically with elements drawn from
+$\{0, \dots, n-1\}$.  For example, we might have the sets
 
 $\{1,3\}, \{0, 4, 2\}, \{5, 6, 7\}$
 
@@ -42,8 +43,8 @@ A union-find structure must support three basic operations:
 Note that $\union$ is a one-way operation: once two sets have been
 unioned together, there's no way to split them apart again.  (If both
 merging and splitting are required, one can use a [link/cut
-tree](XXX), which is very cool, and possibly something I will write
-about in the future, but much more complex.)  However, these three
+tree](https://en.wikipedia.org/wiki/Link/cut_tree), which is very cool---and possibly something I will write
+about in the future---but much more complex.)  However, these three
 operations are enough for union-find structures to have a large number
 of interesting applications!
 
@@ -57,14 +58,15 @@ two sets, we combine their annotations via the semigroup operation.
   we add their sizes.
 - We could also annotate each set with the sum, product, maximum, or
   minumum of all its elements.
+- Of course there are many more exotic examples as well.
 
 We typically use a commutative semigroup, as in the examples above;
-this guarantees that a given set will always have the same value,
-regardless of the sequence of union-find operations that were used to
-create it.  However, we can actually use any binary operation at all
-(*i.e.* any *magma*), in which case the annotations on a set may
-reflect the precise tree of calls to |union| that were used to
-construct it.
+this guarantees that a given set always has a single well-defined
+annotation value, regardless of the sequence of union-find operations
+that were used to create it.  However, we can actually use any binary
+operation at all (*i.e.* any *magma*), in which case the annotations
+on a set may reflect the precise tree of calls to |union| that were
+used to construct it; this can occasionally be useful.
 
 - For example, we could annotate each set with a list of values, and
   combine annotations using list concatenation; the order of elements
@@ -72,30 +74,34 @@ construct it.
   arguments to |union|.
 
 - We could also annotate each set with a binary tree storing values at
-  the leaves.  XXX each singleton starts as leaf, to combine make a
-  new branch node.  Then each set is annotated with the precise tree
-  of union calls made.
+  the leaves. Each singleton set is annotated with a single leaf; to
+  combine two trees we create a new branch node with the two trees as
+  its children.  Then each set ends up annotated with the precise tree
+  of calls to $\union$ that were used to create it.
 
 Implementing union-find
 -----------------------
 
 My implementation is based on [one by Kwang Yul
 Seo](https://kseo.github.io/posts/2014-01-30-implementing-union-find-in-haskell.html),
-but I have modified it quite a bit.  This blog post is not a
-comprehensive union-find tutorial (XXX link to other resources), but I
-will explain some things as we go.  First, a few imports.
+but I have modified it quite a bit.  This blog post is not intended to
+be a comprehensive union-find tutorial, but I will explain some things
+as we go.
 
 > {-# LANGUAGE RecordWildCards #-}
-
+>
 > module UnionFind where
-
+>
 > import Control.Monad (when)
 > import Control.Monad.ST
 > import Data.Array.ST
 
-Now, let's see the definition of the `UnionFind` type itself.  Note
-that the elements are also sometimes called "nodes", since, as we will
-see, they are organized into a forest.
+Let's start with the definition of the `UnionFind` type itself.
+`UnionFind` has two type parameters: `s` is a phantom type parameter
+used to limit the scope to a given `ST` computation; `m` is the type
+of the arbitrary annotations.  Note that the elements are also
+sometimes called "nodes", since, as we will see, they are organized
+into trees.
 
 > type Node = Int
 > data UnionFind s m = UnionFind
@@ -104,8 +110,8 @@ The basic idea is to maintain three mappings:
 
   - First, each element is mapped to a *parent* (another element).
     There are no cycles, except that some elements can be their own
-    parents.  This means that the elements form a *forest* of rooted
-    trees (XXX link?), with the self-parenting elements as roots.  We
+    parent.  This means that the elements form a *forest* of rooted
+    trees, with the self-parenting elements as roots.  We
     store the parent mapping as an `STUArray` (XXX see reference) for
     efficiency.  XXX picture?
 
