@@ -65,13 +65,13 @@ this guarantees that a given set always has a single well-defined
 annotation value, regardless of the sequence of union-find operations
 that were used to create it.  However, we can actually use any binary
 operation at all (*i.e.* any *magma*), in which case the annotations
-on a set may reflect the precise tree of calls to |union| that were
+on a set may reflect the precise tree of calls to $\union$ that were
 used to construct it; this can occasionally be useful.
 
 - For example, we could annotate each set with a list of values, and
   combine annotations using list concatenation; the order of elements
   in the list associated to a given set will depend on the order of
-  arguments to |union|.
+  arguments to $\union$.
 
 - We could also annotate each set with a binary tree storing values at
   the leaves. Each singleton set is annotated with a single leaf; to
@@ -84,9 +84,11 @@ Implementing union-find
 
 My implementation is based on [one by Kwang Yul
 Seo](https://kseo.github.io/posts/2014-01-30-implementing-union-find-in-haskell.html),
-but I have modified it quite a bit.  This blog post is not intended to
-be a comprehensive union-find tutorial, but I will explain some things
-as we go.
+but I have modified it quite a bit.  The code is [also available in my
+`comprog-hs`
+repository](https://github.com/byorgey/comprog-hs/blob/master/UnionFind.hs). This
+blog post is not intended to be a comprehensive union-find tutorial,
+but I will explain some things as we go.
 
 > {-# LANGUAGE RecordWildCards #-}
 >
@@ -104,7 +106,7 @@ sometimes called "nodes", since, as we will see, they are organized
 into trees.
 
 > type Node = Int
-> data UnionFind s m = UnionFind
+> data UnionFind s m = UnionFind {
 
 The basic idea is to maintain three mappings:
 
@@ -112,10 +114,10 @@ The basic idea is to maintain three mappings:
     There are no cycles, except that some elements can be their own
     parent.  This means that the elements form a *forest* of rooted
     trees, with the self-parenting elements as roots.  We
-    store the parent mapping as an `STUArray` (XXX see reference) for
-    efficiency.  XXX picture?
+    store the parent mapping as an `STUArray` ([see here](https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html) for another post where we used `STUArray`) for
+    efficiency.
 
->   { parent :: !(STUArray s Node Node)
+>   parent :: !(STUArray s Node Node),
 
   - Each element is also mapped to a *size*.  We maintain the
     invariant that for any element which is a root (*i.e.* any element
@@ -123,16 +125,16 @@ The basic idea is to maintain three mappings:
     that element.  The size associated to other, non-root elements
     does not matter.
 
-    XXX note can also be done with *height* instead of size, but makes
-    not much practical difference.
+    (Many implementations store the *height* of each tree instead of
+    the size, but it does not make much practical difference, and the
+    size seems more generally useful.)
 
->   , sz :: !(STUArray s Node Int)
+>   sz :: !(STUArray s Node Int),
 
   - Finally, we map each element to a custom annotation value; again,
     we only care about the annotation values for root nodes.
 
->   , ann :: !(STArray s Node m)
->   }
+>   ann :: !(STArray s Node m) }
 
 To $\create$ a new union-find structure, we need a size and a
 function mapping each element to an initial annotation value.  Every
@@ -146,13 +148,13 @@ the same constant annotation value.
 >     <$> newListArray (0, n - 1) [0 .. n - 1]    -- Every node is its own parent
 >     <*> newArray (0, n - 1) 1                   -- Every node has size 1
 >     <*> newListArray (0, n - 1) (map m [0 .. n - 1])
-
+>
 > create :: Int -> m -> ST s (UnionFind s m)
 > create n m = createWith n (const m)
 
 To perform a $\find$ operation, we keep following *parent*
 references up the tree until reaching a root.  We can also do a cool
-optimization known as *path compression* (XXX link): after finding a
+optimization known as *path compression*: after finding a
 root, we can directly update the parent of every node along the path
 we just traversed to be the root.  This means $\find$ can be very
 efficient, since it tends to create trees that are extremely wide and
@@ -167,7 +169,7 @@ shallow.
 >       writeArray parent x r
 >       pure r
 >     else pure x
-
+>
 > connected :: UnionFind s m -> Node -> Node -> ST s Bool
 > connected uf x y = (==) <$> find uf x <*> find uf y
 
@@ -176,7 +178,7 @@ if they are not the same we make the root with the smaller tree the
 child of the other root, combining sizes and annotations as
 appropriate.
 
-> union :: (Semigroup m) => UnionFind s m -> Node -> Node -> ST s ()
+> union :: Semigroup m => UnionFind s m -> Node -> Node -> ST s ()
 > union uf@(UnionFind {..}) x y = do
 >   x <- find uf x
 >   y <- find uf y
@@ -195,10 +197,12 @@ appropriate.
 >         writeArray sz x (sx + sy)
 >         writeArray ann x (mx <> my)
 
-XXX note `x <- find uf x` trick
-XXX note have to be careful with order when combining annotations
+Note the trick of writing `x <- find uf x`: this looks kind of like an
+imperative statement that updates the value of a mutable variable `x`,
+but really it just makes a new variable `x` which shadows the old
+one.
 
-XXX Finally, a few utility functions.  First, one to find the size of
+Finally, a few utility functions.  First, one to get the size of
 the set containing a given node:
 
 > size :: UnionFind s m -> Node -> ST s Int
@@ -206,14 +210,16 @@ the set containing a given node:
 >   x <- find uf x
 >   readArray sz x
 
-XXX Also a couple to update and fetch the custom annotation value
-associated to the set containing a given node.
+Also, we can provide functions to update and fetch the custom
+annotation value associated to the set containing a given node.
 
-> updateAnn :: (Semigroup m) => UnionFind s m -> Node -> m -> ST s ()
+> updateAnn :: Semigroup m => UnionFind s m -> Node -> m -> ST s ()
 > updateAnn uf@(UnionFind {..}) x m = do
 >   x <- find uf x
->   old <- readArray ann x -- modifyArray is not available in Kattis test environment
+>   old <- readArray ann x
 >   writeArray ann x (old <> m)
+>   -- We could use modifyArray above, but the version of the standard library
+>   -- installed on Kattis doesn't have it
 >
 > getAnn :: UnionFind s m -> Node -> ST s m
 > getAnn uf@(UnionFind {..}) x = do
@@ -223,5 +229,7 @@ associated to the set containing a given node.
 Challenge
 ---------
 
-For next time, I challenge you to solve [Duck Journey](XXX)  + other problems?
+Here are a couple of problems I challenge you to solve for next time:
 
+- [Duck Journey](https://open.kattis.com/problems/andvag)
+- [Inventing Test Data](https://open.kattis.com/problems/inventing)
