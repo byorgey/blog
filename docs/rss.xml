@@ -7,8 +7,238 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Mon, 14 Oct 2024 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sat, 02 Nov 2024 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Competitive Programming in Haskell: Union-Find</title>
+    <link>http://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html</link>
+    <description><![CDATA[
+<h1>Competitive Programming in Haskell: Union-Find</h1>
+
+<div class="info">
+  Posted on November  2, 2024
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged &#39;union-find&#39;." href="/tag/union-find.html" rel="tag">union-find</a>
+  
+</div>
+
+<section>
+<section id="union-find" class="level2">
+<h2>Union-find</h2>
+<p>A <a href="https://en.wikipedia.org/wiki/Disjoint-set_data_structure"><em>union-find</em> data
+structure</a>
+(also known as a <em>disjoint set</em> data structure) keeps track of a
+<em>collection of disjoint sets</em>, typically with elements drawn from
+<span class="math inline">\(\{0, \dots, n-1\}\)</span>. For example, we might have the sets</p>
+<p><span class="math inline">\(\{1,3\}, \{0, 4, 2\}, \{5, 6, 7\}\)</span></p>
+<p>A union-find structure must support three basic operations:</p>
+<ul>
+<li><p>We can <span class="math inline">\(\mathit{create}\)</span> a union-find structure with <span class="math inline">\(n\)</span> singleton sets
+<span class="math inline">\(\{0\}\)</span> through <span class="math inline">\(\{n-1\}\)</span>. (Alternatively, we could support two
+operations: creating an empty union-find structure, and adding a new
+singleton set; occasionally this more fine-grained approach is
+useful, but we will stick with the simpler <span class="math inline">\(\mathit{create}\)</span> API for now.)</p></li>
+<li><p>We can <span class="math inline">\(\mathit{find}\)</span> a given <span class="math inline">\(x \in \{0, \dots, n-1\}\)</span>, returning some sort
+of “name” for the set <span class="math inline">\(x\)</span> is in. It doesn’t matter what these names
+are; the only thing that matters is that for any <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>,
+<span class="math inline">\(\mathit{find}(x) = \mathit{find}(y)\)</span> if and only if <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> are in the same
+set. The most important application of <span class="math inline">\(\mathit{find}\)</span> is therefore to check
+whether two given elements are in the same set or not.</p></li>
+<li><p>We can <span class="math inline">\(\mathit{union}\)</span> two elements, so the sets that contain them become
+one set. For example, if we <span class="math inline">\(\mathit{union}(2,5)\)</span> then we would have</p>
+<p><span class="math inline">\(\{1,3\}, \{0, 4, 2, 5, 6, 7\}\)</span></p></li>
+</ul>
+<p>Note that <span class="math inline">\(\mathit{union}\)</span> is a one-way operation: once two sets have been
+unioned together, there’s no way to split them apart again. (If both
+merging and splitting are required, one can use a <a href="https://en.wikipedia.org/wiki/Link/cut_tree">link/cut
+tree</a>, which is very cool—and possibly something I will write
+about in the future—but much more complex.) However, these three
+operations are enough for union-find structures to have a large number
+of interesting applications!</p>
+<p>In addition, we can annotate each set with a value taken from some
+commutative semigroup. When creating a new union-find structure, we
+must specify the starting value for each singleton set; when unioning
+two sets, we combine their annotations via the semigroup operation.</p>
+<ul>
+<li>For example, we could annotate each set with its <em>size</em>; singleton
+sets always start out with size 1, and every time we union two sets
+we add their sizes.</li>
+<li>We could also annotate each set with the sum, product, maximum, or
+minumum of all its elements.</li>
+<li>Of course there are many more exotic examples as well.</li>
+</ul>
+<p>We typically use a commutative semigroup, as in the examples above;
+this guarantees that a given set always has a single well-defined
+annotation value, regardless of the sequence of union-find operations
+that were used to create it. However, we can actually use any binary
+operation at all (<em>i.e.</em> any <em>magma</em>), in which case the annotations
+on a set may reflect the precise tree of calls to <span class="math inline">\(\mathit{union}\)</span> that were
+used to construct it; this can occasionally be useful.</p>
+<ul>
+<li><p>For example, we could annotate each set with a list of values, and
+combine annotations using list concatenation; the order of elements
+in the list associated to a given set will depend on the order of
+arguments to <span class="math inline">\(\mathit{union}\)</span>.</p></li>
+<li><p>We could also annotate each set with a binary tree storing values at
+the leaves. Each singleton set is annotated with a single leaf; to
+combine two trees we create a new branch node with the two trees as
+its children. Then each set ends up annotated with the precise tree
+of calls to <span class="math inline">\(\mathit{union}\)</span> that were used to create it.</p></li>
+</ul>
+</section>
+<section id="implementing-union-find" class="level2">
+<h2>Implementing union-find</h2>
+<p>My implementation is based on <a href="https://kseo.github.io/posts/2014-01-30-implementing-union-find-in-haskell.html">one by Kwang Yul
+Seo</a>,
+but I have modified it quite a bit. The code is <a href="https://github.com/byorgey/comprog-hs/blob/master/UnionFind.hs">also available in my
+<code>comprog-hs</code>
+repository</a>. This
+blog post is not intended to be a comprehensive union-find tutorial,
+but I will explain some things as we go.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">UnionFind</span> <span class="kw">where</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span> (when)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.ST</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Array.ST</span></span></code></pre></div>
+<p>Let’s start with the definition of the <code>UnionFind</code> type itself.
+<code>UnionFind</code> has two type parameters: <code>s</code> is a phantom type parameter
+used to limit the scope to a given <code>ST</code> computation; <code>m</code> is the type
+of the arbitrary annotations. Note that the elements are also
+sometimes called “nodes”, since, as we will see, they are organized
+into trees.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Node</span> <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">UnionFind</span> s m <span class="ot">=</span> <span class="dt">UnionFind</span> {</span></code></pre></div>
+<p>The basic idea is to maintain three mappings:</p>
+<ul>
+<li>First, each element is mapped to a <em>parent</em> (another element).
+There are no cycles, except that some elements can be their own
+parent. This means that the elements form a <em>forest</em> of rooted
+trees, with the self-parenting elements as roots. We
+store the parent mapping as an <code>STUArray</code> (<a href="https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html">see here</a> for another post where we used <code>STUArray</code>) for
+efficiency.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  parent ::</span> <span class="op">!</span>(<span class="dt">STUArray</span> s <span class="dt">Node</span> <span class="dt">Node</span>),</span></code></pre></div>
+<ul>
+<li><p>Each element is also mapped to a <em>size</em>. We maintain the
+invariant that for any element which is a root (<em>i.e.</em> any element
+which is its own parent), we store the size of the tree rooted at
+that element. The size associated to other, non-root elements
+does not matter.</p>
+<p>(Many implementations store the <em>height</em> of each tree instead of
+the size, but it does not make much practical difference, and the
+size seems more generally useful.)</p></li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  sz ::</span> <span class="op">!</span>(<span class="dt">STUArray</span> s <span class="dt">Node</span> <span class="dt">Int</span>),</span></code></pre></div>
+<ul>
+<li>Finally, we map each element to a custom annotation value; again,
+we only care about the annotation values for root nodes.</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  ann ::</span> <span class="op">!</span>(<span class="dt">STArray</span> s <span class="dt">Node</span> m) }</span></code></pre></div>
+<p>To <span class="math inline">\(\mathit{create}\)</span> a new union-find structure, we need a size and a
+function mapping each element to an initial annotation value. Every
+element starts as its own parent, with a size of 1. For convenience,
+we can also make a variant of <code>createWith</code> that gives every element
+the same constant annotation value.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">createWith ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Node</span> <span class="ot">-&gt;</span> m) <span class="ot">-&gt;</span> <span class="dt">ST</span> s (<span class="dt">UnionFind</span> s m)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>createWith n m <span class="ot">=</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">UnionFind</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;$&gt;</span> newListArray (<span class="dv">0</span>, n <span class="op">-</span> <span class="dv">1</span>) [<span class="dv">0</span> <span class="op">..</span> n <span class="op">-</span> <span class="dv">1</span>]    <span class="co">-- Every node is its own parent</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;*&gt;</span> newArray (<span class="dv">0</span>, n <span class="op">-</span> <span class="dv">1</span>) <span class="dv">1</span>                   <span class="co">-- Every node has size 1</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;*&gt;</span> newListArray (<span class="dv">0</span>, n <span class="op">-</span> <span class="dv">1</span>) (<span class="fu">map</span> m [<span class="dv">0</span> <span class="op">..</span> n <span class="op">-</span> <span class="dv">1</span>])</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ot">create ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> m <span class="ot">-&gt;</span> <span class="dt">ST</span> s (<span class="dt">UnionFind</span> s m)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>create n m <span class="ot">=</span> createWith n (<span class="fu">const</span> m)</span></code></pre></div>
+<p>To perform a <span class="math inline">\(\mathit{find}\)</span> operation, we keep following <em>parent</em>
+references up the tree until reaching a root. We can also do a cool
+optimization known as <em>path compression</em>: after finding a
+root, we can directly update the parent of every node along the path
+we just traversed to be the root. This means <span class="math inline">\(\mathit{find}\)</span> can be very
+efficient, since it tends to create trees that are extremely wide and
+shallow.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">find ::</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s <span class="dt">Node</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>find uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> readArray parent x</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> p <span class="op">/=</span> x</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">then</span> <span class="kw">do</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>      r <span class="ot">&lt;-</span> find uf p</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      writeArray parent x r</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">pure</span> r</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> <span class="fu">pure</span> x</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ot">connected ::</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s <span class="dt">Bool</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>connected uf x y <span class="ot">=</span> (<span class="op">==</span>) <span class="op">&lt;$&gt;</span> find uf x <span class="op">&lt;*&gt;</span> find uf y</span></code></pre></div>
+<p>Finally, to implement <span class="math inline">\(\mathit{union}\)</span>, we find the roots of the given nodes;
+if they are not the same we make the root with the smaller tree the
+child of the other root, combining sizes and annotations as
+appropriate.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">union ::</span> <span class="dt">Semigroup</span> m <span class="ot">=&gt;</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s ()</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>union uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x y <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> find uf x</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> find uf y</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  when (x <span class="op">/=</span> y) <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    sx <span class="ot">&lt;-</span> readArray sz x</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    sy <span class="ot">&lt;-</span> readArray sz y</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    mx <span class="ot">&lt;-</span> readArray ann x</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    my <span class="ot">&lt;-</span> readArray ann y</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> sx <span class="op">&lt;</span> sy</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>      <span class="kw">then</span> <span class="kw">do</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        writeArray parent x y</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        writeArray sz y (sx <span class="op">+</span> sy)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        writeArray ann y (mx <span class="op">&lt;&gt;</span> my)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span> <span class="kw">do</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        writeArray parent y x</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        writeArray sz x (sx <span class="op">+</span> sy)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        writeArray ann x (mx <span class="op">&lt;&gt;</span> my)</span></code></pre></div>
+<p>Note the trick of writing <code>x &lt;- find uf x</code>: this looks kind of like an
+imperative statement that updates the value of a mutable variable <code>x</code>,
+but really it just makes a new variable <code>x</code> which shadows the old
+one.</p>
+<p>Finally, a few utility functions. First, one to get the size of
+the set containing a given node:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">size ::</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s <span class="dt">Int</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>size uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> find uf x</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  readArray sz x</span></code></pre></div>
+<p>Also, we can provide functions to update and fetch the custom
+annotation value associated to the set containing a given node.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">updateAnn ::</span> <span class="dt">Semigroup</span> m <span class="ot">=&gt;</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> m <span class="ot">-&gt;</span> <span class="dt">ST</span> s ()</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>updateAnn uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x m <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> find uf x</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  old <span class="ot">&lt;-</span> readArray ann x</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  writeArray ann x (old <span class="op">&lt;&gt;</span> m)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- We could use modifyArray above, but the version of the standard library</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- installed on Kattis doesn&#39;t have it</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="ot">getAnn ::</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s m</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>getAnn uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> find uf x</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  readArray ann x</span></code></pre></div>
+</section>
+<section id="challenge" class="level2">
+<h2>Challenge</h2>
+<p>Here are a couple of problems I challenge you to solve for next time:</p>
+<ul>
+<li><a href="https://open.kattis.com/problems/andvag">Duck Journey</a></li>
+<li><a href="https://open.kattis.com/problems/inventing">Inventing Test Data</a></li>
+</ul>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Competitive Programming in Haskell: Union-Find" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Sat, 02 Nov 2024 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>MonadRandom: major or minor version bump?</title>
     <link>http://byorgey.github.io/blog/posts/2024/10/14/MonadRandom-version-bump.html</link>
     <description><![CDATA[
@@ -1804,55 +2034,6 @@ Until then, give it a try!</p>
 ]]></description>
     <pubDate>Fri, 21 Jun 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/06/21/cpih-product-divisors.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Swarm swarm III (virtual hackathon)</title>
-    <link>http://byorgey.github.io/blog/posts/2024/06/12/swarm-swarm-3.html</link>
-    <description><![CDATA[
-<h1>Swarm swarm III (virtual hackathon)</h1>
-
-<div class="info">
-  Posted on June 12, 2024
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;game&#39;." href="/tag/game.html" rel="tag">game</a>, <a title="All pages tagged &#39;hackathon&#39;." href="/tag/hackathon.html" rel="tag">hackathon</a>, <a title="All pages tagged &#39;programming&#39;." href="/tag/programming.html" rel="tag">programming</a>, <a title="All pages tagged &#39;robot&#39;." href="/tag/robot.html" rel="tag">robot</a>, <a title="All pages tagged &#39;Swarm&#39;." href="/tag/Swarm.html" rel="tag">Swarm</a>
-  
-</div>
-
-<section>
-<p>This Saturday, June 15, we will have the third Swarm swarm, <em>i.e.</em>
-collaborative virtual hackathon. Details can be found <a href="https://github.com/swarm-game/swarm/wiki/Swarm-swarm">here on the
-Swarm wiki</a>.</p>
-<ul>
-<li>Time: <a href="https://www.timeanddate.com/worldclock/fixedtime.html?msg=Swarm+swarm+III&amp;iso=20240615T16&amp;p1=1440&amp;ah=6">11am-5pm CDT / 4pm-10pm UTC / 9:30pm-3:30am
-IST</a>
-(feel free to drop in and out any time)</li>
-<li>Place: <a href="https://app.gather.town/app/SpqG1ic5pNKM7YqS/The%20Swarm%20Hive">The Swarm Hive on
-gather.town</a></li>
-<li>Who: you! Anyone interested in hacking on Swarm is welcome, from
-experienced to first-time contributors. If you’ve been thinking of
-getting involved but haven’t yet, this could be a perfect
-opportunity.</li>
-</ul>
-<p>As a reminder, <a href="https://swarm-game.github.io/">Swarm</a> is a 2D,
-open-world programming and resource gathering game, implemented in
-Haskell, with a strongly-typed, functional programming language and a
-unique upgrade system. Unlocking language features is tied to
-collecting resources, making it an interesting challenge to bootstrap
-your way into the use of the full language.</p>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Swarm swarm III (virtual hackathon)" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>Wed, 12 Jun 2024 00:00:00 UT</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2024/06/12/swarm-swarm-3.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 
