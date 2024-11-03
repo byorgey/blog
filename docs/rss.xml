@@ -7,15 +7,15 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Wed, 23 Oct 2024 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sat, 02 Nov 2024 00:00:00 UT</lastBuildDate>
         <item>
     <title>Competitive Programming in Haskell: Union-Find</title>
-    <link>http://byorgey.github.io/blog/posts/2024/10/23/UnionFind.html</link>
+    <link>http://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html</link>
     <description><![CDATA[
 <h1>Competitive Programming in Haskell: Union-Find</h1>
 
 <div class="info">
-  Posted on October 23, 2024
+  Posted on November  2, 2024
   
   
   <br />
@@ -234,8 +234,8 @@ annotation value associated to the set containing a given node.</p>
 </section>
 
 ]]></description>
-    <pubDate>Wed, 23 Oct 2024 00:00:00 UT</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2024/10/23/UnionFind.html</guid>
+    <pubDate>Sat, 02 Nov 2024 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 <item>
