@@ -53,18 +53,17 @@
   
   
   <br />
-  Tagged 
+  Tagged <a title="All pages tagged 'rational'." href="../../../../tag/rational.html" rel="tag">rational</a>
   
 </div>
 
 <section>
-Inspired by this <a href="http://www.lacim.uqam.ca/~plouffe/OEIS/citations/recounting.pdf">totally sweet paper by Calkin &amp; Wilf</a> (read it for more details, it’s very short and quite elegantly written) (no really, you should read it):
-<pre>
-import Data.Ratio
-
-buildHB (x1:x2:xs) = (x1 + x2) : x1 : buildHB (x2:xs)
-hypbin = 1 : 1 : buildHB hypbin
-rationals = zipWith (%) hypbin (tail hypbin)</pre>
+<p>Inspired by this <a href="https://www.researchgate.net/publication/239541228_Recounting_the_Rationals">totally sweet paper by Calkin &amp; Wilf</a> (read it for more details, it’s very short and quite elegantly written) (no really, you should read it):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Ratio</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>buildHB (x1<span class="op">:</span>x2<span class="op">:</span>xs) <span class="ot">=</span> (x1 <span class="op">+</span> x2) <span class="op">:</span> x1 <span class="op">:</span> buildHB (x2<span class="op">:</span>xs)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>hypbin <span class="ot">=</span> <span class="dv">1</span> <span class="op">:</span> <span class="dv">1</span> <span class="op">:</span> buildHB hypbin</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>rationals <span class="ot">=</span> <span class="fu">zipWith</span> (<span class="op">%</span>) hypbin (<span class="fu">tail</span> hypbin)</span></code></pre></div>
 <p>How cool is that? The infinite list of all positive rational numbers, each occurring exactly once in reduced form. In only three lines of Haskell. There are actually better ways to do this; e.g. see the <a href="http://web.comlab.ox.ac.uk/oucl/work/jeremy.gibbons/publications/rationals.pdf">functional pearl by Gibbons, Lester, and Bird</a>. In particular the three-line version above uses O(n) memory to generate the first n rationals, since half of the hypbin list has to be kept around to generate the rest of it, whereas it can actually be done in constant memory. But it’s still nifty.</p>
 
 </section>
