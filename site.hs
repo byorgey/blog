@@ -7,7 +7,7 @@ import Hakyll
 import Text.Pandoc (Block, HTMLMathMethod (MathJax), Pandoc, bottomUpM)
 import Text.Pandoc.Diagrams
 import Text.Pandoc.Highlighting (Style, styleToCss, tango)
-import Text.Pandoc.Options (WriterOptions (..))
+import Text.Pandoc.Options (WriterOptions (..), CiteMethod (..))
 import Text.Pandoc.SideNote (usingSideNotes)
 
 ------------------------------------------------------------
@@ -67,6 +67,7 @@ myPandocCompiler =
       { writerHighlightStyle = Just pandocCodeStyle
       , writerHTMLMathMethod = MathJax ""
       , writerSectionDivs = True
+      , writerCiteMethod = Citeproc
       }
     (compileDiagrams >=> (return . usingSideNotes))
 

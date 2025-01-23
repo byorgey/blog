@@ -7,8 +7,115 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Wed, 27 Nov 2024 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Thu, 23 Jan 2025 00:00:00 UT</lastBuildDate>
         <item>
+    <title>You could have invented Fenwick trees</title>
+    <link>http://byorgey.github.io/blog/posts/2025/01/23/Fenwick.html</link>
+    <description><![CDATA[
+<h1>You could have invented Fenwick trees</h1>
+
+<div class="info">
+  Posted on January 23, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;Haskell&#39;." href="/tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged &#39;segment&#39;." href="/tag/segment.html" rel="tag">segment</a>, <a title="All pages tagged &#39;Fenwick&#39;." href="/tag/Fenwick.html" rel="tag">Fenwick</a>, <a title="All pages tagged &#39;tree&#39;." href="/tag/tree.html" rel="tag">tree</a>, <a title="All pages tagged &#39;JFP&#39;." href="/tag/JFP.html" rel="tag">JFP</a>, <a title="All pages tagged &#39;journal&#39;." href="/tag/journal.html" rel="tag">journal</a>, <a title="All pages tagged &#39;paper&#39;." href="/tag/paper.html" rel="tag">paper</a>
+  
+</div>
+
+<section>
+<p>My paper, <a href="http://ozark.hendrix.edu/~yorgey/pub/Fenwick-ext.pdf">You could have invented Fenwick
+trees</a>, has just
+been published as a <a href="https://www.cambridge.org/core/services/aop-cambridge-core/content/view/B4628279D4E54229CED97249E96F721D/S0956796824000169a.pdf/you-could-have-invented-fenwick-trees.pdf">Functional Pearl in the Journal of Functional
+Programming</a>.
+This blog post is an advertisement for the paper, which presents a
+novel way to derive the <em>Fenwick tree</em> data structure from first
+principles.</p>
+<p>Suppose we have a sequence of integers <span class="math inline">\(a_1, \dots, a_n\)</span> and want to be
+able to perform two operations:</p>
+<ul>
+<li>we can <em>update</em> any <span class="math inline">\(a_i\)</span> by adding some value <span class="math inline">\(v\)</span> to it; or</li>
+<li>we can perform a <em>range query</em>, which asks for the sum of the values
+<span class="math inline">\(a_i + \dots + a_j\)</span> for any range <span class="math inline">\([i,j]\)</span>.</li>
+</ul>
+<p>There are several ways to solve this problem. For example:</p>
+<ol type="1">
+<li>We could just keep the sequence of integers in a mutable array.
+Updating is <span class="math inline">\(O(1)\)</span>, but range queries are <span class="math inline">\(O(n)\)</span> since we must
+actually loop through the range and add up all the values.</li>
+<li>We could keep a separate array of <em>prefix sums</em> on the side, so
+that <span class="math inline">\(P_i\)</span> stores the sum <span class="math inline">\(a_1 + \dots + a_i\)</span>. Then the range
+query on <span class="math inline">\([i,j]\)</span> can be computed as <span class="math inline">\(P_j - P_{i-1}\)</span>, which only
+takes <span class="math inline">\(O(1)\)</span>; however, updates now take <span class="math inline">\(O(n)\)</span> since we must also
+update all the prefix sums which include the updated element.</li>
+<li>We can get the best of both worlds using a <em>segment tree</em>, a binary
+tree storing the elements at the leaves, with each internal node
+caching the sum of its children. Then both update and range query
+can be done in <span class="math inline">\(O(\lg n)\)</span>.</li>
+</ol>
+<p>I won’t go through the details of this third solution here, but it is
+relatively straightforward to understand and implement, especially in
+a functional language.</p>
+<p>However, there is a fourth solution, known as a <em>Fenwick tree</em> or
+<em>Fenwick array</em>, independently invented by <span class="citation" data-cites="ryabko1989fast">@ryabko1989fast</span> and
+<span class="citation" data-cites="fenwick1994new">@fenwick1994new</span>. Here’s a typical Java implementation of a Fenwick
+tree:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode .java"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FenwickTree <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">long</span><span class="op">[]</span> a<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="fu">FenwickTree</span><span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span> a <span class="op">=</span> <span class="kw">new</span> <span class="dt">long</span><span class="op">[</span>n<span class="op">+</span><span class="dv">1</span><span class="op">];</span> <span class="op">}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">long</span> <span class="fu">prefix</span><span class="op">(</span><span class="dt">int</span> i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">long</span> s <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(;</span> i <span class="op">&gt;</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">-=</span> <span class="fu">LSB</span><span class="op">(</span>i<span class="op">))</span> s <span class="op">+=</span> a<span class="op">[</span>i<span class="op">];</span> <span class="cf">return</span> s<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">update</span><span class="op">(</span><span class="dt">int</span> i<span class="op">,</span> <span class="dt">long</span> delta<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(;</span> i <span class="op">&lt;</span> a<span class="op">.</span><span class="fu">length</span><span class="op">;</span> i <span class="op">+=</span> <span class="fu">LSB</span><span class="op">(</span>i<span class="op">))</span> a<span class="op">[</span>i<span class="op">]</span> <span class="op">+=</span> delta<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">long</span> <span class="fu">range</span><span class="op">(</span><span class="dt">int</span> i<span class="op">,</span> <span class="dt">int</span> j<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">prefix</span><span class="op">(</span>j<span class="op">)</span> <span class="op">-</span> <span class="fu">prefix</span><span class="op">(</span>i<span class="op">-</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">long</span> <span class="fu">get</span><span class="op">(</span><span class="dt">int</span> i<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> <span class="fu">range</span><span class="op">(</span>i<span class="op">,</span>i<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">set</span><span class="op">(</span><span class="dt">int</span> i<span class="op">,</span> <span class="dt">long</span> v<span class="op">)</span> <span class="op">{</span> <span class="fu">update</span><span class="op">(</span>i<span class="op">,</span> v <span class="op">-</span> <span class="fu">get</span><span class="op">(</span>i<span class="op">));</span> <span class="op">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">int</span> <span class="fu">LSB</span><span class="op">(</span><span class="dt">int</span> i<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> i <span class="op">&amp;</span> <span class="op">(-</span>i<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>I know what you’re thinking: what the heck!? There are some loops adding and
+subtracting <code>LSB(i)</code>, which is defined as the bitwise AND of <code>i</code> and
+<code>-i</code>? What on earth is this doing? Unless you have seen this
+before, this code is probably a complete mystery, as it was for me the
+first time I encountered it.</p>
+<p>However, from the right point of view, we can derive this mysterious imperative
+code as an optimization of segment trees. In particular, in my
+paper I show how we can:</p>
+<ol type="1">
+<li>Start with a segment tree.</li>
+<li>Delete some redundant info from the segment tree, and shove the
+remaining values into an array in a systematic way.</li>
+<li>Define operations for moving around in the resulting Fenwick array by
+converting array indices to indices in a segment tree, moving
+around the tree appropriately, and converting back.</li>
+<li>Describe these operations using a Haskell EDSL for
+infinite-precision 2’s complement binary arithmetic, and fuse away
+all the intermediate conversion steps, until the above mysterious
+implementation pops out.</li>
+<li>Profit.</li>
+</ol>
+<p>I may be exaggerating step 5 a teensy bit. But you’ll find everything
+else described in much greater detail, with pretty pictures, in the
+paper! The <a href="https://www.cambridge.org/core/journals/journal-of-functional-programming/article/you-could-have-invented-fenwick-trees/B4628279D4E54229CED97249E96F721D">official JFP version is here</a>, and here’s an <a href="http://ozark.hendrix.edu/~yorgey/pub/Fenwick-ext.pdf">extended
+version with an appendix containing an omitted proof</a>.</p>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="You could have invented Fenwick trees" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Thu, 23 Jan 2025 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2025/01/23/Fenwick.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Competitive Programming in Haskell: stacks, queues, and monoidal sliding windows</title>
     <link>http://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html</link>
     <description><![CDATA[
@@ -2168,281 +2275,6 @@ of values rather than just a set?)</p></li>
 ]]></description>
     <pubDate>Thu, 18 Jul 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/07/18/River.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Competitive Programming in Haskell: tree path decomposition, part I</title>
-    <link>http://byorgey.github.io/blog/posts/2024/07/11/cpih-factor-full-tree.html</link>
-    <description><![CDATA[
-<h1>Competitive Programming in Haskell: tree path decomposition, part I</h1>
-
-<div class="info">
-  Posted on July 11, 2024
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged &#39;number theory&#39;." href="/tag/number%20theory.html" rel="tag">number theory</a>, <a title="All pages tagged &#39;tree&#39;." href="/tag/tree.html" rel="tag">tree</a>, <a title="All pages tagged &#39;path&#39;." href="/tag/path.html" rel="tag">path</a>, <a title="All pages tagged &#39;decomposition&#39;." href="/tag/decomposition.html" rel="tag">decomposition</a>
-  
-</div>
-
-<section>
-<p>In <a href="https://byorgey.github.io/blog/posts/2024/05/28/competitive-programming-in-haskell-two-problems.html">a previous
-post</a>
-I challenged you to solve <a href="https://open.kattis.com/problems/factorfulltree">Factor-Full
-Tree</a>. In this
-problem, we are given an unlabelled rooted tree, and asked to create a <em>divisor
-labelling</em>. That is, we must label the vertices with positive
-integers in such a way that <span class="math inline">\(v\)</span> is an ancestor of <span class="math inline">\(u\)</span> if and only if
-<span class="math inline">\(v\)</span>’s label evenly divides <span class="math inline">\(u\)</span>’s label.</p>
-<p>For example, here is a tree with a divisor labelling:</p>
-<p><span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="marginnote">Divisor labelling of a tree<br />
-<br />
-</span></span></p>
-<figure>
-<img src="/diagrams/0d43c38705f7e411.svg" />
-</figure>
-<p>The interesting point (though irrelevant to solving the problem) is
-that this is a method for encoding a tree as a set of integers:
-because <span class="math inline">\(v\)</span> is an ancestor of <span class="math inline">\(u\)</span> <em>if and only if</em> <span class="math inline">\(v\)</span>’s label divides
-<span class="math inline">\(u\)</span>’s, all the information about the tree’s structure is fully
-contained in the set of labels. For example, if we simply write
-down the set <span class="math inline">\(\{1, 5, 6, 7, 12, 14, 21, 49, 63\}\)</span>, it is possible to
-fully reconstruct the above tree from this set.<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-1" class="margin-toggle"/><span class="marginnote">Note that we
-consider trees equivalent up to reordering of siblings, that is, each
-node has a <em>bag</em>, not a <em>list</em>, of children.<br />
-<br />
-</span></span> This is not a
-particularly <em>efficient</em> way to encode a tree, but it is certainly
-interesting!</p>
-<section id="basic-setup" class="level2">
-<h2>Basic setup</h2>
-<p>First, some basic setup.<span class="sidenote-wrapper"><label for="sn-2" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-2" class="margin-toggle"/><span class="marginnote"><a href="https://byorgey.github.io/blog/posts/2019/05/22/competitive-programming-in-haskell-scanner.html">See here</a> for the <code>Scanner</code>
-abstraction, and
-<a href="https://byorgey.github.io/blog/posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html">here</a>
-for the basics of how I organize solutions.<br />
-<br />
-</span></span> The first line of
-input specifies the number of nodes <span class="math inline">\(N\)</span>, and after that there are
-<span class="math inline">\(N-1\)</span> lines, each specifying a single undirected edge.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Category</span> ((&gt;&gt;&gt;))</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bifunctor</span> (second)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Map</span> (<span class="dt">Map</span>, (!?))</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Map</span> <span class="kw">as</span> <span class="dt">M</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Tuple</span> (swap)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> C.interact <span class="op">$</span> runScanner tc <span class="op">&gt;&gt;&gt;</span> solve <span class="op">&gt;&gt;&gt;</span> format</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">TC</span> <span class="ot">=</span> <span class="dt">TC</span> {<span class="ot"> n ::</span> <span class="dt">Int</span>,<span class="ot"> edges ::</span> [<span class="dt">Edge</span>] }</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ot">tc ::</span> <span class="dt">Scanner</span> <span class="dt">TC</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>tc <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> int</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  edges <span class="ot">&lt;-</span> (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">&gt;&lt;</span> pair int int</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> <span class="dt">TC</span>{<span class="op">..</span>}</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ot">format ::</span> [<span class="dt">Integer</span>] <span class="ot">-&gt;</span> <span class="dt">ByteString</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>format <span class="ot">=</span> <span class="fu">map</span> showB <span class="op">&gt;&gt;&gt;</span> C.unwords</span></code></pre></div>
-<p>We are guaranteed that the edges describe a tree; next we will
-actually build a tree data structure from the input.</p>
-</section>
-<section id="building-trees" class="level2">
-<h2>Building trees</h2>
-<p>There are many
-similar problems which specify a tree structure by giving a list of
-edges, so it’s worthwhile trying to write some generic code to
-transform such an input into an actual tree. In an imperative language
-we would do this by building a map from each node to its neighbors,
-then doing a DFS to orient the tree. Our Haskell code will be
-similar, except building the map and doing a DFS will both be
-one-liners!</p>
-<p>First, a function to turn a list of undirected edges into a <code>Map</code>
-associating each vertex to all its neighbors. It’s convenient to
-decompose this into a function to turn a list of <em>directed</em> edges into
-a <code>Map</code>, and a function to duplicate and swap each pair. We won’t
-need <code>dirEdgesToMap</code> for this problem, but we can certainly imagine
-wanting it elsewhere.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">edgesToMap ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> [(a, a)] <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a]</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>edgesToMap <span class="ot">=</span> <span class="fu">concatMap</span> (\p <span class="ot">-&gt;</span> [p, swap p]) <span class="op">&gt;&gt;&gt;</span> dirEdgesToMap</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">dirEdgesToMap ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> [(a, a)] <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a]</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dirEdgesToMap <span class="ot">=</span> <span class="fu">map</span> (second (<span class="op">:</span> [])) <span class="op">&gt;&gt;&gt;</span> M.fromListWith (<span class="op">++</span>)</span></code></pre></div>
-<p>Next, we can turn such a neighbor <code>Map</code> into a tree. Rather than
-returning a literal <code>Tree</code> data structure, it’s convenient to
-incorporate a tree fold: that is, given a function <code>a -&gt; [b] -&gt; b</code>, a neighbor
-map, and a root node, we fold over the whole tree and return the
-resulting <code>b</code> value. (Of course, if we want an actual <code>Tree</code> we can use
-<code>mapToTree Node</code>.) We can also compose these into a single function <code>edgesToTree</code>.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">mapToTree ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> [b] <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Map</span> a [a] <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>mapToTree nd m root <span class="ot">=</span> dfs root root</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  dfs parent root <span class="ot">=</span> nd root (<span class="fu">maybe</span> [] (<span class="fu">map</span> (dfs root) <span class="op">.</span> <span class="fu">filter</span> (<span class="op">/=</span> parent)) (m <span class="op">!?</span> root))</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ot">edgesToTree ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> [b] <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [(a, a)] <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>edgesToTree nd <span class="ot">=</span> mapToTree nd <span class="op">.</span> edgesToMap</span></code></pre></div>
-</section>
-<section id="inventing-divisor-labellings" class="level2">
-<h2>Inventing divisor labellings</h2>
-<p>So how do we create a divisor labelling for a given tree? Clearly, we
-might as well choose the root to have label <span class="math inline">\(1\)</span>, and every time we
-descend from a parent to a child, we must multiply by some integer,
-which might as well be a prime. Of course, we need to multiply by a
-<em>different</em> prime for each sibling. We might at first imagine simply
-multiplying by 2 for each (arbitrarily chosen) leftmost child, 3 for
-each second child, 5 for each third child, and so on, but this does
-not work—the second child of the first child ends up with the same
-label as the first child of the second child, and so on.</p>
-<p>Each node <span class="math inline">\(u\)</span>’s label is some prime <span class="math inline">\(p\)</span> times its parent’s label; call
-<span class="math inline">\(p\)</span> the <em>factor</em> of node <span class="math inline">\(u\)</span>. It is OK for one child of <span class="math inline">\(u\)</span> to also
-have factor <span class="math inline">\(p\)</span>, but the other children must get different factors.
-To be safe, we can give each additional child a new <em>globally unique</em>
-prime factor. This is not always necessary—in some cases it can be
-OK to reuse a factor if it does not lead to identically numbered
-nodes—but it is certainly sufficient. As an example, below is a
-divisor labelling of the example tree from before, via this scheme.
-Each edge is labelled with the factor of its child.</p>
-<p><span class="sidenote-wrapper"><label for="sn-3" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-3" class="margin-toggle"/><span class="marginnote">Divisor labelling of a tree with consecutive primes<br />
-<br />
-</span></span></p>
-<figure>
-<img src="/diagrams/13d7ee7b4e591669.svg" />
-</figure>
-<p>Notice how we use <span class="math inline">\(2\)</span> for the first child of the root, and <span class="math inline">\(3\)</span> for the
-next child. <span class="math inline">\(3\)</span>’s first child can also use a factor of <span class="math inline">\(3\)</span>, yielding
-a label of <span class="math inline">\(3^2 = 9\)</span>. <span class="math inline">\(3\)</span>’s next child uses a new, globally unique
-prime <span class="math inline">\(5\)</span>, and its third child uses <span class="math inline">\(7\)</span>; the final child of <span class="math inline">\(1\)</span> uses
-the next available prime, <span class="math inline">\(11\)</span>.</p>
-<p>We can code this up via a simple stateful traversal of the tree. (For
-<code>primes</code>, see <a href="https://byorgey.github.io/blog/posts/2020/02/07/competitive-programming-in-haskell-primes-and-factoring.html">this
-post</a>.)
-It’s a bit fiddly since we have to switch to the next prime <em>between</em>
-consecutive children, but not <em>after</em> the last child.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">primes ::</span> [<span class="dt">Integer</span>]</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>primes <span class="ot">=</span> <span class="dv">2</span> <span class="op">:</span> sieve primes [<span class="dv">3</span> <span class="op">..</span>]</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  sieve (p <span class="op">:</span> ps) xs <span class="ot">=</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (h, t) <span class="ot">=</span> <span class="fu">span</span> (<span class="op">&lt;</span> p <span class="op">*</span> p) xs</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> h <span class="op">++</span> sieve ps (<span class="fu">filter</span> ((<span class="op">/=</span> <span class="dv">0</span>) <span class="op">.</span> (<span class="ot">`mod`</span> p)) t)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ot">curPrime ::</span> <span class="dt">State</span> [<span class="dt">Integer</span>] <span class="dt">Integer</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>curPrime <span class="ot">=</span> gets <span class="fu">head</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="ot">nextPrime ::</span> <span class="dt">State</span> [<span class="dt">Integer</span>] ()</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>nextPrime <span class="ot">=</span> modify <span class="fu">tail</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="ot">labelTree ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> (<span class="dt">Integer</span>, a)</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>labelTree <span class="ot">=</span> <span class="fu">flip</span> evalState primes <span class="op">.</span> go <span class="dv">1</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="ot">  go ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">State</span> [<span class="dt">Integer</span>] (<span class="dt">Tree</span> (<span class="dt">Integer</span>, a))</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  go x (<span class="dt">Node</span> a ts) <span class="ot">=</span> <span class="dt">Node</span> (x, a) <span class="op">&lt;$&gt;</span> labelChildren x ts</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="ot">  labelChildren ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> [<span class="dt">Tree</span> a] <span class="ot">-&gt;</span> <span class="dt">State</span> [<span class="dt">Integer</span>] [<span class="dt">Tree</span> (<span class="dt">Integer</span>, a)]</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  labelChildren _ [] <span class="ot">=</span> <span class="fu">pure</span> []</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  labelChildren x (t <span class="op">:</span> ts) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> curPrime</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    t&#39; <span class="ot">&lt;-</span> go (x <span class="op">*</span> p) t</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> ts <span class="kw">of</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>      [] <span class="ot">-&gt;</span> <span class="fu">pure</span> [t&#39;]</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      _ <span class="ot">-&gt;</span> <span class="kw">do</span></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        nextPrime</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        (t&#39; <span class="op">:</span>) <span class="op">&lt;$&gt;</span> labelChildren x ts</span></code></pre></div>
-<p>There is a bit of additional glue code we need get the parsed tree
-from the input, apply <code>labelTree</code>, and then print out the node
-labels in order. However, I’m not going to bother showing it,
-because—this solution is not accepted! It fails with a WA (Wrong
-Answer) verdict. What gives?</p>
-</section>
-<section id="keeping-things-small" class="level2">
-<h2>Keeping things small</h2>
-<p>The key is one of the last sentences in the problem statement, which I
-haven’t mentioned so far: all the labels in our output must be at most
-<span class="math inline">\(10^{18}\)</span>. Why is this a problem? Multiplying by primes over and
-over again, it’s not hard to get rather large numbers. For example,
-consider the tree below:</p>
-<p><span class="sidenote-wrapper"><label for="sn-4" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-4" class="margin-toggle"/><span class="marginnote">Tree for which our naïve scheme generates labels that are too large<br />
-<br />
-</span></span></p>
-<figure>
-<img src="/diagrams/93210957d4a3e60e.svg" />
-</figure>
-<p>Under our scheme, the root gets label <span class="math inline">\(1\)</span>, and the children of the
-root get consecutive primes <span class="math inline">\(2, 3, 5, \dots, 29\)</span>. Then the nodes
-in the long chain hanging off the last sibling get labels <span class="math inline">\(29^2, 29^3, \dots, 29^{13}\)</span>, and <span class="math inline">\(29^{13}\)</span> is too big—in fact, it is
-approximately <span class="math inline">\(10^{19}\)</span>. And this tree has only 23 nodes; in general
-the input can have up to 60.</p>
-<p>Of course, <span class="math inline">\(29\)</span> was a poor choice of factor for such a long chain—we
-should have instead labelled the long chain with powers of,
-say, 2. Notice that if we have a “tree” consisting of a single long
-chain of 60 nodes (and you can bet this is one of the secret test
-inputs!), we just barely get by labelling it with powers of two from
-<span class="math inline">\(2^0\)</span> up to <span class="math inline">\(2^{59}\)</span>: in fact <span class="math inline">\(2^{59} &lt; 10^{18} &lt; 2^{60}\)</span>. So in
-general, we want to find a way to label long chains with small primes,
-and reserve larger primes for shorter chains.</p>
-</section>
-<section id="attempt-1-sorting-by-height" class="level2">
-<h2>Attempt 1: sorting by height</h2>
-<p>One obvious approach is to simply sort the children at each node by
-decreasing height, before traversing the tree to assign prime
-factors. This handles the above example correctly, since the long
-chain would be sorted to the front and assigned the factor 2.
-However, this does not work in general! It can still fail to assign
-the smallest primes to the longest chains. As a simple example,
-consider this tree, in which the children of every node are already
-sorted by decreasing height from left to right:</p>
-<p><span class="sidenote-wrapper"><label for="sn-5" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-5" class="margin-toggle"/><span class="marginnote">Tree for which sorting by height first does not work<br />
-<br />
-</span></span></p>
-<figure>
-<img src="/diagrams/6bb8ef474a78c853.svg" />
-</figure>
-<p>The straightforward traversal algorithm indeed assigns powers of 2 to
-the left spine of the tree, but it then assigns 3, 5, 7, and so on to
-all the tiny spurs hanging off it. So by the time we get to other long
-chain hanging off the root, it is assigned powers of <span class="math inline">\(43\)</span>, which are
-too big. In fact, we want to assign powers of 2 to the left spine,
-powers of 3 to the chain on the right, and then use the rest of the
-primes for all the short spurs. But this sort of “non-local”
-labelling means we can’t assign primes via a tree traversal.</p>
-<p>To drive this point home, here’s another example tree. This one is
-small enough that it probably doesn’t matter too much how we label it,
-but it’s worth thinking about how to label the longest chains with the
-smallest primes. I’ve drawn it in a “left-leaning” style to further
-emphasize the different chains that are involved.</p>
-<p><span class="sidenote-wrapper"><label for="sn-6" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-6" class="margin-toggle"/><span class="marginnote">Tree with chains of various lengths<br />
-<br />
-</span></span></p>
-<figure>
-<img src="/diagrams/45540cc73cab6222.svg" />
-</figure>
-<p>In fact, we want to assign the factor 2 to the long chain on the left;
-then the factor 3 to the second-longest chain, in the fourth column;
-then 5 to the length-6 chain in the second column; 7 to the length-3
-chain all the way on the right; and finally 11 to the smallest chain, in column 3.</p>
-<p>In general, then, we want a way to <em>decompose</em> an arbitrary tree into
-chains, where we repeatedly identify the longest chain, remove it from
-consideration, and then identify the longest chain from the remaining
-nodes, and so on. Once we have decomposed a tree into chains, it will
-be a relatively simple matter to sort the chains by length and assign
-consecutive prime factors.</p>
-<p>This decomposition occasionally comes in handy (for example, see
-<a href="https://open.kattis.com/problems/floatingformation">Floating
-Formation</a>), and
-belongs to a larger family of important tree decomposition techniques
-such as <a href="https://cp-algorithms.com/graph/hld.html">heavy-light
-decomposition</a>. Next time,
-I’ll demonstrate how to implement such tree decompositions in Haskell!</p>
-</section>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Competitive Programming in Haskell: tree path decomposition, part I" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>Thu, 11 Jul 2024 00:00:00 UT</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2024/07/11/cpih-factor-full-tree.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 

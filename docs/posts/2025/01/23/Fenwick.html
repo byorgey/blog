@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - You could have invented Fenwick trees</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2024/11/27/stacks-queues.html">« Competitive Programming in Haskell: stacks, queues, and monoidal sliding windows</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>You could have invented Fenwick trees</h1>
+
+<div class="info">
+  Posted on January 23, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Haskell'." href="../../../../tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged 'segment'." href="../../../../tag/segment.html" rel="tag">segment</a>, <a title="All pages tagged 'Fenwick'." href="../../../../tag/Fenwick.html" rel="tag">Fenwick</a>, <a title="All pages tagged 'tree'." href="../../../../tag/tree.html" rel="tag">tree</a>, <a title="All pages tagged 'JFP'." href="../../../../tag/JFP.html" rel="tag">JFP</a>, <a title="All pages tagged 'journal'." href="../../../../tag/journal.html" rel="tag">journal</a>, <a title="All pages tagged 'paper'." href="../../../../tag/paper.html" rel="tag">paper</a>
+  
+</div>
+
+<section>
+<p>My paper, <a href="http://ozark.hendrix.edu/~yorgey/pub/Fenwick-ext.pdf">You could have invented Fenwick
+trees</a>, has just
+been published as a <a href="https://www.cambridge.org/core/services/aop-cambridge-core/content/view/B4628279D4E54229CED97249E96F721D/S0956796824000169a.pdf/you-could-have-invented-fenwick-trees.pdf">Functional Pearl in the Journal of Functional
+Programming</a>.
+This blog post is an advertisement for the paper, which presents a
+novel way to derive the <em>Fenwick tree</em> data structure from first
+principles.</p>
+<p>Suppose we have a sequence of integers <span class="math inline">\(a_1, \dots, a_n\)</span> and want to be
+able to perform two operations:</p>
+<ul>
+<li>we can <em>update</em> any <span class="math inline">\(a_i\)</span> by adding some value <span class="math inline">\(v\)</span> to it; or</li>
+<li>we can perform a <em>range query</em>, which asks for the sum of the values
+<span class="math inline">\(a_i + \dots + a_j\)</span> for any range <span class="math inline">\([i,j]\)</span>.</li>
+</ul>
+<p>There are several ways to solve this problem. For example:</p>
+<ol type="1">
+<li>We could just keep the sequence of integers in a mutable array.
+Updating is <span class="math inline">\(O(1)\)</span>, but range queries are <span class="math inline">\(O(n)\)</span> since we must
+actually loop through the range and add up all the values.</li>
+<li>We could keep a separate array of <em>prefix sums</em> on the side, so
+that <span class="math inline">\(P_i\)</span> stores the sum <span class="math inline">\(a_1 + \dots + a_i\)</span>. Then the range
+query on <span class="math inline">\([i,j]\)</span> can be computed as <span class="math inline">\(P_j - P_{i-1}\)</span>, which only
+takes <span class="math inline">\(O(1)\)</span>; however, updates now take <span class="math inline">\(O(n)\)</span> since we must also
+update all the prefix sums which include the updated element.</li>
+<li>We can get the best of both worlds using a <em>segment tree</em>, a binary
+tree storing the elements at the leaves, with each internal node
+caching the sum of its children. Then both update and range query
+can be done in <span class="math inline">\(O(\lg n)\)</span>.</li>
+</ol>
+<p>I won’t go through the details of this third solution here, but it is
+relatively straightforward to understand and implement, especially in
+a functional language.</p>
+<p>However, there is a fourth solution, known as a <em>Fenwick tree</em> or
+<em>Fenwick array</em>, independently invented by <span class="citation" data-cites="ryabko1989fast">@ryabko1989fast</span> and
+<span class="citation" data-cites="fenwick1994new">@fenwick1994new</span>. Here’s a typical Java implementation of a Fenwick
+tree:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode .java"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FenwickTree <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">long</span><span class="op">[]</span> a<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="fu">FenwickTree</span><span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span> a <span class="op">=</span> <span class="kw">new</span> <span class="dt">long</span><span class="op">[</span>n<span class="op">+</span><span class="dv">1</span><span class="op">];</span> <span class="op">}</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">long</span> <span class="fu">prefix</span><span class="op">(</span><span class="dt">int</span> i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">long</span> s <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(;</span> i <span class="op">&gt;</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">-=</span> <span class="fu">LSB</span><span class="op">(</span>i<span class="op">))</span> s <span class="op">+=</span> a<span class="op">[</span>i<span class="op">];</span> <span class="cf">return</span> s<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">update</span><span class="op">(</span><span class="dt">int</span> i<span class="op">,</span> <span class="dt">long</span> delta<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(;</span> i <span class="op">&lt;</span> a<span class="op">.</span><span class="fu">length</span><span class="op">;</span> i <span class="op">+=</span> <span class="fu">LSB</span><span class="op">(</span>i<span class="op">))</span> a<span class="op">[</span>i<span class="op">]</span> <span class="op">+=</span> delta<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">long</span> <span class="fu">range</span><span class="op">(</span><span class="dt">int</span> i<span class="op">,</span> <span class="dt">int</span> j<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">prefix</span><span class="op">(</span>j<span class="op">)</span> <span class="op">-</span> <span class="fu">prefix</span><span class="op">(</span>i<span class="op">-</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">long</span> <span class="fu">get</span><span class="op">(</span><span class="dt">int</span> i<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> <span class="fu">range</span><span class="op">(</span>i<span class="op">,</span>i<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">set</span><span class="op">(</span><span class="dt">int</span> i<span class="op">,</span> <span class="dt">long</span> v<span class="op">)</span> <span class="op">{</span> <span class="fu">update</span><span class="op">(</span>i<span class="op">,</span> v <span class="op">-</span> <span class="fu">get</span><span class="op">(</span>i<span class="op">));</span> <span class="op">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">int</span> <span class="fu">LSB</span><span class="op">(</span><span class="dt">int</span> i<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> i <span class="op">&amp;</span> <span class="op">(-</span>i<span class="op">);</span> <span class="op">}</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>I know what you’re thinking: what the heck!? There are some loops adding and
+subtracting <code>LSB(i)</code>, which is defined as the bitwise AND of <code>i</code> and
+<code>-i</code>? What on earth is this doing? Unless you have seen this
+before, this code is probably a complete mystery, as it was for me the
+first time I encountered it.</p>
+<p>However, from the right point of view, we can derive this mysterious imperative
+code as an optimization of segment trees. In particular, in my
+paper I show how we can:</p>
+<ol type="1">
+<li>Start with a segment tree.</li>
+<li>Delete some redundant info from the segment tree, and shove the
+remaining values into an array in a systematic way.</li>
+<li>Define operations for moving around in the resulting Fenwick array by
+converting array indices to indices in a segment tree, moving
+around the tree appropriately, and converting back.</li>
+<li>Describe these operations using a Haskell EDSL for
+infinite-precision 2’s complement binary arithmetic, and fuse away
+all the intermediate conversion steps, until the above mysterious
+implementation pops out.</li>
+<li>Profit.</li>
+</ol>
+<p>I may be exaggerating step 5 a teensy bit. But you’ll find everything
+else described in much greater detail, with pretty pictures, in the
+paper! The <a href="https://www.cambridge.org/core/journals/journal-of-functional-programming/article/you-could-have-invented-fenwick-trees/B4628279D4E54229CED97249E96F721D">official JFP version is here</a>, and here’s an <a href="http://ozark.hendrix.edu/~yorgey/pub/Fenwick-ext.pdf">extended
+version with an appendix containing an omitted proof</a>.</p>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="You could have invented Fenwick trees">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
