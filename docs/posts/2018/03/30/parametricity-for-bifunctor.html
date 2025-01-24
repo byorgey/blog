@@ -7,6 +7,7 @@
         <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
         <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
         <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte-extra.css" />
 
         <!-- See https://katex.org/docs/browser -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
@@ -129,7 +130,7 @@ satisfying (IB). (As with <code>Functor</code>, (IB) + parametricity is enough t
 We can now take the polymorphic type of <code>bimap</code> and turn the crank to derive a statement of parametricity. I’m assuming some familiarity with this process; for details, see <a href="https://people.mpi-sws.org/~dreyer/tor/papers/wadler.pdf">Wadler’s paper</a>. If you don’t care about the details of the derivation, you can just skip to the final statement of parametricity at the end of this section, and then proceed to see how it is applied in the next.
 </p>
 <p>
-Parametricity for <code>bimap</code> says that if we interpret its type as a relation (according to certain rules), then <code>(bimap, bimap)</code> will be a member of the relation, that is, <code>bimap</code> will be related to itself. Below I show the process of expanding out the definition of the relation corresponding to <code>bimap</code>’s type. (I don’t want to take the time to typeset it really nicely using LaTeX or anything like that; a slightly cleaned-up text version will do for now.) I use <code><span class="citation" data-cites="a">@a</span></code> to denote explicit type application, but after the second step I leave type application implicit to reduce clutter.
+Parametricity for <code>bimap</code> says that if we interpret its type as a relation (according to certain rules), then <code>(bimap, bimap)</code> will be a member of the relation, that is, <code>bimap</code> will be related to itself. Below I show the process of expanding out the definition of the relation corresponding to <code>bimap</code>’s type. (I don’t want to take the time to typeset it really nicely using LaTeX or anything like that; a slightly cleaned-up text version will do for now.) I use <code><span class="citation" data-cites="a">(<strong>a?</strong>)</span></code> to denote explicit type application, but after the second step I leave type application implicit to reduce clutter.
 </p>
 <pre><code>(bimap,bimap) ∈ ∀ a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
 

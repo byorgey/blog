@@ -90,3 +90,6 @@ I may be exaggerating step 5 a teensy bit.  But you'll find everything
 else described in much greater detail, with pretty pictures, in the
 paper! The [official JFP version is here](https://www.cambridge.org/core/journals/journal-of-functional-programming/article/you-could-have-invented-fenwick-trees/B4628279D4E54229CED97249E96F721D), and here's an [extended
 version with an appendix containing an omitted proof](http://ozark.hendrix.edu/~yorgey/pub/Fenwick-ext.pdf).
+
+References
+----------
