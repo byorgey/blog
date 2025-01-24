@@ -27,6 +27,7 @@ li:not(:first-child) {
 /* To get the pandoc-generated bibliography to match style, define csl classes. */
 div.csl-bib-body {
     width: 55%;
+    font-size: 1.3rem;
 }
 div.csl-entry {
     clear: both;

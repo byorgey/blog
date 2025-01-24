@@ -7,7 +7,7 @@ import Hakyll
 import Text.Pandoc (Block, HTMLMathMethod (MathJax), Pandoc, bottomUpM)
 import Text.Pandoc.Diagrams
 import Text.Pandoc.Highlighting (Style, styleToCss, tango)
-import Text.Pandoc.Options (WriterOptions (..))
+import Text.Pandoc.Options (ReaderOptions, WriterOptions (..), CiteMethod (..))
 import Text.Pandoc.SideNote (usingSideNotes)
 
 ------------------------------------------------------------
@@ -36,6 +36,18 @@ pandocCodeStyle :: Style
 pandocCodeStyle = tango
 
 ------------------------------------------------------------
+-- Bibliography
+------------------------------------------------------------
+
+-- https://tony-zorman.com/posts/hakyll-and-bibtex.html
+
+processBib :: Item Pandoc -> Compiler (Item Pandoc)
+processBib pandoc = do
+  csl <- load "bib/chicago.csl"
+  bib <- load "bib/references.bib"
+  processPandocBiblio csl bib pandoc
+
+------------------------------------------------------------
 -- Diagrams rendering
 ------------------------------------------------------------
 
@@ -61,14 +73,32 @@ diagramOpts =
 
 myPandocCompiler :: Compiler (Item String)
 myPandocCompiler =
-  pandocCompilerWithTransformM
+  myPandocCompilerWithTransformM
     defaultHakyllReaderOptions
     defaultHakyllWriterOptions
       { writerHighlightStyle = Just pandocCodeStyle
       , writerHTMLMathMethod = MathJax ""
       , writerSectionDivs = True
+      , writerCiteMethod = Citeproc
       }
-    (compileDiagrams >=> (return . usingSideNotes))
+    (processBib >=> traverse compileDiagrams >=> traverse (pure . usingSideNotes))
+
+-- https://tony-zorman.com/posts/hakyll-and-bibtex.html
+
+myRenderPandocWithTransformM
+  :: ReaderOptions -> WriterOptions
+  -> (Item Pandoc -> Compiler (Item Pandoc))  -- this changed!
+  -> Item String
+  -> Compiler (Item String)
+myRenderPandocWithTransformM ropt wopt f i =
+  writePandocWith wopt <$> (f =<< readPandocWith ropt i)
+
+myPandocCompilerWithTransformM
+  :: ReaderOptions -> WriterOptions
+  -> (Item Pandoc -> Compiler (Item Pandoc))  -- this changed!
+  -> Compiler (Item String)
+myPandocCompilerWithTransformM ropt wopt f =
+  getResourceBody >>= myRenderPandocWithTransformM ropt wopt f
 
 ------------------------------------------------------------
 -- Custom contexts
@@ -136,6 +166,8 @@ main = hakyllWith config $ do
     route idRoute
     compile $ makeItem $ styleToCss pandocCodeStyle
 
+  match "bib/*.csl" $ compile cslCompiler
+  match "bib/*.bib" $ compile biblioCompiler
   --------------------------------------------------
   -- Static pages
   --------------------------------------------------
