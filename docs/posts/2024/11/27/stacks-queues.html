@@ -115,7 +115,7 @@ the element being popped, something like this:</p>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">pop ::</span> <span class="dt">GroupStack</span> g a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (a, <span class="dt">GroupStack</span> g a)</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>pop (<span class="dt">GroupStack</span> f g as) <span class="ot">=</span> <span class="kw">case</span> as <span class="kw">of</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  [] <span class="ot">-&gt;</span> <span class="dt">Nothing</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  (a<span class="op">:</span>as') <span class="ot">-&gt;</span> <span class="dt">GroupStack</span> f (inv (f a) <span class="op">&lt;&gt;</span> g) as'</span></code></pre></div>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  (a<span class="op">:</span>as') <span class="ot">-&gt;</span> <span class="dt">Just</span> (a, <span class="dt">GroupStack</span> f (inv (f a) <span class="op">&lt;&gt;</span> g) as')</span></code></pre></div>
 <p>But this won’t work for a monoid, of course. The problem is <code>pop</code>, where
 we can’t just subtract the measure for the element being
 popped. Instead, we need to be able to <em>restore</em> the measure of a
