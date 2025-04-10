@@ -77,7 +77,7 @@ push a (GroupStack f g as) = GroupStack f (f a <> g) (a:as)
 pop :: GroupStack g a -> Maybe (a, GroupStack g a)
 pop (GroupStack f g as) = case as of
   [] -> Nothing
-  (a:as') -> GroupStack f (inv (f a) <> g) as'
+  (a:as') -> Just (a, GroupStack f (inv (f a) <> g) as')
 ```
 
 But this won't work for a monoid, of course. The problem is `pop`, where
