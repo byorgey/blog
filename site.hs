@@ -1,13 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
+import Control.Applicative (liftA2)
 import Control.Monad ((<=<), (>=>))
 import Data.List (findIndex)
 import Hakyll
 import Text.Pandoc (Block, HTMLMathMethod (MathJax), Pandoc, bottomUpM)
 import Text.Pandoc.Diagrams
 import Text.Pandoc.Highlighting (Style, styleToCss, tango)
-import Text.Pandoc.Options (ReaderOptions, WriterOptions (..), CiteMethod (..))
+import Text.Pandoc.Options (CiteMethod (..), ReaderOptions, WriterOptions (..))
 import Text.Pandoc.SideNote (usingSideNotes)
 
 ------------------------------------------------------------
@@ -85,18 +86,20 @@ myPandocCompiler =
 
 -- https://tony-zorman.com/posts/hakyll-and-bibtex.html
 
-myRenderPandocWithTransformM
-  :: ReaderOptions -> WriterOptions
-  -> (Item Pandoc -> Compiler (Item Pandoc))  -- this changed!
-  -> Item String
-  -> Compiler (Item String)
+myRenderPandocWithTransformM ::
+  ReaderOptions ->
+  WriterOptions ->
+  (Item Pandoc -> Compiler (Item Pandoc)) -> -- this changed!
+  Item String ->
+  Compiler (Item String)
 myRenderPandocWithTransformM ropt wopt f i =
   writePandocWith wopt <$> (f =<< readPandocWith ropt i)
 
-myPandocCompilerWithTransformM
-  :: ReaderOptions -> WriterOptions
-  -> (Item Pandoc -> Compiler (Item Pandoc))  -- this changed!
-  -> Compiler (Item String)
+myPandocCompilerWithTransformM ::
+  ReaderOptions ->
+  WriterOptions ->
+  (Item Pandoc -> Compiler (Item Pandoc)) -> -- this changed!
+  Compiler (Item String)
 myPandocCompilerWithTransformM ropt wopt f =
   getResourceBody >>= myRenderPandocWithTransformM ropt wopt f
 
@@ -134,6 +137,14 @@ xs !? n
         (const Nothing)
         xs
         n
+
+------------------------------------------------------------
+-- Tags + categories
+------------------------------------------------------------
+
+getTagsAndCategories :: MonadMetadata m => Identifier -> m [String]
+getTagsAndCategories ident =
+  liftA2 (++) (getTagsByField "tags" ident) (getTagsByField "categories" ident)
 
 ------------------------------------------------------------
 -- Rules
@@ -186,7 +197,7 @@ main = hakyllWith config $ do
 
   -- https://javran.github.io/posts/2014-03-01-add-tags-to-your-hakyll-blog.html
 
-  tags <- buildTags postPattern (fromCapture "tag/*.html")
+  tags <- buildTagsWith getTagsAndCategories postPattern (fromCapture "tag/*.html")
 
   tagsRules tags $ \tag pat -> do
     let title = "Posts tagged \"" ++ tag ++ "\""
