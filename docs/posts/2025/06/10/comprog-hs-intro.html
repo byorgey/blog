@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Introduction to competitive programming in Haskell</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte-extra.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2025/03/13/HCPC25.html">« Hendrix College Programming Contest 2025</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Introduction to competitive programming in Haskell</h1>
+
+<div class="info">
+  Posted on June 10, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'Kattis'." href="../../../../tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged 'competitive programming'." href="../../../../tag/competitive%20programming.html" rel="tag">competitive programming</a>, <a title="All pages tagged 'haskell'." href="../../../../tag/haskell.html" rel="tag">haskell</a>
+  
+</div>
+
+<section>
+<p>A few days ago I gave a talk at <a href="https://zfoh.ch/zurihac2025/">ZuriHac
+2025</a> entitled <em>Haskell for Competitive
+Programming</em>, a basic introduction to competitive programming in
+general, and the joy of using Haskell for competitive programming in
+particular. This is an expanded version of my talk in blog post form.
+(For an even gentler introduction to competitive programming in
+Haskell, see <a href="https://byorgey.github.io/blog/posts/2019/04/24/competitive-programming-in-haskell-basic-setup.html">this old blog post from
+2019</a>.)</p>
+<section id="competitive-programming" class="level2">
+<h2>Competitive Programming</h2>
+<p>First of all, what is <em>competitive programming</em>? It’s a broad term,
+but when I talk about competitive programming I have something in mind
+along the following lines:</p>
+<ul>
+<li>There are well-specified input and output formats, usually with a
+few examples, and a precise specification of what the output should
+be for a given input.</li>
+<li>Your job is to write a program which transforms input meeting the
+specification into a correct output.</li>
+<li>You submit your program, which is tested on a number of inputs and
+declared correct if and only if it yields the correct output for all
+the tested inputs.</li>
+<li>There is often time pressure involved—that is, you have a limited
+amount of time in which to write your program. However, it is also
+possible to participate “recreationally”, simply for the joy of
+problem-solving, without time pressure (in fact, the vast majority
+of the competitive programming I do is of this form, though I have
+occasionally participated in timed contests).</li>
+</ul>
+<p>There are many variations: whether you are allowed to use code
+libraries prepared ahead of time, or must type everything from
+scratch; outputs can be scored according to some criteria rather
+than simply being judged right or wrong; and so on.</p>
+<p>There are many sites which allow you to participate in contests and/or
+solve competitive programming problems recreationally. My favorite is
+<a href="https://open.kattis.com">Open Kattis</a>; I mention some others at the
+end of this post.</p>
+</section>
+<section id="pot-a-first-example" class="level2">
+<h2>Pot: a first example</h2>
+<p>As an introductory example, let’s look at
+<a href="https://open.kattis.com/problems/pot">Pot</a>. As usual, there’s a silly
+story, but what it boils down to is that we will be given a sequence
+of numbers, and we should interpret the last digit of each number as an
+exponent, then sum the results. For example, if given <code>125</code>, we
+should interpret it as <span class="math inline">\(12^5\)</span>, and so on.</p>
+<section id="dealing-with-io-via-interact" class="level3">
+<h3>Dealing with I/O via <code>interact</code></h3>
+<p>An imperative approach to such a problem would involve doing a
+sequence of input commands, some computation, and a sequence of output
+commands—possibly interleaved with one another—and we might
+immediately think to start using functions like <code>getLine</code> and
+<code>putStrLn</code> to do the required I/O in Haskell. However, there is a
+much more fruitful functional perspective: we are simply being asked
+to implement a particular (partial) function of type <code>String -&gt; String</code>. The fact that the function’s input and output should be
+hooked up to the program’s standard input and output is just an
+implementation detail. Competitive programming is functional at
+heart!</p>
+<p>It turns out that Haskell’s standard library already has the perfect
+built-in function for this scenario:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">interact</span><span class="ot"> ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>) <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span></code></pre></div>
+<p><code>interact</code> takes a pure <code>String -&gt; String</code> function and turns it into
+an <code>IO</code> action which reads from standard input, passes the input to
+the given <code>String -&gt; String</code> function, and prints the result to standard output. It even
+does this using <em>lazy</em> I/O—that is, the input is
+read lazily, as demanded by the function, so that the output and input
+can be automatically interleaved depending on which parts of the
+output depend on which parts of the input. In particular, this means
+that that the entire input need not be stored in memory at once. If
+the inputs can be processed into outputs in a streaming fashion—as
+is the case in the example problem we are currently
+considering—then the input and output will be interleaved. In
+general, this kind of lazy I/O is
+<a href="https://stackoverflow.com/questions/5892653/whats-so-bad-about-lazy-i-o">problematic</a>
+and even unsafe, but it’s perfect for this scenario.</p>
+</section>
+<section id="solving-the-problem-with-a-pipeline" class="level3">
+<h3>Solving the problem with a pipeline</h3>
+<p>So <code>interact</code> does all the <code>IO</code> for us, and all we have to do is write
+a pure <code>String -&gt; String</code> function which transforms the input to the
+output. In this case, we can split the input into <code>lines</code>, <code>drop</code> the
+first line (we don’t need to know how many lines of input there
+are—we just get a list of all of them, since <code>interact</code> will read
+until EOF), <code>read</code> each number and turn it into the first digits
+raised to the power of the last digit, then <code>sum</code> them and <code>show</code> the
+result. The full solution is below. Notice how I use the “backwards
+composition” operator <code>(&gt;&gt;&gt;)</code>, since I find it more convenient to type
+from left to right as I’m thinking about transforming from input to
+output.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Category</span> ((&gt;&gt;&gt;))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="fu">interact</span> <span class="op">$</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lines</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">drop</span> <span class="dv">1</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (<span class="fu">read</span> <span class="op">&gt;&gt;&gt;</span> process) <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">show</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ot">process ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>process n <span class="ot">=</span> (n <span class="ot">`div`</span> <span class="dv">10</span>) <span class="op">^</span> (n <span class="ot">`mod`</span> <span class="dv">10</span>)</span></code></pre></div>
+<p>I use <code>Integer</code> here since raw performance doesn’t matter much for
+this easy problem, and <code>Integer</code> avoids any potential problems with
+overflow. However, using <code>Int</code> instead of <code>Integer</code> can make a big
+difference for some compute-intensive problems. On Kattis, <code>Int</code> will
+always be 64 bits, but last time I checked <code>Int</code> can be 32 bits on
+Codeforces.</p>
+</section>
+</section>
+<section id="shopping-list-wholemeal-programming-and-bytestring" class="level2">
+<h2>Shopping List: wholemeal programming and ByteString</h2>
+<p>Let’s consider <a href="https://open.kattis.com/problems/shoppinglist">Shopping List</a> as a second example. In this
+problem, we are given a list of shopping lists, where each shopping
+list consists of a list of space-separated items on a single line. We
+are asked to find the items which are common to all the shopping
+lists, and print them in alphabetical order.</p>
+<section id="wholemeal-programming-with-standard-data-structures" class="level3">
+<h3>Wholemeal programming with standard data structures</h3>
+<p>This problem is very amenable to a <a href="https://www.cs.ox.ac.uk/ralf.hinze/publications/ICFP09.pdf">“wholemeal programming”
+approach</a>,
+where we work entirely at the level of whole data structure
+transformations rather than looping over individual elements. We can
+turn each shopping list into a set, then find the intersection of all
+the sets. Moreover, if we use <code>Data.Set</code>, which uses an ordering on
+the elements, we will get the result in alphabetical order “for free”
+(“free” as in the amount of code we have to write, not necessarily
+runtime cost). Haskell has a decent collection of data structures in
+the <code>containers</code> library (<code>(Int)Set</code>, <code>(Int)Map</code>, <code>Seq</code>, <code>Tree</code>, and
+even <code>Graph</code>) with a large collection of standard methods to construct
+and manipulate them, which are bread and butter for many competitive
+programming problems.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE ImportQualifiedPost #-}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Category</span> ((&gt;&gt;&gt;))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Set</span> (<span class="dt">Set</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Set</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">S</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="fu">interact</span> <span class="op">$</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lines</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">drop</span> <span class="dv">1</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (<span class="fu">words</span> <span class="op">&gt;&gt;&gt;</span> S.fromList) <span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">foldr1</span> S.intersection <span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  (\s <span class="ot">-&gt;</span> <span class="fu">show</span> (S.size s) <span class="op">:</span> S.toList s) <span class="op">&gt;&gt;&gt;</span> <span class="fu">unlines</span></span></code></pre></div>
+</section>
+<section id="bytestring-vs-string" class="level3">
+<h3><code>ByteString</code> vs <code>String</code></h3>
+<p>Unfortunately, when we try submitting this code, we get a Time Limit
+Exceeded error! What’s wrong?</p>
+<p>The issue is our use of <code>String</code>, which is an actual linked list of
+characters and is very slow, especially when we have many short
+strings, as in this problem. In the worst case, we could have 100
+shopping lists, each with 5000 items of length 10, for a total of up
+to 5 MB of input; with that much input data to read, any overhead
+associated with reading and parsing the input can make a significant
+difference.</p>
+<p>Switching to <code>ByteString</code> is much faster. Why not <code>Text</code>, you ask?
+Well, <code>Text</code> has to do a bunch of extra work to deal properly with
+Unicode encodings, but in 99.99% of all competitive programming problems
+I’ve ever seen, the input is guaranteed to be ASCII. So not
+only do we not need <code>Text</code>, we can get away with a version of
+<code>ByteString</code> that simply assumes every character is a single 8-bit
+byte!</p>
+<p>Once we import it, all we need to do is replace a bunch of
+<code>String</code> operations with corresponding <code>ByteString</code> ones.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE ImportQualifiedPost #-}</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Category</span> ((&gt;&gt;&gt;))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Set</span> (<span class="dt">Set</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Set</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">S</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.ByteString.Lazy.Char8</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">BS</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> BS.interact <span class="op">$</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  BS.lines <span class="op">&gt;&gt;&gt;</span> <span class="fu">drop</span> <span class="dv">1</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (BS.words <span class="op">&gt;&gt;&gt;</span> S.fromList) <span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">foldr1</span> S.intersection <span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  (\s <span class="ot">-&gt;</span> BS.pack (<span class="fu">show</span> (S.size s)) <span class="op">:</span> S.toList s) <span class="op">&gt;&gt;&gt;</span> BS.unlines</span></code></pre></div>
+</section>
+</section>
+<section id="a-favourable-ending-input-parsing-and-lazy-recursive-structures" class="level2">
+<h2>A Favourable Ending: input parsing and lazy recursive structures</h2>
+<p>As a last example, let’s look at <a href="https://open.kattis.com/problems/favourable">A Favourable
+Ending</a>. This problem
+consists of a number of test cases; each test case describes a
+choose-your-own-adventure book with a number of sections, where each
+section is either an ending (either good or bad), or allows the reader
+to choose among three sections to proceed to next. For each test case,
+we are asked how many distinct stories there are with good endings.</p>
+<p>More abstractly, wince we are guaranteed that there are no loops, the
+sections of the book form a
+<a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">DAG</a>, and we
+are asked to count the number of distinct paths in a DAG from a
+distinguished start node to any of a distinguished set of “good”
+leaves.</p>
+<section id="parsing-with-scanner" class="level3">
+<h3>Parsing with Scanner</h3>
+<p>Parsing the input for this problem is trickier than the other
+examples so far. In theory, we could still ignore the first number
+specifying the number of test cases, and just continue reading test
+cases until EOF. However, each test case begins with a number
+specifying the number of sections in the book, and we cannot ignore
+this number: we need to know how many lines to read before the start
+of the next test case. Doing this manually involves pattern-matching
+on a list of lines, using <code>splitAt</code> to split off the lines for each
+test case, and manually passing around the list of the remaining
+lines: tedious.</p>
+<p>Fortunately, Haskell is great at building abstractions to insulate us
+from such tedium. I’ve developed a <a href="https://byorgey.github.io/blog/posts/2019/05/22/competitive-programming-in-haskell-scanner.html">simple <code>Scanner</code>
+abstraction</a>
+which works well in this context.</p>
+<p>We begin by creating some data types to represent the input in
+structured form:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Book</span> <span class="ot">=</span> <span class="dt">Map</span> <span class="dt">Int</span> <span class="dt">Section</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Section</span> <span class="ot">=</span> <span class="dt">End</span> <span class="dt">Disposition</span> <span class="op">|</span> <span class="dt">Choice</span> [<span class="dt">Int</span>]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Disposition</span> <span class="ot">=</span> <span class="dt">Favourably</span> <span class="op">|</span> <span class="dt">Catastrophically</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>)</span></code></pre></div>
+<p>Now we can write a <code>Scanner</code> to read a <code>Book</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">book ::</span> <span class="dt">Scanner</span> <span class="dt">Book</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>book <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  s <span class="ot">&lt;-</span> int</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  M.fromList <span class="op">&lt;$&gt;</span> s <span class="op">&gt;&lt;</span> ((,) <span class="op">&lt;$&gt;</span> int <span class="op">&lt;*&gt;</span> section)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ot">section ::</span> <span class="dt">Scanner</span> <span class="dt">Section</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>section <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  t <span class="ot">&lt;-</span> peek</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> <span class="fu">isDigit</span> (BS.head t)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">then</span> <span class="dt">Choice</span> <span class="op">&lt;$&gt;</span> (<span class="dv">3</span> <span class="op">&gt;&lt;</span> int)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> <span class="dt">End</span> <span class="op">.</span> readLower <span class="op">.</span> BS.unpack <span class="op">&lt;$&gt;</span> str</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="ot">readLower ::</span> <span class="dt">Read</span> a <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> a</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>readLower <span class="ot">=</span> <span class="fu">read</span> <span class="op">.</span> onHead <span class="fu">toUpper</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="ot">onHead ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>onHead _ [] <span class="ot">=</span> []</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>onHead f (x <span class="op">:</span> xs) <span class="ot">=</span> f x <span class="op">:</span> xs</span></code></pre></div>
+<p>(<code>readLower</code> and <code>onHead</code> are functions in my personal competitive
+programming template, included here for completeness).</p>
+<p>One more piece of boilerplate we can write at this point is the <code>main</code>
+function, which simply consists of running the <code>Scanner</code> to read all the
+test cases, solving each test case, and formatting the output.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> BS.interact <span class="op">$</span> runScanner (numberOf book) <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (solve <span class="op">&gt;&gt;&gt;</span> showB) <span class="op">&gt;&gt;&gt;</span> BS.unlines</span></code></pre></div>
+</section>
+<section id="dp-topsort-with-a-lazy-recursive-map" class="level3">
+<h3>DP + topsort with a lazy recursive map</h3>
+<p>With all that framework out of the way, we can turn to actually
+solving the problem. And here is where something really fun happens.
+In a typical imperative language, we would have to first topologically
+sort the book sections, then use dynamic programming to compute the
+number of good stories beginning at each section, starting with the
+leaves and proceeding backwards through the topological sort to the
+start—dozens of lines of code. However, in Haskell we can get all
+of this for free, just by defining a lazy, recursive map!</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solve ::</span> <span class="dt">Book</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>solve book <span class="ot">=</span> endings <span class="op">!</span> <span class="dv">1</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    endings <span class="ot">=</span> M.fromList [(p, endingsFrom (book<span class="op">!</span>p)) <span class="op">|</span> p <span class="ot">&lt;-</span> M.keys book]</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    endingsFrom (<span class="dt">End</span> d) <span class="ot">=</span> <span class="kw">if</span> d <span class="op">==</span> <span class="dt">Favourably</span> <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    endingsFrom (<span class="dt">Choice</span> ps) <span class="ot">=</span> <span class="fu">sum</span> <span class="op">$</span> <span class="fu">map</span> (endings <span class="op">!</span>) ps</span></code></pre></div>
+<p><code>endings</code> is a <code>Map</code> from each book section to the number of favorable
+stories starting with that section. Notice how its values are defined
+via the <code>endingsFrom</code> function, which is in turn defined, in the
+<code>Choice</code> case, by looking up the values of the choices in the
+<code>endings</code> map and summing them. <code>endings</code> is thus defined
+recursively, which works because it is lazy in the values. When we
+demand the value of <code>endings ! 1</code>, the runtime system starts turning
+thunks in the map into implicitly does a topological sort for us.</p>
+<p>Another way to think about this is that <code>endingsFrom : Section -&gt; Int</code>
+is a function telling us how many good endings there are starting at a
+given section, and it can be defined via a recurrence. However, if we
+were to literally implement it as a recursive function, our program
+would take far too long as it spent a ridiculous amount of time
+recomputing the same values over and over again. So, we insert a lazy
+map in the middle to memoize the recursive function (there are <a href="https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html">other
+data structures</a> that can be used for this purpose as well).</p>
+</section>
+</section>
+<section id="resources" class="level2">
+<h2>Resources</h2>
+<p>Here are some resources in case you’re interested in exploring more.</p>
+<ul>
+<li><a href="https://open.kattis.com">Open Kattis</a> has a collection of thousands
+of high-quality problems which can be solved in Haskell (or many
+other languages). If you just want to try solving some problems for
+fun, it’s a great place to start.</li>
+<li>There are also other sites which accept Haskell, such as
+<a href="https://codeforces.com/">Codeforces</a>. Check these out if you want
+to actually participate in timed contests.</li>
+<li>My public <a href="http://ozark.hendrix.edu/~yorgey/kattis.html">listing of Kattis problems I have solved</a>, with my own personal
+rating system.</li>
+<li>I’ve written a series of <a href="https://byorgey.github.io/blog/tag/competitive%20programming.html">blog posts</a> about competitive
+programming in Haskell, on a variety of topics.</li>
+<li>I also have a <a href="https://github.com/byorgey/comprog-hs/">repository of modules</a> I’ve developed
+specifically for competitive programming. Many of the modules are
+documented in one or more blog posts.</li>
+<li>Soumik Sarkar has an even <a href="https://github.com/meooow25/haccepted">larger collection of Haskell libraries for
+competitive programming</a>.</li>
+</ul>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="Introduction to competitive programming in Haskell">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
