@@ -208,7 +208,7 @@ section is either an ending (either good or bad), or allows the reader
 to choose among three sections to proceed to next. For each test case,
 we are asked how many distinct stories there are with good endings.
 
-More abstractly, wince we are guaranteed that there are no loops, the
+More abstractly, since we are guaranteed that there are no loops, the
 sections of the book form a
 [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph), and we
 are asked to count the number of distinct paths in a DAG from a
@@ -306,17 +306,18 @@ via the `endingsFrom` function, which is in turn defined, in the
 `Choice` case, by looking up the values of the choices in the
 `endings` map and summing them.  `endings` is thus defined
 recursively, which works because it is lazy in the values.  When we
-demand the value of `endings ! 1`, the runtime system starts turning
-thunks in the map into implicitly does a topological sort for us.
+demand the value of `endings ! 1`, the runtime system starts evaluating
+thunks in the map as needed, implicitly doing a topological sort for us.
 
-Another way to think about this is that `endingsFrom : Section -> Int`
-is a function telling us how many good endings there are starting at a
-given section, and it can be defined via a recurrence.  However, if we
-were to literally implement it as a recursive function, our program
-would take far too long as it spent a ridiculous amount of time
-recomputing the same values over and over again.  So, we insert a lazy
-map in the middle to memoize the recursive function (there are [other
-data structures](https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html) that can be used for this purpose as well).
+Here's another way to think about this: what we really want is the
+function `endingsFrom : Section -> Int`, which tells us how many good
+endings there are starting at a given section. It can be defined via a
+recurrence; however, if we were to literally implement it as a
+recursive function, our program would spend a ridiculous amount of
+time recomputing the same values over and over again.  So, we insert a
+lazy map in the middle to memoize it (there are [other data
+structures](https://byorgey.github.io/blog/posts/2023/06/06/dynamic-programming-in-haskell-automatic-memoization.html)
+that can be used for this purpose as well).
 
 Resources
 ---------
