@@ -3,7 +3,7 @@
 
 import Control.Applicative (liftA2)
 import Control.Monad ((<=<), (>=>))
-import Data.List (findIndex)
+import Data.List (findIndex, intersperse)
 import Hakyll
 import Text.Pandoc (Block, HTMLMathMethod (MathJax), Pandoc, bottomUpM)
 import Text.Pandoc.Diagrams
@@ -108,7 +108,7 @@ myPandocCompilerWithTransformM ropt wopt f =
 ------------------------------------------------------------
 
 tagCtx :: Tags -> Context String
-tagCtx = tagsField "tags"
+tagCtx = tagsFieldWith getTagsAndCategories simpleRenderLink (mconcat . intersperse ", ") "tags"
 
 postCtx :: Context String
 postCtx =
