@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Monads are not like burritos</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte-extra.css" />
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2025/06/10/comprog-hs-intro.html">« Introduction to competitive programming in Haskell</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Monads are not like burritos</h1>
+
+<div class="info">
+  Posted on June 16, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'monad'." href="../../../../tag/monad.html" rel="tag">monad</a>, <a title="All pages tagged 'pedagogy'." href="../../../../tag/pedagogy.html" rel="tag">pedagogy</a>, <a title="All pages tagged 'meme'." href="../../../../tag/meme.html" rel="tag">meme</a>, <a title="All pages tagged 'burrito'." href="../../../../tag/burrito.html" rel="tag">burrito</a>, <a title="All pages tagged 'analogy'." href="../../../../tag/analogy.html" rel="tag">analogy</a>, <a title="All pages tagged 'Haskell'." href="../../../../tag/Haskell.html" rel="tag">Haskell</a>
+  
+</div>
+
+<section>
+<p>In January 2009, while just a baby first-year PhD student, I wrote a
+blog post titled <a href="https://byorgey.github.io/blog/posts/2009/01/12/abstraction-intuition-and-the-monad-tutorial-fallacy.html">Abstraction, intuition, and the “monad tutorial
+fallacy”</a>.
+In it, I made the argument that humans tend to learn best by first
+grappling with concrete examples, and only later proceeding to
+higher-level intuition and analogies later; hence, it’s a mistake to
+think that clearly presenting your intuition for a topic will help
+other people understand it. Analogies and intuition can help, but
+only when accompanied by concrete examples and active engagement. To
+illustrate the point, I made up a fictitious programmer with a
+fictitious analogy.</p>
+<blockquote>
+<p>But now Joe goes and writes a monad tutorial called “Monads are
+Burritos,” under the well-intentioned but mistaken assumption that
+if other people read his magical insight, learning about monads will
+be a snap for them. “Monads are easy,” Joe writes. “Think of them as
+burritos.” Joe hides all the actual details about types and such
+because those are scary, and people will learn better if they can
+avoid all that difficult and confusing stuff. Of course, exactly
+the opposite is true, and all Joe has done is make it <em>harder</em> for
+people to learn about monads…</p>
+</blockquote>
+<p>My intention was to choose a fictitious analogy which was obviously
+ridiculous and silly, as a parody of many of the monad tutorials which
+existed at the time (and still do). <a href="https://blog.plover.com/meta/about-me.html">Mark Jason Dominus</a>
+then wrote a blog post, <a href="https://blog.plover.com/prog/burritos.html">Monads are like
+burritos</a>, pointing out
+that actually, monads <em>are</em> kinda like burritos. It’s really funny,
+though I don’t think it’s actually a very good analogy, and my guess
+is that Mark would agree: it was clearly written as a silly joke and
+not as a real way to explain monads.</p>
+<p>In any case, from that point the “monads are burritos” meme took on a
+life of its own. For example:</p>
+<ul>
+<li><a href="https://chrisdone.com/posts/monads-are-burritos/">Chris Done made a webcomic about
+it</a></li>
+<li><a href="https://edwardmorehouse.github.io/silliness/burrito_monads.pdf">Ed Morehouse wrote a ridiculous paper exploring the categorical
+foundations of burritos</a></li>
+<li><a href="https://github.com/withoutboats/burrito">Someone made a <code>burrito</code> library in Rust</a></li>
+<li><a href="https://x.com/DrEugeniaCheng/status/1316817271961116679">Dr Eugenia Cheng tweeted about it</a></li>
+</ul>
+<p>I even joined in the fun and made this meme image about bad monad
+tutorials:</p>
+<p><img src="http://ozark.hendrix.edu/~yorgey/pub/monad_tutorial.jpg" /></p>
+<p>Of course there are <a href="https://www.reddit.com/r/haskell/comments/6bxk1v/why_monads_always_get_compared_to_burritos/">lots of people who still understand that it was all just a silly joke</a>.
+Recently, however, I’ve seen several instances where people apparently
+believe “monads are burritos” is a real, helpful thing and not just a
+joke meme. For example, see <a href="https://lobste.rs/s/xmpj1p/you_probably_wrote_half_monad_by_accident">this thread on
+lobste.rs</a>,
+or <a href="https://mathstodon.xyz/@CubeRootOfTrue/114404282908533701">this Mastodon post</a>.</p>
+<p>So, to set the record straight: “monads are burritos” is <em>not</em> a helpful
+analogy!<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="sidenote">Yes, I am writing a blog post because <a href="https://xkcd.com/386/">People Are Wrong On
+The Internet</a>, and I know it probably won’t
+make any difference, but here we are.<br />
+<br />
+</span></span> Why not, you ask?
+To expand on my reasons from a <a href="https://www.reddit.com/r/haskell/comments/3bdrlj/comment/ct24jmc/">10-year-old Reddit
+comment</a>:</p>
+<ul>
+<li>The burrito analogy strongly implies that a value of type <code>m a</code>
+somehow “contains” a value (or values) of type <code>a</code>. But that is not
+true for all monads (e.g. there is no sense in which a value of type
+<code>IO String</code> contains a <code>String</code>).</li>
+<li>Relatedly, the analogy also implies that a value of type <code>m a</code> can
+be “unwrapped” to get an <code>a</code>, but this is impossible for many monads.</li>
+<li>It is not actually very easy to take a burrito containing a burrito
+and merge it into a single-level burrito. At least this is not in
+any sense a natural operation on burritos. Perhaps you could argue
+that it is always easy to remove outer tortilla layers (but not the
+innermost one since the food will all fall out), but this is a bad
+analogy, since in general <code>join</code> does not just “remove” an outer
+layer, but somehow merges the effects of two layers into one.</li>
+</ul>
+<p>Actually, burritos are a great analogy for the <code>Identity</code> monad!
+…but not much beyond that.</p>
+<p>On a more positive note, my sense is that the average
+pedagogical quality of Haskell materials, and monad tutorials in
+particular, has indeed gone up significantly since 2009. I’d love to
+think this can be at least partially attributed to my original blog
+post, though of course it’s impossible to know that for sure.</p>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="Monads are not like burritos">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
