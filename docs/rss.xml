@@ -29,7 +29,7 @@ blog post titled <a href="https://byorgey.github.io/blog/posts/2009/01/12/abstra
 fallacy”</a>.
 In it, I made the argument that humans tend to learn best by first
 grappling with concrete examples, and only later proceeding to
-higher-level intuition and analogies later; hence, it’s a mistake to
+higher-level intuition and analogies; hence, it’s a mistake to
 think that clearly presenting your intuition for a topic will help
 other people understand it. Analogies and intuition can help, but
 only when accompanied by concrete examples and active engagement. To
@@ -67,7 +67,7 @@ foundations of burritos</a></li>
 </ul>
 <p>I even joined in the fun and made this meme image about bad monad
 tutorials:</p>
-<p><img src="http://ozark.hendrix.edu/~yorgey/pub/monad_tutorial.jpg" /></p>
+<p><img src="images/monad_tutorial.jpg" /></p>
 <p>Of course there are <a href="https://www.reddit.com/r/haskell/comments/6bxk1v/why_monads_always_get_compared_to_burritos/">lots of people who still understand that it was all just a silly joke</a>.
 Recently, however, I’ve seen several instances where people apparently
 believe “monads are burritos” is a real, helpful thing and not just a

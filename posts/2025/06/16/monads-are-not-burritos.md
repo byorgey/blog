@@ -9,7 +9,7 @@ blog post titled [Abstraction, intuition, and the "monad tutorial
 fallacy"](https://byorgey.github.io/blog/posts/2009/01/12/abstraction-intuition-and-the-monad-tutorial-fallacy.html).
 In it, I made the argument that humans tend to learn best by first
 grappling with concrete examples, and only later proceeding to
-higher-level intuition and analogies later; hence, it's a mistake to
+higher-level intuition and analogies; hence, it's a mistake to
 think that clearly presenting your intuition for a topic will help
 other people understand it.  Analogies and intuition can help, but
 only when accompanied by concrete examples and active engagement.  To
@@ -49,7 +49,7 @@ life of its own.  For example:
 I even joined in the fun and made this meme image about bad monad
 tutorials:
 
-![](http://ozark.hendrix.edu/~yorgey/pub/monad_tutorial.jpg)
+![](images/monad_tutorial.jpg)
 
 Of course there are [lots of people who still understand that it was all just a silly joke](https://www.reddit.com/r/haskell/comments/6bxk1v/why_monads_always_get_compared_to_burritos/).
 Recently, however, I've seen several instances where people apparently
