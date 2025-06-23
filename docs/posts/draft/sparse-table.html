@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: range queries, classified</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../css/tufte.css" />
+        <link rel="stylesheet" type="text/css" href="../../css/tufte-extra.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../">Home</a> •
+                <a href="../../about.html">About</a> •
+                <a href="../../rss.xml">RSS</a> •
+                <a href="../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../posts/2025/06/16/monads-are-not-burritos.html">« Monads are not like burritos</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Competitive programming in Haskell: range queries, classified</h1>
+
+<div class="info">
+  Posted on June 23, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'sparse'." href="../../tag/sparse.html" rel="tag">sparse</a>, <a title="All pages tagged 'table'." href="../../tag/table.html" rel="tag">table</a>, <a title="All pages tagged 'idempotent'." href="../../tag/idempotent.html" rel="tag">idempotent</a>, <a title="All pages tagged 'semigroup'." href="../../tag/semigroup.html" rel="tag">semigroup</a>, <a title="All pages tagged 'monoid'." href="../../tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged 'range'." href="../../tag/range.html" rel="tag">range</a>, <a title="All pages tagged 'query'." href="../../tag/query.html" rel="tag">query</a>, <a title="All pages tagged 'Haskell'." href="../../tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged 'competitive programming'." href="../../tag/competitive%20programming.html" rel="tag">competitive programming</a>
+  
+</div>
+
+<section>
+<section id="static-range-queries" class="level2">
+<h2>Static range queries</h2>
+<p>Suppose we have a sequence of values, which is <em>static</em> in the sense
+that the values in the sequence will never change, and we want to
+perform <em>range queries</em>, that is, for various ranges we want to
+compute the total of all consecutive values in the range, according to
+some binary combining operation. For example, we might want to
+compute the maximum, sum, or product of all the consecutive values in
+a certain subrange. We have various options depending on the kind of
+ranges we want and the algebraic properties of the operation.</p>
+<ul>
+<li><p>If we want ranges corresponding to a <em>sliding window</em>, we can use
+<a href="https://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html">an amortized queue
+structure</a>
+to find the total of each range in <span class="math inline">\(O(1)\)</span>, for an arbitrary
+monoid.
+<!-- ^[If we have a group, then no special data structure is -->
+<!-- needed: just keep track of the value of the current window, and add -->
+<!-- and subtract values as they enter and leave the window, -->
+<!-- respectively.] --></p></li>
+<li><p>If we want arbitrary ranges but the operation is a <em>group</em>, the
+solution is relatively straightforward: we can precompute all
+<em>prefix sums</em>, and subtract to find the result for an arbitrary
+range in <span class="math inline">\(O(1)\)</span>. I will write about this in an upcoming blog post.</p></li>
+<li><p>If the operation is an <em>idempotent semigroup</em> (that is, it has the
+property that <span class="math inline">\(x \diamond x = x\)</span> for all <span class="math inline">\(x\)</span>), we can use a <em><a href="https://cp-algorithms.com/data_structures/sparse-table.html">sparse
+table</a></em>, which takes <span class="math inline">\(O(n \lg n)\)</span> time and space for precomputation,
+and then allows us to answer arbitrary range queries in <span class="math inline">\(O(1)\)</span>. I
+also plan to write about this in an upcoming blog post.</p></li>
+<li><p>If the operation is an arbitrary monoid, we can use a <em><a href="https://cp-algorithms.com/data_structures/sqrt-tree.html">sqrt tree</a></em>,
+which uses <span class="math inline">\(O(n \lg \lg n)\)</span> precomputed time and space, and allows
+answering arbitrary range queries in <span class="math inline">\(O(\lg \lg n)\)</span>. I will write
+about this in a future post.</p></li>
+</ul>
+</section>
+<section id="dynamic-range-queries" class="level2">
+<h2>Dynamic range queries</h2>
+<p>What if we want <em>dynamic</em> range queries, that is, we want to be able
+to interleave range queries with arbitrary updates to the values of
+the sequence?</p>
+<ul>
+<li>If the operation is an arbitrary monoid, we can use a segment
+tree.</li>
+<li>If the operation is a group, we can use a <a href="https://cp-algorithms.com/data_structures/fenwick.html">Fenwick tree</a>.</li>
+</ul>
+<p>I published <a href="https://byorgey.github.io/blog/posts/2025/01/23/Fenwick.html">a paper about Fenwick
+trees</a>,
+which also discusses segment trees, but I should write more about
+them here!</p>
+</section>
+<section id="table" class="level2">
+<h2>Table</h2>
+<p>Here’s a table summarizing the above classification scheme. I plan to
+fill in links as I write blog posts about each row.</p>
+<figure class="fullwidth">
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 14%" />
+<col style="width: 20%" />
+<col style="width: 23%" />
+<col style="width: 16%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Sequence</th>
+<th style="text-align: left;">Ranges</th>
+<th style="text-align: left;">Operation</th>
+<th style="text-align: left;">Solution</th>
+<th style="text-align: left;">Precomputation</th>
+<th style="text-align: left;">Queries</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Static</td>
+<td style="text-align: left;">Sliding window</td>
+<td style="text-align: left;">Monoid</td>
+<td style="text-align: left;"><a href="https://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html">Amortized queue</a></td>
+<td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Static</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Group</td>
+<td style="text-align: left;">Prefix sum table</td>
+<td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Static</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Idempotent semigroup</td>
+<td style="text-align: left;">Sparse table</td>
+<td style="text-align: left;"><span class="math inline">\(O(n \lg n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Static</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Monoid</td>
+<td style="text-align: left;">Sqrt table</td>
+<td style="text-align: left;"><span class="math inline">\(O(n \lg \lg n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(\lg \lg n)\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Dynamic</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Group</td>
+<td style="text-align: left;">Fenwick tree</td>
+<td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(\lg n)\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dynamic</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Monoid</td>
+<td style="text-align: left;">Segment tree</td>
+<td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(\lg n)\)</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="Competitive programming in Haskell: range queries, classified">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>

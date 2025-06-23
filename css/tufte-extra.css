@@ -85,3 +85,8 @@ a.footnote-ref {
     vertical-align: inherit;
     line-height: inherit;
 }
+
+/* Tables with links don't seem to get width=100, even in fullwidth figures */
+.fullwidth table {
+    width: 100%;
+}

@@ -7,8 +7,164 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Mon, 16 Jun 2025 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 23 Jun 2025 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Competitive programming in Haskell: range queries, classified</title>
+    <link>http://byorgey.github.io/blog/posts/2025/06/23/range-queries-classified.html</link>
+    <description><![CDATA[
+<h1>Competitive programming in Haskell: range queries, classified</h1>
+
+<div class="info">
+  Posted on June 23, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;semigroup&#39;." href="/tag/semigroup.html" rel="tag">semigroup</a>, <a title="All pages tagged &#39;monoid&#39;." href="/tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged &#39;range&#39;." href="/tag/range.html" rel="tag">range</a>, <a title="All pages tagged &#39;query&#39;." href="/tag/query.html" rel="tag">query</a>, <a title="All pages tagged &#39;Haskell&#39;." href="/tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged &#39;competitive programming&#39;." href="/tag/competitive%20programming.html" rel="tag">competitive programming</a>
+  
+</div>
+
+<section>
+<section id="static-range-queries" class="level2">
+<h2>Static range queries</h2>
+<p>Suppose we have a sequence of values, which is <em>static</em> in the sense
+that the values in the sequence will never change, and we want to
+perform <em>range queries</em>, that is, for various ranges we want to
+compute the total of all consecutive values in the range, according to
+some binary combining operation. For example, we might want to
+compute the maximum, sum, or product of all the consecutive values in
+a certain subrange. We have various options depending on the kind of
+ranges we want and the algebraic properties of the operation.</p>
+<ul>
+<li><p>If we want ranges corresponding to a <em>sliding window</em>, we can use
+<a href="https://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html">an amortized queue
+structure</a>
+to find the total of each range in <span class="math inline">\(O(1)\)</span>, for an arbitrary
+monoid.
+<!-- ^[If we have a group, then no special data structure is -->
+<!-- needed: just keep track of the value of the current window, and add -->
+<!-- and subtract values as they enter and leave the window, -->
+<!-- respectively.] --></p></li>
+<li><p>If we want arbitrary ranges but the operation is a <em>group</em>, the
+solution is relatively straightforward: we can precompute all
+<em>prefix sums</em>, and subtract to find the result for an arbitrary
+range in <span class="math inline">\(O(1)\)</span>. I will write about this in an upcoming blog post.</p></li>
+<li><p>If the operation is an <em>idempotent semigroup</em> (that is, it has the
+property that <span class="math inline">\(x \diamond x = x\)</span> for all <span class="math inline">\(x\)</span>), we can use a <em><a href="https://cp-algorithms.com/data_structures/sparse-table.html">sparse
+table</a></em>, which takes <span class="math inline">\(O(n \lg n)\)</span> time and space for precomputation,
+and then allows us to answer arbitrary range queries in <span class="math inline">\(O(1)\)</span>. I
+also plan to write about this in an upcoming blog post.</p></li>
+<li><p>If the operation is an arbitrary monoid, we can use a <em><a href="https://cp-algorithms.com/data_structures/sqrt-tree.html">sqrt tree</a></em>,
+which uses <span class="math inline">\(O(n \lg \lg n)\)</span> precomputed time and space, and allows
+answering arbitrary range queries in <span class="math inline">\(O(\lg \lg n)\)</span>. I will write
+about this in a future post.</p></li>
+</ul>
+</section>
+<section id="dynamic-range-queries" class="level2">
+<h2>Dynamic range queries</h2>
+<p>What if we want <em>dynamic</em> range queries, that is, we want to be able
+to interleave range queries with arbitrary updates to the values of
+the sequence?</p>
+<ul>
+<li>If the operation is an arbitrary monoid, we can use a segment
+tree.</li>
+<li>If the operation is a group, we can use a <a href="https://cp-algorithms.com/data_structures/fenwick.html">Fenwick tree</a>.</li>
+</ul>
+<p>I published <a href="https://byorgey.github.io/blog/posts/2025/01/23/Fenwick.html">a paper about Fenwick
+trees</a>,
+which also discusses segment trees, but I should write more about
+them here!</p>
+</section>
+<section id="table" class="level2">
+<h2>Table</h2>
+<p>Here’s a table summarizing the above classification scheme. I plan to
+fill in links as I write blog posts about each row.</p>
+<figure class="fullwidth">
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 14%" />
+<col style="width: 20%" />
+<col style="width: 23%" />
+<col style="width: 16%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Sequence</th>
+<th style="text-align: left;">Ranges</th>
+<th style="text-align: left;">Operation</th>
+<th style="text-align: left;">Solution</th>
+<th style="text-align: left;">Precomputation</th>
+<th style="text-align: left;">Queries</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Static</td>
+<td style="text-align: left;">Sliding window</td>
+<td style="text-align: left;">Monoid</td>
+<td style="text-align: left;"><a href="https://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html">Amortized queue</a></td>
+<td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Static</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Group</td>
+<td style="text-align: left;">Prefix sum table</td>
+<td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Static</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Idempotent semigroup</td>
+<td style="text-align: left;">Sparse table</td>
+<td style="text-align: left;"><span class="math inline">\(O(n \lg n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Static</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Monoid</td>
+<td style="text-align: left;">Sqrt table</td>
+<td style="text-align: left;"><span class="math inline">\(O(n \lg \lg n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(\lg \lg n)\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Dynamic</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Group</td>
+<td style="text-align: left;">Fenwick tree</td>
+<td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(\lg n)\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dynamic</td>
+<td style="text-align: left;">Arbitrary</td>
+<td style="text-align: left;">Monoid</td>
+<td style="text-align: left;">Segment tree</td>
+<td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(O(\lg n)\)</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Competitive programming in Haskell: range queries, classified" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Mon, 23 Jun 2025 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2025/06/23/range-queries-classified.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Monads are not like burritos</title>
     <link>http://byorgey.github.io/blog/posts/2025/06/16/monads-are-not-burritos.html</link>
     <description><![CDATA[
@@ -1718,267 +1874,6 @@ over maintaining one or both packages.</p>
 ]]></description>
     <pubDate>Tue, 01 Oct 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/10/01/BlogLiterately-unmaintained.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Decidable equality for indexed data types</title>
-    <link>http://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html</link>
-    <description><![CDATA[
-<h1>Decidable equality for indexed data types</h1>
-
-<div class="info">
-  Posted on September  9, 2024
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;agda&#39;." href="/tag/agda.html" rel="tag">agda</a>, <a title="All pages tagged &#39;equality&#39;." href="/tag/equality.html" rel="tag">equality</a>, <a title="All pages tagged &#39;indexed&#39;." href="/tag/indexed.html" rel="tag">indexed</a>, <a title="All pages tagged &#39;agda&#39;." href="/tag/agda.html" rel="tag">agda</a>
-  
-</div>
-
-<section>
-<p>Recently, as part of a larger project, I wanted to define decidable
-equality for an indexed data type in Agda. I struggled quite a bit to
-figure out the right way to encode it to make Agda happy, and wasn’t
-able to find much help online, so I’m recording the results here.</p>
-<p>The <strong>tl;dr</strong> is to use mutual recursion to define the indexed data
-type along with a sigma type that hides the index, and to use the
-sigma type in any recursive positions where we don’t care about the
-index! Read on for more motivation and details (and wrong turns I
-took along the way).</p>
-<p>This post is literate Agda; you can <a href="https://github.com/byorgey/blog/blob/main/posts/2024/09/09/OneLevelTypesIndexed.lagda.md">download it here</a> if you want to play along. I tested everything here with Agda version 2.6.4.3 and version 2.0 of the standard library.</p>
-<section id="background" class="level2">
-<h2>Background</h2>
-<p>First, some imports and a module declaration. Note that the entire
-development is parameterized by some abstract set <code>B</code> of base types,
-which must have decidable equality.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Data<span class="ot">.</span>Product <span class="kw">using</span> <span class="ot">(</span>Σ <span class="ot">;</span> <span class="ot">_</span>×<span class="ot">_</span> <span class="ot">;</span> <span class="ot">_</span>,<span class="ot">_</span> <span class="ot">;</span> -,<span class="ot">_</span> <span class="ot">;</span> proj₁ <span class="ot">;</span> proj₂<span class="ot">)</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Data<span class="ot">.</span>Product<span class="ot">.</span>Properties <span class="kw">using</span> <span class="ot">(</span>≡-dec<span class="ot">)</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Function <span class="kw">using</span> <span class="ot">(_</span>∘<span class="ot">_)</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Binary <span class="kw">using</span> <span class="ot">(</span>DecidableEquality<span class="ot">)</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Binary<span class="ot">.</span>PropositionalEquality <span class="kw">using</span> <span class="ot">(_</span>≡<span class="ot">_</span> <span class="ot">;</span> refl<span class="ot">)</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Nullary<span class="ot">.</span>Decidable <span class="kw">using</span> <span class="ot">(</span>yes<span class="ot">;</span> no<span class="ot">;</span> Dec<span class="ot">)</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> OneLevelTypesIndexed <span class="ot">(</span>B <span class="ot">:</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">(</span>≟B <span class="ot">:</span> DecidableEquality B<span class="ot">)</span> <span class="kw">where</span></span></code></pre></div>
-<p>We’ll work with a simple type system containing base types, function
-types, and some distinguished type constructor □. So far, this is
-just to give some context; it is not the final version of the code we
-will end up with, so we stick it in a local module so it won’t end up
-in the top-level namespace.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Unindexed <span class="kw">where</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> Ty</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty <span class="ot">→</span> Ty</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty</span></code></pre></div>
-<p>For example, if <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are base types, then we could write down a
-type like <span class="math inline">\(\square ((\square \square X \to Y) \to \square Y)\)</span>:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">infixr</span> <span class="dv">2</span> <span class="ot">_</span>⇒<span class="ot">_</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">infix</span> <span class="dv">30</span> □<span class="ot">_</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">postulate</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    BX BY <span class="ot">:</span> B</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">:</span> Ty</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">=</span> base BX</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">:</span> Ty</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">=</span> base BY</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">:</span> Ty</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">=</span> □ <span class="ot">((</span>□ □ X ⇒ Y<span class="ot">)</span> ⇒ □ Y<span class="ot">)</span></span></code></pre></div>
-<p>However, for reasons that would take us too far afield in this blog
-post, I <em>don’t</em> want to allow immediately nested boxes, like <span class="math inline">\(\square \square X\)</span>. We can still have multiple boxes in a type, and even
-boxes nested inside of other boxes, as long as there is at least one
-arrow in between. In other words, I only want to rule out boxes
-immediately applied to another type with an outermost box. So we
-don’t want to allow the example type given above (since it contains
-<span class="math inline">\(\square \square X\)</span>), but, for example, <span class="math inline">\(\square ((\square X \to Y) \to \square Y)\)</span> would be OK.</p>
-</section>
-<section id="encoding-invariants" class="level2">
-<h2>Encoding invariants</h2>
-<p>How can we encode this invariant so it holds by construction? One way
-would be to have two mutually recursive data types, like so:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Mutual <span class="kw">where</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> <span class="dt">Set</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> UTy <span class="ot">:</span> <span class="dt">Set</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="kw">where</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> UTy <span class="ot">→</span> Ty</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    ∙<span class="ot">_</span> <span class="ot">:</span> UTy <span class="ot">→</span> Ty</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> UTy <span class="kw">where</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> UTy</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty <span class="ot">→</span> UTy</span></code></pre></div>
-<p><code>UTy</code> consists of types which have no top-level box; the constructors
-of <code>Ty</code> just inject <code>UTy</code> into <code>Ty</code> by adding either one or zero
-boxes. This works, and defining decidable equality for <code>Ty</code> and <code>UTy</code>
-is relatively straightforward (again by mutual recursion). However,
-it seemed to me that having to deal with <code>Ty</code> and <code>UTy</code> everywhere
-through the rest of the development was probably going to be super
-annoying.</p>
-<p>The other option would be to index <code>Ty</code> by values indicating whether a
-type has zero or one top-level boxes; then we can use the indices to
-enforce the appropriate rules. First, we define a data type <code>Boxity</code>
-to act as the index for <code>Ty</code>, and show that it has decidable equality:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Boxity <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  [0] <span class="ot">:</span> Boxity</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  [1] <span class="ot">:</span> Boxity</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>Boxity-≟ <span class="ot">:</span> DecidableEquality Boxity</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>Boxity-≟ [0] [0] <span class="ot">=</span> yes refl</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>Boxity-≟ [0] [1] <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>Boxity-≟ [1] [0] <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>Boxity-≟ [1] [1] <span class="ot">=</span> yes refl</span></code></pre></div>
-<p>My first attempt to write down a version of <code>Ty</code> indexed by <code>Boxity</code>
-looked like this:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> IndexedTry1 <span class="kw">where</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> Boxity <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> Ty [0]</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> <span class="ot">{</span>b₁ b₂ <span class="ot">:</span> Boxity<span class="ot">}</span> <span class="ot">→</span> Ty b₁ <span class="ot">→</span> Ty b₂ <span class="ot">→</span> Ty [0]</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> Ty [0] <span class="ot">→</span> Ty [1]</span></code></pre></div>
-<p><code>base</code> always introduces a type with no top-level box; the <code>□</code>
-constructor requires a type with no top-level box, and produces a type
-with one (this is what ensures we cannot nest boxes); and the arrow
-constructor does not care how many boxes its arguments have, but
-constructs a type with no top-level box.</p>
-<p>This is logically correct, but I found it very difficult to work with.
-The sticking point for me was injectivity of the arrow constructor.
-When defining decidable equality we need to prove lemmas that each of
-the constructors are injective, but I was not even able to write down
-the <em>type</em> of injectivity for <code>_⇒_</code>. We would want something like this:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>⇒<span class="op">-</span>inj <span class="op">:</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  {bσ₁ bσ₂ bτ₁ bτ₂ <span class="op">:</span> <span class="dt">Boxity</span>}</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  {σ₁ <span class="op">:</span> <span class="dt">Ty</span> bσ₁} {σ₂ <span class="op">:</span> <span class="dt">Ty</span> bσ₂} {τ₁ <span class="op">:</span> <span class="dt">Ty</span> bτ₁} {τ₂ <span class="op">:</span> <span class="dt">Ty</span> bτ₂} →</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  (σ₁ ⇒ σ₂) ≡ (τ₁ ⇒ τ₂) →</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  (σ₁ ≡ τ₁) × (σ₂ ≡ τ₂)</span></code></pre></div>
-<p>but this does not even typecheck! The problem is that, for example,
-<code>σ₁</code> and <code>τ₁</code> have different types, so the equality proposition <code>σ₁ ≡ τ₁</code> is not well-typed.</p>
-<p>At this point I tried turning to <a href="https://agda.github.io/agda-stdlib/experimental/Relation.Binary.HeterogeneousEquality.html">heterogeneous
-equality</a>,
-but it didn’t seem to help. I won’t record here all the things I
-tried, but the same issues seemed to persist, just pushed around to
-different places (for example, I was not able to pattern-match on
-witnesses of heterogeneous equality because of types that didn’t
-match).</p>
-</section>
-<section id="sigma-types-to-the-rescue" class="level2">
-<h2>Sigma types to the rescue</h2>
-<p>At ICFP last week I asked <a href="https://jesper.sikanda.be/">Jesper Cockx</a>
-for advice,<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">which felt a bit like asking Rory McIlroy to give some
-tips on your mini-golf game<br />
-<br />
-</span></span> and he suggested trying to prove
-decidable equality for the sigma type pairing an index with a type
-having that index, like this:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>  ΣTy <span class="ot">:</span> <span class="dt">Set</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  ΣTy <span class="ot">=</span> Σ Boxity Ty</span></code></pre></div>
-<p>This turned out to be the key idea, but it still took me a long time
-to figure out the right way to make it work. Given the above
-definitions, if we go ahead and try to define decidable equality for
-<code>ΣTy</code>, injectivity of the arrow constructor is still a problem.</p>
-<p>After days of banging my head against this off and on, I finally
-realized that the way to solve this is to define <code>Ty</code> and <code>ΣTy</code> by
-mutual recursion: the arrow constructor should just take two <code>ΣTy</code>
-arguments! This perfectly captures the idea that we <em>don’t care</em>
-about the indices of the arrow constructor’s argument types, so we
-hide them by bundling them up in a sigma type.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ΣTy <span class="ot">:</span> <span class="dt">Set</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Ty <span class="ot">:</span> Boxity <span class="ot">→</span> <span class="dt">Set</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>ΣTy <span class="ot">=</span> Σ Boxity Ty</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Ty <span class="kw">where</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  □<span class="ot">_</span> <span class="ot">:</span> Ty [0] <span class="ot">→</span> Ty [1]</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  base <span class="ot">:</span> B <span class="ot">→</span> Ty [0]</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> ΣTy <span class="ot">→</span> ΣTy <span class="ot">→</span> Ty [0]</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="kw">infixr</span> <span class="dv">2</span> <span class="ot">_</span>⇒<span class="ot">_</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="kw">infix</span> <span class="dv">30</span> □<span class="ot">_</span></span></code></pre></div>
-<p>Now we’re cooking! We now make quick work of the required injectivity
-lemmas, which all go through trivially by matching on <code>refl</code>:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>□-inj <span class="ot">:</span> <span class="ot">{</span>τ₁ τ₂ <span class="ot">:</span> Ty [0]<span class="ot">}</span> <span class="ot">→</span> <span class="ot">(</span>□ τ₁ ≡ □ τ₂<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>τ₁ ≡ τ₂<span class="ot">)</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>□-inj refl <span class="ot">=</span> refl</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>base-inj <span class="ot">:</span> <span class="ot">{</span>b₁ b₂ <span class="ot">:</span> B<span class="ot">}</span> <span class="ot">→</span> base b₁ ≡ base b₂ <span class="ot">→</span> b₁ ≡ b₂</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>base-inj refl <span class="ot">=</span> refl</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>⇒-inj <span class="ot">:</span> <span class="ot">{</span>σ₁ σ₂ τ₁ τ₂ <span class="ot">:</span> ΣTy<span class="ot">}</span> <span class="ot">→</span> <span class="ot">(</span>σ₁ ⇒ σ₂<span class="ot">)</span> ≡ <span class="ot">(</span>τ₁ ⇒ τ₂<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>σ₁ ≡ τ₁<span class="ot">)</span> × <span class="ot">(</span>σ₂ ≡ τ₂<span class="ot">)</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>⇒-inj refl <span class="ot">=</span> refl , refl</span></code></pre></div>
-<p>Notice how the type of <code>⇒-inj</code> is now perfectly fine: we just have a
-bunch of <code>ΣTy</code> values that hide their indices, so we can talk about
-propositional equality between them with no trouble.</p>
-<p>Finally, we can define decidable equality for <code>Ty</code> and <code>ΣTy</code> by mutual
-recursion.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ΣTy-≟ <span class="ot">:</span> DecidableEquality ΣTy</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="pp">{-# TERMINATING #-}</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">:</span> <span class="ot">∀</span> <span class="ot">{</span>b<span class="ot">}</span> <span class="ot">→</span> DecidableEquality <span class="ot">(</span>Ty b<span class="ot">)</span></span></code></pre></div>
-<p>Sadly, I had to reassure Agda that the definition of <code>Ty-≟</code> is terminating—more on this later.</p>
-<p>To define <code>ΣTy-≟</code> we can just use a lemma from
-<code>Data.Product.Properties</code> which derives decidable equality for a sigma
-type from decidable equality for both components.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ΣTy-≟ <span class="ot">=</span> ≡-dec Boxity-≟ Ty-≟</span></code></pre></div>
-<p>The only thing left is to define decidable equality for any two values
-of type <code>Ty b</code> (given a specific boxity <code>b</code>), making use of our
-injectivity lemmas; now that we have the right definitions, this falls
-out straightforwardly.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(</span>□ σ<span class="ot">)</span> <span class="ot">(</span>□ τ<span class="ot">)</span> <span class="kw">with</span> Ty-≟ σ τ</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ≢τ <span class="ot">=</span> no <span class="ot">(</span>σ≢τ ∘ □-inj<span class="ot">)</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">=</span> yes refl</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(</span>base x<span class="ot">)</span> <span class="ot">(</span>base y<span class="ot">)</span> <span class="kw">with</span> ≟B x y</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no x≢y <span class="ot">=</span> no <span class="ot">(</span>x≢y ∘ base-inj<span class="ot">)</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">=</span> yes refl</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(</span>σ₁ ⇒ σ₂<span class="ot">)</span> <span class="ot">(</span>τ₁ ⇒ τ₂<span class="ot">)</span> <span class="kw">with</span> ΣTy-≟ σ₁ τ₁ <span class="ot">|</span> ΣTy-≟ σ₂ τ₂</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ₁≢τ₁ <span class="ot">|</span> <span class="ot">_</span> <span class="ot">=</span> no <span class="ot">(</span>σ₁≢τ₁ ∘ proj₁ ∘ ⇒-inj<span class="ot">)</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> no σ₂≢τ₂ <span class="ot">=</span> no <span class="ot">(</span>σ₂≢τ₂ ∘ proj₂ ∘ ⇒-inj<span class="ot">)</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">|</span> yes refl <span class="ot">=</span> yes refl</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span></code></pre></div>
-</section>
-<section id="final-thoughts" class="level2">
-<h2>Final thoughts</h2>
-<p>First, the one remaining infelicity is that Agda could not tell that
-<code>Ty-≟</code> is terminating. I am not entirely sure why, but I think it may
-be that the way the recursion works is just too convoluted for it to
-analyze properly: <code>Ty-≟</code> calls <code>ΣTy-≟</code> on structural subterms of its
-inputs, but then <code>ΣTy-≟</code> works by providing <code>Ty-≟</code> <em>as a higher-order
-parameter</em> to <code>≡-dec</code>. If you look at the definition of <code>≡-dec</code>, all
-it does is call its function parameters on structural subterms of its
-input, so everything should be nicely terminating, but I guess I am
-not surprised that Agda is not able to figure this out. If anyone has
-suggestions on how to make this pass the termination checker without
-using a <code>TERMINATING</code> pragma, I would love to hear it!</p>
-<p>As a final aside, I note that converting back and forth between <code>Ty</code>
-(with <code>ΣTy</code> arguments to the arrow constructor) and <code>IndexedTry1.Ty</code>
-(with expanded-out <code>Boxity</code> and <code>Ty</code> arguments to arrow) is trivial:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>Ty→Ty1 <span class="ot">:</span> <span class="ot">{</span>b <span class="ot">:</span> Boxity<span class="ot">}</span> <span class="ot">→</span> Ty b <span class="ot">→</span> IndexedTry1<span class="ot">.</span>Ty b</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>Ty→Ty1 <span class="ot">(</span>□ σ<span class="ot">)</span> <span class="ot">=</span> IndexedTry1<span class="ot">.</span>□ <span class="ot">(</span>Ty→Ty1 σ<span class="ot">)</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>Ty→Ty1 <span class="ot">(</span>base x<span class="ot">)</span> <span class="ot">=</span> IndexedTry1<span class="ot">.</span>base x</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>Ty→Ty1 <span class="ot">((</span>b₁ , σ₁<span class="ot">)</span> ⇒ <span class="ot">(</span>b₂ , σ₂<span class="ot">))</span> <span class="ot">=</span> <span class="ot">(</span>Ty→Ty1 σ₁<span class="ot">)</span> IndexedTry1<span class="ot">.</span>⇒ <span class="ot">(</span>Ty→Ty1 σ₂<span class="ot">)</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>Ty1→Ty <span class="ot">:</span> <span class="ot">{</span>b <span class="ot">:</span> Boxity<span class="ot">}</span> <span class="ot">→</span> IndexedTry1<span class="ot">.</span>Ty b <span class="ot">→</span> Ty b</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>Ty1→Ty <span class="ot">(</span>IndexedTry1<span class="ot">.</span>base x<span class="ot">)</span> <span class="ot">=</span> base x</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>Ty1→Ty <span class="ot">(</span>σ₁ IndexedTry1<span class="ot">.</span>⇒ σ₂<span class="ot">)</span> <span class="ot">=</span> -, <span class="ot">(</span>Ty1→Ty σ₁<span class="ot">)</span> ⇒ -, <span class="ot">(</span>Ty1→Ty σ₂<span class="ot">)</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>Ty1→Ty <span class="ot">(</span>IndexedTry1<span class="ot">.</span>□ σ<span class="ot">)</span> <span class="ot">=</span> □ <span class="ot">(</span>Ty1→Ty σ<span class="ot">)</span></span></code></pre></div>
-<p>I expect it is also trivial to prove this is an isomorphism, though
-I’m not particularly motivated to do it. The point is that, as anyone
-who has spent any time proving things with proof assistants knows, two
-types can be completely isomorphic, and yet one can be vastly easier
-to work with than the other in certain contexts. Often when I’m
-trying to prove something in Agda it feels like at least half the
-battle is just coming up with the right representation that makes the
-proofs go through easily.</p>
-</section>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Decidable equality for indexed data types" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>Mon, 09 Sep 2024 00:00:00 UT</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 
