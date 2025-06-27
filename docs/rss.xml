@@ -10,7 +10,7 @@
         <lastBuildDate>Wed, 25 Jun 2025 00:00:00 UT</lastBuildDate>
         <item>
     <title>Competitive programming in Haskell: prefix sums</title>
-    <link>http://byorgey.github.io/blog/posts/draft/prefix-sums.html</link>
+    <link>http://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html</link>
     <description><![CDATA[
 <h1>Competitive programming in Haskell: prefix sums</h1>
 
@@ -108,7 +108,7 @@ component, but require some additional nontrivial ingredients:</p>
 
 ]]></description>
     <pubDate>2025-06-25T00:00:00Z</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/draft/prefix-sums.html</guid>
+    <guid>http://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 <item>
