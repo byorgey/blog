@@ -29,8 +29,8 @@ ranges we want and the algebraic properties of the operation.
 
 - If we want arbitrary ranges but the operation is a *group*, the
   solution is relatively straightforward: we can precompute all
-  *prefix sums*, and subtract to find the result for an arbitrary
-  range in $O(1)$.  I will write about this in an upcoming blog post.
+  *[prefix sums](https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html)*, and subtract to find the result for an arbitrary
+  range in $O(1)$.
 
 - If the operation is an *idempotent semigroup* (that is, it has the
   property that $x \diamond x = x$ for all $x$), we can use a *[sparse
@@ -70,12 +70,13 @@ fill in links as I write blog posts about each row.
 | Sequence | Ranges         | Operation            | Solution                | Precomputation   | Queries        |
 |:---------|:---------------|:---------------------|:------------------------|:-----------------|:---------------|
 | Static   | Sliding window | Monoid               | [Amortized queue][am-q] | $O(1)$           | $O(1)$         |
-| Static   | Arbitrary      | Group                | Prefix sum table        | $O(n)$           | $O(1)$         |
+| Static   | Arbitrary      | Group                | [Prefix sum table][ps]  | $O(n)$           | $O(1)$         |
 | Static   | Arbitrary      | Idempotent semigroup | Sparse table            | $O(n \lg n)$     | $O(1)$         |
-| Static   | Arbitrary      | Monoid               | Sqrt table              | $O(n \lg \lg n)$ | $O(\lg \lg n)$ |
+| Static   | Arbitrary      | Monoid               | Sqrt tree               | $O(n \lg \lg n)$ | $O(\lg \lg n)$ |
 | Dynamic  | Arbitrary      | Group                | Fenwick tree            | $O(n)$           | $O(\lg n)$     |
 | Dynamic  | Arbitrary      | Monoid               | Segment tree            | $O(n)$           | $O(\lg n)$     |
 
 </figure>
 
 [am-q]: https://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html
+[ps]: https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html

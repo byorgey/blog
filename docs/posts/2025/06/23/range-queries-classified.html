@@ -81,8 +81,8 @@ monoid.
 <!-- respectively.] --></p></li>
 <li><p>If we want arbitrary ranges but the operation is a <em>group</em>, the
 solution is relatively straightforward: we can precompute all
-<em>prefix sums</em>, and subtract to find the result for an arbitrary
-range in <span class="math inline">\(O(1)\)</span>. I will write about this in an upcoming blog post.</p></li>
+<em><a href="https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html">prefix sums</a></em>, and subtract to find the result for an arbitrary
+range in <span class="math inline">\(O(1)\)</span>.</p></li>
 <li><p>If the operation is an <em>idempotent semigroup</em> (that is, it has the
 property that <span class="math inline">\(x \diamond x = x\)</span> for all <span class="math inline">\(x\)</span>), we can use a <em><a href="https://cp-algorithms.com/data_structures/sparse-table.html">sparse
 table</a></em>, which takes <span class="math inline">\(O(n \lg n)\)</span> time and space for precomputation,
@@ -146,7 +146,7 @@ fill in links as I write blog posts about each row.</p>
 <td style="text-align: left;">Static</td>
 <td style="text-align: left;">Arbitrary</td>
 <td style="text-align: left;">Group</td>
-<td style="text-align: left;">Prefix sum table</td>
+<td style="text-align: left;"><a href="https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html">Prefix sum table</a></td>
 <td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
 <td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
 </tr>
@@ -162,7 +162,7 @@ fill in links as I write blog posts about each row.</p>
 <td style="text-align: left;">Static</td>
 <td style="text-align: left;">Arbitrary</td>
 <td style="text-align: left;">Monoid</td>
-<td style="text-align: left;">Sqrt table</td>
+<td style="text-align: left;">Sqrt tree</td>
 <td style="text-align: left;"><span class="math inline">\(O(n \lg \lg n)\)</span></td>
 <td style="text-align: left;"><span class="math inline">\(O(\lg \lg n)\)</span></td>
 </tr>

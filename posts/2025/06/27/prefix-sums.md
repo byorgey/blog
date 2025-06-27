@@ -3,7 +3,6 @@ title: 'Competitive programming in Haskell: prefix sums'
 categories: Haskell,competitive programming
 katex: true
 tags: monoid,range,query,prefix,sum
-published: 2025-06-25T00:00:00Z
 ---
 
 In a [previous blog
