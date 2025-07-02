@@ -17,7 +17,7 @@ Precomputing prefix sums
 Suppose we have a static sequence of values $a_1, a_2, a_3, \dots,
 a_n$ drawn from some
 [group](https://en.wikipedia.org/wiki/Group_(mathematics))^[That is,
-there is an associative binary operation, and
+there is an associative binary operation with an identity element, and
 every element has an inverse.], and want
 to be able to compute the total value (according to the group
 operation) of any contiguous subrange.  That is, given a range
