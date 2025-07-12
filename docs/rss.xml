@@ -7,8 +7,168 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Fri, 27 Jun 2025 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sat, 12 Jul 2025 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Competitive programming in Haskell: sparse tables</title>
+    <link>http://byorgey.github.io/blog/posts/draft/sparse-table.html</link>
+    <description><![CDATA[
+<h1>Competitive programming in Haskell: sparse tables</h1>
+
+<div class="info">
+  Posted on July 12, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;monoid&#39;." href="/tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged &#39;semigroup&#39;." href="/tag/semigroup.html" rel="tag">semigroup</a>, <a title="All pages tagged &#39;idempotent&#39;." href="/tag/idempotent.html" rel="tag">idempotent</a>, <a title="All pages tagged &#39;range&#39;." href="/tag/range.html" rel="tag">range</a>, <a title="All pages tagged &#39;query&#39;." href="/tag/query.html" rel="tag">query</a>, <a title="All pages tagged &#39;sum&#39;." href="/tag/sum.html" rel="tag">sum</a>, <a title="All pages tagged &#39;sparse&#39;." href="/tag/sparse.html" rel="tag">sparse</a>, <a title="All pages tagged &#39;table&#39;." href="/tag/table.html" rel="tag">table</a>, <a title="All pages tagged &#39;Haskell&#39;." href="/tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged &#39;competitive programming&#39;." href="/tag/competitive%20programming.html" rel="tag">competitive programming</a>
+  
+</div>
+
+<section>
+<p>Continuing a <a href="https://byorgey.github.io/blog/posts/2025/06/23/range-queries-classified.html">series of
+posts</a>
+on techniques for calculating <em>range queries</em>, today I will present
+the <em>sparse table</em> data structure.</p>
+<section id="motivation" class="level2">
+<h2>Motivation</h2>
+<p>In my <a href="https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html">previous
+post</a>,
+we saw that if we have a static sequence and a binary operation with a
+<em>group</em> structure (<em>i.e.</em> every element has an inverse), we can
+precompute a prefix sum table in <span class="math inline">\(O(n)\)</span> time, and then answer
+arbitrary range queries in <span class="math inline">\(O(1)\)</span> time.</p>
+<p>What if we don’t have inverses? We can’t use prefix sums, but can we
+do something else that still allows us to answer range queries in
+<span class="math inline">\(O(1)\)</span>? Clearly, one thing we could do would be to construct an <span class="math inline">\(n \times n\)</span> table storing the answer to <em>every possible</em> range query,
+that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to any
+range query in <span class="math inline">\(O(1)\)</span>. Naively computing the value of each <span class="math inline">\(Q[i,j]\)</span>
+would take <span class="math inline">\(O(n)\)</span> time, for a total of <span class="math inline">\(O(n^3)\)</span> time to fill in each
+of the entries in the table<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">We only have to fill in <span class="math inline">\(Q[i,j]\)</span> where
+<span class="math inline">\(i &lt; j\)</span>, but this is still about <span class="math inline">\(n^2/2\)</span> entries.<br />
+<br />
+</span></span>, but it’s not too
+hard to fill in the table in <span class="math inline">\(O(n^2)\)</span> total time, spending only <span class="math inline">\(O(1)\)</span>
+to fill in each entry—I’ll leave this to you as an exercise.</p>
+<p>However, <span class="math inline">\(O(n^2)\)</span> is often too big. Can we do better? More
+generally, we are looking for a particular subset of range queries to
+precompute, such that the total number is asymptotically less than
+<span class="math inline">\(n^2\)</span>, XXX. In the case of a group structure, we were able to compute
+only the <span class="math inline">\(O(n)\)</span> prefix queries, <em>i.e.</em> range queries of the form
+<span class="math inline">\([1,k]\)</span>, and compute the value of an arbitrary range using two
+prefixes, via subtraction.</p>
+<p>A sparse
+table is a particularly simple way to cut down the precomputation time
+and space to only <span class="math inline">\(O(n \lg n)\)</span>—<em>if</em> the operation is <em>idempotent</em>,
+that is, <span class="math inline">\(x \diamond x = x\)</span>. The most common examples of idempotent
+binary operations are <span class="math inline">\(\min\)</span> and <span class="math inline">\(\max\)</span>, but there are others—for
+example, bitwise OR.</p>
+</section>
+<section id="sparse-table" class="level2">
+<h2>Sparse table</h2>
+<p>So, how does a sparse table work? The basic idea is that we store a
+series of “levels”, where level <span class="math inline">\(i\)</span> stores range sums of length <span class="math inline">\(2^i\)</span>.
+So level <span class="math inline">\(0\)</span> stores “range sums of length <span class="math inline">\(1\)</span>”—that is, the elements
+of the original sequence; level <span class="math inline">\(1\)</span> stores range sums of length <span class="math inline">\(2\)</span>;
+level <span class="math inline">\(2\)</span> stores range sums of length <span class="math inline">\(4\)</span>; and so on. Formally,
+<span class="math inline">\(T[i,j]\)</span> stores the value of the range of length <span class="math inline">\(2^i\)</span> starting at
+index <span class="math inline">\(j\)</span>. That is,</p>
+<p><span class="math inline">\(T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}\)</span>.</p>
+<p>We can see that <span class="math inline">\(i\)</span> only needs to range from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n \rfloor\)</span>—above that and the stored range sums would be larger than
+the entire sequence. So this table has size <span class="math inline">\(O(n \lg n)\)</span>.</p>
+<p>Two important questions remain: how do we compute this table in the
+first place? And once we have it, how do we use it to answer arbitrary
+range queries in <span class="math inline">\(O(1)\)</span>?</p>
+<p>The first is easy: XXX each range sum on level <span class="math inline">\(i\)</span>, of length <span class="math inline">\(2^i\)</span>, is the
+combination of two range sums from level <span class="math inline">\(i-1\)</span>.</p>
+<figure>
+<img src="/diagrams/41ff74231eea5f68.svg" />
+</figure>
+</section>
+<section id="haskell-code" class="level2">
+<h2>Haskell code</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">IdempotentSemigroup</span> <span class="kw">where</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Semigroup</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- | An idempotent semigroup is one where the binary operation</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">--   satisfies the law @x &lt;&gt; x = x@ for all @x@.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Semigroup</span> m <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> m</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Min</span> a)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Max</span> a)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> <span class="dt">All</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> <span class="dt">Any</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> <span class="dt">Ordering</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> ()</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">First</span> a)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Last</span> a)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Bits</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">And</span> a)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Bits</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Ior</span> a)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TupleSections #-}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">SparseTable</span> <span class="kw">where</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Array</span> (<span class="dt">Array</span>, array, (!))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bifunctor</span> (first)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">IdempotentSemigroup</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">SparseTable</span> m <span class="ot">=</span> <span class="dt">SparseTable</span> (<span class="dt">Array</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) m)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Logarithm base 2, rounded down to the nearest integer.  Computed</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">--   efficiently using primitive bitwise instructions.</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="ot">lg ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>lg n <span class="ot">=</span> finiteBitSize n <span class="op">-</span> <span class="dv">1</span> <span class="op">-</span> countLeadingZeros n</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Construct a sparse table which can answer range queries over the</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">--   given list in $O(1)$ time.  Constructing the sparse table takes</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">--   $O(n \lg n)$ time and space, where $n$ is the length of the list.</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="ot">fromList ::</span> <span class="dt">IdempotentSemigroup</span> m <span class="ot">=&gt;</span> [m] <span class="ot">-&gt;</span> <span class="dt">SparseTable</span> m</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>fromList ms <span class="ot">=</span> <span class="dt">SparseTable</span> st</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">=</span> <span class="fu">length</span> ms</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  lgn <span class="ot">=</span> lg n</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  st <span class="ot">=</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    array ((<span class="dv">0</span>, <span class="dv">0</span>), (lgn, n <span class="op">-</span> <span class="dv">1</span>)) <span class="op">$</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      (<span class="fu">map</span> (first (<span class="dv">0</span>,)) <span class="op">$</span> <span class="fu">zip</span> [<span class="dv">0</span> <span class="op">..</span>] ms)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span> [ ((i, j), st <span class="op">!</span> (i <span class="op">-</span> <span class="dv">1</span>, j) <span class="op">&lt;&gt;</span> st <span class="op">!</span> (i <span class="op">-</span> <span class="dv">1</span>, j <span class="op">+</span> <span class="dv">1</span> <span class="op">!&lt;&lt;.</span> (i <span class="op">-</span> <span class="dv">1</span>)))</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>           <span class="op">|</span> i <span class="ot">&lt;-</span> [<span class="dv">1</span> <span class="op">..</span> lgn]</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>           , j <span class="ot">&lt;-</span> [<span class="dv">0</span> <span class="op">..</span> n <span class="op">-</span> <span class="dv">1</span> <span class="op">!&lt;&lt;.</span> i]</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>           ]</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">-- | \$O(1)$. @range st l r@ computes the range query which is the</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">--   @sconcat@ of all the elements from index @l@ to @r@ (inclusive).</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span><span class="ot"> ::</span> <span class="dt">IdempotentSemigroup</span> m <span class="ot">=&gt;</span> <span class="dt">SparseTable</span> m <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> m</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span> (<span class="dt">SparseTable</span> st) l r <span class="ot">=</span> st <span class="op">!</span> (i, l) <span class="op">&lt;&gt;</span> st <span class="op">!</span> (i, r <span class="op">-</span> (<span class="dv">1</span> <span class="op">!&lt;&lt;.</span> i) <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">=</span> lg (r <span class="op">-</span> l <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+</section>
+<section id="applications" class="level2">
+<h2>Applications</h2>
+<p>XXX LCA via Euler tour + RMQ</p>
+</section>
+<section id="practice-problems" class="level2">
+<h2>Practice problems</h2>
+<p>Want to practice? Here are a few problems that can be solved using
+techniques discussed in this post:</p>
+<p>XXX</p>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Competitive programming in Haskell: sparse tables" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>2025-07-12T00:00:00Z</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/draft/sparse-table.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Competitive programming in Haskell: prefix sums</title>
     <link>http://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html</link>
     <description><![CDATA[
@@ -33,7 +193,7 @@ useful.</p>
 <h2>Precomputing prefix sums</h2>
 <p>Suppose we have a static sequence of values <span class="math inline">\(a_1, a_2, a_3, \dots, a_n\)</span> drawn from some
 <a href="https://en.wikipedia.org/wiki/Group_(mathematics)">group</a><span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">That is,
-there is an associative binary operation, and
+there is an associative binary operation with an identity element, and
 every element has an inverse.<br />
 <br />
 </span></span>, and want
@@ -1769,154 +1929,6 @@ annotation value associated to the set containing a given node.</p>
 ]]></description>
     <pubDate>Sat, 02 Nov 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>MonadRandom: major or minor version bump?</title>
-    <link>http://byorgey.github.io/blog/posts/2024/10/14/MonadRandom-version-bump.html</link>
-    <description><![CDATA[
-<h1>MonadRandom: major or minor version bump?</h1>
-
-<div class="info">
-  Posted on October 14, 2024
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;Hackage&#39;." href="/tag/Hackage.html" rel="tag">Hackage</a>, <a title="All pages tagged &#39;MonadRandom&#39;." href="/tag/MonadRandom.html" rel="tag">MonadRandom</a>, <a title="All pages tagged &#39;random&#39;." href="/tag/random.html" rel="tag">random</a>, <a title="All pages tagged &#39;version&#39;." href="/tag/version.html" rel="tag">version</a>, <a title="All pages tagged &#39;PVP&#39;." href="/tag/PVP.html" rel="tag">PVP</a>, <a title="All pages tagged &#39;haskell&#39;." href="/tag/haskell.html" rel="tag">haskell</a>, <a title="All pages tagged &#39;meta&#39;." href="/tag/meta.html" rel="tag">meta</a>
-  
-</div>
-
-<section>
-<p><strong>tl;dr</strong>: a fix to the <code>MonadRandom</code> package may cause <code>fromListMay</code>
-and related functions to <em>extremely rarely</em> output different results than
-they used to. This could only possibly affect anyone who is using
-fixed seed(s) to generate random values and is depending on the
-specific values being produced, <em>e.g.</em> a unit test where you use a
-specific seed and test that you get a specific result. Do you think
-this should be a major or minor version bump?</p>
-<hr />
-<section id="the-fix" class="level2">
-<h2>The Fix</h2>
-<p>Since 2013 I have been the maintainer of
-<a href="https://hackage.haskell.org/package/MonadRandom"><code>MonadRandom</code></a>,
-which defines a monad and monad transformer for generating random
-values, along with a number of related utilities.</p>
-<p>Recently, <a href="https://github.com/Flupp">Toni Dietze</a> pointed out <a href="https://github.com/byorgey/MonadRandom/issues/53">a rare
-situation that could cause the <code>fromListMay</code> function to
-crash</a> (as well as
-the other functions which depend on it: <code>fromList</code>, <code>weighted</code>,
-<code>weightedMay</code>, <code>uniform</code>, and <code>uniformMay</code>). This function is
-supposed to draw a weighted random sample from a list of values
-decorated with weights. I’m not going to explain the details of the
-issue here; suffice it to say that it has to do with conversions
-between <code>Rational</code> (the type of the weights) and <code>Double</code> (the type
-that was being used internally for generating random numbers).</p>
-<p>Even though this could only happen in rare and/or strange
-circumstances, fixing it definitely seemed like the right thing to
-do. After a bit of discussion, Toni came up with a good suggestion
-for a fix: we should no longer use <code>Double</code> internally for generating
-random numbers, but rather <code>Word64</code>, which avoids conversion and
-rounding issues.</p>
-<p>In fact, <code>Word64</code> is already used internally in the generation of
-random <code>Double</code> values, so we can emulate the behavior of the <code>Double</code>
-instance (which was <a href="https://github.com/byorgey/MonadRandom/issues/53#issuecomment-2294862625">slightly
-tricky</a>
-to figure out)
-so that we make exactly the same random choices as before, but without
-actually converting to <code>Double</code>.</p>
-</section>
-<section id="the-change" class="level2">
-<h2>The Change</h2>
-<p>…well, not <em>exactly</em> the same random choices as before, and therein
-lies the rub! If <code>fromListMay</code> happens to pick a random value which
-is extremely close to a boundary between choices, it’s possible that
-the value will fall on one side of the boundary when using exact
-calculations with <code>Word64</code> and <code>Rational</code>, whereas before it would
-have fallen on the other side of the boundary after converting to
-<code>Double</code> due to rounding. In other words, it will output the
-same results <em>almost all the time</em>, but for a list of <span class="math inline">\(n\)</span> weighted
-choices there is something like an <span class="math inline">\(n/2^{64}\)</span> chance (or less) that
-any given random choice will be different from what it used to be. I
-have never observed this happening in my tests, and indeed, I do not
-expect to ever observe it! If we generated one billion random samples
-per second continuously for a thousand years, we might expect to see
-it happen once or twice. I am not even sure how to engineer a test
-scenario to force it to happen, because we would have to pick an
-initial PRNG seed that forces a certain <code>Word64</code> value to be
-generated.</p>
-</section>
-<section id="to-pvp-or-not-to-pvp" class="level2">
-<h2>To PVP or not to PVP?</h2>
-<p>Technically, a function exported by <code>MonadRandom</code> has changed
-behavior, so <a href="https://pvp.haskell.org/">according to the Haskell PVP
-specification</a> this should be a major
-version bump (<em>i.e.</em> <code>0.6</code> to <code>0.7</code>).<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">Actually, I am not even
-100% clear on this. <a href="https://pvp.haskell.org/#decision-tree">The decision
-tree</a> on the PVP page says
-that changing the <em>behavior</em> of an exported function necessitates a
-major version bump; but the <a href="https://pvp.haskell.org/#version-numbers">actual
-specification</a> does not
-refer to <em>behavior</em> at all—as I read it, it is exclusively concerned
-with API compatibility, <em>i.e.</em> whether things will still compile.<br />
-<br />
-</span></span> But
-there seem to be some good arguments for doing just a minor version
-bump (<em>i.e.</em> <code>0.6</code> to <code>0.6.1</code>).</p>
-<ul>
-<li><p>Arguments in favor of a minor version bump:</p>
-<ul>
-<li><p>A major version bump would cause a lot of (probably unnecessary)
-breakage! <code>MonadRandom</code> has <a href="https://hackage.haskell.org/package/MonadRandom/reverse/verbose">149 direct reverse dependencies,
-and about 3500 distinct transitive reverse
-dependencies</a>. Forcing
-all those packages to update their upper bound on <code>MonadRandom</code>
-would be a lot of churn.</p></li>
-<li><p>What exactly constitutes the “behavior” of a function to
-generate random values? It depends on your point of view. If
-we view the function as a pure mathematical function which
-takes a PRNG state as input and produces some value as
-output, then its behavior is defined precisely by which outputs
-it returns for which input seeds, and its behavior has changed.
-However, if we think of it in more effectful terms, we could say
-its “behavior” is just to output random values according to a
-certain distribution, in which case its behavior has <em>not</em>
-changed.</p></li>
-<li><p>It’s extremely unlikely that this change will cause any
-breakage; moreover, <a href="https://mathstodon.xyz/@BoydStephenSmithJr@hachyderm.io/113250878388960212">as argued by Boyd Stephen Smith</a>, anyone who cares enough about
-reproducibility to be relying on specific outputs for specific
-seeds is probably already pinning all their package versions.</p></li>
-</ul></li>
-<li><p>Arguments in favor of a major version bump:</p>
-<ul>
-<li><p>It’s what the PVP specifies; what’s the point of having a
-specification if we don’t follow it?</p></li>
-<li><p>In the unlikely event that this change <em>does</em> cause any
-breakage, it could be extremely difficult for package
-maintainers to track down. If the behavior of a random
-generation function completely changes, the source of the issue
-is obvious. But if it only changes for very rare inputs, you
-might reasonably think the problem is something else. A major
-version bump will force maintainers to read the changelog for
-<code>MonadRandom</code> and assess whether this is a change that could
-possibly affect them.</p></li>
-</ul></li>
-</ul>
-<p>So, do you have opinions on this? Would the release affect you one
-way or the other? Feel free to leave a comment here, or send me an
-email with your thoughts. Note there has already been <a href="https://mathstodon.xyz/@byorgey/113250843195905599">a bit of discussion on
-Mastodon</a> as well.</p>
-</section>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="MonadRandom: major or minor version bump?" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>Mon, 14 Oct 2024 00:00:00 UT</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2024/10/14/MonadRandom-version-bump.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Competitive programming in Haskell: sparse tables</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../css/tufte.css" />
+        <link rel="stylesheet" type="text/css" href="../../css/tufte-extra.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../">Home</a> •
+                <a href="../../about.html">About</a> •
+                <a href="../../rss.xml">RSS</a> •
+                <a href="../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../posts/2025/06/27/prefix-sums.html">« Competitive programming in Haskell: prefix sums</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Competitive programming in Haskell: sparse tables</h1>
+
+<div class="info">
+  Posted on July 12, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'monoid'." href="../../tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged 'semigroup'." href="../../tag/semigroup.html" rel="tag">semigroup</a>, <a title="All pages tagged 'idempotent'." href="../../tag/idempotent.html" rel="tag">idempotent</a>, <a title="All pages tagged 'range'." href="../../tag/range.html" rel="tag">range</a>, <a title="All pages tagged 'query'." href="../../tag/query.html" rel="tag">query</a>, <a title="All pages tagged 'sum'." href="../../tag/sum.html" rel="tag">sum</a>, <a title="All pages tagged 'sparse'." href="../../tag/sparse.html" rel="tag">sparse</a>, <a title="All pages tagged 'table'." href="../../tag/table.html" rel="tag">table</a>, <a title="All pages tagged 'Haskell'." href="../../tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged 'competitive programming'." href="../../tag/competitive%20programming.html" rel="tag">competitive programming</a>
+  
+</div>
+
+<section>
+<p>Continuing a <a href="https://byorgey.github.io/blog/posts/2025/06/23/range-queries-classified.html">series of
+posts</a>
+on techniques for calculating <em>range queries</em>, today I will present
+the <em>sparse table</em> data structure.</p>
+<section id="motivation" class="level2">
+<h2>Motivation</h2>
+<p>In my <a href="https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html">previous
+post</a>,
+we saw that if we have a static sequence and a binary operation with a
+<em>group</em> structure (<em>i.e.</em> every element has an inverse), we can
+precompute a prefix sum table in <span class="math inline">\(O(n)\)</span> time, and then answer
+arbitrary range queries in <span class="math inline">\(O(1)\)</span> time.</p>
+<p>What if we don’t have inverses? We can’t use prefix sums, but can we
+do something else that still allows us to answer range queries in
+<span class="math inline">\(O(1)\)</span>? Clearly, one thing we could do would be to construct an <span class="math inline">\(n \times n\)</span> table storing the answer to <em>every possible</em> range query,
+that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to any
+range query in <span class="math inline">\(O(1)\)</span>. Naively computing the value of each <span class="math inline">\(Q[i,j]\)</span>
+would take <span class="math inline">\(O(n)\)</span> time, for a total of <span class="math inline">\(O(n^3)\)</span> time to fill in each
+of the entries in the table<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="sidenote">We only have to fill in <span class="math inline">\(Q[i,j]\)</span> where
+<span class="math inline">\(i &lt; j\)</span>, but this is still about <span class="math inline">\(n^2/2\)</span> entries.<br />
+<br />
+</span></span>, but it’s not too
+hard to fill in the table in <span class="math inline">\(O(n^2)\)</span> total time, spending only <span class="math inline">\(O(1)\)</span>
+to fill in each entry—I’ll leave this to you as an exercise.</p>
+<p>However, <span class="math inline">\(O(n^2)\)</span> is often too big. Can we do better? More
+generally, we are looking for a particular subset of range queries to
+precompute, such that the total number is asymptotically less than
+<span class="math inline">\(n^2\)</span>, XXX. In the case of a group structure, we were able to compute
+only the <span class="math inline">\(O(n)\)</span> prefix queries, <em>i.e.</em> range queries of the form
+<span class="math inline">\([1,k]\)</span>, and compute the value of an arbitrary range using two
+prefixes, via subtraction.</p>
+<p>A sparse
+table is a particularly simple way to cut down the precomputation time
+and space to only <span class="math inline">\(O(n \lg n)\)</span>—<em>if</em> the operation is <em>idempotent</em>,
+that is, <span class="math inline">\(x \diamond x = x\)</span>. The most common examples of idempotent
+binary operations are <span class="math inline">\(\min\)</span> and <span class="math inline">\(\max\)</span>, but there are others—for
+example, bitwise OR.</p>
+</section>
+<section id="sparse-table" class="level2">
+<h2>Sparse table</h2>
+<p>So, how does a sparse table work? The basic idea is that we store a
+series of “levels”, where level <span class="math inline">\(i\)</span> stores range sums of length <span class="math inline">\(2^i\)</span>.
+So level <span class="math inline">\(0\)</span> stores “range sums of length <span class="math inline">\(1\)</span>”—that is, the elements
+of the original sequence; level <span class="math inline">\(1\)</span> stores range sums of length <span class="math inline">\(2\)</span>;
+level <span class="math inline">\(2\)</span> stores range sums of length <span class="math inline">\(4\)</span>; and so on. Formally,
+<span class="math inline">\(T[i,j]\)</span> stores the value of the range of length <span class="math inline">\(2^i\)</span> starting at
+index <span class="math inline">\(j\)</span>. That is,</p>
+<p><span class="math inline">\(T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}\)</span>.</p>
+<p>We can see that <span class="math inline">\(i\)</span> only needs to range from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n \rfloor\)</span>—above that and the stored range sums would be larger than
+the entire sequence. So this table has size <span class="math inline">\(O(n \lg n)\)</span>.</p>
+<p>Two important questions remain: how do we compute this table in the
+first place? And once we have it, how do we use it to answer arbitrary
+range queries in <span class="math inline">\(O(1)\)</span>?</p>
+<p>The first is easy: XXX each range sum on level <span class="math inline">\(i\)</span>, of length <span class="math inline">\(2^i\)</span>, is the
+combination of two range sums from level <span class="math inline">\(i-1\)</span>.</p>
+<figure>
+<img src="../../diagrams/41ff74231eea5f68.svg" />
+</figure>
+</section>
+<section id="haskell-code" class="level2">
+<h2>Haskell code</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">IdempotentSemigroup</span> <span class="kw">where</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Semigroup</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- | An idempotent semigroup is one where the binary operation</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">--   satisfies the law @x &lt;&gt; x = x@ for all @x@.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Semigroup</span> m <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> m</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Min</span> a)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Max</span> a)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> <span class="dt">All</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> <span class="dt">Any</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> <span class="dt">Ordering</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> ()</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">First</span> a)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Last</span> a)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Bits</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">And</span> a)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Bits</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Ior</span> a)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TupleSections #-}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">SparseTable</span> <span class="kw">where</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Array</span> (<span class="dt">Array</span>, array, (!))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bifunctor</span> (first)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">IdempotentSemigroup</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">SparseTable</span> m <span class="ot">=</span> <span class="dt">SparseTable</span> (<span class="dt">Array</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) m)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Logarithm base 2, rounded down to the nearest integer.  Computed</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">--   efficiently using primitive bitwise instructions.</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="ot">lg ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>lg n <span class="ot">=</span> finiteBitSize n <span class="op">-</span> <span class="dv">1</span> <span class="op">-</span> countLeadingZeros n</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Construct a sparse table which can answer range queries over the</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">--   given list in $O(1)$ time.  Constructing the sparse table takes</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">--   $O(n \lg n)$ time and space, where $n$ is the length of the list.</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="ot">fromList ::</span> <span class="dt">IdempotentSemigroup</span> m <span class="ot">=&gt;</span> [m] <span class="ot">-&gt;</span> <span class="dt">SparseTable</span> m</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>fromList ms <span class="ot">=</span> <span class="dt">SparseTable</span> st</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">=</span> <span class="fu">length</span> ms</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  lgn <span class="ot">=</span> lg n</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  st <span class="ot">=</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    array ((<span class="dv">0</span>, <span class="dv">0</span>), (lgn, n <span class="op">-</span> <span class="dv">1</span>)) <span class="op">$</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      (<span class="fu">map</span> (first (<span class="dv">0</span>,)) <span class="op">$</span> <span class="fu">zip</span> [<span class="dv">0</span> <span class="op">..</span>] ms)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span> [ ((i, j), st <span class="op">!</span> (i <span class="op">-</span> <span class="dv">1</span>, j) <span class="op">&lt;&gt;</span> st <span class="op">!</span> (i <span class="op">-</span> <span class="dv">1</span>, j <span class="op">+</span> <span class="dv">1</span> <span class="op">!&lt;&lt;.</span> (i <span class="op">-</span> <span class="dv">1</span>)))</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>           <span class="op">|</span> i <span class="ot">&lt;-</span> [<span class="dv">1</span> <span class="op">..</span> lgn]</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>           , j <span class="ot">&lt;-</span> [<span class="dv">0</span> <span class="op">..</span> n <span class="op">-</span> <span class="dv">1</span> <span class="op">!&lt;&lt;.</span> i]</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>           ]</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">-- | \$O(1)$. @range st l r@ computes the range query which is the</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">--   @sconcat@ of all the elements from index @l@ to @r@ (inclusive).</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span><span class="ot"> ::</span> <span class="dt">IdempotentSemigroup</span> m <span class="ot">=&gt;</span> <span class="dt">SparseTable</span> m <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> m</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span> (<span class="dt">SparseTable</span> st) l r <span class="ot">=</span> st <span class="op">!</span> (i, l) <span class="op">&lt;&gt;</span> st <span class="op">!</span> (i, r <span class="op">-</span> (<span class="dv">1</span> <span class="op">!&lt;&lt;.</span> i) <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">=</span> lg (r <span class="op">-</span> l <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+</section>
+<section id="applications" class="level2">
+<h2>Applications</h2>
+<p>XXX LCA via Euler tour + RMQ</p>
+</section>
+<section id="practice-problems" class="level2">
+<h2>Practice problems</h2>
+<p>Want to practice? Here are a few problems that can be solved using
+techniques discussed in this post:</p>
+<p>XXX</p>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="Competitive programming in Haskell: sparse tables">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly <a href="https://github.com/byorgey/blog">generated by</a>
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>.  95%
+            human, 5% cotton-polyester blend, 0% LLM.
+        </div>
+    </body>
+</html>
