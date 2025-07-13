@@ -27,7 +27,8 @@
 <p>Continuing a <a href="https://byorgey.github.io/blog/posts/2025/06/23/range-queries-classified.html">series of
 posts</a>
 on techniques for calculating <em>range queries</em>, today I will present
-the <em>sparse table</em> data structure.</p>
+the <em>sparse table</em> data structure, for doing fast range queries on a
+static sequence with an idempotent combining operation.</p>
 <section id="motivation" class="level2">
 <h2>Motivation</h2>
 <p>In my <a href="https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html">previous
@@ -38,7 +39,7 @@ precompute a prefix sum table in <span class="math inline">\(O(n)\)</span> time,
 arbitrary range queries in <span class="math inline">\(O(1)\)</span> time.</p>
 <p>What if we don’t have inverses? We can’t use prefix sums, but can we
 do something else that still allows us to answer range queries in
-<span class="math inline">\(O(1)\)</span>? Clearly, one thing we could do would be to construct an <span class="math inline">\(n \times n\)</span> table storing the answer to <em>every possible</em> range query,
+<span class="math inline">\(O(1)\)</span>? One thing we could always do would be to construct an <span class="math inline">\(n \times n\)</span> table storing the answer to <em>every possible</em> range query,
 that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to any
 range query in <span class="math inline">\(O(1)\)</span>. Naively computing the value of each <span class="math inline">\(Q[i,j]\)</span>
 would take <span class="math inline">\(O(n)\)</span> time, for a total of <span class="math inline">\(O(n^3)\)</span> time to fill in each
@@ -49,42 +50,69 @@ of the entries in the table<span class="sidenote-wrapper"><label for="sn-0" clas
 hard to fill in the table in <span class="math inline">\(O(n^2)\)</span> total time, spending only <span class="math inline">\(O(1)\)</span>
 to fill in each entry—I’ll leave this to you as an exercise.</p>
 <p>However, <span class="math inline">\(O(n^2)\)</span> is often too big. Can we do better? More
-generally, we are looking for a particular subset of range queries to
-precompute, such that the total number is asymptotically less than
-<span class="math inline">\(n^2\)</span>, XXX. In the case of a group structure, we were able to compute
-only the <span class="math inline">\(O(n)\)</span> prefix queries, <em>i.e.</em> range queries of the form
-<span class="math inline">\([1,k]\)</span>, and compute the value of an arbitrary range using two
+generally, we are looking for a particular <em>subset</em> of range queries
+to precompute, such that the total number is asymptotically less than
+<span class="math inline">\(n^2\)</span>, and we can compute the value of any arbitrary range query using
+some constant number of precomputed ranges. In the case of a group
+structure, we were able to compute the values for only ranges of the
+form <span class="math inline">\(1 \dots k\)</span>, and compute the value of an arbitrary range using two
 prefixes, via subtraction.</p>
-<p>A sparse
-table is a particularly simple way to cut down the precomputation time
-and space to only <span class="math inline">\(O(n \lg n)\)</span>—<em>if</em> the operation is <em>idempotent</em>,
-that is, <span class="math inline">\(x \diamond x = x\)</span>. The most common examples of idempotent
-binary operations are <span class="math inline">\(\min\)</span> and <span class="math inline">\(\max\)</span>, but there are others—for
-example, bitwise OR.</p>
+<p>A sparse table is exactly such a scheme for precomputing a subset of
+ranges.<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle"/><span class="sidenote">In fact, I believe, but do not know for sure, that this is
+where the name “sparse table” comes from—it is “sparse” in the sense
+that it only stores a sparse subset of range values.<br />
+<br />
+</span></span> Rather than only
+a linear number of ranges, as with prefix sums, we have to compute
+<span class="math inline">\(O(n \lg n)\)</span>, but that’s still way better than <span class="math inline">\(O(n^2)\)</span>! Note,
+however, that a sparse table only works when the combining operation
+is <em>idempotent</em>, that is, when <span class="math inline">\(x \diamond x = x\)</span> for all <span class="math inline">\(x\)</span>. Let’s
+see how it works.</p>
 </section>
-<section id="sparse-table" class="level2">
-<h2>Sparse table</h2>
-<p>So, how does a sparse table work? The basic idea is that we store a
-series of “levels”, where level <span class="math inline">\(i\)</span> stores range sums of length <span class="math inline">\(2^i\)</span>.
-So level <span class="math inline">\(0\)</span> stores “range sums of length <span class="math inline">\(1\)</span>”—that is, the elements
-of the original sequence; level <span class="math inline">\(1\)</span> stores range sums of length <span class="math inline">\(2\)</span>;
-level <span class="math inline">\(2\)</span> stores range sums of length <span class="math inline">\(4\)</span>; and so on. Formally,
-<span class="math inline">\(T[i,j]\)</span> stores the value of the range of length <span class="math inline">\(2^i\)</span> starting at
-index <span class="math inline">\(j\)</span>. That is,</p>
-<p><span class="math inline">\(T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}\)</span>.</p>
-<p>We can see that <span class="math inline">\(i\)</span> only needs to range from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n \rfloor\)</span>—above that and the stored range sums would be larger than
+<section id="sparse-tables" class="level2">
+<h2>Sparse tables</h2>
+<p>The basic idea behind a sparse table is that we precompute a series of
+“levels”, where level <span class="math inline">\(i\)</span> stores values for ranges of length <span class="math inline">\(2^i\)</span>. So level
+<span class="math inline">\(0\)</span> stores “ranges of length <span class="math inline">\(1\)</span>”—that is, the elements of the
+original sequence; level <span class="math inline">\(1\)</span> stores ranges of length <span class="math inline">\(2\)</span>; level
+<span class="math inline">\(2\)</span> stores ranges of length <span class="math inline">\(4\)</span>; and so on. Formally, <span class="math inline">\(T[i,j]\)</span>
+stores the value of the range of length <span class="math inline">\(2^i\)</span> starting at index <span class="math inline">\(j\)</span>.
+That is,</p>
+<p><span class="math display">\[T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}.\]</span></p>
+<p>We can see that <span class="math inline">\(i\)</span> only needs to range from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n \rfloor\)</span>—above that and the stored ranges would be larger than
 the entire sequence. So this table has size <span class="math inline">\(O(n \lg n)\)</span>.</p>
 <p>Two important questions remain: how do we compute this table in the
 first place? And once we have it, how do we use it to answer arbitrary
 range queries in <span class="math inline">\(O(1)\)</span>?</p>
-<p>The first is easy: XXX each range sum on level <span class="math inline">\(i\)</span>, of length <span class="math inline">\(2^i\)</span>, is the
-combination of two range sums from level <span class="math inline">\(i-1\)</span>.</p>
+<p>Computing the table is easy: each range on level <span class="math inline">\(i\)</span>, of length <span class="math inline">\(2^i\)</span>, is the
+combination of two length-<span class="math inline">\(2^{i-1}\)</span> ranges from the previous level. That is,</p>
+<p><span class="math display">\[T[i,j] = T[i-1, j] \diamond T[i-1, j+2^{i-1}]\]</span></p>
+<p>XXX picture</p>
 <figure>
 <img src="/diagrams/41ff74231eea5f68.svg" />
 </figure>
+<p>Once we have this table, We can compute the value of an arbitrary
+range <span class="math inline">\([l,r]\)</span> as follows:</p>
+<ul>
+<li><p>Compute the biggest power of two that fits within the range, that
+is, the largest <span class="math inline">\(k\)</span> such that <span class="math inline">\(2^k \leq r - l + 1\)</span>.</p></li>
+<li><p>Look up two range values of length <span class="math inline">\(2^k\)</span>, one which starts at <span class="math inline">\(l\)</span>
+(that is, <span class="math inline">\(T[k, l]\)</span>) and one which ends at <span class="math inline">\(r\)</span> (that is, <span class="math inline">\(T[k, r - 2^k + 1]\)</span>). These two ranges overlap; but because the combining
+operation is idempotent, combining the values of the ranges yields
+the value for our desired range.</p>
+<p>This is why we require the combining operation to be idempotent:
+otherwise the values in the overlap would be overrepresented in the
+final value. So this works for finding <em>e.g.</em> the maximum or <span class="math inline">\(\gcd\)</span>
+of a range, but not for, say, sum.</p></li>
+</ul>
 </section>
 <section id="haskell-code" class="level2">
 <h2>Haskell code</h2>
+<p>Let’s write some Haskell code! First, a little module for idempotent
+semigroups. The <code>IdempotentSemigroup</code> class has no methods, since as
+compared to <code>Semigroup</code> it only adds a law. However, it’s still
+helpful to signal the requirement. You might like to convince
+yourself that all the instances listed below really are idempotent.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">IdempotentSemigroup</span> <span class="kw">where</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span></span>
@@ -103,57 +131,81 @@ combination of two range sums from level <span class="math inline">\(i-1\)</span
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">First</span> a)</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Last</span> a)</span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Bits</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">And</span> a)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Bits</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Ior</span> a)</span></code></pre></div>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Bits</span> a <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (<span class="dt">Ior</span> a)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">IdempotentSemigroup</span> a, <span class="dt">IdempotentSemigroup</span> b) <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (a,b)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">IdempotentSemigroup</span> b <span class="ot">=&gt;</span> <span class="dt">IdempotentSemigroup</span> (a <span class="ot">-&gt;</span> b)</span></code></pre></div>
+<p>Now, some code for sparse tables. First, a few imports.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TupleSections #-}</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">SparseTable</span> <span class="kw">where</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Array</span> (<span class="dt">Array</span>, array, (!))</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bifunctor</span> (first)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">IdempotentSemigroup</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">SparseTable</span> m <span class="ot">=</span> <span class="dt">SparseTable</span> (<span class="dt">Array</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) m)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Logarithm base 2, rounded down to the nearest integer.  Computed</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">--   efficiently using primitive bitwise instructions.</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="ot">lg ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>lg n <span class="ot">=</span> finiteBitSize n <span class="op">-</span> <span class="dv">1</span> <span class="op">-</span> countLeadingZeros n</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Construct a sparse table which can answer range queries over the</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">--   given list in $O(1)$ time.  Constructing the sparse table takes</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">--   $O(n \lg n)$ time and space, where $n$ is the length of the list.</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="ot">fromList ::</span> <span class="dt">IdempotentSemigroup</span> m <span class="ot">=&gt;</span> [m] <span class="ot">-&gt;</span> <span class="dt">SparseTable</span> m</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>fromList ms <span class="ot">=</span> <span class="dt">SparseTable</span> st</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">=</span> <span class="fu">length</span> ms</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  lgn <span class="ot">=</span> lg n</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  st <span class="ot">=</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    array ((<span class="dv">0</span>, <span class="dv">0</span>), (lgn, n <span class="op">-</span> <span class="dv">1</span>)) <span class="op">$</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      (<span class="fu">map</span> (first (<span class="dv">0</span>,)) <span class="op">$</span> <span class="fu">zip</span> [<span class="dv">0</span> <span class="op">..</span>] ms)</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span> [ ((i, j), st <span class="op">!</span> (i <span class="op">-</span> <span class="dv">1</span>, j) <span class="op">&lt;&gt;</span> st <span class="op">!</span> (i <span class="op">-</span> <span class="dv">1</span>, j <span class="op">+</span> <span class="dv">1</span> <span class="op">!&lt;&lt;.</span> (i <span class="op">-</span> <span class="dv">1</span>)))</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>           <span class="op">|</span> i <span class="ot">&lt;-</span> [<span class="dv">1</span> <span class="op">..</span> lgn]</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>           , j <span class="ot">&lt;-</span> [<span class="dv">0</span> <span class="op">..</span> n <span class="op">-</span> <span class="dv">1</span> <span class="op">!&lt;&lt;.</span> i]</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>           ]</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">-- | \$O(1)$. @range st l r@ computes the range query which is the</span></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">--   @sconcat@ of all the elements from index @l@ to @r@ (inclusive).</span></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span><span class="ot"> ::</span> <span class="dt">IdempotentSemigroup</span> m <span class="ot">=&gt;</span> <span class="dt">SparseTable</span> m <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> m</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span> (<span class="dt">SparseTable</span> st) l r <span class="ot">=</span> st <span class="op">!</span> (i, l) <span class="op">&lt;&gt;</span> st <span class="op">!</span> (i, r <span class="op">-</span> (<span class="dv">1</span> <span class="op">!&lt;&lt;.</span> i) <span class="op">+</span> <span class="dv">1</span>)</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">=</span> lg (r <span class="op">-</span> l <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span> (countLeadingZeros, finiteBitSize, (!&lt;&lt;.))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">IdempotentSemigroup</span></span></code></pre></div>
+<p>The sparse table data structure itself is just a 2D array over some
+idempotent semigroup <code>m</code>. Note that <code>UArray</code> would be more efficient,
+but (1) that would make the code for building the sparse table more
+annoying (more on this later), and (2) it would require a bunch of
+tedious additional constraints on <code>m</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">SparseTable</span> m <span class="ot">=</span> <span class="dt">SparseTable</span> (<span class="dt">Array</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) m)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
+<p>We will frequently need to compute rounded-down base-two logarithms,
+so we define a function for it. A straightforward implementation
+would be to repeatedly shift right by one bit and count the number of
+shifts needed to reach zero; however, there is a better way, using
+<code>Data.Bits.countLeadingZeros</code>. It has a naive default implementation
+which counts right bit shifts, but in most cases it compiles down to
+much more efficient machine instructions.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Logarithm base 2, rounded down to the nearest integer.  Computed</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">--   efficiently using primitive bitwise instructions, when available.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ot">lg ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>lg n <span class="ot">=</span> finiteBitSize n <span class="op">-</span> <span class="dv">1</span> <span class="op">-</span> countLeadingZeros n</span></code></pre></div>
+<p>Now let’s write a function to construct a sparse table, given a
+sequence of values. Notice how the sparse table array <code>st</code> is <a href="https://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html">defined
+recursively</a>.
+This works because the <code>Array</code> type is lazy in the stored values, with
+the added benefit that only the array values we end up actually
+needing will be computed. However, this comes with a decent amount of
+overhead. If we wanted to use an unboxed array instead, we can’t use
+the recursive definition trick; instead, we would have to <a href="https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html">use an
+<code>STUArray</code></a>
+and fill in the values in a specific order. The code for this would
+be longer and much more tedious, but can be faster if we will end up
+needing all the values in the array anyway.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Construct a sparse table which can answer range queries over the</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">--   given list in $O(1)$ time.  Constructing the sparse table takes</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">--   $O(n \lg n)$ time and space, where $n$ is the length of the list.</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ot">fromList ::</span> <span class="dt">IdempotentSemigroup</span> m <span class="ot">=&gt;</span> [m] <span class="ot">-&gt;</span> <span class="dt">SparseTable</span> m</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>fromList ms <span class="ot">=</span> <span class="dt">SparseTable</span> st</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">=</span> <span class="fu">length</span> ms</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  lgn <span class="ot">=</span> lg n</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  st <span class="ot">=</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    array ((<span class="dv">0</span>, <span class="dv">0</span>), (lgn, n <span class="op">-</span> <span class="dv">1</span>)) <span class="op">$</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">zip</span> ((<span class="dv">0</span>,) <span class="op">&lt;$&gt;</span> [<span class="dv">0</span> <span class="op">..</span>]) ms</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span> [ ((i, j), st <span class="op">!</span> (i <span class="op">-</span> <span class="dv">1</span>, j) <span class="op">&lt;&gt;</span> st <span class="op">!</span> (i <span class="op">-</span> <span class="dv">1</span>, j <span class="op">+</span> <span class="dv">1</span> <span class="op">!&lt;&lt;.</span> (i <span class="op">-</span> <span class="dv">1</span>)))</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>           <span class="op">|</span> i <span class="ot">&lt;-</span> [<span class="dv">1</span> <span class="op">..</span> lgn]</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>           , j <span class="ot">&lt;-</span> [<span class="dv">0</span> <span class="op">..</span> n <span class="op">-</span> <span class="dv">1</span> <span class="op">!&lt;&lt;.</span> i]</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>           ]</span></code></pre></div>
+<p>Finally, we can write a function to answer range queries.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | \$O(1)$. @range st l r@ computes the range query which is the</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">--   @sconcat@ of all the elements from index @l@ to @r@ (inclusive).</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span><span class="ot"> ::</span> <span class="dt">IdempotentSemigroup</span> m <span class="ot">=&gt;</span> <span class="dt">SparseTable</span> m <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> m</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span> (<span class="dt">SparseTable</span> st) l r <span class="ot">=</span> st <span class="op">!</span> (k, l) <span class="op">&lt;&gt;</span> st <span class="op">!</span> (k, r <span class="op">-</span> (<span class="dv">1</span> <span class="op">!&lt;&lt;.</span> k) <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  k <span class="ot">=</span> lg (r <span class="op">-</span> l <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
 </section>
 <section id="applications" class="level2">
 <h2>Applications</h2>
-<p>XXX LCA via Euler tour + RMQ</p>
-</section>
-<section id="practice-problems" class="level2">
-<h2>Practice problems</h2>
-<p>Want to practice? Here are a few problems that can be solved using
-techniques discussed in this post:</p>
-<p>XXX</p>
+<p>Most commonly, we can use a sparse table to find the minimum or
+maximum values on a range, <span class="math inline">\(\min\)</span> and <span class="math inline">\(\max\)</span> being the quintessential
+idempotent operations. XXX Example?</p>
+<p>What if we want to find the <em>index of</em> the minimum or maximum value in
+a given range? We can easily accomplish this using the semigroup <code>Min (Arg m i)</code> (or <code>Max</code>), where <code>m</code> is the type of the values and <code>i</code> is
+the index type. For example: XXX</p>
+<p>See <a href="https://open.kattis.com/problems/worstweather">Worst Weather</a>?</p>
+<p>XXX LCA via Euler tour + RMQ.</p>
 </section>
 
 </section>

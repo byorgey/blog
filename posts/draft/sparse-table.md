@@ -9,7 +9,8 @@ tags: monoid,semigroup,idempotent,range,query,sum,sparse,table
 Continuing a [series of
 posts](https://byorgey.github.io/blog/posts/2025/06/23/range-queries-classified.html)
 on techniques for calculating *range queries*, today I will present
-the *sparse table* data structure.
+the *sparse table* data structure, for doing fast range queries on a
+static sequence with an idempotent combining operation.
 
 Motivation
 ----------
@@ -23,7 +24,7 @@ arbitrary range queries in $O(1)$ time.
 
 What if we don't have inverses?  We can't use prefix sums, but can we
 do something else that still allows us to answer range queries in
-$O(1)$?  Clearly, one thing we could do would be to construct an $n
+$O(1)$?  One thing we could always do would be to construct an $n
 \times n$ table storing the answer to *every possible* range query,
 that is, $Q[i,j]$ would store the value of the range $a_i \diamond
 \dots \diamond a_j$. Then we could just look up the answer to any
@@ -35,50 +36,79 @@ hard to fill in the table in $O(n^2)$ total time, spending only $O(1)$
 to fill in each entry---I'll leave this to you as an exercise.
 
 However, $O(n^2)$ is often too big.  Can we do better?  More
-generally, we are looking for a particular subset of range queries to
-precompute, such that the total number is asymptotically less than
-$n^2$, XXX.  In the case of a group structure, we were able to compute
-only the $O(n)$ prefix queries, *i.e.* range queries of the form
-$[1,k]$, and compute the value of an arbitrary range using two
+generally, we are looking for a particular *subset* of range queries
+to precompute, such that the total number is asymptotically less than
+$n^2$, and we can compute the value of any arbitrary range query using
+some constant number of precomputed ranges.  In the case of a group
+structure, we were able to compute the values for only ranges of the
+form $1 \dots k$, and compute the value of an arbitrary range using two
 prefixes, via subtraction.
 
-A sparse
-table is a particularly simple way to cut down the precomputation time
-and space to only $O(n \lg n)$---*if* the operation is *idempotent*,
-that is, $x \diamond x = x$.  The most common examples of idempotent
-binary operations are $\min$ and $\max$, but there are others---for
-example, bitwise OR.
+A sparse table is exactly such a scheme for precomputing a subset of
+ranges.^[In fact, I believe, but do not know for sure, that this is
+where the name "sparse table" comes from---it is "sparse" in the sense
+that it only stores a sparse subset of range values.] Rather than only
+a linear number of ranges, as with prefix sums, we have to compute
+$O(n \lg n)$, but that's still way better than $O(n^2)$!  Note,
+however, that a sparse table only works when the combining operation
+is *idempotent*, that is, when $x \diamond x = x$ for all $x$.  Let's
+see how it works.
 
-Sparse table
-------------
+Sparse tables
+-------------
 
-So, how does a sparse table work?  The basic idea is that we store a
-series of "levels", where level $i$ stores range sums of length $2^i$.
-So level $0$ stores "range sums of length $1$"---that is, the elements
-of the original sequence; level $1$ stores range sums of length $2$;
-level $2$ stores range sums of length $4$; and so on. Formally,
-$T[i,j]$ stores the value of the range of length $2^i$ starting at
-index $j$.  That is,
+The basic idea behind a sparse table is that we precompute a series of
+"levels", where level $i$ stores values for ranges of length $2^i$.  So level
+$0$ stores "ranges of length $1$"---that is, the elements of the
+original sequence; level $1$ stores ranges of length $2$; level
+$2$ stores ranges of length $4$; and so on. Formally, $T[i,j]$
+stores the value of the range of length $2^i$ starting at index $j$.
+That is,
 
-$T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}$.
+$$T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}.$$
 
 We can see that $i$ only needs to range from $0$ up to $\lfloor \lg n
-\rfloor$---above that and the stored range sums would be larger than
+\rfloor$---above that and the stored ranges would be larger than
 the entire sequence.  So this table has size $O(n \lg n)$.
 
 Two important questions remain: how do we compute this table in the
 first place? And once we have it, how do we use it to answer arbitrary
 range queries in $O(1)$?
 
-The first is easy: XXX each range sum on level $i$, of length $2^i$, is the
-combination of two range sums from level $i-1$.
+Computing the table is easy: each range on level $i$, of length $2^i$, is the
+combination of two length-$2^{i-1}$ ranges from the previous level.  That is,
 
+$$T[i,j] = T[i-1, j] \diamond T[i-1, j+2^{i-1}]$$
+
+XXX picture
 ```{.diagram width=400 height=400 caption=""}
 dia = circle 1 # fc blue
 ```
 
+Once we have this table, We can compute the value of an arbitrary
+range $[l,r]$ as follows:
+
+- Compute the biggest power of two that fits within the range, that
+  is, the largest $k$ such that $2^k \leq r - l + 1$.
+- Look up two range values of length $2^k$, one which starts at $l$
+  (that is, $T[k, l]$) and one which ends at $r$ (that is, $T[k, r -
+  2^k + 1]$).  These two ranges overlap; but because the combining
+  operation is idempotent, combining the values of the ranges yields
+  the value for our desired range.
+
+  This is why we require the combining operation to be idempotent:
+  otherwise the values in the overlap would be overrepresented in the
+  final value.  So this works for finding *e.g.* the maximum or $\gcd$
+  of a range, but not for, say, sum.
+
 Haskell code
 ------------
+
+Let's write some Haskell code!  First, a little module for idempotent
+semigroups.  The `IdempotentSemigroup` class has no methods, since as
+compared to `Semigroup` it only adds a law.  However, it's still
+helpful to signal the requirement.  You might like to convince
+yourself that all the instances listed below really are idempotent.
 
 ```haskell
 module IdempotentSemigroup where
@@ -100,7 +130,11 @@ instance IdempotentSemigroup (First a)
 instance IdempotentSemigroup (Last a)
 instance Bits a => IdempotentSemigroup (And a)
 instance Bits a => IdempotentSemigroup (Ior a)
+instance (IdempotentSemigroup a, IdempotentSemigroup b) => IdempotentSemigroup (a,b)
+instance IdempotentSemigroup b => IdempotentSemigroup (a -> b)
 ```
+
+Now, some code for sparse tables.  First, a few imports.
 
 ```haskell
 {-# LANGUAGE TupleSections #-}
@@ -108,18 +142,50 @@ instance Bits a => IdempotentSemigroup (Ior a)
 module SparseTable where
 
 import Data.Array (Array, array, (!))
-import Data.Bifunctor (first)
-import Data.Bits
+import Data.Bits (countLeadingZeros, finiteBitSize, (!<<.))
 import IdempotentSemigroup
+```
 
+The sparse table data structure itself is just a 2D array over some
+idempotent semigroup `m`.  Note that `UArray` would be more efficient,
+but (1) that would make the code for building the sparse table more
+annoying (more on this later), and (2) it would require a bunch of
+tedious additional constraints on `m`.
+
+```haskell
 newtype SparseTable m = SparseTable (Array (Int, Int) m)
   deriving (Show)
+```
 
+We will frequently need to compute rounded-down base-two logarithms,
+so we define a function for it.  A straightforward implementation
+would be to repeatedly shift right by one bit and count the number of
+shifts needed to reach zero; however, there is a better way, using
+`Data.Bits.countLeadingZeros`.  It has a naive default implementation
+which counts right bit shifts, but in most cases it compiles down to
+much more efficient machine instructions.
+
+```haskell
 -- | Logarithm base 2, rounded down to the nearest integer.  Computed
---   efficiently using primitive bitwise instructions.
+--   efficiently using primitive bitwise instructions, when available.
 lg :: Int -> Int
 lg n = finiteBitSize n - 1 - countLeadingZeros n
+```
 
+Now let's write a function to construct a sparse table, given a
+sequence of values. Notice how the sparse table array `st` is [defined
+recursively](https://byorgey.github.io/blog/posts/2023/06/02/dynamic-programming-in-haskell-lazy-immutable-arrays.html).
+This works because the `Array` type is lazy in the stored values, with
+the added benefit that only the array values we end up actually
+needing will be computed.  However, this comes with a decent amount of
+overhead.  If we wanted to use an unboxed array instead, we can't use
+the recursive definition trick; instead, we would have to [use an
+`STUArray`](https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html)
+and fill in the values in a specific order.  The code for this would
+be longer and much more tedious, but can be faster if we will end up
+needing all the values in the array anyway.
+
+```haskell
 -- | Construct a sparse table which can answer range queries over the
 --   given list in $O(1)$ time.  Constructing the sparse table takes
 --   $O(n \lg n)$ time and space, where $n$ is the length of the list.
@@ -131,30 +197,37 @@ fromList ms = SparseTable st
 
   st =
     array ((0, 0), (lgn, n - 1)) $
-      (map (first (0,)) $ zip [0 ..] ms)
+      zip ((0,) <$> [0 ..]) ms
         ++ [ ((i, j), st ! (i - 1, j) <> st ! (i - 1, j + 1 !<<. (i - 1)))
            | i <- [1 .. lgn]
            , j <- [0 .. n - 1 !<<. i]
            ]
+```
 
+Finally, we can write a function to answer range queries.
+
+```haskell
 -- | \$O(1)$. @range st l r@ computes the range query which is the
 --   @sconcat@ of all the elements from index @l@ to @r@ (inclusive).
 range :: IdempotentSemigroup m => SparseTable m -> Int -> Int -> m
-range (SparseTable st) l r = st ! (i, l) <> st ! (i, r - (1 !<<. i) + 1)
+range (SparseTable st) l r = st ! (k, l) <> st ! (k, r - (1 !<<. k) + 1)
  where
-  i = lg (r - l + 1)
+  k = lg (r - l + 1)
 
 ```
 
 Applications
 ------------
 
-XXX LCA via Euler tour + RMQ
+Most commonly, we can use a sparse table to find the minimum or
+maximum values on a range, $\min$ and $\max$ being the quintessential
+idempotent operations.  XXX Example?
 
-Practice problems
------------------
+What if we want to find the *index of* the minimum or maximum value in
+a given range?  We can easily accomplish this using the semigroup `Min
+(Arg m i)` (or `Max`), where `m` is the type of the values and `i` is
+the index type. For example: XXX
 
-Want to practice?  Here are a few problems that can be solved using
-techniques discussed in this post:
+See [Worst Weather](https://open.kattis.com/problems/worstweather)?
 
-XXX
+XXX LCA via Euler tour + RMQ.
