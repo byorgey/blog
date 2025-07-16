@@ -5,13 +5,13 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>blog :: Brent -> [String] - Competitive programming in Haskell: sparse tables</title>
         <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
-        <link rel="stylesheet" type="text/css" href="../../css/syntax.css" />
-        <link rel="stylesheet" type="text/css" href="../../css/tufte.css" />
-        <link rel="stylesheet" type="text/css" href="../../css/tufte-extra.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte-extra.css" />
 
         <!-- See https://katex.org/docs/browser -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
-        <link rel="alternate" type="application/rss+xml" href="../../rss.xml" title="RSS Feed">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
 
         <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
 
@@ -21,12 +21,12 @@
     <body>
         <div id="header">
             <div id="navigation" style="position: relative">
-                <a href="../../">Home</a> •
-                <a href="../../about.html">About</a> •
-                <a href="../../rss.xml">RSS</a> •
-                <a href="../../posts/blogliterately.html">BlogLiterately</a> •
-                <a href="../../posts/catsters-guide-2.html">Catsters Guide</a> •
-                <a href="../../posts/how-to-print-things.html">How To Print
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print
                   Things</a> •
                 <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
                   <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
@@ -37,7 +37,7 @@
 
         <article>
           
-<a href="../../posts/2025/06/27/prefix-sums.html">« Competitive programming in Haskell: prefix sums</a>
+<a href="../../../../posts/2025/06/27/prefix-sums.html">« Competitive programming in Haskell: prefix sums</a>
 
 
 <span style="margin-left: 2em">
@@ -48,11 +48,11 @@
 <h1>Competitive programming in Haskell: sparse tables</h1>
 
 <div class="info">
-  Posted on July 12, 2025
+  Posted on July 18, 2025
   
   
   <br />
-  Tagged <a title="All pages tagged 'monoid'." href="../../tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged 'semigroup'." href="../../tag/semigroup.html" rel="tag">semigroup</a>, <a title="All pages tagged 'idempotent'." href="../../tag/idempotent.html" rel="tag">idempotent</a>, <a title="All pages tagged 'range'." href="../../tag/range.html" rel="tag">range</a>, <a title="All pages tagged 'query'." href="../../tag/query.html" rel="tag">query</a>, <a title="All pages tagged 'sum'." href="../../tag/sum.html" rel="tag">sum</a>, <a title="All pages tagged 'sparse'." href="../../tag/sparse.html" rel="tag">sparse</a>, <a title="All pages tagged 'table'." href="../../tag/table.html" rel="tag">table</a>, <a title="All pages tagged 'Haskell'." href="../../tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged 'competitive programming'." href="../../tag/competitive%20programming.html" rel="tag">competitive programming</a>
+  Tagged <a title="All pages tagged 'monoid'." href="../../../../tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged 'semigroup'." href="../../../../tag/semigroup.html" rel="tag">semigroup</a>, <a title="All pages tagged 'idempotent'." href="../../../../tag/idempotent.html" rel="tag">idempotent</a>, <a title="All pages tagged 'range'." href="../../../../tag/range.html" rel="tag">range</a>, <a title="All pages tagged 'query'." href="../../../../tag/query.html" rel="tag">query</a>, <a title="All pages tagged 'sum'." href="../../../../tag/sum.html" rel="tag">sum</a>, <a title="All pages tagged 'sparse'." href="../../../../tag/sparse.html" rel="tag">sparse</a>, <a title="All pages tagged 'table'." href="../../../../tag/table.html" rel="tag">table</a>, <a title="All pages tagged 'Haskell'." href="../../../../tag/Haskell.html" rel="tag">Haskell</a>, <a title="All pages tagged 'competitive programming'." href="../../../../tag/competitive%20programming.html" rel="tag">competitive programming</a>
   
 </div>
 
@@ -60,36 +60,36 @@
 <p>Continuing a <a href="https://byorgey.github.io/blog/posts/2025/06/23/range-queries-classified.html">series of
 posts</a>
 on techniques for calculating <em>range queries</em>, today I will present
-the <em>sparse table</em> data structure, for doing fast range queries on a
-static sequence with an idempotent combining operation.</p>
+the <a href="https://cp-algorithms.com/data_structures/sparse-table.html"><em>sparse table</em> data structure</a>, for doing fast range queries on a
+static sequence with an <em>idempotent</em> combining operation.</p>
 <section id="motivation" class="level2">
 <h2>Motivation</h2>
 <p>In my <a href="https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html">previous
 post</a>,
 we saw that if we have a static sequence and a binary operation with a
 <em>group</em> structure (<em>i.e.</em> every element has an inverse), we can
-precompute a prefix sum table in <span class="math inline">\(O(n)\)</span> time, and then answer
+precompute a prefix sum table in <span class="math inline">\(O(n)\)</span> time, and then use it to answer
 arbitrary range queries in <span class="math inline">\(O(1)\)</span> time.</p>
 <p>What if we don’t have inverses? We can’t use prefix sums, but can we
 do something else that still allows us to answer range queries in
-<span class="math inline">\(O(1)\)</span>? One thing we could always do would be to construct an <span class="math inline">\(n \times n\)</span> table storing the answer to <em>every possible</em> range query,
-that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to any
-range query in <span class="math inline">\(O(1)\)</span>. Naively computing the value of each <span class="math inline">\(Q[i,j]\)</span>
-would take <span class="math inline">\(O(n)\)</span> time, for a total of <span class="math inline">\(O(n^3)\)</span> time to fill in each
-of the entries in the table<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="sidenote">We only have to fill in <span class="math inline">\(Q[i,j]\)</span> where
-<span class="math inline">\(i &lt; j\)</span>, but this is still about <span class="math inline">\(n^2/2\)</span> entries.<br />
+<span class="math inline">\(O(1)\)</span>? One thing we could always do would be to construct an <span class="math inline">\(n \times n\)</span> table storing the answer to <em>every possible</em> range
+query—that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to
+any range query in <span class="math inline">\(O(1)\)</span>. Naively computing the value of each
+<span class="math inline">\(Q[i,j]\)</span> would take <span class="math inline">\(O(n)\)</span> time, for a total of <span class="math inline">\(O(n^3)\)</span> time to fill
+in each of the entries in the table<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="sidenote">We only have to fill in <span class="math inline">\(Q[i,j]\)</span>
+where <span class="math inline">\(i &lt; j\)</span>, but this is still about <span class="math inline">\(n^2/2\)</span> entries.<br />
 <br />
-</span></span>, but it’s not too
-hard to fill in the table in <span class="math inline">\(O(n^2)\)</span> total time, spending only <span class="math inline">\(O(1)\)</span>
-to fill in each entry—I’ll leave this to you as an exercise.</p>
+</span></span>, though it’s not
+too hard to fill in the table in <span class="math inline">\(O(n^2)\)</span> total time, spending only
+<span class="math inline">\(O(1)\)</span> to fill in each entry—I’ll leave this to you as an exercise.</p>
 <p>However, <span class="math inline">\(O(n^2)\)</span> is often too big. Can we do better? More
 generally, we are looking for a particular <em>subset</em> of range queries
 to precompute, such that the total number is asymptotically less than
-<span class="math inline">\(n^2\)</span>, and we can compute the value of any arbitrary range query using
-some constant number of precomputed ranges. In the case of a group
-structure, we were able to compute the values for only ranges of the
-form <span class="math inline">\(1 \dots k\)</span>, and compute the value of an arbitrary range using two
-prefixes, via subtraction.</p>
+<span class="math inline">\(n^2\)</span>, but we can still compute the value of any arbitrary range query
+by combining some (constant number of) precomputed ranges. In the case
+of a group structure, we were able to compute the values for only
+prefix ranges of the form <span class="math inline">\(1 \dots k\)</span>, then compute the value of an arbitrary
+range using two prefixes, via subtraction.</p>
 <p>A sparse table is exactly such a scheme for precomputing a subset of
 ranges.<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle" /><span class="sidenote">In fact, I believe, but do not know for sure, that this is
 where the name “sparse table” comes from—it is “sparse” in the sense
@@ -97,10 +97,11 @@ that it only stores a sparse subset of range values.<br />
 <br />
 </span></span> Rather than only
 a linear number of ranges, as with prefix sums, we have to compute
-<span class="math inline">\(O(n \lg n)\)</span>, but that’s still way better than <span class="math inline">\(O(n^2)\)</span>! Note,
+<span class="math inline">\(O(n \lg n)\)</span> of them, but that’s still way better than <span class="math inline">\(O(n^2)\)</span>. Note,
 however, that a sparse table only works when the combining operation
-is <em>idempotent</em>, that is, when <span class="math inline">\(x \diamond x = x\)</span> for all <span class="math inline">\(x\)</span>. Let’s
-see how it works.</p>
+is <em>idempotent</em>, that is, when <span class="math inline">\(x \diamond x = x\)</span> for all <span class="math inline">\(x\)</span>. For
+example, we can use a sparse table with combining operations such as
+<span class="math inline">\(\max\)</span> or <span class="math inline">\(\gcd\)</span>, but not with <span class="math inline">\(+\)</span> or <span class="math inline">\(\times\)</span>. Let’s see how it works.</p>
 </section>
 <section id="sparse-tables" class="level2">
 <h2>Sparse tables</h2>
@@ -112,7 +113,7 @@ original sequence; level <span class="math inline">\(1\)</span> stores ranges of
 stores the value of the range of length <span class="math inline">\(2^i\)</span> starting at index <span class="math inline">\(j\)</span>.
 That is,</p>
 <p><span class="math display">\[T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}.\]</span></p>
-<p>We can see that <span class="math inline">\(i\)</span> only needs to range from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n \rfloor\)</span>—above that and the stored ranges would be larger than
+<p>We can see that <span class="math inline">\(i\)</span> only needs to go from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n \rfloor\)</span>; above that and the stored ranges would be larger than
 the entire sequence. So this table has size <span class="math inline">\(O(n \lg n)\)</span>.</p>
 <p>Two important questions remain: how do we compute this table in the
 first place? And once we have it, how do we use it to answer arbitrary
@@ -120,32 +121,36 @@ range queries in <span class="math inline">\(O(1)\)</span>?</p>
 <p>Computing the table is easy: each range on level <span class="math inline">\(i\)</span>, of length <span class="math inline">\(2^i\)</span>, is the
 combination of two length-<span class="math inline">\(2^{i-1}\)</span> ranges from the previous level. That is,</p>
 <p><span class="math display">\[T[i,j] = T[i-1, j] \diamond T[i-1, j+2^{i-1}]\]</span></p>
-<p>XXX picture</p>
-<figure>
-<img src="../../diagrams/41ff74231eea5f68.svg" />
-</figure>
-<p>Once we have this table, We can compute the value of an arbitrary
+<p>The zeroth level just consists of the elements of the original
+sequence, and we can compute each subsequent level using values from
+the previous level, so we can fill in the entire table in <span class="math inline">\(O(n \lg n)\)</span>
+time, doing just a single combining operation for each value in the table.</p>
+<p>Once we have the table, we can compute the value of an arbitrary
 range <span class="math inline">\([l,r]\)</span> as follows:</p>
 <ul>
 <li><p>Compute the biggest power of two that fits within the range, that
-is, the largest <span class="math inline">\(k\)</span> such that <span class="math inline">\(2^k \leq r - l + 1\)</span>.</p></li>
-<li><p>Look up two range values of length <span class="math inline">\(2^k\)</span>, one which starts at <span class="math inline">\(l\)</span>
-(that is, <span class="math inline">\(T[k, l]\)</span>) and one which ends at <span class="math inline">\(r\)</span> (that is, <span class="math inline">\(T[k, r - 2^k + 1]\)</span>). These two ranges overlap; but because the combining
+is, the largest <span class="math inline">\(k\)</span> such that <span class="math inline">\(2^k \leq r - l + 1\)</span>. We can compute
+this simply as <span class="math inline">\(\lfloor \lg (r - l + 1) \rfloor\)</span>.</p></li>
+<li><p>Look up two range values of length <span class="math inline">\(2^k\)</span>, one for the range which begins at <span class="math inline">\(l\)</span>
+(that is, <span class="math inline">\(T[k, l]\)</span>) and one for the range which ends at <span class="math inline">\(r\)</span> (that is, <span class="math inline">\(T[k, r - 2^k + 1]\)</span>). These two ranges overlap; but because the combining
 operation is idempotent, combining the values of the ranges yields
-the value for our desired range.</p>
+the value for our desired range <span class="math inline">\([l,r]\)</span>.</p>
 <p>This is why we require the combining operation to be idempotent:
 otherwise the values in the overlap would be overrepresented in the
-final value. So this works for finding <em>e.g.</em> the maximum or <span class="math inline">\(\gcd\)</span>
-of a range, but not for, say, sum.</p></li>
+final, combined value.</p></li>
 </ul>
 </section>
 <section id="haskell-code" class="level2">
 <h2>Haskell code</h2>
 <p>Let’s write some Haskell code! First, a little module for idempotent
-semigroups. The <code>IdempotentSemigroup</code> class has no methods, since as
-compared to <code>Semigroup</code> it only adds a law. However, it’s still
-helpful to signal the requirement. You might like to convince
-yourself that all the instances listed below really are idempotent.</p>
+semigroups. Note that we couch everything in terms of <em>semigroups</em>,
+not monoids, because we have no particular need of an identity
+element; indeed, some of the most important examples like <span class="math inline">\(\min\)</span> and
+<span class="math inline">\(\max\)</span> don’t have an identity element. The <code>IdempotentSemigroup</code>
+class has no methods, since as compared to <code>Semigroup</code> it only adds a
+law. However, it’s still helpful to signal the requirement. You
+might like to convince yourself that all the instances listed below
+really are idempotent.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">IdempotentSemigroup</span> <span class="kw">where</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span></span>
@@ -199,11 +204,12 @@ recursively</a>.
 This works because the <code>Array</code> type is lazy in the stored values, with
 the added benefit that only the array values we end up actually
 needing will be computed. However, this comes with a decent amount of
-overhead. If we wanted to use an unboxed array instead, we can’t use
+overhead. If we wanted to use an unboxed array instead, we wouldn’t
+be able to use
 the recursive definition trick; instead, we would have to <a href="https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html">use an
 <code>STUArray</code></a>
 and fill in the values in a specific order. The code for this would
-be longer and much more tedious, but can be faster if we will end up
+be longer and much more tedious, but could be faster if we end up
 needing all the values in the array anyway.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Construct a sparse table which can answer range queries over the</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">--   given list in $O(1)$ time.  Constructing the sparse table takes</span></span>
@@ -233,12 +239,41 @@ needing all the values in the array anyway.</p>
 <h2>Applications</h2>
 <p>Most commonly, we can use a sparse table to find the minimum or
 maximum values on a range, <span class="math inline">\(\min\)</span> and <span class="math inline">\(\max\)</span> being the quintessential
-idempotent operations. XXX Example?</p>
+idempotent operations. For example, this plays a key role in a
+solution to the (quite tricky) problem
+<a href="https://open.kattis.com/problems/ograda">Ograda</a>.<span class="sidenote-wrapper"><label for="sn-2" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-2" class="margin-toggle" /><span class="sidenote">At first it
+seemed like that problem should be solvable with some kind of <a href="https://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html">sliding
+window</a> approach, but I couldn’t figure out how to make it work!<br />
+<br />
+</span></span></p>
 <p>What if we want to find the <em>index of</em> the minimum or maximum value in
-a given range? We can easily accomplish this using the semigroup <code>Min (Arg m i)</code> (or <code>Max</code>), where <code>m</code> is the type of the values and <code>i</code> is
-the index type. For example: XXX</p>
-<p>See <a href="https://open.kattis.com/problems/worstweather">Worst Weather</a>?</p>
-<p>XXX LCA via Euler tour + RMQ.</p>
+a given range (see, for example, <a href="https://open.kattis.com/problems/worstweather">Worst Weather</a>)? We can easily accomplish this using the semigroup <code>Min (Arg m i)</code> (or <code>Max (Arg m i)</code>), where <code>m</code> is the type of the values and <code>i</code> is
+the index type. <code>Arg</code>, from <code>Data.Semigroup</code>, is just a pair which uses only the first value
+for its <code>Eq</code> and <code>Ord</code> instances, and carries along the second value
+(which is also exposed via <code>Functor</code>, <code>Foldable</code>, and <code>Traversable</code>
+instances). In the example below, we can see that the call to <code>range st 0 3</code> returns both the max value on the range (<code>4</code>) and its index
+(<code>2</code>) which got carried along for the ride:</p>
+<pre><code>λ&gt; :m +Data.Semigroup
+λ&gt; st = fromList (map Max (zipWith Arg [2, 3, 4, 2, 7, 4, 9] [0..]))
+λ&gt; range st 0 3
+Max {getMax = Arg 4 2}</code></pre>
+<p>Finally, I will mention that being able to compute range minimum
+queries is one way to compute lowest common ancestors for a (static,
+rooted) tree. First, walk the tree via a depth-first search and
+record the depth of each node encountered in sequence, a so-called
+<a href="https://en.wikipedia.org/wiki/Euler_tour_technique">Euler tour</a> (note
+that you must record <em>every</em> visit to a node—before visiting any of
+its children, in between each child, and after visiting all the
+children). Now the minimum depth recorded between visits to any two
+nodes will correspond to their lowest common ancestor.</p>
+<p>Here are a few problems that involve computing least common ancestors
+in a tree, though note there are also other techniques for computing
+LCAs (such as binary jumping) which I plan to write about eventually.</p>
+<ul>
+<li><a href="https://open.kattis.com/problems/tourists">Tourists</a></li>
+<li><a href="https://open.kattis.com/problems/stogovi">Stogovi</a></li>
+<li><a href="https://open.kattis.com/problems/windiesel">Win Diesel</a></li>
+</ul>
 </section>
 
 </section>
