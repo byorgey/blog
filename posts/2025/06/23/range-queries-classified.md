@@ -34,9 +34,8 @@ ranges we want and the algebraic properties of the operation.
 
 - If the operation is an *idempotent semigroup* (that is, it has the
   property that $x \diamond x = x$ for all $x$), we can use a *[sparse
-  table](https://cp-algorithms.com/data_structures/sparse-table.html)*, which takes $O(n \lg n)$ time and space for precomputation,
-  and then allows us to answer arbitrary range queries in $O(1)$.  I
-  also plan to write about this in an upcoming blog post.
+  table](https://byorgey.github.io/blog/posts/2025/07/18/sparse-table.html)*, which takes $O(n \lg n)$ time and space for precomputation,
+  and then allows us to answer arbitrary range queries in $O(1)$.
 
 - If the operation is an arbitrary monoid, we can use a *[sqrt tree](https://cp-algorithms.com/data_structures/sqrt-tree.html)*,
   which uses $O(n \lg \lg n)$ precomputed time and space, and allows
@@ -71,7 +70,7 @@ fill in links as I write blog posts about each row.
 |:---------|:---------------|:---------------------|:------------------------|:-----------------|:---------------|
 | Static   | Sliding window | Monoid               | [Amortized queue][am-q] | $O(1)$           | $O(1)$         |
 | Static   | Arbitrary      | Group                | [Prefix sum table][ps]  | $O(n)$           | $O(1)$         |
-| Static   | Arbitrary      | Idempotent semigroup | Sparse table            | $O(n \lg n)$     | $O(1)$         |
+| Static   | Arbitrary      | Idempotent semigroup | [Sparse table][st]      | $O(n \lg n)$     | $O(1)$         |
 | Static   | Arbitrary      | Monoid               | Sqrt tree               | $O(n \lg \lg n)$ | $O(\lg \lg n)$ |
 | Dynamic  | Arbitrary      | Group                | Fenwick tree            | $O(n)$           | $O(\lg n)$     |
 | Dynamic  | Arbitrary      | Monoid               | Segment tree            | $O(n)$           | $O(\lg n)$     |
@@ -80,3 +79,4 @@ fill in links as I write blog posts about each row.
 
 [am-q]: https://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html
 [ps]: https://byorgey.github.io/blog/posts/2025/06/27/prefix-sums.html
+[st]: https://byorgey.github.io/blog/posts/2025/07/18/sparse-table.html
