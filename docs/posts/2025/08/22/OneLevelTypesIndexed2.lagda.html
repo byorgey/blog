@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Decidable equality for indexed data types, take 2</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte-extra.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2025/07/18/sparse-table.html">« Competitive programming in Haskell: sparse tables</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Decidable equality for indexed data types, take 2</h1>
+
+<div class="info">
+  Posted on August 22, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'agda'." href="../../../../tag/agda.html" rel="tag">agda</a>, <a title="All pages tagged 'equality'." href="../../../../tag/equality.html" rel="tag">equality</a>, <a title="All pages tagged 'path'." href="../../../../tag/path.html" rel="tag">path</a>, <a title="All pages tagged 'dependent'." href="../../../../tag/dependent.html" rel="tag">dependent</a>, <a title="All pages tagged 'indexed'." href="../../../../tag/indexed.html" rel="tag">indexed</a>, <a title="All pages tagged 'agda'." href="../../../../tag/agda.html" rel="tag">agda</a>
+  
+</div>
+
+<section>
+<p>In a <a href="https://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html">post from a year
+ago</a>,
+I explored how to prove decidable equality in Agda of a particular
+indexed data type. Recently, I discovered a different way to
+accomplish the same thing, without resorting to embedded sigma types.</p>
+<p>This post is literate Agda; you can <a href="https://github.com/byorgey/blog/blob/main/posts/2025/08/22/OneLevelTypesIndexed2.lagda.md">download it
+here</a>
+if you want to play along. I tested everything here with Agda version
+2.6.4.3 and version 2.0 of the standard library. (I assume it would
+also work with more recent versions, but haven’t tested it.)</p>
+<section id="background" class="level2">
+<h2>Background</h2>
+<p><em>This section is repeated from my <a href="https://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html">previous
+post</a>,
+which I assume no one remembers.</em></p>
+<p>First, some imports and a module declaration. Note that the entire
+development is parameterized by some abstract set <code>B</code> of base types,
+which must have decidable equality.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Data<span class="ot">.</span>Product <span class="kw">using</span> <span class="ot">(</span>Σ <span class="ot">;</span> <span class="ot">_</span>×<span class="ot">_</span> <span class="ot">;</span> <span class="ot">_</span>,<span class="ot">_</span> <span class="ot">;</span> -,<span class="ot">_</span> <span class="ot">;</span> proj₁ <span class="ot">;</span> proj₂<span class="ot">)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Data<span class="ot">.</span>Product<span class="ot">.</span>Properties <span class="kw">using</span> <span class="ot">(</span>≡-dec<span class="ot">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Function <span class="kw">using</span> <span class="ot">(_</span>∘<span class="ot">_)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Binary <span class="kw">using</span> <span class="ot">(</span>DecidableEquality<span class="ot">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Binary<span class="ot">.</span>PropositionalEquality <span class="kw">using</span> <span class="ot">(_</span>≡<span class="ot">_</span> <span class="ot">;</span> refl<span class="ot">)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Nullary<span class="ot">.</span>Decidable <span class="kw">using</span> <span class="ot">(</span>yes<span class="ot">;</span> no<span class="ot">;</span> Dec<span class="ot">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> OneLevelTypesIndexed2 <span class="ot">(</span>B <span class="ot">:</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">(</span>≟B <span class="ot">:</span> DecidableEquality B<span class="ot">)</span> <span class="kw">where</span></span></code></pre></div>
+<p>We’ll work with a simple type system containing base types, function
+types, and some distinguished type constructor □. So far, this is
+just to give some context; it is not the final version of the code we
+will end up with, so we stick it in a local module so it won’t end up
+in the top-level namespace.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Unindexed <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> Ty</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty <span class="ot">→</span> Ty</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty</span></code></pre></div>
+<p>For example, if <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are base types, then we could write down a
+type like <span class="math inline">\(\square ((\square \square X \to Y) \to \square Y)\)</span>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">infixr</span> <span class="dv">2</span> <span class="ot">_</span>⇒<span class="ot">_</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">infix</span> <span class="dv">30</span> □<span class="ot">_</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">postulate</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    BX BY <span class="ot">:</span> B</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">:</span> Ty</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">=</span> base BX</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">:</span> Ty</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">=</span> base BY</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">:</span> Ty</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">=</span> □ <span class="ot">((</span>□ □ X ⇒ Y<span class="ot">)</span> ⇒ □ Y<span class="ot">)</span></span></code></pre></div>
+<p>However, for reasons that would take us too far afield in this blog
+post, I <em>don’t</em> want to allow immediately nested boxes, like <span class="math inline">\(\square \square X\)</span>. We can still have multiple boxes in a type, and even
+boxes nested inside of other boxes, as long as there is at least one
+arrow in between. In other words, I only want to rule out boxes
+immediately applied to another type with an outermost box. So we
+don’t want to allow the example type given above (since it contains
+<span class="math inline">\(\square \square X\)</span>), but, for example, <span class="math inline">\(\square ((\square X \to Y) \to \square Y)\)</span> would be OK.</p>
+</section>
+<section id="two-encodings" class="level2">
+<h2>Two encodings</h2>
+<p>In my <a href="https://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html">previous blog
+post</a>,
+I ended up with the following encoding of types indexed by a <code>Boxity</code>,
+which records the number of top-level boxes. Since the boxity of the
+arguments to an arrow type do not matter, we make them sigma types
+that package up a boxity with a type having that boxity. I was then
+able to define decidable equality for <code>ΣTy</code> and <code>Ty</code> by mutual
+recursion.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Boxity <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  ₀ <span class="ot">:</span> Boxity</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  ₁ <span class="ot">:</span> Boxity</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">variable</span> b b₁ b₂ b₃ b₄ <span class="ot">:</span> Boxity</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> WithSigma <span class="kw">where</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  ΣTy <span class="ot">:</span> <span class="dt">Set</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> Boxity <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  ΣTy <span class="ot">=</span> Σ Boxity Ty</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="kw">where</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> Ty ₀ <span class="ot">→</span> Ty ₁</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> Ty ₀</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> ΣTy <span class="ot">→</span> ΣTy <span class="ot">→</span> Ty ₀</span></code></pre></div>
+<p>The problem is that working with this definition of <code>Ty</code> is really
+annoying! Every time we construct or pattern-match on an arrow type,
+we have to package up each argument type into a dependent pair with
+its <code>Boxity</code>; this introduces syntactic clutter, and in many cases we
+know exactly what the <code>Boxity</code> has to be, so it’s not even
+informative. The version we really want looks more like this:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Ty <span class="ot">:</span> Boxity <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  base <span class="ot">:</span> B <span class="ot">→</span> Ty ₀</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> <span class="ot">{</span>b₁ b₂ <span class="ot">:</span> Boxity<span class="ot">}</span> <span class="ot">→</span> Ty b₁ <span class="ot">→</span> Ty b₂ <span class="ot">→</span> Ty ₀</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  □<span class="ot">_</span> <span class="ot">:</span> Ty ₀ <span class="ot">→</span> Ty ₁</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">infixr</span> <span class="dv">2</span> <span class="ot">_</span>⇒<span class="ot">_</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">infix</span> <span class="dv">30</span> □<span class="ot">_</span></span></code></pre></div>
+<p>In this version, the boxities of the arguments to the arrow
+constructor are just implicit parameters of the arrow constructor
+itself. Previously, I was unable to get decidable equality to go
+through for this version… but just the other day, I finally realized
+how to make it work!</p>
+</section>
+<section id="path-dependent-equality" class="level2">
+<h2>Path-dependent equality</h2>
+<p>The key trick that makes everything work is to define a
+<em>path-dependent equality</em> type. I <a href="https://martinescardo.github.io/dependent-equality-lecture/DependentEquality.html">learned this from Martín
+Escardó</a>.
+The idea is that we can express equality between two indexed things
+with different indices, as long as we also have an equality between
+the indices.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>≡⟦<span class="ot">_</span>⟧<span class="ot">_</span> <span class="ot">:</span> <span class="ot">{</span>A <span class="ot">:</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>B <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>a₀ a₁ <span class="ot">:</span> A<span class="ot">}</span> <span class="ot">→</span> B a₀ <span class="ot">→</span> a₀ ≡ a₁ <span class="ot">→</span> B a₁ <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>b₀ ≡⟦ refl ⟧ b₁   <span class="ot">=</span>   b₀ ≡ b₁</span></code></pre></div>
+<p>That’s exactly what we need here: the ability to express
+equality between <code>Ty</code> values, which may be indexed by different
+boxities—as long as we know that the boxities are equal.</p>
+</section>
+<section id="decidable-equality-for-ty" class="level2">
+<h2>Decidable equality for <code>Ty</code></h2>
+<p>We can now use this to directly encode decidable equality for <code>Ty</code>.
+First, we can easily define decidable equality for <code>Boxity</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Boxity-≟ <span class="ot">:</span> DecidableEquality Boxity</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>Boxity-≟ ₀ ₀ <span class="ot">=</span> yes refl</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>Boxity-≟ ₀ ₁ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>Boxity-≟ ₁ ₀ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>Boxity-≟ ₁ ₁ <span class="ot">=</span> yes refl</span></code></pre></div>
+<p>Here is the type of the decision procedure: given two <code>Ty</code> values
+which may have <em>different</em> boxities, we decide whether or not we can
+produce a witness to their equality. Such a witness consists of a
+<em>pair</em> of (1) a proof that the boxities are equal, and (2) a proof
+that the types are equal, depending on (1).<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="sidenote">We would really like to
+write this as <code>Σ (b₁ ≡ b₂) λ p → σ ≡⟦ p ⟧ τ</code>, but for some reason Agda
+requires us to fill in some extra implicit arguments before it is
+happy that everything is unambiguous, <a href="https://github.com/agda/agda/issues/2264">requiring some ugly syntax</a>.<br />
+<br />
+</span></span></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">:</span> <span class="ot">(</span>σ <span class="ot">:</span> Ty b₁<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>τ <span class="ot">:</span> Ty b₂<span class="ot">)</span> <span class="ot">→</span> Dec <span class="ot">(</span>Σ <span class="ot">(</span>b₁ ≡ b₂<span class="ot">)</span> <span class="ot">λ</span> p <span class="ot">→</span> <span class="ot">_</span>≡⟦<span class="ot">_</span>⟧<span class="ot">_</span> <span class="ot">{_}</span> <span class="ot">{</span>Ty<span class="ot">}</span> σ p τ<span class="ot">)</span></span></code></pre></div>
+<p>Before showing the definition of <code>Ty-≟′</code>, let’s see that we can use it
+to easily define both a boxity-homogeneous version of decidable
+equality for <code>Ty</code>, as well as decidable equality for <code>Σ Boxity Ty</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">:</span> DecidableEquality <span class="ot">(</span>Ty b<span class="ot">)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">{</span>b<span class="ot">}</span> σ τ <span class="kw">with</span> Ty-≟′ σ τ</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ≢τ <span class="ot">=</span> no <span class="ot">(λ</span> σ≡τ <span class="ot">→</span> σ≢τ <span class="ot">(</span> refl , σ≡τ<span class="ot">))</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , σ≡τ<span class="ot">)</span> <span class="ot">=</span> yes σ≡τ</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>ΣTy-≟ <span class="ot">:</span> DecidableEquality <span class="ot">(</span>Σ Boxity Ty<span class="ot">)</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>ΣTy-≟ <span class="ot">(_</span> , σ<span class="ot">)</span> <span class="ot">(_</span> , τ<span class="ot">)</span> <span class="kw">with</span> Ty-≟′ σ τ</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ≢τ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> refl <span class="ot">→</span> σ≢τ <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">=</span> yes refl</span></code></pre></div>
+<p>A lot of pattern matching on <code>refl</code> and everything falls out quite easily.</p>
+<p>And now the definition of <code>Ty-≟′</code>. It looks complicated, but it is
+actually not very difficult. The most interesting case is when
+comparing two arrow types for equality: we must first compare the
+boxities of the arguments, then consider the arguments themselves once
+we know the boxities are equal.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>□ σ<span class="ot">)</span> <span class="ot">(</span>□ τ<span class="ot">)</span> <span class="kw">with</span> Ty-≟′ σ τ</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">=</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ≢τ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> σ≢τ <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>base S<span class="ot">)</span> <span class="ot">(</span>base T<span class="ot">)</span> <span class="kw">with</span> ≟B S T</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">=</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no S≢T <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> S≢T refl <span class="ot">}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(_</span>⇒<span class="ot">_</span> <span class="ot">{</span>b₁<span class="ot">}</span> <span class="ot">{</span>b₂<span class="ot">}</span> σ₁ σ₂<span class="ot">)</span> <span class="ot">(_</span>⇒<span class="ot">_</span> <span class="ot">{</span>b₃<span class="ot">}</span> <span class="ot">{</span>b₄<span class="ot">}</span> τ₁ τ₂<span class="ot">)</span> <span class="kw">with</span> Boxity-≟ b₁ b₃ <span class="ot">|</span> Boxity-≟ b₂ b₄ <span class="ot">|</span> Ty-≟′ σ₁ τ₁ <span class="ot">|</span> Ty-≟′ σ₂ τ₂</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no b₁≢b₃ <span class="ot">|</span> <span class="ot">_</span> <span class="ot">|</span> <span class="ot">_</span> <span class="ot">|</span> <span class="ot">_</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> b₁≢b₃ refl <span class="ot">}</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> no b₂≢b₄ <span class="ot">|</span> <span class="ot">_</span> <span class="ot">|</span> <span class="ot">_</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> b₂≢b₄ refl <span class="ot">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> no σ₁≢τ₁ <span class="ot">|</span> <span class="ot">_</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> σ₁≢τ₁ <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> no σ₂≢τ₂ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> σ₂≢τ₂ <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">}</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">=</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>□ <span class="ot">_)</span> <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>□ <span class="ot">_)</span> <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">(</span>□ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , <span class="ot">())</span> <span class="ot">}</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">(</span>□ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , <span class="ot">())</span> <span class="ot">}</span></span></code></pre></div>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="Decidable equality for indexed data types, take 2">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly <a href="https://github.com/byorgey/blog">generated by</a>
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>.  95%
+            human, 5% cotton-polyester blend, 0% LLM.
+            <br /><br />
+            <a href="https://byorgey.github.io/blog/">blog :: Brent -> [String]</a> © 2007 - 2025 by <a href="http://ozark.hendrix.edu/~yorgey/">Brent Yorgey</a> is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt style="max-width: 1em;max-height:1em;margin-left: .2em;">
+        </div>
+    </body>
+</html>

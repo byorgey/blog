@@ -167,11 +167,11 @@ The sticking point for me was injectivity of the arrow constructor.
 When defining decidable equality we need to prove lemmas that each of
 the constructors are injective, but I was not even able to write down
 the <em>type</em> of injectivity for <code>_⇒_</code>. We would want something like this:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>⇒<span class="op">-</span>inj <span class="op">:</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  {bσ₁ bσ₂ bτ₁ bτ₂ <span class="op">:</span> <span class="dt">Boxity</span>}</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  {σ₁ <span class="op">:</span> <span class="dt">Ty</span> bσ₁} {σ₂ <span class="op">:</span> <span class="dt">Ty</span> bσ₂} {τ₁ <span class="op">:</span> <span class="dt">Ty</span> bτ₁} {τ₂ <span class="op">:</span> <span class="dt">Ty</span> bτ₂} →</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  (σ₁ ⇒ σ₂) ≡ (τ₁ ⇒ τ₂) →</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  (σ₁ ≡ τ₁) × (σ₂ ≡ τ₂)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>⇒-inj <span class="ot">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{</span>bσ₁ bσ₂ bτ₁ bτ₂ <span class="ot">:</span> Boxity<span class="ot">}</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">{</span>σ₁ <span class="ot">:</span> Ty bσ₁<span class="ot">}</span> <span class="ot">{</span>σ₂ <span class="ot">:</span> Ty bσ₂<span class="ot">}</span> <span class="ot">{</span>τ₁ <span class="ot">:</span> Ty bτ₁<span class="ot">}</span> <span class="ot">{</span>τ₂ <span class="ot">:</span> Ty bτ₂<span class="ot">}</span> <span class="ot">→</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">(</span>σ₁ ⇒ σ₂<span class="ot">)</span> ≡ <span class="ot">(</span>τ₁ ⇒ τ₂<span class="ot">)</span> <span class="ot">→</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">(</span>σ₁ ≡ τ₁<span class="ot">)</span> × <span class="ot">(</span>σ₂ ≡ τ₂<span class="ot">)</span></span></code></pre></div>
 <p>but this does not even typecheck! The problem is that, for example,
 <code>σ₁</code> and <code>τ₁</code> have different types, so the equality proposition <code>σ₁ ≡ τ₁</code> is not well-typed.</p>
 <p>At this point I tried turning to <a href="https://agda.github.io/agda-stdlib/experimental/Relation.Binary.HeterogeneousEquality.html">heterogeneous

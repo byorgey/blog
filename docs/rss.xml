@@ -7,8 +7,213 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Fri, 18 Jul 2025 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Fri, 22 Aug 2025 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Decidable equality for indexed data types, take 2</title>
+    <link>http://byorgey.github.io/blog/posts/2025/08/22/OneLevelTypesIndexed2.lagda.html</link>
+    <description><![CDATA[
+<h1>Decidable equality for indexed data types, take 2</h1>
+
+<div class="info">
+  Posted on August 22, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;agda&#39;." href="/tag/agda.html" rel="tag">agda</a>, <a title="All pages tagged &#39;equality&#39;." href="/tag/equality.html" rel="tag">equality</a>, <a title="All pages tagged &#39;path&#39;." href="/tag/path.html" rel="tag">path</a>, <a title="All pages tagged &#39;dependent&#39;." href="/tag/dependent.html" rel="tag">dependent</a>, <a title="All pages tagged &#39;indexed&#39;." href="/tag/indexed.html" rel="tag">indexed</a>, <a title="All pages tagged &#39;agda&#39;." href="/tag/agda.html" rel="tag">agda</a>
+  
+</div>
+
+<section>
+<p>In a <a href="https://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html">post from a year
+ago</a>,
+I explored how to prove decidable equality in Agda of a particular
+indexed data type. Recently, I discovered a different way to
+accomplish the same thing, without resorting to embedded sigma types.</p>
+<p>This post is literate Agda; you can <a href="https://github.com/byorgey/blog/blob/main/posts/2025/08/22/OneLevelTypesIndexed2.lagda.md">download it
+here</a>
+if you want to play along. I tested everything here with Agda version
+2.6.4.3 and version 2.0 of the standard library. (I assume it would
+also work with more recent versions, but haven’t tested it.)</p>
+<section id="background" class="level2">
+<h2>Background</h2>
+<p><em>This section is repeated from my <a href="https://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html">previous
+post</a>,
+which I assume no one remembers.</em></p>
+<p>First, some imports and a module declaration. Note that the entire
+development is parameterized by some abstract set <code>B</code> of base types,
+which must have decidable equality.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Data<span class="ot">.</span>Product <span class="kw">using</span> <span class="ot">(</span>Σ <span class="ot">;</span> <span class="ot">_</span>×<span class="ot">_</span> <span class="ot">;</span> <span class="ot">_</span>,<span class="ot">_</span> <span class="ot">;</span> -,<span class="ot">_</span> <span class="ot">;</span> proj₁ <span class="ot">;</span> proj₂<span class="ot">)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Data<span class="ot">.</span>Product<span class="ot">.</span>Properties <span class="kw">using</span> <span class="ot">(</span>≡-dec<span class="ot">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Function <span class="kw">using</span> <span class="ot">(_</span>∘<span class="ot">_)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Binary <span class="kw">using</span> <span class="ot">(</span>DecidableEquality<span class="ot">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Binary<span class="ot">.</span>PropositionalEquality <span class="kw">using</span> <span class="ot">(_</span>≡<span class="ot">_</span> <span class="ot">;</span> refl<span class="ot">)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">open</span> <span class="kw">import</span> Relation<span class="ot">.</span>Nullary<span class="ot">.</span>Decidable <span class="kw">using</span> <span class="ot">(</span>yes<span class="ot">;</span> no<span class="ot">;</span> Dec<span class="ot">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> OneLevelTypesIndexed2 <span class="ot">(</span>B <span class="ot">:</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">(</span>≟B <span class="ot">:</span> DecidableEquality B<span class="ot">)</span> <span class="kw">where</span></span></code></pre></div>
+<p>We’ll work with a simple type system containing base types, function
+types, and some distinguished type constructor □. So far, this is
+just to give some context; it is not the final version of the code we
+will end up with, so we stick it in a local module so it won’t end up
+in the top-level namespace.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Unindexed <span class="kw">where</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> Ty</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty <span class="ot">→</span> Ty</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> Ty <span class="ot">→</span> Ty</span></code></pre></div>
+<p>For example, if <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are base types, then we could write down a
+type like <span class="math inline">\(\square ((\square \square X \to Y) \to \square Y)\)</span>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">infixr</span> <span class="dv">2</span> <span class="ot">_</span>⇒<span class="ot">_</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">infix</span> <span class="dv">30</span> □<span class="ot">_</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">postulate</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    BX BY <span class="ot">:</span> B</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">:</span> Ty</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">=</span> base BX</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">:</span> Ty</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">=</span> base BY</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">:</span> Ty</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">=</span> □ <span class="ot">((</span>□ □ X ⇒ Y<span class="ot">)</span> ⇒ □ Y<span class="ot">)</span></span></code></pre></div>
+<p>However, for reasons that would take us too far afield in this blog
+post, I <em>don’t</em> want to allow immediately nested boxes, like <span class="math inline">\(\square \square X\)</span>. We can still have multiple boxes in a type, and even
+boxes nested inside of other boxes, as long as there is at least one
+arrow in between. In other words, I only want to rule out boxes
+immediately applied to another type with an outermost box. So we
+don’t want to allow the example type given above (since it contains
+<span class="math inline">\(\square \square X\)</span>), but, for example, <span class="math inline">\(\square ((\square X \to Y) \to \square Y)\)</span> would be OK.</p>
+</section>
+<section id="two-encodings" class="level2">
+<h2>Two encodings</h2>
+<p>In my <a href="https://byorgey.github.io/blog/posts/2024/09/09/OneLevelTypesIndexed.lagda.html">previous blog
+post</a>,
+I ended up with the following encoding of types indexed by a <code>Boxity</code>,
+which records the number of top-level boxes. Since the boxity of the
+arguments to an arrow type do not matter, we make them sigma types
+that package up a boxity with a type having that boxity. I was then
+able to define decidable equality for <code>ΣTy</code> and <code>Ty</code> by mutual
+recursion.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Boxity <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  ₀ <span class="ot">:</span> Boxity</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  ₁ <span class="ot">:</span> Boxity</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">variable</span> b b₁ b₂ b₃ b₄ <span class="ot">:</span> Boxity</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> WithSigma <span class="kw">where</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  ΣTy <span class="ot">:</span> <span class="dt">Set</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="ot">:</span> Boxity <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  ΣTy <span class="ot">=</span> Σ Boxity Ty</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> Ty <span class="kw">where</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    □<span class="ot">_</span> <span class="ot">:</span> Ty ₀ <span class="ot">→</span> Ty ₁</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    base <span class="ot">:</span> B <span class="ot">→</span> Ty ₀</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> ΣTy <span class="ot">→</span> ΣTy <span class="ot">→</span> Ty ₀</span></code></pre></div>
+<p>The problem is that working with this definition of <code>Ty</code> is really
+annoying! Every time we construct or pattern-match on an arrow type,
+we have to package up each argument type into a dependent pair with
+its <code>Boxity</code>; this introduces syntactic clutter, and in many cases we
+know exactly what the <code>Boxity</code> has to be, so it’s not even
+informative. The version we really want looks more like this:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Ty <span class="ot">:</span> Boxity <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  base <span class="ot">:</span> B <span class="ot">→</span> Ty ₀</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">_</span>⇒<span class="ot">_</span> <span class="ot">:</span> <span class="ot">{</span>b₁ b₂ <span class="ot">:</span> Boxity<span class="ot">}</span> <span class="ot">→</span> Ty b₁ <span class="ot">→</span> Ty b₂ <span class="ot">→</span> Ty ₀</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  □<span class="ot">_</span> <span class="ot">:</span> Ty ₀ <span class="ot">→</span> Ty ₁</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">infixr</span> <span class="dv">2</span> <span class="ot">_</span>⇒<span class="ot">_</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">infix</span> <span class="dv">30</span> □<span class="ot">_</span></span></code></pre></div>
+<p>In this version, the boxities of the arguments to the arrow
+constructor are just implicit parameters of the arrow constructor
+itself. Previously, I was unable to get decidable equality to go
+through for this version… but just the other day, I finally realized
+how to make it work!</p>
+</section>
+<section id="path-dependent-equality" class="level2">
+<h2>Path-dependent equality</h2>
+<p>The key trick that makes everything work is to define a
+<em>path-dependent equality</em> type. I <a href="https://martinescardo.github.io/dependent-equality-lecture/DependentEquality.html">learned this from Martín
+Escardó</a>.
+The idea is that we can express equality between two indexed things
+with different indices, as long as we also have an equality between
+the indices.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>≡⟦<span class="ot">_</span>⟧<span class="ot">_</span> <span class="ot">:</span> <span class="ot">{</span>A <span class="ot">:</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>B <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>a₀ a₁ <span class="ot">:</span> A<span class="ot">}</span> <span class="ot">→</span> B a₀ <span class="ot">→</span> a₀ ≡ a₁ <span class="ot">→</span> B a₁ <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>b₀ ≡⟦ refl ⟧ b₁   <span class="ot">=</span>   b₀ ≡ b₁</span></code></pre></div>
+<p>That’s exactly what we need here: the ability to express
+equality between <code>Ty</code> values, which may be indexed by different
+boxities—as long as we know that the boxities are equal.</p>
+</section>
+<section id="decidable-equality-for-ty" class="level2">
+<h2>Decidable equality for <code>Ty</code></h2>
+<p>We can now use this to directly encode decidable equality for <code>Ty</code>.
+First, we can easily define decidable equality for <code>Boxity</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Boxity-≟ <span class="ot">:</span> DecidableEquality Boxity</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>Boxity-≟ ₀ ₀ <span class="ot">=</span> yes refl</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>Boxity-≟ ₀ ₁ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>Boxity-≟ ₁ ₀ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>Boxity-≟ ₁ ₁ <span class="ot">=</span> yes refl</span></code></pre></div>
+<p>Here is the type of the decision procedure: given two <code>Ty</code> values
+which may have <em>different</em> boxities, we decide whether or not we can
+produce a witness to their equality. Such a witness consists of a
+<em>pair</em> of (1) a proof that the boxities are equal, and (2) a proof
+that the types are equal, depending on (1).<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">We would really like to
+write this as <code>Σ (b₁ ≡ b₂) λ p → σ ≡⟦ p ⟧ τ</code>, but for some reason Agda
+requires us to fill in some extra implicit arguments before it is
+happy that everything is unambiguous, <a href="https://github.com/agda/agda/issues/2264">requiring some ugly syntax</a>.<br />
+<br />
+</span></span></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">:</span> <span class="ot">(</span>σ <span class="ot">:</span> Ty b₁<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>τ <span class="ot">:</span> Ty b₂<span class="ot">)</span> <span class="ot">→</span> Dec <span class="ot">(</span>Σ <span class="ot">(</span>b₁ ≡ b₂<span class="ot">)</span> <span class="ot">λ</span> p <span class="ot">→</span> <span class="ot">_</span>≡⟦<span class="ot">_</span>⟧<span class="ot">_</span> <span class="ot">{_}</span> <span class="ot">{</span>Ty<span class="ot">}</span> σ p τ<span class="ot">)</span></span></code></pre></div>
+<p>Before showing the definition of <code>Ty-≟′</code>, let’s see that we can use it
+to easily define both a boxity-homogeneous version of decidable
+equality for <code>Ty</code>, as well as decidable equality for <code>Σ Boxity Ty</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">:</span> DecidableEquality <span class="ot">(</span>Ty b<span class="ot">)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>Ty-≟ <span class="ot">{</span>b<span class="ot">}</span> σ τ <span class="kw">with</span> Ty-≟′ σ τ</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ≢τ <span class="ot">=</span> no <span class="ot">(λ</span> σ≡τ <span class="ot">→</span> σ≢τ <span class="ot">(</span> refl , σ≡τ<span class="ot">))</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , σ≡τ<span class="ot">)</span> <span class="ot">=</span> yes σ≡τ</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>ΣTy-≟ <span class="ot">:</span> DecidableEquality <span class="ot">(</span>Σ Boxity Ty<span class="ot">)</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>ΣTy-≟ <span class="ot">(_</span> , σ<span class="ot">)</span> <span class="ot">(_</span> , τ<span class="ot">)</span> <span class="kw">with</span> Ty-≟′ σ τ</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ≢τ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> refl <span class="ot">→</span> σ≢τ <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">=</span> yes refl</span></code></pre></div>
+<p>A lot of pattern matching on <code>refl</code> and everything falls out quite easily.</p>
+<p>And now the definition of <code>Ty-≟′</code>. It looks complicated, but it is
+actually not very difficult. The most interesting case is when
+comparing two arrow types for equality: we must first compare the
+boxities of the arguments, then consider the arguments themselves once
+we know the boxities are equal.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>□ σ<span class="ot">)</span> <span class="ot">(</span>□ τ<span class="ot">)</span> <span class="kw">with</span> Ty-≟′ σ τ</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">=</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no σ≢τ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> σ≢τ <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>base S<span class="ot">)</span> <span class="ot">(</span>base T<span class="ot">)</span> <span class="kw">with</span> ≟B S T</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">=</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no S≢T <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> S≢T refl <span class="ot">}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(_</span>⇒<span class="ot">_</span> <span class="ot">{</span>b₁<span class="ot">}</span> <span class="ot">{</span>b₂<span class="ot">}</span> σ₁ σ₂<span class="ot">)</span> <span class="ot">(_</span>⇒<span class="ot">_</span> <span class="ot">{</span>b₃<span class="ot">}</span> <span class="ot">{</span>b₄<span class="ot">}</span> τ₁ τ₂<span class="ot">)</span> <span class="kw">with</span> Boxity-≟ b₁ b₃ <span class="ot">|</span> Boxity-≟ b₂ b₄ <span class="ot">|</span> Ty-≟′ σ₁ τ₁ <span class="ot">|</span> Ty-≟′ σ₂ τ₂</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no b₁≢b₃ <span class="ot">|</span> <span class="ot">_</span> <span class="ot">|</span> <span class="ot">_</span> <span class="ot">|</span> <span class="ot">_</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> b₁≢b₃ refl <span class="ot">}</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> no b₂≢b₄ <span class="ot">|</span> <span class="ot">_</span> <span class="ot">|</span> <span class="ot">_</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> b₂≢b₄ refl <span class="ot">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> no σ₁≢τ₁ <span class="ot">|</span> <span class="ot">_</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> σ₁≢τ₁ <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> no σ₂≢τ₂ <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">→</span> σ₂≢τ₂ <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">}</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">_</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">|</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span> <span class="ot">=</span> yes <span class="ot">(</span>refl , refl<span class="ot">)</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>□ <span class="ot">_)</span> <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>□ <span class="ot">_)</span> <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">(</span>□ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , <span class="ot">())</span> <span class="ot">}</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">(</span>□ <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">()</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>Ty-≟′ <span class="ot">(_</span> ⇒ <span class="ot">_)</span> <span class="ot">(</span>base <span class="ot">_)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>refl , <span class="ot">())</span> <span class="ot">}</span></span></code></pre></div>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Decidable equality for indexed data types, take 2" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Fri, 22 Aug 2025 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2025/08/22/OneLevelTypesIndexed2.lagda.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Competitive programming in Haskell: sparse tables</title>
     <link>http://byorgey.github.io/blog/posts/2025/07/18/sparse-table.html</link>
     <description><![CDATA[
@@ -1785,236 +1990,6 @@ Mitrichev</a>.</p>
 ]]></description>
     <pubDate>Mon, 18 Nov 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/11/18/UnionFind-sols.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Competitive Programming in Haskell: Union-Find</title>
-    <link>http://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html</link>
-    <description><![CDATA[
-<h1>Competitive Programming in Haskell: Union-Find</h1>
-
-<div class="info">
-  Posted on November  2, 2024
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged &#39;union-find&#39;." href="/tag/union-find.html" rel="tag">union-find</a>, <a title="All pages tagged &#39;competitive programming&#39;." href="/tag/competitive%20programming.html" rel="tag">competitive programming</a>, <a title="All pages tagged &#39;haskell&#39;." href="/tag/haskell.html" rel="tag">haskell</a>
-  
-</div>
-
-<section>
-<section id="union-find" class="level2">
-<h2>Union-find</h2>
-<p>A <a href="https://en.wikipedia.org/wiki/Disjoint-set_data_structure"><em>union-find</em> data
-structure</a>
-(also known as a <em>disjoint set</em> data structure) keeps track of a
-<em>collection of disjoint sets</em>, typically with elements drawn from
-<span class="math inline">\(\{0, \dots, n-1\}\)</span>. For example, we might have the sets</p>
-<p><span class="math inline">\(\{1,3\}, \{0, 4, 2\}, \{5, 6, 7\}\)</span></p>
-<p>A union-find structure must support three basic operations:</p>
-<ul>
-<li><p>We can <span class="math inline">\(\mathit{create}\)</span> a union-find structure with <span class="math inline">\(n\)</span> singleton sets
-<span class="math inline">\(\{0\}\)</span> through <span class="math inline">\(\{n-1\}\)</span>. (Alternatively, we could support two
-operations: creating an empty union-find structure, and adding a new
-singleton set; occasionally this more fine-grained approach is
-useful, but we will stick with the simpler <span class="math inline">\(\mathit{create}\)</span> API for now.)</p></li>
-<li><p>We can <span class="math inline">\(\mathit{find}\)</span> a given <span class="math inline">\(x \in \{0, \dots, n-1\}\)</span>, returning some sort
-of “name” for the set <span class="math inline">\(x\)</span> is in. It doesn’t matter what these names
-are; the only thing that matters is that for any <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>,
-<span class="math inline">\(\mathit{find}(x) = \mathit{find}(y)\)</span> if and only if <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> are in the same
-set. The most important application of <span class="math inline">\(\mathit{find}\)</span> is therefore to check
-whether two given elements are in the same set or not.</p></li>
-<li><p>We can <span class="math inline">\(\mathit{union}\)</span> two elements, so the sets that contain them become
-one set. For example, if we <span class="math inline">\(\mathit{union}(2,5)\)</span> then we would have</p>
-<p><span class="math inline">\(\{1,3\}, \{0, 4, 2, 5, 6, 7\}\)</span></p></li>
-</ul>
-<p>Note that <span class="math inline">\(\mathit{union}\)</span> is a one-way operation: once two sets have been
-unioned together, there’s no way to split them apart again. (If both
-merging and splitting are required, one can use a <a href="https://en.wikipedia.org/wiki/Link/cut_tree">link/cut
-tree</a>, which is very cool—and possibly something I will write
-about in the future—but much more complex.) However, these three
-operations are enough for union-find structures to have a large number
-of interesting applications!</p>
-<p>In addition, we can annotate each set with a value taken from some
-commutative semigroup. When creating a new union-find structure, we
-must specify the starting value for each singleton set; when unioning
-two sets, we combine their annotations via the semigroup operation.</p>
-<ul>
-<li>For example, we could annotate each set with its <em>size</em>; singleton
-sets always start out with size 1, and every time we union two sets
-we add their sizes.</li>
-<li>We could also annotate each set with the sum, product, maximum, or
-minumum of all its elements.</li>
-<li>Of course there are many more exotic examples as well.</li>
-</ul>
-<p>We typically use a commutative semigroup, as in the examples above;
-this guarantees that a given set always has a single well-defined
-annotation value, regardless of the sequence of union-find operations
-that were used to create it. However, we can actually use any binary
-operation at all (<em>i.e.</em> any <em>magma</em>), in which case the annotations
-on a set may reflect the precise tree of calls to <span class="math inline">\(\mathit{union}\)</span> that were
-used to construct it; this can occasionally be useful.</p>
-<ul>
-<li><p>For example, we could annotate each set with a list of values, and
-combine annotations using list concatenation; the order of elements
-in the list associated to a given set will depend on the order of
-arguments to <span class="math inline">\(\mathit{union}\)</span>.</p></li>
-<li><p>We could also annotate each set with a binary tree storing values at
-the leaves. Each singleton set is annotated with a single leaf; to
-combine two trees we create a new branch node with the two trees as
-its children. Then each set ends up annotated with the precise tree
-of calls to <span class="math inline">\(\mathit{union}\)</span> that were used to create it.</p></li>
-</ul>
-</section>
-<section id="implementing-union-find" class="level2">
-<h2>Implementing union-find</h2>
-<p>My implementation is based on <a href="https://kseo.github.io/posts/2014-01-30-implementing-union-find-in-haskell.html">one by Kwang Yul
-Seo</a>,
-but I have modified it quite a bit. The code is <a href="https://github.com/byorgey/comprog-hs/blob/master/UnionFind.hs">also available in my
-<code>comprog-hs</code>
-repository</a>. This
-blog post is not intended to be a comprehensive union-find tutorial,
-but I will explain some things as we go.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">UnionFind</span> <span class="kw">where</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span> (when)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.ST</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Array.ST</span></span></code></pre></div>
-<p>Let’s start with the definition of the <code>UnionFind</code> type itself.
-<code>UnionFind</code> has two type parameters: <code>s</code> is a phantom type parameter
-used to limit the scope to a given <code>ST</code> computation; <code>m</code> is the type
-of the arbitrary annotations. Note that the elements are also
-sometimes called “nodes”, since, as we will see, they are organized
-into trees.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Node</span> <span class="ot">=</span> <span class="dt">Int</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">UnionFind</span> s m <span class="ot">=</span> <span class="dt">UnionFind</span> {</span></code></pre></div>
-<p>The basic idea is to maintain three mappings:</p>
-<ul>
-<li>First, each element is mapped to a <em>parent</em> (another element).
-There are no cycles, except that some elements can be their own
-parent. This means that the elements form a <em>forest</em> of rooted
-trees, with the self-parenting elements as roots. We
-store the parent mapping as an <code>STUArray</code> (<a href="https://byorgey.github.io/blog/posts/2021/11/17/competitive-programming-in-haskell-bfs-part-4-implementation-via-stuarray.html">see here</a> for another post where we used <code>STUArray</code>) for
-efficiency.</li>
-</ul>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  parent ::</span> <span class="op">!</span>(<span class="dt">STUArray</span> s <span class="dt">Node</span> <span class="dt">Node</span>),</span></code></pre></div>
-<ul>
-<li><p>Each element is also mapped to a <em>size</em>. We maintain the
-invariant that for any element which is a root (<em>i.e.</em> any element
-which is its own parent), we store the size of the tree rooted at
-that element. The size associated to other, non-root elements
-does not matter.</p>
-<p>(Many implementations store the <em>height</em> of each tree instead of
-the size, but it does not make much practical difference, and the
-size seems more generally useful.)</p></li>
-</ul>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  sz ::</span> <span class="op">!</span>(<span class="dt">STUArray</span> s <span class="dt">Node</span> <span class="dt">Int</span>),</span></code></pre></div>
-<ul>
-<li>Finally, we map each element to a custom annotation value; again,
-we only care about the annotation values for root nodes.</li>
-</ul>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">  ann ::</span> <span class="op">!</span>(<span class="dt">STArray</span> s <span class="dt">Node</span> m) }</span></code></pre></div>
-<p>To <span class="math inline">\(\mathit{create}\)</span> a new union-find structure, we need a size and a
-function mapping each element to an initial annotation value. Every
-element starts as its own parent, with a size of 1. For convenience,
-we can also make a variant of <code>createWith</code> that gives every element
-the same constant annotation value.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">createWith ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Node</span> <span class="ot">-&gt;</span> m) <span class="ot">-&gt;</span> <span class="dt">ST</span> s (<span class="dt">UnionFind</span> s m)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>createWith n m <span class="ot">=</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">UnionFind</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;$&gt;</span> newListArray (<span class="dv">0</span>, n <span class="op">-</span> <span class="dv">1</span>) [<span class="dv">0</span> <span class="op">..</span> n <span class="op">-</span> <span class="dv">1</span>]    <span class="co">-- Every node is its own parent</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;*&gt;</span> newArray (<span class="dv">0</span>, n <span class="op">-</span> <span class="dv">1</span>) <span class="dv">1</span>                   <span class="co">-- Every node has size 1</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;*&gt;</span> newListArray (<span class="dv">0</span>, n <span class="op">-</span> <span class="dv">1</span>) (<span class="fu">map</span> m [<span class="dv">0</span> <span class="op">..</span> n <span class="op">-</span> <span class="dv">1</span>])</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ot">create ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> m <span class="ot">-&gt;</span> <span class="dt">ST</span> s (<span class="dt">UnionFind</span> s m)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>create n m <span class="ot">=</span> createWith n (<span class="fu">const</span> m)</span></code></pre></div>
-<p>To perform a <span class="math inline">\(\mathit{find}\)</span> operation, we keep following <em>parent</em>
-references up the tree until reaching a root. We can also do a cool
-optimization known as <em>path compression</em>: after finding a
-root, we can directly update the parent of every node along the path
-we just traversed to be the root. This means <span class="math inline">\(\mathit{find}\)</span> can be very
-efficient, since it tends to create trees that are extremely wide and
-shallow.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">find ::</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s <span class="dt">Node</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>find uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> readArray parent x</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> p <span class="op">/=</span> x</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">then</span> <span class="kw">do</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>      r <span class="ot">&lt;-</span> find uf p</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      writeArray parent x r</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">pure</span> r</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">else</span> <span class="fu">pure</span> x</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ot">connected ::</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s <span class="dt">Bool</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>connected uf x y <span class="ot">=</span> (<span class="op">==</span>) <span class="op">&lt;$&gt;</span> find uf x <span class="op">&lt;*&gt;</span> find uf y</span></code></pre></div>
-<p>Finally, to implement <span class="math inline">\(\mathit{union}\)</span>, we find the roots of the given nodes;
-if they are not the same we make the root with the smaller tree the
-child of the other root, combining sizes and annotations as
-appropriate.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">union ::</span> <span class="dt">Semigroup</span> m <span class="ot">=&gt;</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s ()</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>union uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x y <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> find uf x</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> find uf y</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  when (x <span class="op">/=</span> y) <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    sx <span class="ot">&lt;-</span> readArray sz x</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    sy <span class="ot">&lt;-</span> readArray sz y</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    mx <span class="ot">&lt;-</span> readArray ann x</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    my <span class="ot">&lt;-</span> readArray ann y</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> sx <span class="op">&lt;</span> sy</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>      <span class="kw">then</span> <span class="kw">do</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        writeArray parent x y</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        writeArray sz y (sx <span class="op">+</span> sy)</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        writeArray ann y (mx <span class="op">&lt;&gt;</span> my)</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">else</span> <span class="kw">do</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        writeArray parent y x</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        writeArray sz x (sx <span class="op">+</span> sy)</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        writeArray ann x (mx <span class="op">&lt;&gt;</span> my)</span></code></pre></div>
-<p>Note the trick of writing <code>x &lt;- find uf x</code>: this looks kind of like an
-imperative statement that updates the value of a mutable variable <code>x</code>,
-but really it just makes a new variable <code>x</code> which shadows the old
-one.</p>
-<p>Finally, a few utility functions. First, one to get the size of
-the set containing a given node:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">size ::</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s <span class="dt">Int</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>size uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> find uf x</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  readArray sz x</span></code></pre></div>
-<p>Also, we can provide functions to update and fetch the custom
-annotation value associated to the set containing a given node.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">updateAnn ::</span> <span class="dt">Semigroup</span> m <span class="ot">=&gt;</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> m <span class="ot">-&gt;</span> <span class="dt">ST</span> s ()</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>updateAnn uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x m <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> find uf x</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  old <span class="ot">&lt;-</span> readArray ann x</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  writeArray ann x (old <span class="op">&lt;&gt;</span> m)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- We could use modifyArray above, but the version of the standard library</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- installed on Kattis doesn&#39;t have it</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="ot">getAnn ::</span> <span class="dt">UnionFind</span> s m <span class="ot">-&gt;</span> <span class="dt">Node</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s m</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>getAnn uf<span class="op">@</span>(<span class="dt">UnionFind</span> {<span class="op">..</span>}) x <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> find uf x</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  readArray ann x</span></code></pre></div>
-</section>
-<section id="challenge" class="level2">
-<h2>Challenge</h2>
-<p>Here are a couple of problems I challenge you to solve for next time:</p>
-<ul>
-<li><a href="https://open.kattis.com/problems/andvag">Duck Journey</a></li>
-<li><a href="https://open.kattis.com/problems/inventing">Inventing Test Data</a></li>
-</ul>
-</section>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Competitive Programming in Haskell: Union-Find" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>Sat, 02 Nov 2024 00:00:00 UT</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 

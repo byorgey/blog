@@ -147,7 +147,7 @@ When defining decidable equality we need to prove lemmas that each of
 the constructors are injective, but I was not even able to write down
 the *type* of injectivity for `_⇒_`.  We would want something like this:
 
-```haskell
+```agda
 ⇒-inj :
   {bσ₁ bσ₂ bτ₁ bτ₂ : Boxity}
   {σ₁ : Ty bσ₁} {σ₂ : Ty bσ₂} {τ₁ : Ty bτ₁} {τ₂ : Ty bτ₂} →
