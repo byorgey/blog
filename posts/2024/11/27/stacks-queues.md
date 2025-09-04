@@ -24,7 +24,7 @@ force in $O(nw)$ time, by simply generating the list of all the
 windows and then summing each.  But, of course, we can do better: keep
 track of the sum of the current window; every time we slide the window
 one element to the right we can add the new element that enters the
-window on the right and subtract the element that falls of the window
+window on the right and subtract the element that falls off the window
 to the left. Using this "sliding window" technique, we can compute the
 sum of every window in only $O(n)$ total time instead of $O(nw)$.
 
