@@ -173,9 +173,12 @@ main = hakyllWith config $ do
     route idRoute
     compile compressCssCompiler
 
-  create ["css/syntax.css"] $ do
-    route idRoute
-    compile $ makeItem $ styleToCss pandocCodeStyle
+  -- Used to create syntax.css like this, but now hard-coded the file
+  -- in order to add a dark mode.
+
+  -- create ["css/syntax.css"] $ do
+  --   route idRoute
+  --   compile $ makeItem $ styleToCss pandocCodeStyle
 
   match "bib/*.csl" $ compile cslCompiler
   match "bib/*.bib" $ compile biblioCompiler
