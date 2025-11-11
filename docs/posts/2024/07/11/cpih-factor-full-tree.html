@@ -72,7 +72,7 @@ integers in such a way that <span class="math inline">\(v\)</span> is an ancesto
 <br />
 </span></span></p>
 <figure>
-<img src="../../../../diagrams/0d43c38705f7e411.svg" />
+<img src="../../../../diagrams/851774a928433f07.svg" />
 </figure>
 <p>The interesting point (though irrelevant to solving the problem) is
 that this is a method for encoding a tree as a set of integers:
@@ -178,7 +178,7 @@ Each edge is labelled with the factor of its child.</p>
 <br />
 </span></span></p>
 <figure>
-<img src="../../../../diagrams/13d7ee7b4e591669.svg" />
+<img src="../../../../diagrams/13114ec501e86242.svg" />
 </figure>
 <p>Notice how we use <span class="math inline">\(2\)</span> for the first child of the root, and <span class="math inline">\(3\)</span> for the
 next child. <span class="math inline">\(3\)</span>’s first child can also use a factor of <span class="math inline">\(3\)</span>, yielding
@@ -236,11 +236,12 @@ consider the tree below:</p>
 <br />
 </span></span></p>
 <figure>
-<img src="../../../../diagrams/93210957d4a3e60e.svg" />
+<img src="../../../../diagrams/8bf59397babebc22.svg" />
 </figure>
 <p>Under our scheme, the root gets label <span class="math inline">\(1\)</span>, and the children of the
 root get consecutive primes <span class="math inline">\(2, 3, 5, \dots, 29\)</span>. Then the nodes
-in the long chain hanging off the last sibling get labels <span class="math inline">\(29^2, 29^3, \dots, 29^{13}\)</span>, and <span class="math inline">\(29^{13}\)</span> is too big—in fact, it is
+in the long chain hanging off the last sibling get labels <span class="math inline">\(29^2, 29^3,
+\dots, 29^{13}\)</span>, and <span class="math inline">\(29^{13}\)</span> is too big—in fact, it is
 approximately <span class="math inline">\(10^{19}\)</span>. And this tree has only 23 nodes; in general
 the input can have up to 60.</p>
 <p>Of course, <span class="math inline">\(29\)</span> was a poor choice of factor for such a long chain—we
@@ -266,7 +267,7 @@ sorted by decreasing height from left to right:</p>
 <br />
 </span></span></p>
 <figure>
-<img src="../../../../diagrams/6bb8ef474a78c853.svg" />
+<img src="../../../../diagrams/86e7896bf6ef8358.svg" />
 </figure>
 <p>The straightforward traversal algorithm indeed assigns powers of 2 to
 the left spine of the tree, but it then assigns 3, 5, 7, and so on to
@@ -285,7 +286,7 @@ emphasize the different chains that are involved.</p>
 <br />
 </span></span></p>
 <figure>
-<img src="../../../../diagrams/45540cc73cab6222.svg" />
+<img src="../../../../diagrams/07880eaaead8b522.svg" />
 </figure>
 <p>In fact, we want to assign the factor 2 to the long chain on the left;
 then the factor 3 to the second-longest chain, in the fourth column;

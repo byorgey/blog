@@ -7,8 +7,164 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Fri, 22 Aug 2025 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 10 Nov 2025 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Call for collaboration: Disco web UI</title>
+    <link>http://byorgey.github.io/blog/posts/2025/11/10/disco-web-ui.html</link>
+    <description><![CDATA[
+<h1>Call for collaboration: Disco web UI</h1>
+
+<div class="info">
+  Posted on November 10, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;disco&#39;." href="/tag/disco.html" rel="tag">disco</a>, <a title="All pages tagged &#39;web&#39;." href="/tag/web.html" rel="tag">web</a>, <a title="All pages tagged &#39;WASM&#39;." href="/tag/WASM.html" rel="tag">WASM</a>, <a title="All pages tagged &#39;UI&#39;." href="/tag/UI.html" rel="tag">UI</a>, <a title="All pages tagged &#39;teaching&#39;." href="/tag/teaching.html" rel="tag">teaching</a>, <a title="All pages tagged &#39;discrete&#39;." href="/tag/discrete.html" rel="tag">discrete</a>, <a title="All pages tagged &#39;math&#39;." href="/tag/math.html" rel="tag">math</a>, <a title="All pages tagged &#39;Haskell&#39;." href="/tag/Haskell.html" rel="tag">Haskell</a>
+  
+</div>
+
+<section>
+<p><strong>tl;dr</strong>: I would like to have a web interface for <a href="https://github.com/disco-lang/disco">Disco</a>, a
+student-oriented programming language for teaching functional
+programming and discrete mathematics, which is implemented in Haskell.
+I’m looking for others interested to help build it. If you like
+building web stuff with Haskell compiled to WASM and want to have a
+positive impact on students learning mathematics and functional
+programming, <a href="http://ozark.hendrix.edu/~yorgey/forest/contact/index.xml">get in touch</a>!</p>
+<section id="disco" class="level2">
+<h2>Disco</h2>
+<p>For the past nine (!) years I have been developing
+<a href="https://github.com/disco-lang/disco">Disco</a>, a functional teaching
+language for use in a discrete mathematics course. It features
+first-class functions, polymorphism, and recursive algebraic data
+types, along with various built-in mathematical niceties and syntax
+that is designed to be close to mathematical practice.</p>
+<p>As a simple example, here’s a recursive function in Disco to compute the
+<a href="https://oeis.org/A002487">hyperbinary numbers</a>:</p>
+<pre><code>h : N -&gt; N
+h(0)      = 1
+h(2n)     = h(n) + h(n .- 1)
+h(2n + 1) = h(n)</code></pre>
+<p>Since recursive functions in Disco are automatically memoized, this
+evaluates almost instantly even on very large numbers:</p>
+<pre><code>Disco&gt; h(1000000)
+1287</code></pre>
+<p>If you want to know more about Disco, you can <a href="http://ozark.hendrix.edu/~yorgey/forest/yorgey-disco-2023/index.xml">read a paper about it
+here</a>,
+or <a href="https://disco-lang.readthedocs.io/en/latest/">read the language documentation</a>.</p>
+</section>
+<section id="the-problem" class="level2">
+<h2>The problem</h2>
+<p>I want students in my <a href="https://hendrix-cs.github.io/math240/">Discrete Mathematics
+course</a> (or any Discrete
+Mathematics course) to be able to use Disco: to play around at a REPL,
+write and test their own code, and so on.</p>
+<p>However, getting students to install Haskell and build Disco from
+source is a total non-starter, for multiple reasons. Some students in
+the course are not all that tech-savvy. Some students don’t even have
+their own computer, or the computer they do have chokes when trying to
+compile a large Haskell project (<em>e.g.</em> because of limited memory).
+Even aside from those issues, I simply don’t want to spend time and
+effort helping students install stuff at the beginning of the semester
+(at least not in this class).</p>
+</section>
+<section id="old-solution-replit" class="level2">
+<h2>Old solution: Replit</h2>
+<p>For a couple years, students were able to use Disco via a site called
+Replit, which provided free educational accounts, and supported
+arbitrary Nix configurations. Since the <a href="https://hackage.haskell.org/package/disco">disco package on
+Hackage</a> was picked up by
+nixpkgs, it was possible to spin up a Disco interpreter on Replit in
+just a few seconds. Replit provided a virtual file system, an editor,
+and, of course, a REPL.</p>
+<p>This was a great solution while it lasted, but sadly it is no longer
+viable:</p>
+<ul>
+<li>Disco has been broken in nixpkgs for a while now, and I have no idea
+how to fix it.</li>
+<li>Even if I could fix it, Replit has stopped supporting free education
+accounts, and started trying to shove LLMs into everything, making it no
+longer a viable teaching platform.</li>
+</ul>
+</section>
+<section id="solution-criteria" class="level2">
+<h2>Solution criteria</h2>
+<p>There are a few non-negotiable criteria that any solution must meet:</p>
+<ul>
+<li><p>It must either run on existing cloud infrastructure, or run
+completely client-side. I do not want to be in the business of
+running a server, or of worrying about mitigating DOS attacks (by
+which I mean students accidentally running infinite loops generating
+infinite amounts of memory). I also do not want to be in the
+business of managing accounts and logins.</p></li>
+<li><p>Students should not have to install anything. As I mentioned
+before, this is a nonstarter for some students.</p></li>
+<li><p>It should allow students to work at a Disco REPL, and also test
+their own Disco code.</p></li>
+</ul>
+</section>
+<section id="potential-solutions" class="level2">
+<h2>Potential solutions</h2>
+<ul>
+<li><p>Of course, a really nice solution would be to find an existing site
+which replicates some of the functionality we used to have with
+Replit and supports educational uses. I kind of doubt such a thing
+exists, though I would be happy to be wrong about this.</p></li>
+<li><p>Another possibility is to have students use VSCode in their browsers
+via GitHub; to make this work we would have to add LSP support to
+Disco and package it up appropriately. I’m not really excited about
+using GitHub for this, although implementing LSP for Disco is
+independently a great idea.</p></li>
+<li><p>The other solution I can think of is to compile Disco to WASM, and
+build a web UI on top of it, so that the whole thing runs in the
+student’s browser. I spent some time on this last year and
+successfully got Disco to compile to WASM, but didn’t make it any
+farther than that. Honestly, I simply don’t know anything about web
+development, and I am not very motivated to learn.</p></li>
+</ul>
+</section>
+<section id="ui-levels" class="level2">
+<h2>UI levels</h2>
+<p>Running with the last idea above (WASM + a custom web UI), what could
+such a thing look like? What features would we want? Here are some
+different solutions I could imagine, in increasing order of effort.</p>
+<ul>
+<li><p><strong>Level 0</strong> would be to have just a web-based REPL. Students can
+edit Disco code on their own device, upload it to the website, then
+evaluate expressions at the REPL. Having to reupload their code
+every time they make changes would be annoying, but this would still
+be better than nothing.</p></li>
+<li><p><strong>Level 1</strong> would be to have a web-based editor and REPL. Students
+can type code in the editor, then push a button to load it into the
+REPL and play with it.</p></li>
+<li><p><strong>Level 2</strong> would be to have a web-based filesystem + editor + REPL.
+Students can see a list of multiple files, edit them individually, and
+load any of them into the REPL. The filesystem must live on their own
+computer, not on a remote server; but it could be their real
+filesystem, or a virtual filesystem.</p></li>
+</ul>
+<p>I don’t know how difficult any of these are; I would assume that
+at least some of them can be achieved by gluing together some existing
+Javascript components (e.g. <a href="https://codemirror.net/">CodeMirror</a>?).
+I’m sure it will require extending Disco itself with some new APIs,
+but I can definitely work on that part once I know what would be needed.</p>
+<p>If you know how to build web UIs like this and are interested in
+helping, <a href="http://ozark.hendrix.edu/~yorgey/forest/contact/index.xml">get in touch</a>!</p>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Call for collaboration: Disco web UI" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Mon, 10 Nov 2025 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2025/11/10/disco-web-ui.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Decidable equality for indexed data types, take 2</title>
     <link>http://byorgey.github.io/blog/posts/2025/08/22/OneLevelTypesIndexed2.lagda.html</link>
     <description><![CDATA[
@@ -76,12 +232,14 @@ type like <span class="math inline">\(\square ((\square \square X \to Y) \to \sq
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">:</span> Ty</span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">=</span> □ <span class="ot">((</span>□ □ X ⇒ Y<span class="ot">)</span> ⇒ □ Y<span class="ot">)</span></span></code></pre></div>
 <p>However, for reasons that would take us too far afield in this blog
-post, I <em>don’t</em> want to allow immediately nested boxes, like <span class="math inline">\(\square \square X\)</span>. We can still have multiple boxes in a type, and even
+post, I <em>don’t</em> want to allow immediately nested boxes, like <span class="math inline">\(\square
+\square X\)</span>. We can still have multiple boxes in a type, and even
 boxes nested inside of other boxes, as long as there is at least one
 arrow in between. In other words, I only want to rule out boxes
 immediately applied to another type with an outermost box. So we
 don’t want to allow the example type given above (since it contains
-<span class="math inline">\(\square \square X\)</span>), but, for example, <span class="math inline">\(\square ((\square X \to Y) \to \square Y)\)</span> would be OK.</p>
+<span class="math inline">\(\square \square X\)</span>), but, for example, <span class="math inline">\(\square ((\square X \to Y)
+\to \square Y)\)</span> would be OK.</p>
 </section>
 <section id="two-encodings" class="level2">
 <h2>Two encodings</h2>
@@ -244,8 +402,10 @@ precompute a prefix sum table in <span class="math inline">\(O(n)\)</span> time,
 arbitrary range queries in <span class="math inline">\(O(1)\)</span> time.</p>
 <p>What if we don’t have inverses? We can’t use prefix sums, but can we
 do something else that still allows us to answer range queries in
-<span class="math inline">\(O(1)\)</span>? One thing we could always do would be to construct an <span class="math inline">\(n \times n\)</span> table storing the answer to <em>every possible</em> range
-query—that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to
+<span class="math inline">\(O(1)\)</span>? One thing we could always do would be to construct an <span class="math inline">\(n
+\times n\)</span> table storing the answer to <em>every possible</em> range
+query—that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i
+\diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to
 any range query in <span class="math inline">\(O(1)\)</span>. Naively computing the value of each
 <span class="math inline">\(Q[i,j]\)</span> would take <span class="math inline">\(O(n)\)</span> time, for a total of <span class="math inline">\(O(n^3)\)</span> time to fill
 in each of the entries in the table<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">We only have to fill in <span class="math inline">\(Q[i,j]\)</span>
@@ -285,7 +445,8 @@ original sequence; level <span class="math inline">\(1\)</span> stores ranges of
 stores the value of the range of length <span class="math inline">\(2^i\)</span> starting at index <span class="math inline">\(j\)</span>.
 That is,</p>
 <p><span class="math display">\[T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}.\]</span></p>
-<p>We can see that <span class="math inline">\(i\)</span> only needs to go from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n \rfloor\)</span>; above that and the stored ranges would be larger than
+<p>We can see that <span class="math inline">\(i\)</span> only needs to go from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n
+\rfloor\)</span>; above that and the stored ranges would be larger than
 the entire sequence. So this table has size <span class="math inline">\(O(n \lg n)\)</span>.</p>
 <p>Two important questions remain: how do we compute this table in the
 first place? And once we have it, how do we use it to answer arbitrary
@@ -304,7 +465,8 @@ range <span class="math inline">\([l,r]\)</span> as follows:</p>
 is, the largest <span class="math inline">\(k\)</span> such that <span class="math inline">\(2^k \leq r - l + 1\)</span>. We can compute
 this simply as <span class="math inline">\(\lfloor \lg (r - l + 1) \rfloor\)</span>.</p></li>
 <li><p>Look up two range values of length <span class="math inline">\(2^k\)</span>, one for the range which begins at <span class="math inline">\(l\)</span>
-(that is, <span class="math inline">\(T[k, l]\)</span>) and one for the range which ends at <span class="math inline">\(r\)</span> (that is, <span class="math inline">\(T[k, r - 2^k + 1]\)</span>). These two ranges overlap; but because the combining
+(that is, <span class="math inline">\(T[k, l]\)</span>) and one for the range which ends at <span class="math inline">\(r\)</span> (that is, <span class="math inline">\(T[k, r -
+2^k + 1]\)</span>). These two ranges overlap; but because the combining
 operation is idempotent, combining the values of the ranges yields
 the value for our desired range <span class="math inline">\([l,r]\)</span>.</p>
 <p>This is why we require the combining operation to be idempotent:
@@ -483,7 +645,8 @@ Today, I will discuss one of those techniques which is simple but frequently
 useful.</p>
 <section id="precomputing-prefix-sums" class="level2">
 <h2>Precomputing prefix sums</h2>
-<p>Suppose we have a static sequence of values <span class="math inline">\(a_1, a_2, a_3, \dots, a_n\)</span> drawn from some
+<p>Suppose we have a static sequence of values <span class="math inline">\(a_1, a_2, a_3, \dots,
+a_n\)</span> drawn from some
 <a href="https://en.wikipedia.org/wiki/Group_(mathematics)">group</a><span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">That is,
 there is an associative binary operation with an identity element, and
 every element has an inverse.<br />
@@ -491,14 +654,16 @@ every element has an inverse.<br />
 </span></span>, and want
 to be able to compute the total value (according to the group
 operation) of any contiguous subrange. That is, given a range
-<span class="math inline">\([i,j]\)</span>, we want to compute <span class="math inline">\(a_i \diamond a_{i+1} \diamond \dots \diamond a_j\)</span> (where <span class="math inline">\(\diamond\)</span> is the group operation). For example,
+<span class="math inline">\([i,j]\)</span>, we want to compute <span class="math inline">\(a_i \diamond a_{i+1} \diamond \dots
+\diamond a_j\)</span> (where <span class="math inline">\(\diamond\)</span> is the group operation). For example,
 we might have a sequence of integers and want to compute the sum, or
 perhaps the bitwise xor (but not the maximum) of all the values in any particular
 subrange.</p>
 <p>Of course, we could simply compute <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>
 directly, but that takes <span class="math inline">\(O(n)\)</span> time. With some simple preprocessing,
 it’s possible to compute the value of any range in constant time.</p>
-<p>The key idea is to precompute an array <span class="math inline">\(P\)</span> of <em>prefix sums</em>, so <span class="math inline">\(P_i = a_1 \diamond \dots \diamond a_i\)</span>. This can be computed in linear time
+<p>The key idea is to precompute an array <span class="math inline">\(P\)</span> of <em>prefix sums</em>, so <span class="math inline">\(P_i =
+a_1 \diamond \dots \diamond a_i\)</span>. This can be computed in linear time
 via a <em>scan</em>; for example:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Array</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (scanl&#39;)</span>
@@ -513,10 +678,13 @@ faster but slightly more limited in its uses: import
 </span></span></p>
 <p>Note that we set <span class="math inline">\(P_0 = 0\)</span> (or whatever the identity element is for
 the group); this is why I had the sequence of values indexed starting
-from <span class="math inline">\(1\)</span>, so <span class="math inline">\(P_0\)</span> corresponds to the empty sum, <span class="math inline">\(P_1 = a_1\)</span>, <span class="math inline">\(P_2 = a_1 \diamond a_2\)</span>, and so on.</p>
-<p>Now, for the value of the range <span class="math inline">\([i,j]\)</span>, just compute <span class="math inline">\(P_j \diamond P_{i-1}^{-1}\)</span>—that is, we start with a prefix that ends at the right place, then
+from <span class="math inline">\(1\)</span>, so <span class="math inline">\(P_0\)</span> corresponds to the empty sum, <span class="math inline">\(P_1 = a_1\)</span>, <span class="math inline">\(P_2 =
+a_1 \diamond a_2\)</span>, and so on.</p>
+<p>Now, for the value of the range <span class="math inline">\([i,j]\)</span>, just compute <span class="math inline">\(P_j \diamond
+P_{i-1}^{-1}\)</span>—that is, we start with a prefix that ends at the right place, then
 cancel or “subtract” the prefix that ends right before the range we
-want. For example, to find the sum of the integers <span class="math inline">\(a_5 + \dots + a_{10}\)</span>, we can compute <span class="math inline">\(P_{10} - P_4\)</span>.</p>
+want. For example, to find the sum of the integers <span class="math inline">\(a_5 + \dots +
+a_{10}\)</span>, we can compute <span class="math inline">\(P_{10} - P_4\)</span>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span><span class="ot"> ::</span> <span class="dt">Group</span> a <span class="ot">=&gt;</span> <span class="dt">Array</span> <span class="dt">Int</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> a</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span> p i j <span class="ot">=</span> p<span class="op">!</span>j <span class="op">&lt;&gt;</span> inv (p<span class="op">!</span>(i<span class="op">-</span><span class="dv">1</span>))</span></code></pre></div>
 <p>That’s why this only works for groups but not for general monoids:
@@ -643,7 +811,7 @@ fill in links as I write blog posts about each row.</p>
 <col style="width: 14%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th style="text-align: left;">Sequence</th>
 <th style="text-align: left;">Ranges</th>
 <th style="text-align: left;">Operation</th>
@@ -653,7 +821,7 @@ fill in links as I write blog posts about each row.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td style="text-align: left;">Static</td>
 <td style="text-align: left;">Sliding window</td>
 <td style="text-align: left;">Monoid</td>
@@ -661,7 +829,7 @@ fill in links as I write blog posts about each row.</p>
 <td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
 <td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: left;">Static</td>
 <td style="text-align: left;">Arbitrary</td>
 <td style="text-align: left;">Group</td>
@@ -669,7 +837,7 @@ fill in links as I write blog posts about each row.</p>
 <td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
 <td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td style="text-align: left;">Static</td>
 <td style="text-align: left;">Arbitrary</td>
 <td style="text-align: left;">Idempotent semigroup</td>
@@ -677,7 +845,7 @@ fill in links as I write blog posts about each row.</p>
 <td style="text-align: left;"><span class="math inline">\(O(n \lg n)\)</span></td>
 <td style="text-align: left;"><span class="math inline">\(O(1)\)</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: left;">Static</td>
 <td style="text-align: left;">Arbitrary</td>
 <td style="text-align: left;">Monoid</td>
@@ -685,7 +853,7 @@ fill in links as I write blog posts about each row.</p>
 <td style="text-align: left;"><span class="math inline">\(O(n \lg \lg n)\)</span></td>
 <td style="text-align: left;"><span class="math inline">\(O(\lg \lg n)\)</span></td>
 </tr>
-<tr class="odd">
+<tr>
 <td style="text-align: left;">Dynamic</td>
 <td style="text-align: left;">Arbitrary</td>
 <td style="text-align: left;">Group</td>
@@ -693,7 +861,7 @@ fill in links as I write blog posts about each row.</p>
 <td style="text-align: left;"><span class="math inline">\(O(n)\)</span></td>
 <td style="text-align: left;"><span class="math inline">\(O(\lg n)\)</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: left;">Dynamic</td>
 <td style="text-align: left;">Arbitrary</td>
 <td style="text-align: left;">Monoid</td>
@@ -1283,7 +1451,7 @@ paper! The <a href="https://www.cambridge.org/core/journals/journal-of-functiona
 version with an appendix containing an omitted proof</a>.</p>
 <section id="references" class="level2 unnumbered">
 <h2 class="unnumbered">References</h2>
-<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-fenwick1994new" class="csl-entry" role="listitem">
 Fenwick, Peter M. 1994. <span>“A New Data Structure for Cumulative Frequency Tables.”</span> <em>Software: Practice and <span>E</span>xperience</em> 24 (3): 327–36.
 </div>
@@ -1328,7 +1496,7 @@ within the list.</p>
 <br />
 </span></span></p>
 <figure>
-<img src="/diagrams/84a9401ef1ac9137.svg" />
+<img src="/diagrams/94037f79b5ed0048.svg" />
 </figure>
 <p>We can compute the <em>sum</em> of each window by brute
 force in <span class="math inline">\(O(nw)\)</span> time, by simply generating the list of all the
@@ -1611,385 +1779,6 @@ in the future.</p>
 ]]></description>
     <pubDate>Wed, 27 Nov 2024 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Competitive Programming in Haskell: Union-Find, part II</title>
-    <link>http://byorgey.github.io/blog/posts/2024/11/18/UnionFind-sols.html</link>
-    <description><![CDATA[
-<h1>Competitive Programming in Haskell: Union-Find, part II</h1>
-
-<div class="info">
-  Posted on November 18, 2024
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged &#39;union-find&#39;." href="/tag/union-find.html" rel="tag">union-find</a>, <a title="All pages tagged &#39;competitive programming&#39;." href="/tag/competitive%20programming.html" rel="tag">competitive programming</a>, <a title="All pages tagged &#39;haskell&#39;." href="/tag/haskell.html" rel="tag">haskell</a>
-  
-</div>
-
-<section>
-<p>In my <a href="https://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html">previous
-post</a>
-I explained how to implement a reasonably efficient <em>union-find</em> data
-structure in Haskell, and challenged you to solve a couple Kattis
-problems. In this post, I will (1) touch on a few generalizations
-brought up in the comments of my last post, (2) go over my solutions
-to the two challenge problems, and (3) briefly discuss generalizing
-the second problem’s solution to finding max-edge decompositions of
-weighted trees.</p>
-<section id="generalizations" class="level2">
-<h2>Generalizations</h2>
-<p>Before going on to explain my solutions to those problems, I want to
-highlight some things from a <a href="https://byorgey.github.io/blog/posts/2024/11/02/UnionFind.html#isso-1971">comment by Derek
-Elkins</a>
-and a related <a href="https://www.philipzucker.com/union-find-groupoid/">blog post by Philip
-Zucker</a>. The first
-is that instead of (or in addition to) annotating each set with a
-value from a commutative semigroup, we can also annotate the <em>edges</em>
-between nodes with elements from a
-<a href="https://en.wikipedia.org/wiki/Group_(mathematics)">group</a> (or, more
-generally, a <a href="https://en.wikipedia.org/wiki/Groupoid">groupoid</a>). The
-idea is that each edge records some information about, or evidence
-for, the <em>relationship</em> between the endpoints of the edge. To compute
-information about the relationship between two arbitrary nodes in the
-same set, we can compose elements along the path between them. This
-is a nifty idea—I have never personally seen it used for a
-competitive programming problem, but it probably has been at some
-point. (It kind of makes me want to write such a problem!) And of
-course it has “real” applications beyond competitive programming as
-well. I have not actually generalized my union-find code to allow
-edge annotations; I leave it as an exercise for the reader.</p>
-<p>The other idea to highlight is that instead of thinking in terms of
-<em>disjoint sets</em>, what we are really doing is building an <a href="https://www.jonmsterling.com/jms-00L3.xml"><em>equivalence
-relation</em></a>, which
-partitions the elements into disjoint equivalence classes. In
-particular, we do this by incrementally building a relation <span class="math inline">\(R\)</span>, where
-the union-find structure represents the reflexive, transitive,
-symmetric closure of <span class="math inline">\(R\)</span>. We start with the empty relation <span class="math inline">\(R\)</span> (whose
-reflexive, transitive, symmetric closure is the discrete equivalence
-relation, with every element in its own equivalence class); every
-<span class="math inline">\(\mathit{union}(x,y)\)</span> operation adds <span class="math inline">\((x,y)\)</span> to <span class="math inline">\(R\)</span>; and the <span class="math inline">\(\mathit{find}(x)\)</span>
-operation computes a canonical representative of the equivalence class
-of <span class="math inline">\(x\)</span>. In other words, given some facts about which things are
-related to which other things (possibly along with some associated
-evidence), the union-find structure keeps track of everything we can
-infer from the given facts and the assumption that the relation is an
-equivalence.</p>
-<p>Finally, through the comments I also learned about other
-potentially-faster-in-practice schemes for doing path compression such
-as <a href="https://algocoding.wordpress.com/2015/05/13/simple-union-find-techniques/">Rem’s
-Algorithm</a>;
-I leave it for future me to try these out and see if they speed things up.</p>
-<p>Now, on to the solutions!</p>
-</section>
-<section id="duck-journey" class="level2">
-<h2>Duck Journey</h2>
-<p>In <a href="https://open.kattis.com/problems/andvag">Duck Journey</a>, we are
-essentially given a graph with edges labelled by bitstrings, where
-edges along a path are combined using bitwise OR. We are then asked
-to find the <em>greatest</em> possible value of a path between two given
-vertices, assuming that we are allowed to retrace our steps as much as
-we want.<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="sidenote">Incidentally, if we are <em>not</em> allowed to retrace our steps,
-this problem probably becomes NP-hard.<br />
-<br />
-</span></span> If we can retrace our steps,
-then on our way from A to B we might as well visit every edge in the
-entire connected component, so this problem is not really
-about path-finding at all. It boils down to two things: (1) being
-able to quickly test whether two given vertices are in the same
-connected component or not, and (2) computing the bitwise OR of all
-the edge labels in each connected component.</p>
-<p>One way to solve this would be to first use some kind of graph
-traversal, like DFS, to find the connected components and build a map
-from vertices to component labels; then partition the edges by
-component and take the bitwise OR of all the edge weights in each
-component. To answer queries we could first look up the component
-label of the two vertices; if the labels are the same then we look up
-the total weight for that component.</p>
-<p>This works, and is in some sense the most “elemantary” solution, but
-it requires building some kind of graph data structure, storing all
-the edges in memory, doing the component labelling via DFS and
-building another map, and so on. An alternative solution is to use a
-union-find structure with a bitstring annotation for each set: as we
-read in the edges in the input, we simply union the endpoints of the
-edge, and then update the bitstring for the resulting equivalence
-class with the bitstring for the edge. If we take a union-find library
-as given, this solution seems simpler to me.</p>
-<p>First, some imports and the top-level <code>main</code> function. (<a href="https://github.com/byorgey/comprog-hs/blob/master/ScannerBS.hs">See here for the <code>ScannerBS</code> module</a>.)</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE ImportQualifiedPost #-}</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Category</span> ((&gt;&gt;&gt;))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.ST</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bits</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.ByteString.Lazy.Char8</span> (<span class="dt">ByteString</span>)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.ByteString.Lazy.Char8</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">BS</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">ScannerBS</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">UnionFind</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">UF</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> BS.interact <span class="op">$</span> runScanner tc <span class="op">&gt;&gt;&gt;</span> solve <span class="op">&gt;&gt;&gt;</span> format</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ot">format ::</span> [<span class="dt">Maybe</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">ByteString</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>format <span class="ot">=</span> <span class="fu">map</span> (<span class="fu">maybe</span> <span class="st">&quot;-1&quot;</span> (<span class="fu">show</span> <span class="op">&gt;&gt;&gt;</span> BS.pack)) <span class="op">&gt;&gt;&gt;</span> BS.unlines</span></code></pre></div>
-<p>Next, some data types to represent the input, and a <code>Scanner</code> to read
-it.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Each edge is a &quot;filter&quot; represented as a bitstring stored as an Int.</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">Filter</span> <span class="ot">=</span> <span class="dt">Filter</span> <span class="dt">Int</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Semigroup</span> <span class="dt">Filter</span> <span class="kw">where</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Filter</span> x <span class="op">&lt;&gt;</span> <span class="dt">Filter</span> y <span class="ot">=</span> <span class="dt">Filter</span> (x <span class="op">.|.</span> y)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ot">filterSize ::</span> <span class="dt">Filter</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>filterSize (<span class="dt">Filter</span> f) <span class="ot">=</span> popCount f</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Channel</span> <span class="ot">=</span> <span class="dt">Channel</span> <span class="dt">UF.Node</span> <span class="dt">UF.Node</span> <span class="dt">Filter</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">TC</span> <span class="ot">=</span> <span class="dt">TC</span> {<span class="ot">n ::</span> <span class="op">!</span><span class="dt">Int</span>,<span class="ot"> channels ::</span> [<span class="dt">Channel</span>],<span class="ot"> queries ::</span> [(<span class="dt">Int</span>, <span class="dt">Int</span>)]}</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="ot">tc ::</span> <span class="dt">Scanner</span> <span class="dt">TC</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>tc <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> int</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> int</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  q <span class="ot">&lt;-</span> int</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  channels <span class="ot">&lt;-</span> m <span class="op">&gt;&lt;</span> (<span class="dt">Channel</span> <span class="op">&lt;$&gt;</span> int <span class="op">&lt;*&gt;</span> int <span class="op">&lt;*&gt;</span> (<span class="dt">Filter</span> <span class="op">&lt;$&gt;</span> int))</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  queries <span class="ot">&lt;-</span> q <span class="op">&gt;&lt;</span> pair int int</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> <span class="dt">TC</span> {<span class="op">..</span>}</span></code></pre></div>
-<p>Finally, here’s the solution itself: process each channel with a
-union-find structure, then process queries. The annoying thing, of
-course, is that this all has to be in the <code>ST</code> monad, but other than
-that it’s quite straightforward.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solve ::</span> <span class="dt">TC</span> <span class="ot">-&gt;</span> [<span class="dt">Maybe</span> <span class="dt">Int</span>]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>solve <span class="dt">TC</span> {<span class="op">..</span>} <span class="ot">=</span> runST <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  uf <span class="ot">&lt;-</span> UF.new (n <span class="op">+</span> <span class="dv">1</span>) (<span class="dt">Filter</span> <span class="dv">0</span>)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mapM_</span> (addChannel uf) channels</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mapM</span> (answer uf) queries</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ot">addChannel ::</span> <span class="dt">UF.UnionFind</span> s <span class="dt">Filter</span> <span class="ot">-&gt;</span> <span class="dt">Channel</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s ()</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>addChannel uf (<span class="dt">Channel</span> a b f) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  UF.union uf a b</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  UF.updateAnn uf a f</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ot">answer ::</span> <span class="dt">UF.UnionFind</span> s <span class="dt">Filter</span> <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">ST</span> s (<span class="dt">Maybe</span> <span class="dt">Int</span>)</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>answer uf (a, b) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  c <span class="ot">&lt;-</span> UF.connected uf a b</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">case</span> c <span class="kw">of</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">False</span> <span class="ot">-&gt;</span> <span class="fu">pure</span> <span class="dt">Nothing</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">True</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="op">.</span> filterSize <span class="op">&lt;$&gt;</span> UF.getAnn uf a</span></code></pre></div>
-</section>
-<section id="inventing-test-data" class="level2">
-<h2>Inventing Test Data</h2>
-<p>In <a href="https://open.kattis.com/problems/inventing">Inventing Test Data</a>,
-we are given a tree <span class="math inline">\(T\)</span> with integer weights on its edges, and asked
-to find the minimum possible weight of a complete graph for which <span class="math inline">\(T\)</span>
-is the unique <a href="https://en.wikipedia.org/wiki/Minimum_spanning_tree">minimum spanning
-tree</a> (MST).</p>
-<p><span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-1" class="margin-toggle"/><span class="marginnote"><img src="images/T-with-non-edge.png" /><br />
-<br />
-</span></span></p>
-<p>Let <span class="math inline">\(e = (x,y)\)</span> be some edge which is not in <span class="math inline">\(T\)</span>. There must be a
-unique path between <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> in <span class="math inline">\(T\)</span> (so adding <span class="math inline">\(e\)</span> to <span class="math inline">\(T\)</span> would
-complete a cycle); let <span class="math inline">\(m\)</span> be the maximum weight of the edges along
-this path. Then I claim that we must give edge <span class="math inline">\(e\)</span> weight <span class="math inline">\(m+1\)</span>:</p>
-<ul>
-<li>On the one hand, this ensures <span class="math inline">\(e\)</span> can never be in any MST, since an
-edge which is strictly the largest edge in some cycle can never be
-part of an MST (this is often called the “cycle property”).</li>
-<li>Conversely, if <span class="math inline">\(e\)</span> had a weight less than or equal to <span class="math inline">\(m\)</span>, then <span class="math inline">\(T\)</span>
-would not be a MST (or at least not uniquely): we
-could remove any edge in the path from <span class="math inline">\(x\)</span> to <span class="math inline">\(y\)</span> through <span class="math inline">\(T\)</span> and
-replace it with <span class="math inline">\(e\)</span>, resulting in a spanning tree with a lower (or
-equal) weight.</li>
-</ul>
-<p>Hence, every edge not in <span class="math inline">\(T\)</span> must be given a weight one more than the
-largest weight in the unique <span class="math inline">\(T\)</span>-path connecting its endpoints; these
-are the minimum weights that ensure <span class="math inline">\(T\)</span> is a unique MST.</p>
-</section>
-<section id="a-false-start" class="level2">
-<h2>A false start</h2>
-<p>At first, I thought what we needed was a way to quickly compute this
-max weight along any path in the tree (where by “quickly” I mean
-something like “faster than linear in the length of the path”). There
-are indeed ways to do this, for example, using a heavy-light
-decomposition and then putting a data structure on each heavy path
-that allows us to query subranges of the path quickly. (If we use a
-segment tree on each path we can even support operations to <em>update</em>
-the edge weights quickly.)</p>
-<p>All this is fascinating, and something I
-may very well write about later. But it doesn’t actually help! Even
-if we could find the max weight along any path in <span class="math inline">\(O(1)\)</span>, there are
-still <span class="math inline">\(O(V^2)\)</span> edges to loop over, which is too big. There can be up
-to <span class="math inline">\(V = 15\,000\)</span> nodes in the tree, so <span class="math inline">\(V^2 = 2.25 \times 10^8\)</span>. A
-good rule of thumb is <span class="math inline">\(10^8\)</span> operations per second, and there are
-likely to be very high constant factors hiding in whatever complex
-data structures we use to query paths efficiently.</p>
-<p>So we need a way to somehow process many edges at once. As usual, a
-change in perspective is helpful; to get there we first need to take a
-slight detour.</p>
-</section>
-<section id="kruskals-algorithm" class="level2">
-<h2>Kruskal’s Algorithm</h2>
-<p>It helps to be familiar with <a href="https://en.wikipedia.org/wiki/Kruskal%27s_algorithm">Kruskal’s
-Algorithm</a>, which
-is the simplest algorithm I know for finding minimum spanning
-trees:</p>
-<ul>
-<li>Sort the edges from smallest to biggest weight.</li>
-<li>Initialize <span class="math inline">\(T\)</span> to an empty set of edges.</li>
-<li>For each edge <span class="math inline">\(e\)</span> in order from smallest to biggest:
-<ul>
-<li>If <span class="math inline">\(e\)</span> does not complete a cycle with the other edges already in
-<span class="math inline">\(T\)</span>, add <span class="math inline">\(e\)</span> to <span class="math inline">\(T\)</span>.</li>
-</ul></li>
-</ul>
-<p>To efficiently check whether <span class="math inline">\(e\)</span> completes a cycle with the other
-edges in <span class="math inline">\(T\)</span>, we can use a union-find, of course: we maintain
-equivalence classes of vertices under the “is connected to”
-equivalence relation; adding <span class="math inline">\(e\)</span> would complete a cycle if and only if
-the endpoints of <span class="math inline">\(e\)</span> are already connected to each other in <span class="math inline">\(T\)</span>. If
-we do add an edge <span class="math inline">\(e\)</span>, we can just <span class="math inline">\(\mathit{union}\)</span> its endpoints to properly
-maintain the relation.</p>
-</section>
-<section id="a-change-of-perspective" class="level2">
-<h2>A change of perspective</h2>
-<p>So how does this help us solve “Inventing Test Data”? After all, we
-are not being directly asked to find a minimum spanning tree.
-However, it’s still helpful to think about the process Kruskal’s
-Algorithm <em>would</em> go through, in order to choose edge weights that
-will force it to do what we want (<em>i.e.</em> pick all the edges in <span class="math inline">\(T\)</span>).
-That is, instead of thinking about each individual edge <em>not</em> in <span class="math inline">\(T\)</span>,
-we can instead think about the edges that <em>are</em> in <span class="math inline">\(T\)</span>, and what must
-be true to force Kruskal’s algorithm to pick each one.</p>
-<p>Suppose we are part of the way through running Kruskal’s algorithm,
-and that it is about to consider a given edge <span class="math inline">\(e = (x,y) \in T\)</span> which
-has weight <span class="math inline">\(w_e\)</span>. At this point it has already considered any edges
-with smaller weight, and (we shall assume) chosen all the
-smaller-weight edges in <span class="math inline">\(T\)</span>. So let <span class="math inline">\(X\)</span> be the set of vertices
-reachable from <span class="math inline">\(x\)</span> by edges in <span class="math inline">\(T\)</span> with weight less than or equal to
-<span class="math inline">\(w_e\)</span>, and similarly let <span class="math inline">\(Y\)</span> be those reachable from <span class="math inline">\(y\)</span>. Kruskal’s
-algorithm will pick edge <span class="math inline">\(e\)</span> after checking that <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are
-disjoint.</p>
-<p><span class="sidenote-wrapper"><label for="sn-2" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-2" class="margin-toggle"/><span class="marginnote"><img src="images/XY-edges.png" /><br />
-<br />
-</span></span></p>
-<p>Think about all the <em>other</em> edges from <span class="math inline">\(X\)</span> to <span class="math inline">\(Y\)</span>: all of them must
-have weight greater than <span class="math inline">\(w_e\)</span>, because otherwise Kruskal’s algorithm
-would have already considered them earlier, and used one of them to
-connect <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. In fact, <em>all</em> of these edges must have weight
-<span class="math inline">\(w_e + 1\)</span>, as we argued earlier, since <span class="math inline">\(e\)</span> is the largest-weight edge
-on the <span class="math inline">\(T\)</span>-path between their endpoints (all the other edges on these
-paths were already chosen earlier and hence have smaller weight). The
-number of such edges is just <span class="math inline">\(|X| |Y| - 1\)</span> (there is an edge for every
-pair of vertices, but we do not want to count <span class="math inline">\(e\)</span> itself). Hence they
-contribute a total of <span class="math inline">\((|X||Y| - 1)(w_e + 1)\)</span> to the sum of edge
-weights.</p>
-<p>Hopefully the solution is now becoming clear: we process the edges of
-<span class="math inline">\(T\)</span> in order from smallest to biggest, using a union-find to keep
-track equivalence classes of connected vertices so far. For each edge
-<span class="math inline">\((x,y)\)</span> we look up the sizes of the equivalence classes of <span class="math inline">\(x\)</span> and
-<span class="math inline">\(y\)</span>, add <span class="math inline">\((|X||Y| - 1)(w_e + 1)\)</span> to a running total, and union. This
-accounts for all the edges not in <span class="math inline">\(T\)</span>; finally we must also add the
-weights of the edges in <span class="math inline">\(T\)</span> themselves.</p>
-<p>First some standard pragmas and imports, along with some data types
-and a <code>Scanner</code> to parse the input. Note the custom <code>Ord</code> instance
-for <code>Edge</code>, so we can sort edges by weight.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE ImportQualifiedPost #-}</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE RecordWildCards #-}</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Category</span> ((&gt;&gt;&gt;))</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.ST</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.ByteString.Lazy.Char8</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">BS</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sort)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Ord</span> (comparing)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.STRef</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">ScannerBS</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">UnionFind</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">UF</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> BS.interact <span class="op">$</span> runScanner (numberOf tc) <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (solve <span class="op">&gt;&gt;&gt;</span> <span class="fu">show</span> <span class="op">&gt;&gt;&gt;</span> BS.pack) <span class="op">&gt;&gt;&gt;</span> BS.unlines</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Edge</span> <span class="ot">=</span> <span class="dt">Edge</span> {<span class="ot">a ::</span> <span class="op">!</span><span class="dt">Int</span>,<span class="ot"> b ::</span> <span class="op">!</span><span class="dt">Int</span>,<span class="ot"> w ::</span> <span class="op">!</span><span class="dt">Integer</span>}</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> <span class="dt">Edge</span> <span class="kw">where</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compare</span> <span class="ot">=</span> comparing w</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">TC</span> <span class="ot">=</span> <span class="dt">TC</span> {<span class="ot">n ::</span> <span class="op">!</span><span class="dt">Int</span>,<span class="ot"> edges ::</span> [<span class="dt">Edge</span>]}</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="ot">tc ::</span> <span class="dt">Scanner</span> <span class="dt">TC</span></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>tc <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> int</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  edges <span class="ot">&lt;-</span> (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">&gt;&lt;</span> (<span class="dt">Edge</span> <span class="op">&lt;$&gt;</span> int <span class="op">&lt;*&gt;</span> int <span class="op">&lt;*&gt;</span> integer)</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> <span class="dt">TC</span> {<span class="op">..</span>}</span></code></pre></div>
-<p>Finally, the (remarkably short) solution proper: we <code>sort</code> the edges
-and process them from smallest to biggest; for each edge we update an
-accumulator according to the formula discussed above. Since we’re
-already tied to the <code>ST</code> monad anyway, we might as well keep the
-accumulator in a mutable <code>STRef</code> cell.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solve ::</span> <span class="dt">TC</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>solve <span class="dt">TC</span> {<span class="op">..</span>} <span class="ot">=</span> runST <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  uf <span class="ot">&lt;-</span> UF.new (n <span class="op">+</span> <span class="dv">1</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  total <span class="ot">&lt;-</span> newSTRef (<span class="dv">0</span><span class="ot"> ::</span> <span class="dt">Integer</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mapM_</span> (processEdge uf total) (<span class="fu">sort</span> edges)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  readSTRef total</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ot">processEdge ::</span> <span class="dt">UF.UnionFind</span> s <span class="ot">-&gt;</span> <span class="dt">STRef</span> s <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Edge</span> <span class="ot">-&gt;</span> <span class="dt">ST</span> s ()</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>processEdge uf total (<span class="dt">Edge</span> a b w) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  modifySTRef&#39; total (<span class="op">+</span> w)</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  sa <span class="ot">&lt;-</span> UF.size uf a</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  sb <span class="ot">&lt;-</span> UF.size uf b</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  modifySTRef&#39; total (<span class="op">+</span> (<span class="fu">fromIntegral</span> sa <span class="op">*</span> <span class="fu">fromIntegral</span> sb <span class="op">-</span> <span class="dv">1</span>) <span class="op">*</span> (w <span class="op">+</span> <span class="dv">1</span>))</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  UF.union uf a b</span></code></pre></div>
-</section>
-<section id="max-edge-decomposition" class="level2">
-<h2>Max-edge decomposition</h2>
-<p><span class="sidenote-wrapper"><label for="sn-3" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-3" class="margin-toggle"/><span class="marginnote"><img src="images/max-edge-decomp.png" /><br />
-<br />
-</span></span></p>
-<p>Incidentally, there’s something a bit more general going on here: for
-a given nonempty weighted tree <span class="math inline">\(T\)</span>, a <em>max-edge decomposition</em> of
-<span class="math inline">\(T\)</span> is a binary tree defined as follows:</p>
-<ul>
-<li>The max-edge decomposition of a trivial single-vertex tree is a
-single vertex.</li>
-<li>Otherwise, the max-edge decomposition of <span class="math inline">\(T\)</span> consists of a root node
-with two children, which are the max-edge decompositions of the two
-trees that result from deleting a largest-weight edge from <span class="math inline">\(T\)</span>.</li>
-</ul>
-<p>Any max-edge decomposition of a tree <span class="math inline">\(T\)</span> with <span class="math inline">\(n\)</span> vertices will have
-<span class="math inline">\(n\)</span> leaf nodes and <span class="math inline">\(n-1\)</span> internal nodes. Typically we think of the
-leaf nodes of the decomposition as being labelled by the vertices of
-<span class="math inline">\(T\)</span>, and the internal nodes as being labelled by the edges of <span class="math inline">\(T\)</span>.</p>
-<p>An alternative way to think of the max-edge decomposition is as the
-binary tree of union operations performed by Kruskal’s algorithm while
-building <span class="math inline">\(T\)</span>, starting with each vertex in a singleton leaf and then
-merging two trees into one with every union operation. Thinking
-about, or even explicitly building, this max-edge decomposition
-occasionally comes in handy. For example, see
-<a href="https://open.kattis.com/problems/vedur">Veður</a> and <a href="https://open.kattis.com/problems/tollroads">Toll
-Roads</a>.</p>
-<p>Incidentally, I can’t remember whether I got the term “max-edge
-decomposition” from somewhere else or if I made it up myself; in any
-case, regardless of what it is called, I think I first learned of it
-from <a href="https://blog.mitrichev.ch/2022/02/an-alphaweek.html">this blog post by Petr
-Mitrichev</a>.</p>
-</section>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Competitive Programming in Haskell: Union-Find, part II" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>Mon, 18 Nov 2024 00:00:00 UT</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2024/11/18/UnionFind-sols.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 

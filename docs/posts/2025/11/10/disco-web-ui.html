@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>blog :: Brent -> [String] - Call for collaboration: Disco web UI</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/default.css" /> -->
+        <link rel="stylesheet" type="text/css" href="../../../../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../css/tufte-extra.css" />
+
+        <!-- See https://katex.org/docs/browser -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+        <link rel="alternate" type="application/rss+xml" href="../../../../rss.xml" title="RSS Feed">
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+    </head>
+    <body>
+        <div id="header">
+            <div id="navigation" style="position: relative">
+                <a href="../../../../">Home</a> •
+                <a href="../../../../about.html">About</a> •
+                <a href="../../../../rss.xml">RSS</a> •
+                <a href="../../../../posts/blogliterately.html">BlogLiterately</a> •
+                <a href="../../../../posts/catsters-guide-2.html">Catsters Guide</a> •
+                <a href="../../../../posts/how-to-print-things.html">How To Print
+                  Things</a> •
+                <a class="no-tufte-underline" href="https://ko-fi.com/I3I5KYUQX">
+                  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" style="position: absolute; top: 50%;
+                  left: 50%; transform: translate(-70%, -50%)" />
+                </a>
+            </div>
+        </div>
+
+        <article>
+          
+<a href="../../../../posts/2025/08/22/OneLevelTypesIndexed2.lagda.html">« Decidable equality for indexed data types, take 2</a>
+
+
+<span style="margin-left: 2em">
+
+</span>
+
+
+<h1>Call for collaboration: Disco web UI</h1>
+
+<div class="info">
+  Posted on November 10, 2025
+  
+  
+  <br />
+  Tagged <a title="All pages tagged 'disco'." href="../../../../tag/disco.html" rel="tag">disco</a>, <a title="All pages tagged 'web'." href="../../../../tag/web.html" rel="tag">web</a>, <a title="All pages tagged 'WASM'." href="../../../../tag/WASM.html" rel="tag">WASM</a>, <a title="All pages tagged 'UI'." href="../../../../tag/UI.html" rel="tag">UI</a>, <a title="All pages tagged 'teaching'." href="../../../../tag/teaching.html" rel="tag">teaching</a>, <a title="All pages tagged 'discrete'." href="../../../../tag/discrete.html" rel="tag">discrete</a>, <a title="All pages tagged 'math'." href="../../../../tag/math.html" rel="tag">math</a>, <a title="All pages tagged 'Haskell'." href="../../../../tag/Haskell.html" rel="tag">Haskell</a>
+  
+</div>
+
+<section>
+<p><strong>tl;dr</strong>: I would like to have a web interface for <a href="https://github.com/disco-lang/disco">Disco</a>, a
+student-oriented programming language for teaching functional
+programming and discrete mathematics, which is implemented in Haskell.
+I’m looking for others interested to help build it. If you like
+building web stuff with Haskell compiled to WASM and want to have a
+positive impact on students learning mathematics and functional
+programming, <a href="http://ozark.hendrix.edu/~yorgey/forest/contact/index.xml">get in touch</a>!</p>
+<section id="disco" class="level2">
+<h2>Disco</h2>
+<p>For the past nine (!) years I have been developing
+<a href="https://github.com/disco-lang/disco">Disco</a>, a functional teaching
+language for use in a discrete mathematics course. It features
+first-class functions, polymorphism, and recursive algebraic data
+types, along with various built-in mathematical niceties and syntax
+that is designed to be close to mathematical practice.</p>
+<p>As a simple example, here’s a recursive function in Disco to compute the
+<a href="https://oeis.org/A002487">hyperbinary numbers</a>:</p>
+<pre><code>h : N -&gt; N
+h(0)      = 1
+h(2n)     = h(n) + h(n .- 1)
+h(2n + 1) = h(n)</code></pre>
+<p>Since recursive functions in Disco are automatically memoized, this
+evaluates almost instantly even on very large numbers:</p>
+<pre><code>Disco&gt; h(1000000)
+1287</code></pre>
+<p>If you want to know more about Disco, you can <a href="http://ozark.hendrix.edu/~yorgey/forest/yorgey-disco-2023/index.xml">read a paper about it
+here</a>,
+or <a href="https://disco-lang.readthedocs.io/en/latest/">read the language documentation</a>.</p>
+</section>
+<section id="the-problem" class="level2">
+<h2>The problem</h2>
+<p>I want students in my <a href="https://hendrix-cs.github.io/math240/">Discrete Mathematics
+course</a> (or any Discrete
+Mathematics course) to be able to use Disco: to play around at a REPL,
+write and test their own code, and so on.</p>
+<p>However, getting students to install Haskell and build Disco from
+source is a total non-starter, for multiple reasons. Some students in
+the course are not all that tech-savvy. Some students don’t even have
+their own computer, or the computer they do have chokes when trying to
+compile a large Haskell project (<em>e.g.</em> because of limited memory).
+Even aside from those issues, I simply don’t want to spend time and
+effort helping students install stuff at the beginning of the semester
+(at least not in this class).</p>
+</section>
+<section id="old-solution-replit" class="level2">
+<h2>Old solution: Replit</h2>
+<p>For a couple years, students were able to use Disco via a site called
+Replit, which provided free educational accounts, and supported
+arbitrary Nix configurations. Since the <a href="https://hackage.haskell.org/package/disco">disco package on
+Hackage</a> was picked up by
+nixpkgs, it was possible to spin up a Disco interpreter on Replit in
+just a few seconds. Replit provided a virtual file system, an editor,
+and, of course, a REPL.</p>
+<p>This was a great solution while it lasted, but sadly it is no longer
+viable:</p>
+<ul>
+<li>Disco has been broken in nixpkgs for a while now, and I have no idea
+how to fix it.</li>
+<li>Even if I could fix it, Replit has stopped supporting free education
+accounts, and started trying to shove LLMs into everything, making it no
+longer a viable teaching platform.</li>
+</ul>
+</section>
+<section id="solution-criteria" class="level2">
+<h2>Solution criteria</h2>
+<p>There are a few non-negotiable criteria that any solution must meet:</p>
+<ul>
+<li><p>It must either run on existing cloud infrastructure, or run
+completely client-side. I do not want to be in the business of
+running a server, or of worrying about mitigating DOS attacks (by
+which I mean students accidentally running infinite loops generating
+infinite amounts of memory). I also do not want to be in the
+business of managing accounts and logins.</p></li>
+<li><p>Students should not have to install anything. As I mentioned
+before, this is a nonstarter for some students.</p></li>
+<li><p>It should allow students to work at a Disco REPL, and also test
+their own Disco code.</p></li>
+</ul>
+</section>
+<section id="potential-solutions" class="level2">
+<h2>Potential solutions</h2>
+<ul>
+<li><p>Of course, a really nice solution would be to find an existing site
+which replicates some of the functionality we used to have with
+Replit and supports educational uses. I kind of doubt such a thing
+exists, though I would be happy to be wrong about this.</p></li>
+<li><p>Another possibility is to have students use VSCode in their browsers
+via GitHub; to make this work we would have to add LSP support to
+Disco and package it up appropriately. I’m not really excited about
+using GitHub for this, although implementing LSP for Disco is
+independently a great idea.</p></li>
+<li><p>The other solution I can think of is to compile Disco to WASM, and
+build a web UI on top of it, so that the whole thing runs in the
+student’s browser. I spent some time on this last year and
+successfully got Disco to compile to WASM, but didn’t make it any
+farther than that. Honestly, I simply don’t know anything about web
+development, and I am not very motivated to learn.</p></li>
+</ul>
+</section>
+<section id="ui-levels" class="level2">
+<h2>UI levels</h2>
+<p>Running with the last idea above (WASM + a custom web UI), what could
+such a thing look like? What features would we want? Here are some
+different solutions I could imagine, in increasing order of effort.</p>
+<ul>
+<li><p><strong>Level 0</strong> would be to have just a web-based REPL. Students can
+edit Disco code on their own device, upload it to the website, then
+evaluate expressions at the REPL. Having to reupload their code
+every time they make changes would be annoying, but this would still
+be better than nothing.</p></li>
+<li><p><strong>Level 1</strong> would be to have a web-based editor and REPL. Students
+can type code in the editor, then push a button to load it into the
+REPL and play with it.</p></li>
+<li><p><strong>Level 2</strong> would be to have a web-based filesystem + editor + REPL.
+Students can see a list of multiple files, edit them individually, and
+load any of them into the REPL. The filesystem must live on their own
+computer, not on a remote server; but it could be their real
+filesystem, or a virtual filesystem.</p></li>
+</ul>
+<p>I don’t know how difficult any of these are; I would assume that
+at least some of them can be achieved by gluing together some existing
+Javascript components (e.g. <a href="https://codemirror.net/">CodeMirror</a>?).
+I’m sure it will require extending Disco itself with some new APIs,
+but I can definitely work on that part once I know what would be needed.</p>
+<p>If you know how to build web UIs like this and are interested in
+helping, <a href="http://ozark.hendrix.edu/~yorgey/forest/contact/index.xml">get in touch</a>!</p>
+</section>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread" data-title="Call for collaboration: Disco web UI">
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+
+
+        </article>
+        <div id="footer">
+            Site proudly <a href="https://github.com/byorgey/blog">generated by</a>
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>.  95%
+            human, 5% cotton-polyester blend, 0% LLM.
+            <br /><br />
+            <a href="https://byorgey.github.io/blog/">blog :: Brent -> [String]</a> © 2007 - 2025 by <a href="http://ozark.hendrix.edu/~yorgey/">Brent Yorgey</a> is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt style="max-width: 1em;max-height:1em;margin-left: .2em;">
+        </div>
+    </body>
+</html>

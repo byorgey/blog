@@ -588,7 +588,7 @@ Naturality squares.
 Intuition about natural transformations based on homotopy.
 </li>
 <li>
-Alternative definition of natural transformation analogous to usual homotopy definition: a natural transformation is a functor <span class="math inline">\(C \times I \to D\)</span> where <span class="math inline">\(I\)</span> is the “categorical interval”, <em>i.e.</em> the two-object category with a single nontrivial morphism.
+Alternative definition of natural transformation analogous to usual homotopy definition: a natural transformation is a functor <span class="math inline">\(C \times  I \to D\)</span> where <span class="math inline">\(I\)</span> is the “categorical interval”, <em>i.e.</em> the two-object category with a single nontrivial morphism.
 </li>
 </ul>
 <h3 id="natural-transformations-2">
@@ -678,7 +678,7 @@ Is there a functor <span class="math inline">\(A \to H_A\)</span>? Yes, the <em>
 <span class="math inline">\(Y(A) = H_A\)</span>
 </li>
 <li>
-<span class="math inline">\(Y(f) = H_f\)</span>, where <span class="math inline">\(H_f : H_A \to H_B\)</span> is postcomposition with <span class="math inline">\(f\)</span>. <span class="math inline">\(H_f\)</span> is a natural transformation; its component at <span class="math inline">\(X\)</span> has type <span class="math inline">\(H_f(X) : H_A(X) \to H_B(X) = C(X,A) \to C(X,B)\)</span>. Postcomposing an arrow in <span class="math inline">\(C(X,A)\)</span> with <span class="math inline">\(f : A \to B\)</span> yields an arrow in <span class="math inline">\(C(X,B)\)</span>.
+<span class="math inline">\(Y(f) = H_f\)</span>, where <span class="math inline">\(H_f : H_A \to H_B\)</span> is postcomposition with <span class="math inline">\(f\)</span>. <span class="math inline">\(H_f\)</span> is a natural transformation; its component at <span class="math inline">\(X\)</span> has type <span class="math inline">\(H_f(X) : H_A(X) \to H_B(X) = C(X,A) \to  C(X,B)\)</span>. Postcomposing an arrow in <span class="math inline">\(C(X,A)\)</span> with <span class="math inline">\(f : A  \to B\)</span> yields an arrow in <span class="math inline">\(C(X,B)\)</span>.
 </li>
 </ul>
 </li>
@@ -719,7 +719,7 @@ http://youtu.be/loOJxIOmShE
 </p>
 <ul>
 <li>
-Given categories <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span> and functors <span class="math inline">\(F : C \to D\)</span> and <span class="math inline">\(G : D \to C\)</span>, we have the following situations:
+Given categories <span class="math inline">\(C\)</span> and <span class="math inline">\(D\)</span> and functors <span class="math inline">\(F : C \to D\)</span> and <span class="math inline">\(G : D  \to C\)</span>, we have the following situations:
 <ul>
 <li>
 Isomorphism: <span class="math inline">\(1 = GF\)</span>, <span class="math inline">\(FG = 1\)</span>
@@ -733,7 +733,7 @@ Adjunction: <span class="math inline">\(\eta : 1 \Rightarrow GF\)</span>, <span 
 </ul>
 </li>
 <li>
-<span class="math inline">\(\eta\)</span> and <span class="math inline">\(\varepsilon\)</span> are subject to triangle identities: <span class="math inline">\(F \stackrel{F\eta}{\Longrightarrow} FGF \stackrel{\varepsilon F}{\Longrightarrow} F\)</span> is the identity, and similarly for <span class="math inline">\(\eta G ; G \varepsilon\)</span>.
+<span class="math inline">\(\eta\)</span> and <span class="math inline">\(\varepsilon\)</span> are subject to triangle identities: <span class="math inline">\(F  \stackrel{F\eta}{\Longrightarrow} FGF \stackrel{\varepsilon  F}{\Longrightarrow} F\)</span> is the identity, and similarly for <span class="math inline">\(\eta G ; G \varepsilon\)</span>.
 </li>
 <li>
 These laws can be expressed as commuting diagrams of 2-cells: draw <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\varepsilon\)</span> as 2-cells and paste them in two different ways.
@@ -872,7 +872,7 @@ http://youtu.be/eBQnysX7oLI
 Algebras for monads. Monads are supposed to be like algebraic theories; algebras are models.
 </li>
 <li>
-An <em>algebra</em> for a monad <span class="math inline">\((T : C \to C, \eta, \mu)\)</span> is an object <span class="math inline">\(A \in C\)</span> (the “underlying object”) equipped with an “action” <span class="math inline">\(\theta : T\ A \to A\)</span>, satisfying the “obvious” axioms (<span class="math inline">\(\theta\)</span> must interact “sensibly” with <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\mu\)</span>).
+An <em>algebra</em> for a monad <span class="math inline">\((T : C \to C, \eta, \mu)\)</span> is an object <span class="math inline">\(A  \in C\)</span> (the “underlying object”) equipped with an “action” <span class="math inline">\(\theta :  T\ A \to A\)</span>, satisfying the “obvious” axioms (<span class="math inline">\(\theta\)</span> must interact “sensibly” with <span class="math inline">\(\eta\)</span> and <span class="math inline">\(\mu\)</span>).
 <ul>
 <li>
 <span class="math inline">\(\eta ; \theta = 1\)</span>
@@ -946,12 +946,12 @@ Monad algebras form a category (called <span class="math inline">\(\mathbf{Alg}\
 <ul>
 <li>
 <p>
-Given two monad algebras <span class="math inline">\(\theta : T A \to A\)</span> and <span class="math inline">\(\varphi : T B \to B\)</span>, a morphism between them consists of a morphism of underlying objects, <span class="math inline">\(f : A \to B\)</span>, such that the obvious square commutes.
+Given two monad algebras <span class="math inline">\(\theta : T A \to A\)</span> and <span class="math inline">\(\varphi : T B \to  B\)</span>, a morphism between them consists of a morphism of underlying objects, <span class="math inline">\(f : A \to B\)</span>, such that the obvious square commutes.
 </p>
 </li>
 <li>
 <p>
-Example. List monad again. <span class="math inline">\(C = \mathbf{Set}, T = []\)</span>. A morphism of monoids is a function <span class="math inline">\(f : A \to B\)</span> such that <span class="math inline">\(f (xy) = f(x)f(y)\)</span>. See how this equation arises from the commuting square for monad morphisms, by starting with a 2-element list in upper left and following it around.
+Example. List monad again. <span class="math inline">\(C = \mathbf{Set}, T = []\)</span>. A morphism of monoids is a function <span class="math inline">\(f : A \to B\)</span> such that <span class="math inline">\(f (xy) =  f(x)f(y)\)</span>. See how this equation arises from the commuting square for monad morphisms, by starting with a 2-element list in upper left and following it around.
 </p>
 </li>
 <li>
@@ -1030,7 +1030,7 @@ Terminal solution (Eilenberg-Moore): consider category <span class="math inline"
 <ul>
 <li>
 <p>
-<span class="math inline">\(G : C^T \to C\)</span> is easy to construct: <span class="math inline">\((A, \theta : T A \to A) \mapsto A\)</span>.
+<span class="math inline">\(G : C^T \to C\)</span> is easy to construct: <span class="math inline">\((A, \theta : T A \to A)  \mapsto A\)</span>.
 </p>
 </li>
 <li>
@@ -1040,7 +1040,7 @@ What about <span class="math inline">\(F : C \to C^T\)</span>? Sends <span class
 </li>
 <li>
 <p>
-Now define a unit and counit. <span class="math inline">\(\eta_A : A \to GFA = A \to TA\)</span> is just the <span class="math inline">\(\eta\)</span> for the monad. <span class="math inline">\(\varepsilon_\theta : FG(A,\theta) \to (A,\theta)\)</span> is an algebra morphism from the free algebra on <span class="math inline">\(A\)</span> (<em>i.e.</em> <span class="math inline">\((TA, \mu)\)</span>) to <span class="math inline">\((A,\theta)\)</span>: in fact, <span class="math inline">\(\theta\)</span> itself is such a morphism, by the second algebra law.
+Now define a unit and counit. <span class="math inline">\(\eta_A : A \to GFA = A \to TA\)</span> is just the <span class="math inline">\(\eta\)</span> for the monad. <span class="math inline">\(\varepsilon_\theta :  FG(A,\theta) \to (A,\theta)\)</span> is an algebra morphism from the free algebra on <span class="math inline">\(A\)</span> (<em>i.e.</em> <span class="math inline">\((TA, \mu)\)</span>) to <span class="math inline">\((A,\theta)\)</span>: in fact, <span class="math inline">\(\theta\)</span> itself is such a morphism, by the second algebra law.
 </p>
 </li>
 <li>
@@ -1287,7 +1287,7 @@ Terminal objects: limit over the empty diagram.
 Products: limit over discrete diagram on two objects.
 </li>
 <li>
-Pullback: limit over a “cospan”, <em>i.e.</em> a diagram like <span class="math inline">\(X \to Y \leftarrow Z\)</span>. Note that we usually ignore the edge of the cone to <span class="math inline">\(Y\)</span>, since it is uniquely determined by the edges to <span class="math inline">\(X\)</span> and <span class="math inline">\(Z\)</span>.
+Pullback: limit over a “cospan”, <em>i.e.</em> a diagram like <span class="math inline">\(X \to Y  \leftarrow Z\)</span>. Note that we usually ignore the edge of the cone to <span class="math inline">\(Y\)</span>, since it is uniquely determined by the edges to <span class="math inline">\(X\)</span> and <span class="math inline">\(Z\)</span>.
 </li>
 <li>
 Equalizer: limit over a parallel pair of arrows.
@@ -1332,7 +1332,7 @@ Formal definition of a limit: given a diagram <span class="math inline">\(D : I 
 </li>
 <li>
 <p>
-If we set <span class="math inline">\(V = U\)</span> then <span class="math inline">\(C(U,U) \cong \dots\)</span> <em>etc.</em> In particular <span class="math inline">\(1_U : C(U,U)\)</span> corresponds to some cone, which is THE universal cone. The Yoneda lemma says (?) that the entire natural isomorphism is determined by this one piece of data (where <span class="math inline">\(1_U\)</span> goes). Note that both <span class="math inline">\(C(-,U)\)</span> and <span class="math inline">\([I,C](\Delta_-, D)\)</span> are functors <span class="math inline">\(C^{\text{op}} \to \mathbf{Set}\)</span>. The Yoneda lemma says that a natural transformation from <span class="math inline">\(C(-,U) = H_U\)</span> to <span class="math inline">\([I,C](\Delta_-, D)\)</span> is isomorphic to <span class="math inline">\([I,C](\Delta_U, D)\)</span> — i.e. a cone with vertex <span class="math inline">\(U\)</span>, the universal cone.
+If we set <span class="math inline">\(V = U\)</span> then <span class="math inline">\(C(U,U) \cong \dots\)</span> <em>etc.</em> In particular <span class="math inline">\(1_U :  C(U,U)\)</span> corresponds to some cone, which is THE universal cone. The Yoneda lemma says (?) that the entire natural isomorphism is determined by this one piece of data (where <span class="math inline">\(1_U\)</span> goes). Note that both <span class="math inline">\(C(-,U)\)</span> and <span class="math inline">\([I,C](\Delta_-, D)\)</span> are functors <span class="math inline">\(C^{\text{op}} \to \mathbf{Set}\)</span>. The Yoneda lemma says that a natural transformation from <span class="math inline">\(C(-,U) = H_U\)</span> to <span class="math inline">\([I,C](\Delta_-, D)\)</span> is isomorphic to <span class="math inline">\([I,C](\Delta_U, D)\)</span> — i.e. a cone with vertex <span class="math inline">\(U\)</span>, the universal cone.
 </p>
 </li>
 <li>
@@ -1358,7 +1358,7 @@ Notation for limits. Categories that “have all limits (of a given shape)”.
 The natural isomorphism defining a limit can be seen as an adjunction <span class="math inline">\(\Delta \dashv \lim_{I \leftarrow}\)</span> where <span class="math inline">\(\Delta : C \to [I,C]\)</span>, and <span class="math inline">\(\lim_{I \leftarrow} : [I,C] \to C\)</span> is the functor that takes a diagram and produces its limit.
 </li>
 <li>
-Claim: this is an adjunction <em>if</em> <span class="math inline">\(C\)</span> has all <span class="math inline">\(I\)</span>-limits. Need to show that the iso is also natural in <span class="math inline">\(D\)</span>, and that <span class="math inline">\(\lim_{I \leftarrow}\)</span> is actually a functor.
+Claim: this is an adjunction <em>if</em> <span class="math inline">\(C\)</span> has all <span class="math inline">\(I\)</span>-limits. Need to show that the iso is also natural in <span class="math inline">\(D\)</span>, and that <span class="math inline">\(\lim_{I  \leftarrow}\)</span> is actually a functor.
 </li>
 </ul>
 <h3 id="general-limits-and-colimits-6">
@@ -1468,7 +1468,7 @@ Let’s generalize even more! Fix the functor <span class="math inline">\(F\)</s
 Objects: triple <span class="math inline">\((c \in C, X \in D, p : F C \to X)\)</span>.
 </li>
 <li>
-Morphism <span class="math inline">\((c, X, p) \to (c', X', p')\)</span> is a pair of morphisms <span class="math inline">\(c \to c'\)</span> and <span class="math inline">\(X \to X'\)</span> such that the relevant square commutes.
+Morphism <span class="math inline">\((c, X, p) \to (c', X', p')\)</span> is a pair of morphisms <span class="math inline">\(c \to  c'\)</span> and <span class="math inline">\(X \to X'\)</span> such that the relevant square commutes.
 </li>
 </ul>
 <p>
@@ -1514,7 +1514,7 @@ Example: in <span class="math inline">\(\mathbf{Set}\)</span>: coequaliser of <s
 </li>
 <li>
 <p>
-Conversely, we can <em>start</em> with an equivalence relation and build it using a coequaliser. Given: an equivalence relation <span class="math inline">\(R \subseteq B \times B\)</span>. Note we have <span class="math inline">\(\pi_1, \pi_2 : R \to B\)</span>. Coequaliser is equivalence classes of <span class="math inline">\(R\)</span>.
+Conversely, we can <em>start</em> with an equivalence relation and build it using a coequaliser. Given: an equivalence relation <span class="math inline">\(R \subseteq B  \times B\)</span>. Note we have <span class="math inline">\(\pi_1, \pi_2 : R \to B\)</span>. Coequaliser is equivalence classes of <span class="math inline">\(R\)</span>.
 </p>
 </li>
 </ul>
@@ -1710,7 +1710,7 @@ equipped with
 identities: for all <span class="math inline">\(x \in C\)</span> a function <span class="math inline">\(1 \to C(x,x)\)</span>
 </li>
 <li>
-composition: for all <span class="math inline">\(x,y,z \in C\)</span>, a composition function <span class="math inline">\(C(y,z) \times C(x,y) \to C(x,z)\)</span>.
+composition: for all <span class="math inline">\(x,y,z \in C\)</span>, a composition function <span class="math inline">\(C(y,z)  \times C(x,y) \to C(x,z)\)</span>.
 </li>
 <li>
 unit and associativity laws.
@@ -1791,7 +1791,7 @@ Given a set with two binary operations <span class="math inline">\(\circ\)</span
 <span class="math inline">\(\circ\)</span> and <span class="math inline">\(\star\)</span> are unital, with the same unit;
 </li>
 <li>
-one of them distributes over the other, i.e. <span class="math inline">\((a \star b) \circ (c \star d) = (a \circ c) \star (b \circ d)\)</span>,
+one of them distributes over the other, i.e. <span class="math inline">\((a \star b) \circ (c  \star d) = (a \circ c) \star (b \circ d)\)</span>,
 </li>
 </ul>
 <p>
@@ -1892,7 +1892,7 @@ Distributive law is equivalent to a lift of <span class="math inline">\(T\)</spa
 </p>
 <ul>
 <li>
-An <span class="math inline">\(S\)</span>-algebra looks like <span class="math inline">\(\theta : SX \to X\)</span>; we want <span class="math inline">\(T'\)</span> to send this to another <span class="math inline">\(S\)</span>-algebra, with carrier <span class="math inline">\(TX\)</span>, i.e. some <span class="math inline">\(\phi : STX \to TX\)</span>. But we have <span class="math inline">\(T \theta : TSX \to TX\)</span>; precomposing with <span class="math inline">\(\lambda\)</span> gives us what we want, and the distributive law axioms ensure that <span class="math inline">\(T'\)</span> is a monad on <span class="math inline">\(S\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span>.
+An <span class="math inline">\(S\)</span>-algebra looks like <span class="math inline">\(\theta : SX \to X\)</span>; we want <span class="math inline">\(T'\)</span> to send this to another <span class="math inline">\(S\)</span>-algebra, with carrier <span class="math inline">\(TX\)</span>, i.e. some <span class="math inline">\(\phi :  STX \to TX\)</span>. But we have <span class="math inline">\(T \theta : TSX \to TX\)</span>; precomposing with <span class="math inline">\(\lambda\)</span> gives us what we want, and the distributive law axioms ensure that <span class="math inline">\(T'\)</span> is a monad on <span class="math inline">\(S\)</span>-<span class="math inline">\(\mathbf{Alg}\)</span>.
 </li>
 </ul>
 <p>
@@ -1914,7 +1914,7 @@ This essentially says that an algebra for <span class="math inline">\(T'\)</span
 </li>
 <li>
 <p>
-An algebra for <span class="math inline">\(TS\)</span> is <span class="math inline">\(\psi : TSX \to X\)</span>. Clear that from a <span class="math inline">\(T'\)</span>-algebra we get a <span class="math inline">\(TS\)</span> algebra. What about vice versa? Just precompose <span class="math inline">\(\psi\)</span> with <span class="math inline">\(\eta_T\)</span> to get an <span class="math inline">\(S\)</span>-algebra, and with <span class="math inline">\(T \eta_S\)</span> to get a <span class="math inline">\(T\)</span>-algebra. A <span class="math inline">\(TS\)</span>-algebra says how to evaluate e.g. multiplication and additions all mixed up; precomposing with <span class="math inline">\(\eta\)</span> picks out the stuff with just multiplication or just addition. Apparently one can prove that the algebras you get this way do indeed interact nicely.
+An algebra for <span class="math inline">\(TS\)</span> is <span class="math inline">\(\psi : TSX \to X\)</span>. Clear that from a <span class="math inline">\(T'\)</span>-algebra we get a <span class="math inline">\(TS\)</span> algebra. What about vice versa? Just precompose <span class="math inline">\(\psi\)</span> with <span class="math inline">\(\eta_T\)</span> to get an <span class="math inline">\(S\)</span>-algebra, and with <span class="math inline">\(T  \eta_S\)</span> to get a <span class="math inline">\(T\)</span>-algebra. A <span class="math inline">\(TS\)</span>-algebra says how to evaluate e.g. multiplication and additions all mixed up; precomposing with <span class="math inline">\(\eta\)</span> picks out the stuff with just multiplication or just addition. Apparently one can prove that the algebras you get this way do indeed interact nicely.
 </p>
 </li>
 </ul>
@@ -1974,7 +1974,7 @@ A monad transformation (<em>i.e.</em> a <span class="math inline">\(2\)</span>-c
 </p>
 <ul>
 <li>
-a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\sigma : u_1 \to u_2\)</span>, satisfying <span class="math inline">\(\sigma S_2 ; \lambda_2 = \lambda_1 ; S_1 \sigma\)</span> (something like that, see pasting diagrams of <span class="math inline">\(2\)</span>-cells in the video).
+a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\sigma : u_1 \to u_2\)</span>, satisfying <span class="math inline">\(\sigma S_2 ;  \lambda_2 = \lambda_1 ; S_1 \sigma\)</span> (something like that, see pasting diagrams of <span class="math inline">\(2\)</span>-cells in the video).
 </li>
 </ul>
 <h3 id="distributive-laws-4">
@@ -2066,7 +2066,7 @@ together with axioms expressed as commutative diagrams:
 <span class="math inline">\((id \times \mu) ; \mu = (\mu \times id) ; \mu\)</span>
 </li>
 <li>
-<span class="math inline">\((\eta \times id) ; \mu = id = (id \times \eta) ; \mu\)</span> (note to be pedantic we also need to use <span class="math inline">\(\lambda : G \to 1 \times G\)</span> and <span class="math inline">\(\rho : G \to G \times 1\)</span>)
+<span class="math inline">\((\eta \times id) ; \mu = id = (id \times \eta) ; \mu\)</span> (note to be pedantic we also need to use <span class="math inline">\(\lambda : G \to 1 \times  G\)</span> and <span class="math inline">\(\rho : G \to G \times 1\)</span>)
 </li>
 <li>
 <span class="math inline">\(\Delta ; (id \times \gamma) ; \mu = \varepsilon ; \eta\)</span>
@@ -2277,7 +2277,7 @@ This is in some sense a generalization of a cone.
 </li>
 <li>
 <p>
-An <em>end</em> is a universal wedge, <em>i.e.</em> a wedge <span class="math inline">\(E \stackrel{\bullet}{\to} T\)</span> such that if <span class="math inline">\(x \stackrel{\bullet}{\to} T\)</span> then there exists a unique morphism <span class="math inline">\(x \to E\)</span> through which the components of <span class="math inline">\(x\)</span> factor.
+An <em>end</em> is a universal wedge, <em>i.e.</em> a wedge <span class="math inline">\(E  \stackrel{\bullet}{\to} T\)</span> such that if <span class="math inline">\(x \stackrel{\bullet}{\to}  T\)</span> then there exists a unique morphism <span class="math inline">\(x \to E\)</span> through which the components of <span class="math inline">\(x\)</span> factor.
 </p>
 </li>
 </ul>
@@ -2291,17 +2291,17 @@ Ends 2
 http://youtu.be/gyc86NFT0Sw
 </p>
 <p>
-Simple example of an end: <span class="math inline">\(T = \mathrm{Hom} : C^{\text{op}} \times C \to \mathbf{Set}\)</span>. In this case a wedge <span class="math inline">\(x \stackrel{\bullet}{\to} T\)</span> consists of:
+Simple example of an end: <span class="math inline">\(T = \mathrm{Hom} : C^{\text{op}} \times C  \to \mathbf{Set}\)</span>. In this case a wedge <span class="math inline">\(x \stackrel{\bullet}{\to}  T\)</span> consists of:
 </p>
 <ul>
 <li>
 some <span class="math inline">\(x \in \mathbf{Set}\)</span>
 </li>
 <li>
-for each <span class="math inline">\(c \in C\)</span> a function <span class="math inline">\(\omega_c : x \to \mathrm{Hom}(c,c)\)</span>
+for each <span class="math inline">\(c \in C\)</span> a function <span class="math inline">\(\omega_c : x \to  \mathrm{Hom}(c,c)\)</span>
 </li>
 <li>
-such that <span class="math inline">\(\forall f : c \to c'\)</span> we have <span class="math inline">\(\omega_c; f \circ - = \omega_{c'}; - \circ f\)</span>.
+such that <span class="math inline">\(\forall f : c \to c'\)</span> we have <span class="math inline">\(\omega_c; f \circ - =  \omega_{c'}; - \circ f\)</span>.
 </li>
 </ul>
 <p>
@@ -2339,7 +2339,7 @@ Another example, “baby Tannaka reconstruction” (see <a href="http://ncatlab.
 <span class="math inline">\(U : M\text{-}\mathbf{Set} \to \mathbf{Set}\)</span> is the forgetful functor.
 </li>
 <li>
-Result: <span class="math inline">\(\int_{(S,\sigma) \in M\text{-}\mathbf{Set}} \mathrm{Hom} (U(S,\sigma), U(S,\sigma)) \cong \mathrm{Nat}(U,U) \cong M\)</span>. (In general, natural transformations over forgetful functor reconstructs algebraic objects.)
+Result: <span class="math inline">\(\int_{(S,\sigma) \in M\text{-}\mathbf{Set}} \mathrm{Hom}  (U(S,\sigma), U(S,\sigma)) \cong \mathrm{Nat}(U,U) \cong M\)</span>. (In general, natural transformations over forgetful functor reconstructs algebraic objects.)
 </li>
 </ul>
 <p>
@@ -2350,7 +2350,7 @@ Proof (application of Yoneda):
 Let <span class="math inline">\(\mu : M \times M \to M\)</span> be monoid operation and <span class="math inline">\(e\)</span> the identity.
 </li>
 <li>
-An <span class="math inline">\(M\)</span>-set consists of a set <span class="math inline">\(S\)</span> together with an action <span class="math inline">\(\sigma : M \times S \to S\)</span>. Morphisms <span class="math inline">\((S,\sigma) \to (R,\rho)\)</span> are just functions <span class="math inline">\(S \to R\)</span> which commute with the actions (“equivariant maps”).
+An <span class="math inline">\(M\)</span>-set consists of a set <span class="math inline">\(S\)</span> together with an action <span class="math inline">\(\sigma : M  \times S \to S\)</span>. Morphisms <span class="math inline">\((S,\sigma) \to (R,\rho)\)</span> are just functions <span class="math inline">\(S \to R\)</span> which commute with the actions (“equivariant maps”).
 </li>
 <li>
 Note <span class="math inline">\(U\)</span> is representable:
@@ -2359,10 +2359,10 @@ Note <span class="math inline">\(U\)</span> is representable:
 Consider the <span class="math inline">\(M\)</span>-set <span class="math inline">\(M^l = (M, \mu)\)</span> (“left-regular representation of <span class="math inline">\(M\)</span>”)
 </li>
 <li>
-Define <span class="math inline">\(\mathrm{Hom}(M^l, (S, \sigma)) \to S\)</span> by <span class="math inline">\(f \mapsto f(e)\)</span>.
+Define <span class="math inline">\(\mathrm{Hom}(M^l, (S, \sigma)) \to  S\)</span> by <span class="math inline">\(f \mapsto f(e)\)</span>.
 </li>
 <li>
-Note <span class="math inline">\(f(e)\)</span> determines <span class="math inline">\(f\)</span> since <span class="math inline">\(f\)</span> is equivariant: <span class="math inline">\(f(m) = f(m \cdot e) = m \cdot f(e)\)</span>. In fact <span class="math inline">\(\mathrm{Hom}(M^l, (S, \sigma)) \cong S\)</span>.
+Note <span class="math inline">\(f(e)\)</span> determines <span class="math inline">\(f\)</span> since <span class="math inline">\(f\)</span> is equivariant: <span class="math inline">\(f(m) = f(m  \cdot e) = m \cdot f(e)\)</span>. In fact <span class="math inline">\(\mathrm{Hom}(M^l, (S,  \sigma)) \cong S\)</span>.
 </li>
 <li>
 Thus <span class="math inline">\(U = \mathrm{Hom}(M^l, -)\)</span>.
@@ -2370,7 +2370,7 @@ Thus <span class="math inline">\(U = \mathrm{Hom}(M^l, -)\)</span>.
 </ul>
 </li>
 <li>
-So <span class="math inline">\(\mathrm{Nat}(U,U) = \mathrm{Nat}(\mathrm{Hom}(M^l,-), \mathrm{Hom}(M^l,-))\)</span>, and by (co-?)Yoneda, this is just <span class="math inline">\(\mathrm{Hom}(M^l, M^l) = U(M^l) = M\)</span>.
+So <span class="math inline">\(\mathrm{Nat}(U,U) = \mathrm{Nat}(\mathrm{Hom}(M^l,-),  \mathrm{Hom}(M^l,-))\)</span>, and by (co-?)Yoneda, this is just <span class="math inline">\(\mathrm{Hom}(M^l, M^l) = U(M^l) = M\)</span>.
 </li>
 </ul>
 <h3 id="ends-4">
@@ -2387,7 +2387,7 @@ Combine some of the previous examples. Recall
 <span class="math inline">\(\int_C \mathrm{Hom} \cong \mathrm{Nat}(Id,Id)\)</span> (Ends 2)
 </li>
 <li>
-<span class="math inline">\(\int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{\mathbf{Set}}(U(-), U(-)) \cong M\)</span> (Ends 3)
+<span class="math inline">\(\int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{\mathbf{Set}}(U(-),  U(-)) \cong M\)</span> (Ends 3)
 </li>
 </ul>
 <p>
@@ -2395,7 +2395,7 @@ What happens if we combine these two results? First, look at the end from last t
 </p>
 <ul>
 <li>
-Let <span class="math inline">\(\Phi \in \int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{M\text{-}\mathbf{Set}}(U -,U -) = \mathrm{Nat}(U,U)\)</span> be a natural transformation on <span class="math inline">\(U\)</span>. That is, <span class="math inline">\(\Phi_{(R,\rho)}\)</span> is a function <span class="math inline">\(R \to R\)</span>, such that <span class="math inline">\(\Phi\)</span> commutes with the underlying function of any equivariant map, <em>i.e.</em>
+Let <span class="math inline">\(\Phi \in \int_{M\text{-}\mathbf{Set}}  \mathrm{Hom}_{M\text{-}\mathbf{Set}}(U -,U -) = \mathrm{Nat}(U,U)\)</span> be a natural transformation on <span class="math inline">\(U\)</span>. That is, <span class="math inline">\(\Phi_{(R,\rho)}\)</span> is a function <span class="math inline">\(R \to R\)</span>, such that <span class="math inline">\(\Phi\)</span> commutes with the underlying function of any equivariant map, <em>i.e.</em>
 </li>
 </ul>
 <div style="text-align:center;">
@@ -2405,7 +2405,7 @@ Let <span class="math inline">\(\Phi \in \int_{M\text{-}\mathbf{Set}} \mathrm{Ho
 </div>
 <ul>
 <li>
-As we showed last time, <span class="math inline">\(\Phi_{(R,\rho)} = \rho(m)\)</span> for some <span class="math inline">\(m \in M\)</span>.
+As we showed last time, <span class="math inline">\(\Phi_{(R,\rho)} = \rho(m)\)</span> for some <span class="math inline">\(m \in  M\)</span>.
 </li>
 <li>
 Note <span class="math inline">\(\Phi_{(R,\rho)}\)</span> is just a function <span class="math inline">\(R \to R\)</span>, but has to commute with equivariant functions.
@@ -2438,7 +2438,7 @@ What’s the difference? <span class="math inline">\(\Theta\)</span> is now a fa
 </li>
 <li>
 <p>
-Consider the left-regular representation <span class="math inline">\(M^l\)</span> again. Then we know <span class="math inline">\(\Phi_{M^l} : M^l \to M_l\)</span> is just left-multiplication by some <span class="math inline">\(m \in M\)</span>. But it has to commute with equivariant maps; picking the action on the particular element <span class="math inline">\(e\)</span>, this means for all <span class="math inline">\(n \in M\)</span>
+Consider the left-regular representation <span class="math inline">\(M^l\)</span> again. Then we know <span class="math inline">\(\Phi_{M^l} : M^l \to M_l\)</span> is just left-multiplication by some <span class="math inline">\(m  \in M\)</span>. But it has to commute with equivariant maps; picking the action on the particular element <span class="math inline">\(e\)</span>, this means for all <span class="math inline">\(n \in M\)</span>
 </p>
 <p>
 <span class="math inline">\(n \cdot \Phi_{M^l}(e) = \Phi_{M^l}(n \cdot e)\)</span>
@@ -2449,7 +2449,7 @@ that is, <span class="math inline">\(nm = mn\)</span>, <em>i.e.</em> <span class
 </li>
 <li>
 <p>
-So we conclude <span class="math inline">\(\int_{M\text{-}\mathbf{Set}} \mathrm{Hom}_{M\text{-}\mathbf{Set}}(-,-) = Z(M)\)</span>.
+So we conclude <span class="math inline">\(\int_{M\text{-}\mathbf{Set}}  \mathrm{Hom}_{M\text{-}\mathbf{Set}}(-,-) = Z(M)\)</span>.
 </p>
 </li>
 </ul>
@@ -2511,18 +2511,18 @@ To the set <span class="math inline">\(X\)</span> associate the slice category <
 Think of the objects of this slice category, <span class="math inline">\(E \to X\)</span>, as “bundles over <span class="math inline">\(X\)</span>”: a base space <span class="math inline">\(X\)</span> and a set above that, where each element of <span class="math inline">\(X\)</span> is associated to its fiber/preimage.
 </li>
 <li>
-Another way to think of this is as a functor <span class="math inline">\(\hat{E} : X \to \mathbf{Set}\)</span> (considering <span class="math inline">\(X\)</span> as a discrete category), that picks out the fiber of each element of <span class="math inline">\(X\)</span>.
+Another way to think of this is as a functor <span class="math inline">\(\hat{E} : X \to  \mathbf{Set}\)</span> (considering <span class="math inline">\(X\)</span> as a discrete category), that picks out the fiber of each element of <span class="math inline">\(X\)</span>.
 </li>
 </ul>
 </li>
 <li>
 <p>
-There is actually an equivalence of categories <span class="math inline">\(\mathbf{Set}^X \cong \mathbf{Set}/X\)</span>.
+There is actually an equivalence of categories <span class="math inline">\(\mathbf{Set}^X \cong  \mathbf{Set}/X\)</span>.
 </p>
 </li>
 <li>
 <p>
-What about maps between sets? <em>e.g.</em> <span class="math inline">\(f : X \to Y\)</span>. As we’ll see, we get three associated maps <span class="math inline">\(f^* : \mathbf{Set}^Y \to \mathbf{Set}^X\)</span>, <span class="math inline">\(f_* : \mathbf{Set}^X \to \mathbf{Set}^Y\)</span>, and <span class="math inline">\(f_! : \mathbf{Set}^X \to \mathbf{Set}^Y\)</span>, with <span class="math inline">\(f_! \dashv f^* \dashv f_*\)</span>. Details in the next lecture.
+What about maps between sets? <em>e.g.</em> <span class="math inline">\(f : X \to Y\)</span>. As we’ll see, we get three associated maps <span class="math inline">\(f^* : \mathbf{Set}^Y \to  \mathbf{Set}^X\)</span>, <span class="math inline">\(f_* : \mathbf{Set}^X \to \mathbf{Set}^Y\)</span>, and <span class="math inline">\(f_! : \mathbf{Set}^X \to \mathbf{Set}^Y\)</span>, with <span class="math inline">\(f_! \dashv f^*  \dashv f_*\)</span>. Details in the next lecture.
 </p>
 </li>
 </ul>
@@ -2543,7 +2543,7 @@ Given <span class="math inline">\(f : X \to Y\)</span>, define the “pullback�
 </li>
 <li>
 <p>
-Now for the other direction. Idea: given a bundle over <span class="math inline">\(X\)</span> and <span class="math inline">\(f : X \to Y\)</span>, for each <span class="math inline">\(y \in Y\)</span> we have a set <span class="math inline">\(f^{-1}(y) \subseteq X\)</span> which are sent to that <span class="math inline">\(y\)</span> by <span class="math inline">\(f\)</span>; we have to somehow combine their fibers to yield a fiber for <span class="math inline">\(y\)</span>. Several ways we could imagine doing it: disjoint union, product? In this case we want the product. That is,
+Now for the other direction. Idea: given a bundle over <span class="math inline">\(X\)</span> and <span class="math inline">\(f :  X \to Y\)</span>, for each <span class="math inline">\(y \in Y\)</span> we have a set <span class="math inline">\(f^{-1}(y) \subseteq X\)</span> which are sent to that <span class="math inline">\(y\)</span> by <span class="math inline">\(f\)</span>; we have to somehow combine their fibers to yield a fiber for <span class="math inline">\(y\)</span>. Several ways we could imagine doing it: disjoint union, product? In this case we want the product. That is,
 </p>
 <p>
 <span class="math inline">\(\displaystyle (f_* \hat{E})(y) = \prod_{x \in f^{-1}(y)} \hat{E}(x).\)</span>
@@ -2575,22 +2575,22 @@ Such hom-sets are a collection of maps between fibers, one for each base point.
 </li>
 <li>
 <p>
-So we have <span class="math inline">\(\mathrm{Hom}_X(f^* \hat F, \hat E) = \prod_{x \in X} \mathrm{Hom}(f^* \hat F (x), \hat E (x)) = \prod_{x \in X} \mathrm{Hom}(\hat F (f(x)), \hat E (x))\)</span>.
+So we have <span class="math inline">\(\mathrm{Hom}_X(f^* \hat F, \hat E) = \prod_{x \in X}  \mathrm{Hom}(f^* \hat F (x), \hat E (x)) = \prod_{x \in X}  \mathrm{Hom}(\hat F (f(x)), \hat E (x))\)</span>.
 </p>
 </li>
 <li>
 <p>
-We can partition <span class="math inline">\(X\)</span> as preimages of elements of <span class="math inline">\(Y\)</span> under <span class="math inline">\(f\)</span>. So the above is equal to <span class="math inline">\(\prod_{y \in Y} \prod_{x \in f^{-1}(y)} \mathrm{Hom}(\hat F (y), \hat E (x))\)</span>.
+We can partition <span class="math inline">\(X\)</span> as preimages of elements of <span class="math inline">\(Y\)</span> under <span class="math inline">\(f\)</span>. So the above is equal to <span class="math inline">\(\prod_{y \in Y} \prod_{x \in f^{-1}(y)}  \mathrm{Hom}(\hat F (y), \hat E (x))\)</span>.
 </p>
 </li>
 <li>
 <p>
-A product of hom-sets is isomorphic to a hom-set into a product (<em>i.e.</em> <span class="math inline">\(A^X B^X = (AB)^X\)</span>), so this is equal to <span class="math inline">\(\prod_{y \in Y} \mathrm{Hom}(\hat F (y), \prod_{x \in f^{-1}(y)} \hat E (x))\)</span>.
+A product of hom-sets is isomorphic to a hom-set into a product (<em>i.e.</em> <span class="math inline">\(A^X B^X = (AB)^X\)</span>), so this is equal to <span class="math inline">\(\prod_{y \in Y}  \mathrm{Hom}(\hat F (y), \prod_{x \in f^{-1}(y)} \hat E (x))\)</span>.
 </p>
 </li>
 <li>
 <p>
-By definition of <span class="math inline">\(f_*\)</span>, this is <span class="math inline">\(\prod_{y \in Y} \mathrm{Hom}(\hat F (y), (f_* \hat E) (y))\)</span>.
+By definition of <span class="math inline">\(f_*\)</span>, this is <span class="math inline">\(\prod_{y \in Y}  \mathrm{Hom}(\hat F (y), (f_* \hat E) (y))\)</span>.
 </p>
 </li>
 <li>
@@ -2705,7 +2705,7 @@ Let <span class="math inline">\(E\)</span> be a category with (chosen) pullbacks
 </li>
 <li>
 <p>
-<span class="math inline">\(2\)</span>-cells are morphisms between <span class="math inline">\(1\)</span>-cells, that is, spans. So a <span class="math inline">\(2\)</span>-cell between <span class="math inline">\(A \leftarrow S \rightarrow B\)</span> and <span class="math inline">\(A \leftarrow S' \rightarrow B\)</span> is a morphism <span class="math inline">\(S \to S'\)</span> which makes things commute.
+<span class="math inline">\(2\)</span>-cells are morphisms between <span class="math inline">\(1\)</span>-cells, that is, spans. So a <span class="math inline">\(2\)</span>-cell between <span class="math inline">\(A \leftarrow S \rightarrow B\)</span> and <span class="math inline">\(A \leftarrow S'  \rightarrow B\)</span> is a morphism <span class="math inline">\(S \to S'\)</span> which makes things commute.
 </p>
 </li>
 <li>
@@ -2759,7 +2759,7 @@ We have
 a <span class="math inline">\(0\)</span>-cell, <em>i.e.</em> a set <span class="math inline">\(C_0\)</span>.
 </li>
 <li>
-a <span class="math inline">\(1\)</span>-cell from <span class="math inline">\(C_0\)</span> to itself, <em>i.e.</em> a span <span class="math inline">\(C_0 \stackrel{s}{\leftarrow} C_1 \stackrel{t}{\rightarrow} C_0\)</span> (idea is that <span class="math inline">\(C_1\)</span> will be the set of morphisms, and <span class="math inline">\(s\)</span> and <span class="math inline">\(t\)</span> will pick out the source and target objects)
+a <span class="math inline">\(1\)</span>-cell from <span class="math inline">\(C_0\)</span> to itself, <em>i.e.</em> a span <span class="math inline">\(C_0  \stackrel{s}{\leftarrow} C_1 \stackrel{t}{\rightarrow} C_0\)</span> (idea is that <span class="math inline">\(C_1\)</span> will be the set of morphisms, and <span class="math inline">\(s\)</span> and <span class="math inline">\(t\)</span> will pick out the source and target objects)
 </li>
 <li>
 a <span class="math inline">\(2\)</span>-cell <span class="math inline">\(\eta\)</span> from <span class="math inline">\(1\)</span> (the boring span with all the same object and identity morphisms) to the <span class="math inline">\(1\)</span>-cell given above. This ends up being a function <span class="math inline">\(f : C_0 \to C_1\)</span> such that <span class="math inline">\(f ; s = f ; t = id\)</span>, that is, <span class="math inline">\(f\)</span> takes each object in <span class="math inline">\(C_0\)</span> to a morphism in <span class="math inline">\(C_1\)</span> having that object as both its source and target.
@@ -2984,7 +2984,7 @@ Explains in more detail how categories enriched in <span class="math inline">\((
 For each pair of objects we have a “Hom-object” which is a nonnegative real number. (“distance”)
 </li>
 <li>
-Composition is supposed to be a morphism <span class="math inline">\(\mathrm{Hom}(a,b) \otimes \mathrm{Hom}(b,c) \to \mathrm{Hom}(a,c)\)</span>. But <span class="math inline">\(\otimes\)</span> is <span class="math inline">\(+\)</span> and <span class="math inline">\(\to\)</span> is <span class="math inline">\(\geq\)</span>, so this is the triangle inequality.
+Composition is supposed to be a morphism <span class="math inline">\(\mathrm{Hom}(a,b) \otimes  \mathrm{Hom}(b,c) \to \mathrm{Hom}(a,c)\)</span>. But <span class="math inline">\(\otimes\)</span> is <span class="math inline">\(+\)</span> and <span class="math inline">\(\to\)</span> is <span class="math inline">\(\geq\)</span>, so this is the triangle inequality.
 </li>
 <li>
 Identity morphisms are given by <span class="math inline">\(I \to \mathrm{Hom}(a,a)\)</span>; in this context that says <span class="math inline">\(0 \geq \mathrm{Hom}(a,a)\)</span>, i.e. distance from <span class="math inline">\(a\)</span> to itself is <span class="math inline">\(0\)</span>.
@@ -3018,7 +3018,7 @@ Given two <span class="math inline">\(V\)</span>-categories, a <span class="math
 a map <span class="math inline">\(\mathrm{Ob}(C) \to \mathrm{Ob}(D)\)</span>, and
 </li>
 <li>
-for all <span class="math inline">\(a,b,c \in C\)</span>, <span class="math inline">\(\Phi : \mathrm{Hom}(a,b) \to \mathrm{Hom(\Phi a, \Phi b)}\)</span> (a morphism in <span class="math inline">\(D\)</span>) which has to commute with composition in the appropriate way.
+for all <span class="math inline">\(a,b,c \in C\)</span>, <span class="math inline">\(\Phi : \mathrm{Hom}(a,b) \to  \mathrm{Hom(\Phi a, \Phi b)}\)</span> (a morphism in <span class="math inline">\(D\)</span>) which has to commute with composition in the appropriate way.
 </li>
 </ul>
 <p>

@@ -108,12 +108,14 @@ type like <span class="math inline">\(\square ((\square \square X \to Y) \to \sq
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">:</span> Ty</span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  example <span class="ot">=</span> □ <span class="ot">((</span>□ □ X ⇒ Y<span class="ot">)</span> ⇒ □ Y<span class="ot">)</span></span></code></pre></div>
 <p>However, for reasons that would take us too far afield in this blog
-post, I <em>don’t</em> want to allow immediately nested boxes, like <span class="math inline">\(\square \square X\)</span>. We can still have multiple boxes in a type, and even
+post, I <em>don’t</em> want to allow immediately nested boxes, like <span class="math inline">\(\square
+\square X\)</span>. We can still have multiple boxes in a type, and even
 boxes nested inside of other boxes, as long as there is at least one
 arrow in between. In other words, I only want to rule out boxes
 immediately applied to another type with an outermost box. So we
 don’t want to allow the example type given above (since it contains
-<span class="math inline">\(\square \square X\)</span>), but, for example, <span class="math inline">\(\square ((\square X \to Y) \to \square Y)\)</span> would be OK.</p>
+<span class="math inline">\(\square \square X\)</span>), but, for example, <span class="math inline">\(\square ((\square X \to Y)
+\to \square Y)\)</span> would be OK.</p>
 </section>
 <section id="encoding-invariants" class="level2">
 <h2>Encoding invariants</h2>

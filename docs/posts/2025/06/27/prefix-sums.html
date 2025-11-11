@@ -66,7 +66,8 @@ Today, I will discuss one of those techniques which is simple but frequently
 useful.</p>
 <section id="precomputing-prefix-sums" class="level2">
 <h2>Precomputing prefix sums</h2>
-<p>Suppose we have a static sequence of values <span class="math inline">\(a_1, a_2, a_3, \dots, a_n\)</span> drawn from some
+<p>Suppose we have a static sequence of values <span class="math inline">\(a_1, a_2, a_3, \dots,
+a_n\)</span> drawn from some
 <a href="https://en.wikipedia.org/wiki/Group_(mathematics)">group</a><span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="sidenote">That is,
 there is an associative binary operation with an identity element, and
 every element has an inverse.<br />
@@ -74,14 +75,16 @@ every element has an inverse.<br />
 </span></span>, and want
 to be able to compute the total value (according to the group
 operation) of any contiguous subrange. That is, given a range
-<span class="math inline">\([i,j]\)</span>, we want to compute <span class="math inline">\(a_i \diamond a_{i+1} \diamond \dots \diamond a_j\)</span> (where <span class="math inline">\(\diamond\)</span> is the group operation). For example,
+<span class="math inline">\([i,j]\)</span>, we want to compute <span class="math inline">\(a_i \diamond a_{i+1} \diamond \dots
+\diamond a_j\)</span> (where <span class="math inline">\(\diamond\)</span> is the group operation). For example,
 we might have a sequence of integers and want to compute the sum, or
 perhaps the bitwise xor (but not the maximum) of all the values in any particular
 subrange.</p>
 <p>Of course, we could simply compute <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>
 directly, but that takes <span class="math inline">\(O(n)\)</span> time. With some simple preprocessing,
 it’s possible to compute the value of any range in constant time.</p>
-<p>The key idea is to precompute an array <span class="math inline">\(P\)</span> of <em>prefix sums</em>, so <span class="math inline">\(P_i = a_1 \diamond \dots \diamond a_i\)</span>. This can be computed in linear time
+<p>The key idea is to precompute an array <span class="math inline">\(P\)</span> of <em>prefix sums</em>, so <span class="math inline">\(P_i =
+a_1 \diamond \dots \diamond a_i\)</span>. This can be computed in linear time
 via a <em>scan</em>; for example:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Array</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (scanl')</span>
@@ -96,10 +99,13 @@ faster but slightly more limited in its uses: import
 </span></span></p>
 <p>Note that we set <span class="math inline">\(P_0 = 0\)</span> (or whatever the identity element is for
 the group); this is why I had the sequence of values indexed starting
-from <span class="math inline">\(1\)</span>, so <span class="math inline">\(P_0\)</span> corresponds to the empty sum, <span class="math inline">\(P_1 = a_1\)</span>, <span class="math inline">\(P_2 = a_1 \diamond a_2\)</span>, and so on.</p>
-<p>Now, for the value of the range <span class="math inline">\([i,j]\)</span>, just compute <span class="math inline">\(P_j \diamond P_{i-1}^{-1}\)</span>—that is, we start with a prefix that ends at the right place, then
+from <span class="math inline">\(1\)</span>, so <span class="math inline">\(P_0\)</span> corresponds to the empty sum, <span class="math inline">\(P_1 = a_1\)</span>, <span class="math inline">\(P_2 =
+a_1 \diamond a_2\)</span>, and so on.</p>
+<p>Now, for the value of the range <span class="math inline">\([i,j]\)</span>, just compute <span class="math inline">\(P_j \diamond
+P_{i-1}^{-1}\)</span>—that is, we start with a prefix that ends at the right place, then
 cancel or “subtract” the prefix that ends right before the range we
-want. For example, to find the sum of the integers <span class="math inline">\(a_5 + \dots + a_{10}\)</span>, we can compute <span class="math inline">\(P_{10} - P_4\)</span>.</p>
+want. For example, to find the sum of the integers <span class="math inline">\(a_5 + \dots +
+a_{10}\)</span>, we can compute <span class="math inline">\(P_{10} - P_4\)</span>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span><span class="ot"> ::</span> <span class="dt">Group</span> a <span class="ot">=&gt;</span> <span class="dt">Array</span> <span class="dt">Int</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> a</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span> p i j <span class="ot">=</span> p<span class="op">!</span>j <span class="op">&lt;&gt;</span> inv (p<span class="op">!</span>(i<span class="op">-</span><span class="dv">1</span>))</span></code></pre></div>
 <p>That’s why this only works for groups but not for general monoids:

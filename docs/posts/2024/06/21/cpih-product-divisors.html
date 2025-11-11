@@ -63,13 +63,15 @@
 post</a>
 I challenged you to solve <a href="https://open.kattis.com/problems/productdivisors">Product
 Divisors</a>. In this
-problem, we are given a sequence of positive integers <span class="math inline">\(a_1, \dots, a_n\)</span>, and we are asked to compute the total number of divisors of
+problem, we are given a sequence of positive integers <span class="math inline">\(a_1, \dots,
+a_n\)</span>, and we are asked to compute the total number of divisors of
 their product. For example, if we are given the numbers <span class="math inline">\(4, 2, 3\)</span>,
 then the answer should be <span class="math inline">\(8\)</span>, since <span class="math inline">\(4 \times 2 \times 3 = 24\)</span> has
 the <span class="math inline">\(8\)</span> distinct divisors <span class="math inline">\(1, 2, 3, 4, 6, 8, 12, 24\)</span>.</p>
 <section id="counting-divisors" class="level2">
 <h2>Counting divisors</h2>
-<p>In general, if <span class="math inline">\(a\)</span> has the prime factorization <span class="math inline">\(a = p_1^{\alpha_1} p_2^{\alpha_2} \cdots p_k^{\alpha_k}\)</span> (where the <span class="math inline">\(p_i\)</span> are all distinct primes), then
+<p>In general, if <span class="math inline">\(a\)</span> has the prime factorization <span class="math inline">\(a = p_1^{\alpha_1} p_2^{\alpha_2}
+\cdots p_k^{\alpha_k}\)</span> (where the <span class="math inline">\(p_i\)</span> are all distinct primes), then
 the number of divisors of <span class="math inline">\(a\)</span> is</p>
 <p><span class="math display">\[(\alpha_1 + 1)(\alpha_2 + 1) \cdots (\alpha_k + 1),\]</span></p>
 <p>since we can independently choose how many powers of each prime to
@@ -123,7 +125,8 @@ Given this table, to factor a positive integer <span class="math inline">\(i\)</
 <span class="math inline">\(\mathit{smallest}[i] = p\)</span>, add it to the prime factorization, then
 recurse on <span class="math inline">\(i/p\)</span>; the base case is when <span class="math inline">\(i = 1\)</span>.</p>
 <p>How do we compute <span class="math inline">\(\mathit{smallest}\)</span>? The basic idea is to create an
-array of size <span class="math inline">\(n\)</span>, initializing it with <span class="math inline">\(\mathit{smallest}[k] = k\)</span>. For each <span class="math inline">\(k\)</span> from <span class="math inline">\(2\)</span> up to <span class="math inline">\(n\)</span>,<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle">⊕</label><input type="checkbox" id="sn-1" class="margin-toggle" /><span class="marginnote">We could optimize this even
+array of size <span class="math inline">\(n\)</span>, initializing it with <span class="math inline">\(\mathit{smallest}[k] =
+k\)</span>. For each <span class="math inline">\(k\)</span> from <span class="math inline">\(2\)</span> up to <span class="math inline">\(n\)</span>,<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle">⊕</label><input type="checkbox" id="sn-1" class="margin-toggle" /><span class="marginnote">We could optimize this even
 further via the <a href="https://codeforces.com/blog/entry/54090">approach in this blog
 post</a>, which takes <span class="math inline">\(O(n)\)</span>
 rather than <span class="math inline">\(O(n \lg n)\)</span> time, but it would complicate our Haskell

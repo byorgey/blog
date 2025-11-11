@@ -1,13 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-import Control.Applicative (liftA2)
 import Control.Monad ((<=<), (>=>))
 import Data.List (findIndex, intersperse)
 import Hakyll
 import Text.Pandoc (Block, HTMLMathMethod (MathJax), Pandoc, bottomUpM)
 import Text.Pandoc.Diagrams
-import Text.Pandoc.Highlighting (Style, styleToCss, tango)
+import Text.Pandoc.Highlighting (Style, tango)
 import Text.Pandoc.Options (CiteMethod (..), ReaderOptions, WriterOptions (..))
 import Text.Pandoc.SideNote (usingSideNotes)
 

@@ -74,8 +74,10 @@ precompute a prefix sum table in <span class="math inline">\(O(n)\)</span> time,
 arbitrary range queries in <span class="math inline">\(O(1)\)</span> time.</p>
 <p>What if we don’t have inverses? We can’t use prefix sums, but can we
 do something else that still allows us to answer range queries in
-<span class="math inline">\(O(1)\)</span>? One thing we could always do would be to construct an <span class="math inline">\(n \times n\)</span> table storing the answer to <em>every possible</em> range
-query—that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i \diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to
+<span class="math inline">\(O(1)\)</span>? One thing we could always do would be to construct an <span class="math inline">\(n
+\times n\)</span> table storing the answer to <em>every possible</em> range
+query—that is, <span class="math inline">\(Q[i,j]\)</span> would store the value of the range <span class="math inline">\(a_i
+\diamond \dots \diamond a_j\)</span>. Then we could just look up the answer to
 any range query in <span class="math inline">\(O(1)\)</span>. Naively computing the value of each
 <span class="math inline">\(Q[i,j]\)</span> would take <span class="math inline">\(O(n)\)</span> time, for a total of <span class="math inline">\(O(n^3)\)</span> time to fill
 in each of the entries in the table<span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle" /><span class="sidenote">We only have to fill in <span class="math inline">\(Q[i,j]\)</span>
@@ -115,7 +117,8 @@ original sequence; level <span class="math inline">\(1\)</span> stores ranges of
 stores the value of the range of length <span class="math inline">\(2^i\)</span> starting at index <span class="math inline">\(j\)</span>.
 That is,</p>
 <p><span class="math display">\[T[i,j] = a_j \diamond \dots \diamond a_{j+2^i-1}.\]</span></p>
-<p>We can see that <span class="math inline">\(i\)</span> only needs to go from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n \rfloor\)</span>; above that and the stored ranges would be larger than
+<p>We can see that <span class="math inline">\(i\)</span> only needs to go from <span class="math inline">\(0\)</span> up to <span class="math inline">\(\lfloor \lg n
+\rfloor\)</span>; above that and the stored ranges would be larger than
 the entire sequence. So this table has size <span class="math inline">\(O(n \lg n)\)</span>.</p>
 <p>Two important questions remain: how do we compute this table in the
 first place? And once we have it, how do we use it to answer arbitrary
@@ -134,7 +137,8 @@ range <span class="math inline">\([l,r]\)</span> as follows:</p>
 is, the largest <span class="math inline">\(k\)</span> such that <span class="math inline">\(2^k \leq r - l + 1\)</span>. We can compute
 this simply as <span class="math inline">\(\lfloor \lg (r - l + 1) \rfloor\)</span>.</p></li>
 <li><p>Look up two range values of length <span class="math inline">\(2^k\)</span>, one for the range which begins at <span class="math inline">\(l\)</span>
-(that is, <span class="math inline">\(T[k, l]\)</span>) and one for the range which ends at <span class="math inline">\(r\)</span> (that is, <span class="math inline">\(T[k, r - 2^k + 1]\)</span>). These two ranges overlap; but because the combining
+(that is, <span class="math inline">\(T[k, l]\)</span>) and one for the range which ends at <span class="math inline">\(r\)</span> (that is, <span class="math inline">\(T[k, r -
+2^k + 1]\)</span>). These two ranges overlap; but because the combining
 operation is idempotent, combining the values of the ranges yields
 the value for our desired range <span class="math inline">\([l,r]\)</span>.</p>
 <p>This is why we require the combining operation to be idempotent:
