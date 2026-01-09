@@ -7,8 +7,57 @@
         <description><![CDATA[Brent Yorgey's academic blog]]></description>
         <atom:link href="http://byorgey.github.io/blog/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Mon, 10 Nov 2025 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Fri, 09 Jan 2026 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Disco Live!</title>
+    <link>http://byorgey.github.io/blog/posts/2026/01/09/disco-live.html</link>
+    <description><![CDATA[
+<h1>Disco Live!</h1>
+
+<div class="info">
+  Posted on January  9, 2026
+  
+  
+  <br />
+  Tagged <a title="All pages tagged &#39;disco&#39;." href="/tag/disco.html" rel="tag">disco</a>, <a title="All pages tagged &#39;web&#39;." href="/tag/web.html" rel="tag">web</a>, <a title="All pages tagged &#39;WASM&#39;." href="/tag/WASM.html" rel="tag">WASM</a>, <a title="All pages tagged &#39;UI&#39;." href="/tag/UI.html" rel="tag">UI</a>, <a title="All pages tagged &#39;teaching&#39;." href="/tag/teaching.html" rel="tag">teaching</a>, <a title="All pages tagged &#39;discrete&#39;." href="/tag/discrete.html" rel="tag">discrete</a>, <a title="All pages tagged &#39;math&#39;." href="/tag/math.html" rel="tag">math</a>, <a title="All pages tagged &#39;Haskell&#39;." href="/tag/Haskell.html" rel="tag">Haskell</a>
+  
+</div>
+
+<section>
+<p>A couple months ago, <a href="https://byorgey.github.io/blog/posts/2025/11/10/disco-web-ui.html">I asked for
+help</a>
+creating a web interface for
+<a href="https://github.com/disco-lang/disco">Disco</a>, a
+student-oriented programming language for teaching functional
+programming and discrete mathematics. I am very happy to report that
+<a href="https://apfelmus.nfshost.com/">Heinrich Apfelmus</a> responded to the
+call, and this is the result:</p>
+<p><a href="https://disco-lang.github.io/disco-live/">Disco Live!</a></p>
+<p>It’s fairly bare bones at the moment, but it’s a fantastic place to
+start, and far more than I would have been able to accomplish in a few
+weeks. Give it a try, and let me know of any bugs you find! You are
+also very welcome to contribute fixes, features, etc. on GitHub:</p>
+<ul>
+<li><a href="https://github.com/disco-lang/disco-live">The disco-live repo</a></li>
+<li><a href="https://github.com/disco-lang/disco">The repo for disco itself</a></li>
+</ul>
+<p>If you want to know more about Disco, you can <a href="http://ozark.hendrix.edu/~yorgey/forest/yorgey-disco-2023/index.xml">read a paper about it
+here</a>,
+or <a href="https://disco-lang.readthedocs.io/en/latest/">read the language documentation</a>.</p>
+
+</section>
+
+<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
+<section id="isso-thread"  data-title="Disco Live!" >
+  <noscript>Javascript needs to be activated to view comments.</noscript>
+</section>
+
+]]></description>
+    <pubDate>Fri, 09 Jan 2026 00:00:00 UT</pubDate>
+    <guid>http://byorgey.github.io/blog/posts/2026/01/09/disco-live.html</guid>
+    <dc:creator>Brent Yorgey</dc:creator>
+</item>
+<item>
     <title>Call for collaboration: Disco web UI</title>
     <link>http://byorgey.github.io/blog/posts/2025/11/10/disco-web-ui.html</link>
     <description><![CDATA[
@@ -1471,314 +1520,6 @@ Ryabko, Boris Yakovlevich. 1989. <span>“A Fast on-Line Code.”</span> In <em>
 ]]></description>
     <pubDate>Thu, 23 Jan 2025 00:00:00 UT</pubDate>
     <guid>http://byorgey.github.io/blog/posts/2025/01/23/Fenwick.html</guid>
-    <dc:creator>Brent Yorgey</dc:creator>
-</item>
-<item>
-    <title>Competitive Programming in Haskell: stacks, queues, and monoidal sliding windows</title>
-    <link>http://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html</link>
-    <description><![CDATA[
-<h1>Competitive Programming in Haskell: stacks, queues, and monoidal sliding windows</h1>
-
-<div class="info">
-  Posted on November 27, 2024
-  
-  
-  <br />
-  Tagged <a title="All pages tagged &#39;challenge&#39;." href="/tag/challenge.html" rel="tag">challenge</a>, <a title="All pages tagged &#39;Kattis&#39;." href="/tag/Kattis.html" rel="tag">Kattis</a>, <a title="All pages tagged &#39;stack&#39;." href="/tag/stack.html" rel="tag">stack</a>, <a title="All pages tagged &#39;queue&#39;." href="/tag/queue.html" rel="tag">queue</a>, <a title="All pages tagged &#39;sliding window&#39;." href="/tag/sliding%20window.html" rel="tag">sliding window</a>, <a title="All pages tagged &#39;monoid&#39;." href="/tag/monoid.html" rel="tag">monoid</a>, <a title="All pages tagged &#39;competitive programming&#39;." href="/tag/competitive%20programming.html" rel="tag">competitive programming</a>, <a title="All pages tagged &#39;haskell&#39;." href="/tag/haskell.html" rel="tag">haskell</a>
-  
-</div>
-
-<section>
-<p>Suppose we have a list of items of length <span class="math inline">\(n\)</span>, and we want to
-consider <em>windows</em> (<em>i.e.</em> contiguous subsequences) of width <span class="math inline">\(w\)</span>
-within the list.</p>
-<p><span class="sidenote-wrapper"><label for="sn-0" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-0" class="margin-toggle"/><span class="marginnote">A list of numbers, with contiguous size-3 windows highlighted<br />
-<br />
-</span></span></p>
-<figure>
-<img src="/diagrams/94037f79b5ed0048.svg" />
-</figure>
-<p>We can compute the <em>sum</em> of each window by brute
-force in <span class="math inline">\(O(nw)\)</span> time, by simply generating the list of all the
-windows and then summing each. But, of course, we can do better: keep
-track of the sum of the current window; every time we slide the window
-one element to the right we can add the new element that enters the
-window on the right and subtract the element that falls off the window
-to the left. Using this “sliding window” technique, we can compute the
-sum of every window in only <span class="math inline">\(O(n)\)</span> total time instead of <span class="math inline">\(O(nw)\)</span>.</p>
-<p>How about finding the <em>maximum</em> of every window? Of course the brute
-force <span class="math inline">\(O(nw)\)</span> algorithm still works, but doing it in only <span class="math inline">\(O(n)\)</span> is
-considerably trickier! We can’t use the same trick as we did for sums
-since there’s no way to “subtract” the element falling off the left.
-This really comes down to the fact that addition forms a <em>group</em>
-(<em>i.e.</em> a monoid-with-inverses), but <code>max</code> does not. So more
-generally, the question is: how can we compute a <em>monoidal</em> summary
-for every window in only <span class="math inline">\(O(n)\)</span> time?</p>
-<p>Today I want to show you how to solve this problem using one of my
-favorite competitive programming tricks, which fits beautifully in a
-functional context. Along the way we’ll also see how to implement
-simple yet efficient functional queues.</p>
-<section id="stacks" class="level2">
-<h2>Stacks</h2>
-<p>Before we get to queues, we need to take a detour through stacks.
-Stacks in Haskell are pretty boring. We can just use a list, with the
-front of the list corresponding to the top of the stack. However, to
-make things more interesting—and because it will come in very handy
-later—we’re going to implement <em>monoidally-annotated</em> stacks. Every
-element on the stack will have a <em>measure</em>, which is a value from some
-monoid <code>m</code>. We then want to be able to query any stack for the total
-of all the measures in <span class="math inline">\(O(1)\)</span>. For example, perhaps we want to always
-be able to find the sum or max of all the elements on a stack.</p>
-<p>If we wanted to implement stacks annotated by a <em>group</em>, we could just
-do something like this:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">GroupStack</span> g a <span class="ot">=</span> <span class="dt">GroupStack</span> (a <span class="ot">-&gt;</span> g) <span class="op">!</span>g [a]</span></code></pre></div>
-<p>That is, a <code>GroupStack</code> stores a <em>measure function</em>, which assigns to
-each element of type <code>a</code> a measure of type <code>g</code> (which is intended to
-be a <code>Group</code>); a value of type <code>g</code> representing the sum (via the group
-operation) of measures of all elements on the stack; and the actual
-stack itself. To push, we would just compute the measure of the new element
-and add it to the cached <code>g</code> value; to pop, we subtract the measure of
-the element being popped, something like this:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">push ::</span> a <span class="ot">-&gt;</span> <span class="dt">GroupStack</span> g a <span class="ot">-&gt;</span> <span class="dt">GroupStack</span> g a</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>push a (<span class="dt">GroupStack</span> f g as) <span class="ot">=</span> <span class="dt">GroupStack</span> f (f a <span class="op">&lt;&gt;</span> g) (a<span class="op">:</span>as)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">pop ::</span> <span class="dt">GroupStack</span> g a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (a, <span class="dt">GroupStack</span> g a)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>pop (<span class="dt">GroupStack</span> f g as) <span class="ot">=</span> <span class="kw">case</span> as <span class="kw">of</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  [] <span class="ot">-&gt;</span> <span class="dt">Nothing</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  (a<span class="op">:</span>as&#39;) <span class="ot">-&gt;</span> <span class="dt">Just</span> (a, <span class="dt">GroupStack</span> f (inv (f a) <span class="op">&lt;&gt;</span> g) as&#39;)</span></code></pre></div>
-<p>But this won’t work for a monoid, of course. The problem is <code>pop</code>, where
-we can’t just subtract the measure for the element being
-popped. Instead, we need to be able to <em>restore</em> the measure of a
-previous stack. Hmmm… sounds like we might be able to use… a stack! We
-could just store a stack of measures alongside the stack of elements;
-even better is to store a stack of <em>pairs</em>. That is, each element on
-the stack is paired with an annotation representing the sum of all the
-measures at or below it. Here, then, is our representation of
-monoidally-annotated stacks:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE BangPatterns #-}</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Stack</span> <span class="kw">where</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Stack</span> m a <span class="ot">=</span> <span class="dt">Stack</span> (a <span class="ot">-&gt;</span> m) <span class="op">!</span><span class="dt">Int</span> [(m, a)]</span></code></pre></div>
-<p>A <code>Stack m a</code> stores three things:</p>
-<ol type="1">
-<li><p>A measure function of type <code>a -&gt; m</code>.<span class="sidenote-wrapper"><label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle"/><span class="sidenote">Incidentally, what if we want
-to be able to specify an arbitrary measure for each element, and
-even give different measures to the same element at different
-times? Easy: just use <code>(m,a)</code> pairs as elements, and use <code>fst</code> as
-the measure function.<br />
-<br />
-</span></span></p></li>
-<li><p>An <code>Int</code> representing the size of the stack. This is not strictly
-necessary, especially since one could always just use a monoidal
-annotation to keep track of the size; but wanting the size is so
-ubiquitous that it seems convenient to just include it as a special
-case.</p></li>
-<li><p>The aforementioned stack of (annotation, element) pairs.</p></li>
-</ol>
-<p>Note that we cannot write a <code>Functor</code> instance for <code>Stack m</code>, since
-<code>a</code> occurs contravariantly in <code>(a -&gt; m)</code>. But this makes sense: if we
-change all the <code>a</code> values, the cached measures would no longer be valid.</p>
-<p>When creating a new, empty stack, we have to specify the measure
-function; to get the measure of a stack, we just look up the measure
-on top, or return <code>mempty</code> for an empty stack.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">new ::</span> (a <span class="ot">-&gt;</span> m) <span class="ot">-&gt;</span> <span class="dt">Stack</span> m a</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>new f <span class="ot">=</span> <span class="dt">Stack</span> f <span class="dv">0</span> []</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ot">size ::</span> <span class="dt">Stack</span> m a <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>size (<span class="dt">Stack</span> _ n _) <span class="ot">=</span> n</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ot">measure ::</span> <span class="dt">Monoid</span> m <span class="ot">=&gt;</span> <span class="dt">Stack</span> m a <span class="ot">-&gt;</span> m</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>measure (<span class="dt">Stack</span> _ _ as) <span class="ot">=</span> <span class="kw">case</span> as <span class="kw">of</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  [] <span class="ot">-&gt;</span> <span class="fu">mempty</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  (m, _) <span class="op">:</span> _ <span class="ot">-&gt;</span> m</span></code></pre></div>
-<p>Now let’s implement <code>push</code> and <code>pop</code>. Both are relatively
-straightforward.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">push ::</span> <span class="dt">Monoid</span> m <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Stack</span> m a <span class="ot">-&gt;</span> <span class="dt">Stack</span> m a</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>push a s<span class="op">@</span>(<span class="dt">Stack</span> f n as) <span class="ot">=</span> <span class="dt">Stack</span> f (n <span class="op">+</span> <span class="dv">1</span>) ((f a <span class="op">&lt;&gt;</span> measure s, a) <span class="op">:</span> as)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ot">pop ::</span> <span class="dt">Stack</span> m a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (a, <span class="dt">Stack</span> m a)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>pop (<span class="dt">Stack</span> f n as) <span class="ot">=</span> <span class="kw">case</span> as <span class="kw">of</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  [] <span class="ot">-&gt;</span> <span class="dt">Nothing</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  (_, a) <span class="op">:</span> as&#39; <span class="ot">-&gt;</span> <span class="dt">Just</span> (a, <span class="dt">Stack</span> f (n <span class="op">-</span> <span class="dv">1</span>) as&#39;)</span></code></pre></div>
-<p>Note that if we care about using <em>non-commutative</em> monoids,
-in the implementation of <code>push</code> we have a choice to make between <code>f a &lt;&gt; measure s</code> and <code>measure s &lt;&gt; f a</code>. The former seems nicer to me,
-since it keeps the measures “in the same order” as the list
-representing the stack. For example, if we push a list of elements
-onto a stack via <code>foldr</code>, using the measure function <code>(:[])</code> that injects
-each element into the monoid of lists, the resulting <code>measure</code> is just
-the original list:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>measure <span class="op">.</span> <span class="fu">foldr</span> push (new (<span class="op">:</span>[])) <span class="op">==</span> <span class="fu">id</span></span></code></pre></div>
-<p>And more generally, for any measure function <code>f</code>, we have</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>measure <span class="op">.</span> <span class="fu">foldr</span> push (new f) <span class="op">==</span> <span class="fu">foldMap</span> f</span></code></pre></div>
-<p>Finally, we are going to want a function to <em>reverse</em> a stack, which
-is a one-liner:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">reverse</span><span class="ot"> ::</span> <span class="dt">Monoid</span> m <span class="ot">=&gt;</span> <span class="dt">Stack</span> m a <span class="ot">-&gt;</span> <span class="dt">Stack</span> m a</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">reverse</span> (<span class="dt">Stack</span> f _ as) <span class="ot">=</span> foldl&#39; (<span class="fu">flip</span> push) (new f) (<span class="fu">map</span> <span class="fu">snd</span> as)</span></code></pre></div>
-<p>That is, to reverse a stack, we extract the elements and then use
-<code>foldl'</code> to push the elements one at a time onto a new stack using the
-same measure function.</p>
-<p>There is a <a href="https://github.com/byorgey/comprog-hs/blob/master/Stack.hs">bit more code you can find on
-GitHub</a>,
-such as <code>Show</code> and <code>Eq</code> instances.</p>
-</section>
-<section id="queues" class="level2">
-<h2>Queues</h2>
-<p>Now that we have monoidally-annotated stacks under our belt, let’s
-turn to queues. And here’s where my favorite trick is revealed: we
-can implement a queue out of two stacks, so that enqueue and dequeue
-run in <span class="math inline">\(O(1)\)</span> amortized time; and if we use monoidally-annotated
-stacks, we get monoidally-annotated queues for free!</p>
-<p>First, some imports.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE ImportQualifiedPost #-}</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Queue</span> <span class="kw">where</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Bifunctor</span> (second)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Stack</span> (<span class="dt">Stack</span>)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Stack</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">Stack</span></span></code></pre></div>
-<p>A <code>Queue m a</code> just consists of two stacks, one for the front and one
-for the back. To create a <code>new</code> queue, we just create two new stacks;
-to get the <code>size</code> of a queue, we just add the sizes of the stacks; to
-get the <code>measure</code> of a queue, we just combine the measures of the
-stacks. Easy peasy.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">CommutativeMonoid</span> <span class="ot">=</span> <span class="dt">Monoid</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Queue</span> m a <span class="ot">=</span> <span class="dt">Queue</span> {<span class="ot">getFront ::</span> <span class="dt">Stack</span> m a,<span class="ot"> getBack ::</span> <span class="dt">Stack</span> m a}</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ot">new ::</span> (a <span class="ot">-&gt;</span> m) <span class="ot">-&gt;</span> <span class="dt">Queue</span> m a</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>new f <span class="ot">=</span> <span class="dt">Queue</span> (Stack.new f) (Stack.new f)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="ot">size ::</span> <span class="dt">Queue</span> m a <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>size (<span class="dt">Queue</span> front back) <span class="ot">=</span> Stack.size front <span class="op">+</span> Stack.size back</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="ot">measure ::</span> <span class="dt">CommutativeMonoid</span> m <span class="ot">=&gt;</span> <span class="dt">Queue</span> m a <span class="ot">-&gt;</span> m</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>measure (<span class="dt">Queue</span> front back) <span class="ot">=</span> Stack.measure front <span class="op">&lt;&gt;</span> Stack.measure back</span></code></pre></div>
-<p>Note the restriction to <em>commutative</em> monoids, since the queue
-elements are stored in different orders in the front and back stacks.
-If we really cared about making this work with non-commutative
-monoids, we would have to make two different <code>push</code> methods for the
-front and back stacks, to combine the measures in opposite orders.
-That just doesn’t seem worth it. But if you have a good example
-requiring the use of a queue annotated by a non-commutative monoid,
-I’d love to hear it!</p>
-<p>Now, to <code>enqueue</code>, we just push the new element on the back:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">enqueue ::</span> <span class="dt">CommutativeMonoid</span> m <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Queue</span> m a <span class="ot">-&gt;</span> <span class="dt">Queue</span> m a</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>enqueue a (<span class="dt">Queue</span> front back) <span class="ot">=</span> <span class="dt">Queue</span> front (Stack.push a back)</span></code></pre></div>
-<p>Dequeueing is the magic bit that makes everything work. If there are
-any elements in the front stack, we can just pop from there.
-Otherwise, we need to first reverse the back stack into the front
-stack. This means <code>dequeue</code> may occasionally take <span class="math inline">\(O(n)\)</span> time, but it’s
-still <span class="math inline">\(O(1)\)</span> amortized.<span class="sidenote-wrapper"><label for="sn-2" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-2" class="margin-toggle"/><span class="sidenote">The easiest way to see this is to note that
-every element is touched exactly three times: once when it is pushed
-on the back; once when it is transferred from the back to the front;
-and once when it is popped from the front. So, overall, we do <span class="math inline">\(O(1)\)</span>
-work per element.<br />
-<br />
-</span></span></p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">dequeue ::</span> <span class="dt">CommutativeMonoid</span> m <span class="ot">=&gt;</span> <span class="dt">Queue</span> m a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (a, <span class="dt">Queue</span> m a)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>dequeue (<span class="dt">Queue</span> front back)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> Stack.size front <span class="op">==</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> Stack.size back <span class="op">==</span> <span class="dv">0</span> <span class="ot">=</span> <span class="dt">Nothing</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> Stack.size front <span class="op">==</span> <span class="dv">0</span> <span class="ot">=</span> dequeue (<span class="dt">Queue</span> (Stack.reverse back) front)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> second (\front&#39; <span class="ot">-&gt;</span> <span class="dt">Queue</span> front&#39; back) <span class="op">&lt;$&gt;</span> Stack.pop</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  front</span></code></pre></div>
-<p>Finally, for convenience, we can make a function <code>drop1</code> which just
-dequeues an item from the front of a queue and throws it away.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">drop1 ::</span> <span class="dt">CommutativeMonoid</span> m <span class="ot">=&gt;</span> <span class="dt">Queue</span> m a <span class="ot">-&gt;</span> <span class="dt">Queue</span> m a</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>drop1 q <span class="ot">=</span> <span class="kw">case</span> dequeue q <span class="kw">of</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Nothing</span> <span class="ot">-&gt;</span> q</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Just</span> (_, q&#39;) <span class="ot">-&gt;</span> q&#39;</span></code></pre></div>
-<p>This “banker’s queue” method of building a queue out of two stacks is
-discussed in <em>Purely Functional Data Structures</em> by Okasaki, though I
-don’t think he was the first to come up with the idea. It’s also
-possible to use some clever tricks to <a href="https://www.hedonisticlearning.com/posts/global-rebuilding-coroutines-and-defunctionalization.html">make both <code>enqueue</code> and
-<code>dequeue</code> take <span class="math inline">\(O(1)\)</span> time in the <em>worst</em>
-case</a>.
-In a future post I’d like to do some benchmarking to compare various
-queue implementations (<em>i.e.</em> banker’s queues, <code>Data.Sequence</code>,
-circular array queues built on top of <code>STArray</code>). At least
-anecdotally, in solving some sliding window problems, banker’s queues
-seem quite fast so far.</p>
-</section>
-<section id="sliding-windows" class="level2">
-<h2>Sliding windows</h2>
-<p>I hope you can see how this solves the initial motivating problem: to
-find <em>e.g.</em> the max of a sliding window, we can just put the elements
-in a monoidally-annotated queue, enqueueing and dequeueing one element
-every time we slide the window over.<span class="sidenote-wrapper"><label for="sn-3" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-3" class="margin-toggle"/><span class="sidenote">More generally, of course, it
-doesn’t even matter if the left and right ends of the window stay
-exactly in sync; we can enqueue and dequeue as many times as we want.<br />
-<br />
-</span></span> The following <code>windows</code> function computes the monoidal sum <code>foldMap f window</code> for each window of width <span class="math inline">\(w\)</span>, in only <span class="math inline">\(O(n)\)</span> time
-overall.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">windows ::</span> <span class="dt">CommutativeMonoid</span> m <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> m) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [m]</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>windows w f as <span class="ot">=</span> go startQ rest</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  (start, rest) <span class="ot">=</span> <span class="fu">splitAt</span> w as</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  startQ <span class="ot">=</span> foldl&#39; (<span class="fu">flip</span> enqueue) (new f) start</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  go q as <span class="ot">=</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    measure q <span class="op">:</span> <span class="kw">case</span> as <span class="kw">of</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>      [] <span class="ot">-&gt;</span> []</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>      a <span class="op">:</span> as <span class="ot">-&gt;</span> go (enqueue a (drop1 q)) as</span></code></pre></div>
-<p>“But…maximum and minimum do not form monoids, only semigroups!”
-I hear you cry. Well, we can just adjoin special positive or negative
-infinity elements as needed, like so:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Max</span> a <span class="ot">=</span> <span class="dt">NegInf</span> <span class="op">|</span> <span class="dt">Max</span> a <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Semigroup</span> (<span class="dt">Max</span> a) <span class="kw">where</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">NegInf</span> <span class="op">&lt;&gt;</span> a <span class="ot">=</span> a</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  a <span class="op">&lt;&gt;</span> <span class="dt">NegInf</span> <span class="ot">=</span> a</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Max</span> a <span class="op">&lt;&gt;</span> <span class="dt">Max</span> b <span class="ot">=</span> <span class="dt">Max</span> (<span class="fu">max</span> a b)</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Monoid</span> (<span class="dt">Max</span> a) <span class="kw">where</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">NegInf</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Min</span> a <span class="ot">=</span> <span class="dt">Min</span> a <span class="op">|</span> <span class="dt">PosInf</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Semigroup</span> (<span class="dt">Min</span> a) <span class="kw">where</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">PosInf</span> <span class="op">&lt;&gt;</span> a <span class="ot">=</span> a</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  a <span class="op">&lt;&gt;</span> <span class="dt">PosInf</span> <span class="ot">=</span> a</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Min</span> a <span class="op">&lt;&gt;</span> <span class="dt">Min</span> b <span class="ot">=</span> <span class="dt">Min</span> (<span class="fu">min</span> a b)</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Monoid</span> (<span class="dt">Min</span> a) <span class="kw">where</span></span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">PosInf</span></span></code></pre></div>
-<p>Now we can write, for example, <code>windows 3 Max [1,4,2,8,9,4,4,6]</code> which
-yields <code>[Max 4, Max 8, Max 9, Max 9, Max 9, Max 6]</code>, the maximums of
-each 3-element window.</p>
-</section>
-<section id="challenges" class="level2">
-<h2>Challenges</h2>
-<p>If you’d like to try solving some problems using the techniques from this
-blog post, I can recommend the following (generally in order of difficulty):</p>
-<ul>
-<li><a href="https://open.kattis.com/problems/tiredterry">Tired Terry</a></li>
-<li><a href="https://open.kattis.com/problems/treeshopping">Tree Shopping</a></li>
-<li><a href="https://open.kattis.com/problems/einvigi">Einvígi</a></li>
-<li><a href="https://open.kattis.com/problems/hockeyfans">Hockey Fans</a></li>
-</ul>
-<p>In a future post I’ll walk through my solution to <a href="https://open.kattis.com/problems/hockeyfans">Hockey
-Fans</a>. And here’s another
-couple problems along similar lines; unlike the previous problems I am
-not so sure how to solve these in a nice way. I may write about them
-in the future.</p>
-<ul>
-<li><a href="https://open.kattis.com/problems/martiandna">Martian DNA</a></li>
-<li><a href="https://open.kattis.com/problems/slidecount">Slide Count</a></li>
-</ul>
-</section>
-
-</section>
-
-<script data-isso="https://comments.byorgey.com/" src="https://comments.byorgey.com/js/embed.min.js"></script>
-<section id="isso-thread"  data-title="Competitive Programming in Haskell: stacks, queues, and monoidal sliding windows" >
-  <noscript>Javascript needs to be activated to view comments.</noscript>
-</section>
-
-]]></description>
-    <pubDate>Wed, 27 Nov 2024 00:00:00 UT</pubDate>
-    <guid>http://byorgey.github.io/blog/posts/2024/11/27/stacks-queues.html</guid>
     <dc:creator>Brent Yorgey</dc:creator>
 </item>
 
