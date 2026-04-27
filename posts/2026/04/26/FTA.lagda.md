@@ -11,41 +11,48 @@ students.  Having just [taught my Discrete Math students the
 Fundamental Theorem of
 Arithmetic](http://ozark.hendrix.edu/~yorgey/forest/00EG/index.xml), I
 wondered whether formalizing^[I mean formalizing it *from scratch*: of
-course, the FTA is [already in the Agda standard library](XXX).  As I later
+course, the FTA is [already in the Agda standard library](https://agda.github.io/agda-stdlib/v2.3/Data.Nat.Primality.Factorisation.html).  As I later
 learned, it was added to the standard library by [Nathan van Doorn,
 aka Taneb](https://github.com/Taneb).] it in
 [Agda](https://wiki.portal.chalmers.se/agda/pmwiki.php?n=Main.HomePage)
 could make a nice project.
 
+XXX link to
+https://agda.readthedocs.io/en/latest/getting-started/a-taste-of-agda.html
+, other Agda documentation?
+
 So I decided to spend about an hour trying to prove the FTA in Agda,
 to gauge the level of the project.  At the end of an hour, I had
-learned two things: (1) this was not at all an appropriate project for
-my students; (2) I was not going to be able to stop until I
-finished the proof myself.
+learned two things: (1) this was in no way an appropriate project for
+my students (who have only had a few weeks' practice with Agda); (2) I
+was not going to be able to stop until I finished the proof myself.
 
-XXX finished it completely from scratch (not using anything from
-stdlib, without looking up any reference material), based on my
-experience in Agda, knowledge of proofs, tricks I've picked up along
-the way e.g. from Conor + elsewhere.  Some things have same names as
-in [stdlib](XXX), but a lot of things don't, since I either didn't
-know the stdlib name and made up my own, or in a few cases I do know
-the stdlib name but don't like it, so made up my own anyway.
+Over the next week or so, I finished the proof completely from
+scratch—without using anything from the standard library, and without
+looking up any reference material.  I based it only on my experience
+in Agda, knowledge of the relevant proofs on an informal level, and Agda
+tricks I've picked up along the way XXX from Conor and elsewhere.
 
-XXX thought it could be useful as an intermediate-level reference:
-you've learned some basic Agda, have basic familiarity with Curry-Howard, but want to see a fully worked-out
-medium-sized proof with some commentary.
+I decided to publish the proof, with extra commentary, in the hopes
+that it can be useful as an intermediate-level reference.  That is,
+perhaps you've learned some basic Agda and have some basic familiarity
+with the Curry-Howard correspondence, but would benefit from seeing an
+example of a fully worked out, medium-sized proof.
 
-XXX if you want an exercise, you can download version with holes XXX.
-Try filling in the proofs as you go along, before reading each section.
+This blog post XXX available as literate Agda.  XXX There is also an
+alternative version of this blog post with holes.  Try filling in the
+proofs as you go along, before reading each section.
 
 ## The Fundamental Theorem of Arithmetic
 
-XXX state theorem
+The fundamental theorem of arithmetic states that any natural number
+$n \geq 1$ can be written as a product of zero or more primes, and
+moreover that this product is unique up to permutation.
 
-XXX we are only going to prove *existence* part.  Uniqueness might be
-for later.
-
-XXX constructive proof.  Can also be seen as a *formally verified
+For now, we are only going to prove *existence* part (I may write
+another blog post with the uniqueness proof later).  Since a *constructive*
+existence proof is really an algorithm for constructing the thing that
+is claimed to exist, this can also be seen as a *formally verified
 factorization program*: put any number in, get a prime factorization
 out.  Writing a prime factorization program is not hard, of course;
 it's the formal verification part that is particularly interesting!
@@ -66,7 +73,7 @@ variable
 
 Since we're building this completely from scratch, we start with some
 types to represent basic logical building blocks (via the
-[Curry-Howard correspondence](XXX)).  First, the "top" type `⊤` to
+[Curry-Howard correspondence](https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence)).  First, the "top" type `⊤` to
 stand for truth, *i.e.* a proposition with trivial evidence:
 
 ```agda
@@ -74,14 +81,20 @@ data ⊤ : Set where
   tt : ⊤
 ```
 
+Note that some things we define here—such as `⊤`—will have the same
+names as they do in the Agda standard library.  However, many things
+won't, since I either didn't know the standard name and made up my
+own, or (in a few cases) did know the standard name but didn't like
+it, and made up my own anyway.
+
 Next, the "bottom" type `⊥` with no constructors, representing
 falsity, along with a corresponding elimination principle, `absurd`.  The elimination
 principle says that anything follows from `⊥` ("*[ex falso
-quodlibet](XXX)*"), and is implemented using Agda's absurd pattern,
+quodlibet](https://en.wikipedia.org/wiki/Principle_of_explosion)*"), and is implemented using Agda's absurd pattern,
 written `()`.  If Agda can tell that there are no possible
 constructors which could give rise to a value of a certain type, we
 can pattern-match on it with `()`, and are then absolved of having to
-provide a right-hand side for the definition.
+provide a right-hand side for the definition in that case.
 
 ```agda
 data ⊥ : Set where
@@ -90,7 +103,7 @@ absurd : ⊥ → A
 absurd ()
 ```
 
-We can then define negation as an implication to `⊥`.
+We can now define negation as an implication to `⊥`.
 
 ```agda
 ¬ : Set → Set
@@ -139,8 +152,9 @@ data _⊎_ (A B : Set) : Set where
 
 The standard equality (*aka* identity *aka* path) type, with a single
 constructor `refl` that witnesses when its two arguments are
-identical.  It still seems magical to me that this seemingly
-too-simple definition encapsulates XXX   We also define a convenient
+identical.^[It still seems somewhat magical to me that this seemingly
+too-simple definition encapsulates everything we want in an equality
+relation (well, [almost everything](https://martinescardo.github.io/TypeTopology/UnivalenceFromScratch.html)).]  We also define a convenient
 synonym for inequality.
 
 ```agda
@@ -153,7 +167,7 @@ x ≢ y = ¬ (x ≡ y)
 ```
 
 Besides reflexivity, equality enjoys various properties that we will
-need: symmetry, transitivity, and congruence (we can apply any
+need: symmetry, transitivity, and congruence (*i.e.*, we can apply any
 function to both sides of an equation).
 
 ```agda
@@ -169,7 +183,33 @@ cong _ refl = refl
 
 Since we will spend a good amount of time reasoning about equality, it
 is worthwhile building up some machinery for writing more readable
-equality proofs.
+equality proofs.  Instead of writing, say,
+```text
+trans p (trans q (trans (sym r) s))
+```
+we will be able to instead write equality proofs like so:
+```text
+begin
+  v      ≡[ p ⟩≡
+  w      ≡[ q ⟩≡
+  x      ≡⟨ r ]≡
+  y      ≡[ s ⟩≡
+  z      ∎
+```
+This notation is one of my favorite applications of Agda's [mixfix
+operator syntax](https://agda.readthedocs.io/en/latest/language/mixfix-operators.html), and has several benefits:
+
+1. We can avoid nested parentheses when chaining uses of transitivity.
+2. We can automatically apply symmetry by using a left-pointing
+   instead of right-pointing operator.
+3. We get to explicitly mention (and have Agda check for us) all the
+   intermediate values, making it easier to write the proof
+   incrementally, and much easier for humans to read.
+
+This is one of the places where I deliberately chose different
+operator names than the standard library, which uses `_≡⟨_⟩_` and
+`_≡⟨_⟨_`.  The operator names I decided to use are [inspired by Conor
+McBride](https://personal.cis.strath.ac.uk/conor.mcbride/PolyTest.pdf).  I just like the way they look better.
 
 ```agda
 infix 1 begin_
@@ -187,7 +227,15 @@ _ ≡⟨ y≡x ]≡ y≡z = trans (sym y≡x) y≡z
 infixr 5 _∎
 _∎ : (x : A) → x ≡ x
 _ ∎ = refl
+```
 
+Finally, a few [Applicative](XXX)-like operators for more conveniently
+writing common forms of congruence.  For example, instead of writing
+`cong f x≡y`, we can write `f $≡ x≡y`; or to use congruence on both
+arguments of a two-place function at once, we can write `f $≡ x≡y ≡$≡
+z≡w`.  (These operators were also inspired by Conor.)
+
+```agda
 infixl 4 _$≡_
 _$≡_ : (f : A → B) → {x y : A} → x ≡ y → f x ≡ f y
 f $≡ x≡y = cong f x≡y
@@ -203,40 +251,102 @@ f≡g ≡$≡ x≡y = trans (f≡g ≡$ _) (_ $≡ x≡y)
 
 ## Natural numbers
 
+Of course, we will need a type to represent the natural numbers.  We
+can tell Agda that our natural number type should correspond to its
+built-in notion of natural numbers, so we can use numeric literals
+like `2 : ℕ` instead of having to write `suc (suc zero)`.
+
 ```agda
 data ℕ : Set where
   zero : ℕ
   suc : ℕ → ℕ
 {-# BUILTIN NATURAL ℕ #-}
+```
 
---------------------------------------------------
--- Deciding
+XXX for any data type, often need to know that XXX at least in a
+vanilla data type with no quotients, constructors are
+(1) disjoint, meaning that different constructors always generate
+different values (aka it's a contradiction to have  an equality
+between values built with different constructors); (2) injective, i.e. if we have an equality between values built
+with the same constructor, we can decompose it into equalities between
+the components.   XXX see http://strictlypositive.org/concon.ps.gz
+XXX can prove both simultaneously using a property called "no
+confusion".  XXX Well-known in the literature.
 
+There is a
+XXX In general I like the pattern of defining a *type* starting with a
+capital letter, then a *term* that returns that type starting with a
+lowercase letter.  We will use this pattern later too (DivAlg/divAlg, FTA/fta).  Sometimes just
+for convenience.  In this case, the type is actually defined via some
+nontrivial computation.
+
+XXX For natural numbers `m` and `n`, the type `NoConf m n` should be
+thought of as the type of evidence that `m ≡ n`, based on looking at
+one level of constructor XXX.  If `m` and `n` have different
+constructors, then no evidence can possibly show that they are equal,
+so `NoConf m n = ⊥` in that case.  If `m` and `n` are both zero, then
+they are evidently equal, so `NoConf 0 0 = ⊤`.  Otherwise, if `m` and
+`n` are both successors, `NoConf m n` reduces to a proof of equality
+between their predecessors.
+
+```agda
 NoConf : ℕ → ℕ → Set
 NoConf zero zero = ⊤
-NoConf zero (suc y) = ⊥
-NoConf (suc x) zero = ⊥
-NoConf (suc x) (suc y) = x ≡ y
+NoConf zero (suc n) = ⊥
+NoConf (suc m) zero = ⊥
+NoConf (suc m) (suc n) = m ≡ n
+```
 
-noConf : {x y : ℕ} → x ≡ y → NoConf x y
+Now we can prove the no confusion lemma for our natural number type,
+which says that `NoConf m n` always holds whenever `m ≡ n`.
+Since `m ≡ n`, we only have to deal with the cases when `m` and `n`
+are both zero or both a successor—but this also justifies assigning a
+type of `⊥` to the cases when the constructors do not match. `noConf`
+can therefore be used to strip `suc` from both sides of an equation,
+*or* to derive a contradiction when we have an equation between
+non-matching constructors.
+
+```agda
+noConf : {m n : ℕ} → m ≡ n → NoConf m n
 noConf {zero} refl = tt
-noConf {suc x} refl = refl
+noConf {suc m} refl = refl
+```
 
+We now show how to decide equality of natural numbers.  We can first
+define a simple type representing decidability in general: `Dec P` represents
+either a proof of `P`, or a proof of `¬ P`.  (The [standard library
+version is much more sophisticated](https://agda.github.io/agda-stdlib/v2.3/Relation.Nullary.Decidable.Core.html#1966), but this simple version will do
+just fine.)
+
+```agda
 data Dec (P : Set) : Set where
   yes : P → Dec P
   no : ¬ P → Dec P
+```
 
+We can then prove that for any natural numbers `x` and `y`, we can decide
+whether `x ≡ y`.  Notice the several different uses of the no
+confusion lemma.
+
+```agda
 _≟_ : (x y : ℕ) → Dec (x ≡ y)
 zero ≟ zero = yes refl
-zero ≟ suc y = no (λ ())
-suc x ≟ zero = no (λ ())
+zero ≟ suc y = no noConf
+suc x ≟ zero = no noConf
 suc x ≟ suc y with x ≟ y
 ... | yes x≡y = yes (suc $≡ x≡y)
 ... | no x≢y = no (λ sx≡sy → x≢y (noConf sx≡sy))
+```
 
---------------------------------------------------
--- Addition
+## Addition
 
+We next turn to defining addition (by pattern-matching on the
+left-hand argument), along with several properties of
+addition we will need: zero is a right identity for addition; we can
+pull out a `suc` from the right-hand argument; and addition is
+commutative, associative, and left-cancellable.
+
+```agda
 infixl 6 _+_
 _+_ : ℕ → ℕ → ℕ
 zero + y = y
@@ -261,10 +371,13 @@ zero +suc y = refl
 +-cancelˡ : (x y z : ℕ) → x + y ≡ x + z → y ≡ z
 +-cancelˡ zero y z x+y≡x+z = x+y≡x+z
 +-cancelˡ (suc x) y z x+y≡x+z = +-cancelˡ x y z (noConf x+y≡x+z)
+```
 
---------------------------------------------------
--- Multiplication
+## Multiplication
 
+Multiplication is next:
+
+```agda
 infixl 7 _*_
 _*_ : ℕ → ℕ → ℕ
 zero * y = zero
