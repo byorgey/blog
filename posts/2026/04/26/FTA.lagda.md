@@ -5,6 +5,8 @@ katex: true
 tags: agda,arithmetic,theorem,proof
 ---
 
+XXX use math mode instead of `tt` as much as possible
+
 A couple weeks ago, I was idly brainstorming potential final projects
 for my [Functional Programming](https://hendrix-cs.github.io/csci365/)
 students.  Having just [taught my Discrete Math students the
@@ -263,26 +265,26 @@ data ℕ : Set where
 {-# BUILTIN NATURAL ℕ #-}
 ```
 
-XXX for any data type, often need to know that XXX at least in a
-vanilla data type with no quotients, constructors are
-(1) disjoint, meaning that different constructors always generate
-different values (aka it's a contradiction to have  an equality
-between values built with different constructors); (2) injective, i.e. if we have an equality between values built
+### No confusion
+
+For our natural number type—and often, for any algebraic data type—we
+need to know that the constructors are
+
+1. *disjoint*, meaning that different constructors always generate
+different values (so it's a contradiction to have an equality
+between values built with different constructors); and
+2. *injective*, meaning that if we have an equality between values built
 with the same constructor, we can decompose it into equalities between
-the components.   XXX see http://strictlypositive.org/concon.ps.gz
-XXX can prove both simultaneously using a property called "no
-confusion".  XXX Well-known in the literature.
+the components.
 
-There is a
-XXX In general I like the pattern of defining a *type* starting with a
-capital letter, then a *term* that returns that type starting with a
-lowercase letter.  We will use this pattern later too (DivAlg/divAlg, FTA/fta).  Sometimes just
-for convenience.  In this case, the type is actually defined via some
-nontrivial computation.
+We can prove both of these simultaneously using a property called "no
+confusion".  This is XXX Well-known in the literature.
+http://strictlypositive.org/concon.ps.gz
+https://link.springer.com/chapter/10.1007/3-540-61780-9_64  Cornes + Terrasse
 
-XXX For natural numbers `m` and `n`, the type `NoConf m n` should be
+For natural numbers `m` and `n`, the type `NoConf m n` should be
 thought of as the type of evidence that `m ≡ n`, based on looking at
-one level of constructor XXX.  If `m` and `n` have different
+the top-level constructors of `m` and `n`.  If `m` and `n` have different
 constructors, then no evidence can possibly show that they are equal,
 so `NoConf m n = ⊥` in that case.  If `m` and `n` are both zero, then
 they are evidently equal, so `NoConf 0 0 = ⊤`.  Otherwise, if `m` and
@@ -312,7 +314,17 @@ noConf {zero} refl = tt
 noConf {suc m} refl = refl
 ```
 
-We now show how to decide equality of natural numbers.  We can first
+As an aside, this definition of the no confusion property uses a
+technique I like: defining a *type* starting with a capital letter,
+then defining a *term* that returns that type starting with a
+lowercase letter.  This pattern will come up again later.  Sometimes
+it can be just for convenience; sometimes it's because we would like
+to refer to the type multiple times; or, as in the above case, the type
+can actually defined via some nontrivial computation.
+
+### Decidable equality
+
+We can now show how to decide equality of natural numbers.  We first
 define a simple type representing decidability in general: `Dec P` represents
 either a proof of `P`, or a proof of `¬ P`.  (The [standard library
 version is much more sophisticated](https://agda.github.io/agda-stdlib/v2.3/Relation.Nullary.Decidable.Core.html#1966), but this simple version will do
@@ -375,7 +387,9 @@ zero +suc y = refl
 
 ## Multiplication
 
-Multiplication is next:
+Multiplication is next: we start by defining the multiplication
+operation (by pattern-matching on the left-hand argument) and proving
+a few lemmas about multiplying by known arguments on the right.
 
 ```agda
 infixl 7 _*_
@@ -400,7 +414,14 @@ zero *suc y = refl
   (y + x) + x * y             ≡[ _+_ $≡ +-comm y x ≡$ x * y ⟩≡
   (x + y) + x * y             ≡[ +-assoc x _ _ ⟩≡
   x + (y + x * y)             ∎)
+```
 
+We prove some standard properties of multiplication: commutativity,
+distributivity over addition, associativity.  The proofs mostly
+consist of a whole bunch of algebra, using the special notation for
+building chained equality proofs.
+
+```agda
 *-comm : (x y : ℕ) → x * y ≡ y * x
 *-comm zero y = sym (y *0)
 *-comm (suc x) y = begin
@@ -432,7 +453,12 @@ zero *suc y = refl
   (y + x * y) * z             ≡[ *-distribʳ y _ _ ⟩≡
   y * z + (x * y) * z         ≡[ y * z +_ $≡ *-assoc x _ _ ⟩≡
   y * z + x * (y * z)         ∎
+```
 
+Finally, we prove that multiplication is left-cancellative.  XXX proof
+is tricky---recursive call to *-cancel, making use of fact that + is left-cancellative.
+
+```agda
 *-cancelˡ : (x y z : ℕ) → (0 ≢ x) → x * y ≡ x * z → y ≡ z
 *-cancelˡ zero y z x≢0 xy≡xz = absurd (x≢0 refl)
 *-cancelˡ (suc x) zero zero x≢0 xy≡xz = refl
@@ -449,12 +475,15 @@ zero *suc y = refl
       )
     )
   )
+```
 
---------------------------------------------------
--- Inequality
+## Inequality
 
--- ≤
+XXX Standard leq. Note that structure matches structure of natural
+numbers i.e. structure of `x leq y` proof matches structure of `x`.
+XXX Along with standard properties.
 
+```agda
 data _≤_ : ℕ → ℕ → Set where
   zle : {n : ℕ} → zero ≤ n
   sle : {m n : ℕ} → m ≤ n → suc m ≤ suc n
@@ -477,8 +506,11 @@ data _≤_ : ℕ → ℕ → Set where
 ≤-pred : {x y : ℕ} → suc x ≤ suc y → x ≤ y
 ≤-pred (sle sx≤sy) = sx≤sy
 
--- <
+```
 
+XXX less than just defined in terms of leq.
+
+```agda
 _<_ : ℕ → ℕ → Set
 x < y = suc x ≤ y
 
@@ -492,33 +524,63 @@ _<suc (suc x) = sle (x <suc)
 x≮x : {x : ℕ} → ¬ (x < x)
 x≮x {zero} = λ ()
 x≮x {suc x} = λ { (sle x<x) → x≮x x<x}
+```
 
--- Relationships among ≤, <, ≡
+### Relationships among equality and inequality
 
+Of course, equality, `<` and `≤` have various relationships that we
+will need.  First, equality implies `≤`.
+
+```agda
 ≡→≤ : {x y : ℕ} → x ≡ y → x ≤ y
 ≡→≤ refl = ≤-refl
+```
 
-<→≢ : {x y : ℕ} → x < y → x ≢ y   -- gets used a lot!
+Next, $x < y$ implies that $x$ and $y$ are *not* related by $\equiv$ or
+$\leq$.  The first lemma in particular—that less than implies not equal
+to—gets used quite a bit.  Note that it can be read in two equivalent
+ways: on the surface, it is a way to turn $x < y$ into $x \not\equiv y$; but
+since $x \not\equiv y$ is really an abbreviation for $(x \equiv y) \to \bot$, it can be
+used to derive a contradiction if we have proofs that $x < y$ and
+also $x \equiv y$.
+
+```agda
+<→≢ : {x y : ℕ} → x < y → x ≢ y
 <→≢ x<y refl = x≮x x<y
 
 <→≰ : {x y : ℕ} → x < y → ¬ (y ≤ x)
 <→≰ (sle x<y) (sle y≤x) = <→≰ x<y y≤x
+```
 
+If $x \leq y$ but they are not equal, then $x < y$.
+
+```agda
 ≤≢→< : {x y : ℕ} → x ≤ y → x ≢ y → x < y
 ≤≢→< {y = zero} zle x≢y = absurd (x≢y refl)
 ≤≢→< {y = suc y} zle x≢y = sle zle
 ≤≢→< (sle x≤y) x≢y = sle (≤≢→< x≤y (λ m≡n → x≢y (suc $≡ m≡n)))
+```
 
+XXX transitivity
+
+```agda
 ≤-<-trans : {x y z : ℕ} → x ≤ y → y < z → x < z
 ≤-<-trans x≤y (sle y<z) = ≤-trans (sle x≤y) (sle y<z)
+```
 
+Finally, a very specific lemma we will need, that if a number is not
+equal to either 0 or 1, then it must be greater than or equal to 2.
+
+```agda
 ¬01-is-≥2 : (a : ℕ) → (a ≢ 0) → (a ≢ 1) → (2 ≤ a)
 ¬01-is-≥2 zero a≢0 a≢1 = absurd (a≢0 refl)
 ¬01-is-≥2 (suc zero) a≢0 a≢1 = absurd (a≢1 refl)
 ¬01-is-≥2 (suc (suc a)) a≢0 a≢1 = sle (sle zle)
+```
 
--- Arithmetic and inequality
+### Arithmetic and inequality
 
+```agda
 +→≤ : {x y z : ℕ} → x + y ≡ z → x ≤ z
 +→≤ {zero} x+y≡z = zle
 +→≤ {suc x} {z = suc z} x+y≡z = sle (+→≤ (noConf x+y≡z))
@@ -536,19 +598,42 @@ x≮x {suc x} = λ { (sle x<x) → x≮x x<x}
 
 *→≤ : {x y z : ℕ} → (y ≢ 0) → x * y ≡ z → x ≤ z
 *→≤ {x} {y} y≢0 refl = ≤-trans (≤-* y≢0) (≡→≤ (*-comm y x))
+```
 
---------------------------------------------------
--- Divisibility, primes, and composites
+## Divisibility, primes, and composites
 
+XXX finally make use of Sigma.  A *constructive* proof that `a` divides
+`b` is a natural number `k` paired with a proof that `k * a ≡ b`.
+
+```agda
 _∣_ : ℕ → ℕ → Set
 a ∣ b = Σ ℕ (λ k → k * a ≡ b)
+```
 
+Using the notion of divisibility, we can now define prime and
+composite numbers.  A prime is defined as a number which is at least
+two, for which every $2 \leq d < n$ does *not* divide $n$.
+
+```agda
 Prime : ℕ → Set
 Prime n = (2 ≤ n) × (∀ (d : ℕ) → (2 ≤ d) → (d < n) → ¬ (d ∣ n))
+```
 
+One could equivalently define primality by saying that any divisor of
+$n$ must be equal to $1$ or $n$; I just decided I liked this
+formulation better, especially because it directly matches up with the
+way we will test a number for primality later.
+
+A composite number is one that has a divisor $2 \leq d < n$.  (XXX We
+could easily prove that prime n -> not composite n and composite n ->
+not prime n, but we won't end up needing these lemmas.)
+
+```agda
 Composite : ℕ → Set
 Composite n = Σ ℕ (λ d → 2 ≤ d × d < n × d ∣ n)
+```
 
+```agda
 FactorsOf : ℕ → Set
 FactorsOf n = Σ (Composite n × Composite n) (λ {(f₁ , f₂) → fst f₁ * fst f₂ ≡ n})
 
