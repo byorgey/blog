@@ -5,9 +5,7 @@ katex: true
 tags: agda,arithmetic,theorem,proof
 ---
 
-XXX use math mode instead of `tt` as much as possible
-
-A couple weeks ago, I was idly brainstorming potential final projects
+Earlier this spring, I was idly brainstorming potential final projects
 for my [Functional Programming](https://hendrix-cs.github.io/csci365/)
 students.  Having just [taught my Discrete Math students the
 Fundamental Theorem of
@@ -39,7 +37,9 @@ I decided to publish the proof, with extra commentary, in the hopes
 that it can be useful as an intermediate-level reference.  That is,
 perhaps you've learned some basic Agda and have some basic familiarity
 with the Curry-Howard correspondence, but would benefit from seeing an
-example of a fully worked out, medium-sized proof.
+example of a fully worked out, medium-sized proof.  The resulting blog
+post ended up being extremely long, but I didn't think it made sense
+to publish it in pieces. XXX?
 
 This blog post XXX available as literate Agda.  XXX There is also an
 alternative version of this blog post with holes.  Try filling in the
@@ -51,13 +51,13 @@ The fundamental theorem of arithmetic states that any natural number
 $n \geq 1$ can be written as a product of zero or more primes, and
 moreover that this product is unique up to permutation.
 
-For now, we are only going to prove *existence* part (I may write
+For now, we are only going to prove the *existence* part (I may write
 another blog post with the uniqueness proof later).  Since a *constructive*
 existence proof is really an algorithm for constructing the thing that
 is claimed to exist, this can also be seen as a *formally verified
 factorization program*: put any number in, get a prime factorization
 out.  Writing a prime factorization program is not hard, of course;
-it's the formal verification part that is particularly interesting!
+it's the formal verification part that is interesting!
 
 ## Preliminaries
 
@@ -75,16 +75,17 @@ variable
 
 Since we're building this completely from scratch, we start with some
 types to represent basic logical building blocks (via the
-[Curry-Howard correspondence](https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence)).  First, the "top" type `⊤` to
-stand for truth, *i.e.* a proposition with trivial evidence:
+[Curry-Howard correspondence](https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence)).  First, the "top" type `⊤` to stand for truth, *i.e.* a proposition with trivial evidence:
 
 ```agda
 data ⊤ : Set where
   tt : ⊤
 ```
 
+`tt` is declared to be the one and only value of type `⊤`.
+
 Note that some things we define here—such as `⊤`—will have the same
-names as they do in the Agda standard library.  However, many things
+names as they do in the [Agda standard library](XXX).  However, many things
 won't, since I either didn't know the standard name and made up my
 own, or (in a few cases) did know the standard name but didn't like
 it, and made up my own anyway.
@@ -95,8 +96,7 @@ principle says that anything follows from `⊥` ("*[ex falso
 quodlibet](https://en.wikipedia.org/wiki/Principle_of_explosion)*"), and is implemented using Agda's absurd pattern,
 written `()`.  If Agda can tell that there are no possible
 constructors which could give rise to a value of a certain type, we
-can pattern-match on it with `()`, and are then absolved of having to
-provide a right-hand side for the definition in that case.
+can pattern-match on it with `()`, and are absolved of providing a right-hand side for the definition in that case.
 
 ```agda
 data ⊥ : Set where
@@ -152,7 +152,7 @@ data _⊎_ (A B : Set) : Set where
 
 ## Equality
 
-The standard equality (*aka* identity *aka* path) type, with a single
+Next, we write down the standard equality (*aka* identity, *aka* path) type, with a single
 constructor `refl` that witnesses when its two arguments are
 identical.^[It still seems somewhat magical to me that this seemingly
 too-simple definition encapsulates everything we want in an equality
@@ -201,10 +201,10 @@ begin
 This notation is one of my favorite applications of Agda's [mixfix
 operator syntax](https://agda.readthedocs.io/en/latest/language/mixfix-operators.html), and has several benefits:
 
-1. We can avoid nested parentheses when chaining uses of transitivity.
-2. We can automatically apply symmetry by using a left-pointing
+- We can avoid nested parentheses when chaining uses of transitivity.
+- We can automatically apply symmetry by using a left-pointing
    instead of right-pointing operator.
-3. We get to explicitly mention (and have Agda check for us) all the
+- We get to explicitly mention (and have Agda check for us) all the
    intermediate values, making it easier to write the proof
    incrementally, and much easier for humans to read.
 
@@ -254,7 +254,7 @@ f≡g ≡$≡ x≡y = trans (f≡g ≡$ _) (_ $≡ x≡y)
 ## Natural numbers
 
 Of course, we will need a type to represent the natural numbers.  We
-can tell Agda that our natural number type should correspond to its
+can also tell Agda that our natural number type should correspond to its
 built-in notion of natural numbers, so we can use numeric literals
 like `2 : ℕ` instead of having to write `suc (suc zero)`.
 
@@ -318,15 +318,21 @@ As an aside, this definition of the no confusion property uses a
 technique I like: defining a *type* starting with a capital letter,
 then defining a *term* that returns that type starting with a
 lowercase letter.  This pattern will come up again later.  Sometimes
-it can be just for convenience; sometimes it's because we would like
-to refer to the type multiple times; or, as in the above case, the type
-can actually defined via some nontrivial computation.
+we define named types in this way just for convenience, say, to be
+able to refer to the type multiple times in a concise way; or, as in
+the above case, sometimes the type is actually defined via some
+nontrivial computation.
 
 ### Decidable equality
 
 We can now show how to decide equality of natural numbers.  We first
 define a simple type representing decidability in general: `Dec P` represents
-either a proof of `P`, or a proof of `¬ P`.  (The [standard library
+either a proof of `P`, or a proof of `¬ P`.^[You may be aware that the
+[law of excluded middle](XXX), which
+says that $P \lor \neg P$ for all propositions $P$, does not hold in constructive logic.  However, even
+though $P \lor \neg P$ does not hold for *all* $P$, it can still hold
+for certain specific propositions.  Propositions $P$ for which $P \lor
+\neg P$ holds constructively are called *decidable*.]  (The [standard library
 version is much more sophisticated](https://agda.github.io/agda-stdlib/v2.3/Relation.Nullary.Decidable.Core.html#1966), but this simple version will do
 just fine.)
 
@@ -338,7 +344,8 @@ data Dec (P : Set) : Set where
 
 We can then prove that for any natural numbers `x` and `y`, we can decide
 whether `x ≡ y`.  Notice the several different uses of the no
-confusion lemma.
+confusion lemma: two to handle impossible situations, and one to strip
+`suc` off both sides of an equality.
 
 ```agda
 _≟_ : (x y : ℕ) → Dec (x ≡ y)
@@ -455,8 +462,12 @@ building chained equality proofs.
   y * z + x * (y * z)         ∎
 ```
 
-Finally, we prove that multiplication is left-cancellative.  XXX proof
-is tricky---recursive call to *-cancel, making use of fact that + is left-cancellative.
+Finally, we prove that multiplication is left-cancellative.  This
+proof is somewhat tricky—in the case that `x`, `y`, and `z` are all
+successors, we need to use the induction hypothesis (*i.e.* a
+recursive call to `*-cancelˡ`) on `x` and the
+predecessors of `y` and `z`, using the fact that + is
+left-cancellative to construct the required input equality.
 
 ```agda
 *-cancelˡ : (x y z : ℕ) → (0 ≢ x) → x * y ≡ x * z → y ≡ z
@@ -479,15 +490,20 @@ is tricky---recursive call to *-cancel, making use of fact that + is left-cancel
 
 ## Inequality
 
-XXX Standard leq. Note that structure matches structure of natural
-numbers i.e. structure of `x leq y` proof matches structure of `x`.
-XXX Along with standard properties.
+Next, we give a standard definition of the "less than or equal to"
+relation on natural numbers. Note that the structure of a proof of $x \leq
+y$ exactly matches the structure of $x$ itself.
 
 ```agda
 data _≤_ : ℕ → ℕ → Set where
   zle : {n : ℕ} → zero ≤ n
   sle : {m n : ℕ} → m ≤ n → suc m ≤ suc n
+```
 
+We also prove some standard properties of $\leq$: it is reflexive and
+transitive, and is related to `suc` in various ways.
+
+```agda
 ≤-refl : {m : ℕ} → m ≤ m
 ≤-refl {zero} = zle
 ≤-refl {suc m} = sle ≤-refl
@@ -508,7 +524,9 @@ data _≤_ : ℕ → ℕ → Set where
 
 ```
 
-XXX less than just defined in terms of leq.
+For convenience, we define $<$ in terms of $\leq$, and prove a few
+properties: any number is less than its successor, and $<$ is
+transitive and non-reflexive.
 
 ```agda
 _<_ : ℕ → ℕ → Set
@@ -528,8 +546,8 @@ x≮x {suc x} = λ { (sle x<x) → x≮x x<x}
 
 ### Relationships among equality and inequality
 
-Of course, equality, `<` and `≤` have various relationships that we
-will need.  First, equality implies `≤`.
+Of course, equality, $<$ and $\leq$ have various relationships that we
+will need.  First, equality implies $\leq$.
 
 ```agda
 ≡→≤ : {x y : ℕ} → x ≡ y → x ≤ y
@@ -537,9 +555,9 @@ will need.  First, equality implies `≤`.
 ```
 
 Next, $x < y$ implies that $x$ and $y$ are *not* related by $\equiv$ or
-$\leq$.  The first lemma in particular—that less than implies not equal
-to—gets used quite a bit.  Note that it can be read in two equivalent
-ways: on the surface, it is a way to turn $x < y$ into $x \not\equiv y$; but
+$\leq$.  The first lemma in particular—that $<$ implies $\not\equiv$—gets used quite a bit.  Note that it can be read in two equivalent
+ways: on the surface, it is a way to turn a proof of $x < y$ into a
+proof of $x \not\equiv y$; but
 since $x \not\equiv y$ is really an abbreviation for $(x \equiv y) \to \bot$, it can be
 used to derive a contradiction if we have proofs that $x < y$ and
 also $x \equiv y$.
@@ -561,14 +579,15 @@ If $x \leq y$ but they are not equal, then $x < y$.
 ≤≢→< (sle x≤y) x≢y = sle (≤≢→< x≤y (λ m≡n → x≢y (suc $≡ m≡n)))
 ```
 
-XXX transitivity
+We will need a form of transitivity that says if $x \leq y$ and $y <
+z$, then $x < z$.
 
 ```agda
 ≤-<-trans : {x y z : ℕ} → x ≤ y → y < z → x < z
 ≤-<-trans x≤y (sle y<z) = ≤-trans (sle x≤y) (sle y<z)
 ```
 
-Finally, a very specific lemma we will need, that if a number is not
+Finally, a very specific lemma we will need: if a number is not
 equal to either 0 or 1, then it must be greater than or equal to 2.
 
 ```agda
@@ -580,39 +599,58 @@ equal to either 0 or 1, then it must be greater than or equal to 2.
 
 ### Arithmetic and inequality
 
+The last lemmas we need relate arithmetic operations and inequality.
+First, adding and multiplying cannot make anything smaller (unless we
+multiply by zero, of course).
+
+```agda
+≤+ : {x y : ℕ} → x ≤ (x + y)
+≤+ {zero} = zle
+≤+ {suc x} = sle ≤+
+
+≤* : {x y : ℕ} → (x ≢ 0) → y ≤ (x * y)
+≤* {zero} x≢0 = absurd (x≢0 refl)
+≤* {suc x} x≢0 = ≤+
+```
+
+As a result, if we know that one thing is equal to a sum or product of
+other things, we can conclude something about their relative sizes.
+
 ```agda
 +→≤ : {x y z : ℕ} → x + y ≡ z → x ≤ z
-+→≤ {zero} x+y≡z = zle
-+→≤ {suc x} {z = suc z} x+y≡z = sle (+→≤ (noConf x+y≡z))
++→≤ refl = ≤+
 
 +→< : {x y z : ℕ} → 0 < y → x + y ≡ z → x < z
 +→< {x} {suc y} _ x+y≡z = +→≤ (trans (sym (x +suc y)) x+y≡z)
 
-≤-+ : {x y : ℕ} → x ≤ (x + y)
-≤-+ {zero} = zle
-≤-+ {suc x} = sle ≤-+
-
-≤-* : {x y : ℕ} → (x ≢ 0) → y ≤ (x * y)
-≤-* {zero} x≢0 = absurd (x≢0 refl)
-≤-* {suc x} x≢0 = ≤-+
-
-*→≤ : {x y z : ℕ} → (y ≢ 0) → x * y ≡ z → x ≤ z
-*→≤ {x} {y} y≢0 refl = ≤-trans (≤-* y≢0) (≡→≤ (*-comm y x))
+*→≤ : {x y z : ℕ} → (y ≢ 0) → y * x ≡ z → x ≤ z
+*→≤ {x} {y} y≢0 refl = ≤* y≢0
 ```
 
 ## Divisibility, primes, and composites
 
-XXX finally make use of Sigma.  A *constructive* proof that `a` divides
-`b` is a natural number `k` paired with a proof that `k * a ≡ b`.
+With the preliminaries out of the way, we can finally get on with the
+meat of the problem—and we finally get to make use of a dependent pair!  A *constructive* proof that `a` divides
+`b` is a specific natural number witness `k`, along with a proof that `k * a ≡ b`.
 
 ```agda
 _∣_ : ℕ → ℕ → Set
 a ∣ b = Σ ℕ (λ k → k * a ≡ b)
 ```
 
-Using the notion of divisibility, we can now define prime and
-composite numbers.  A prime is defined as a number which is at least
-two, for which every $2 \leq d < n$ does *not* divide $n$.
+Proofs of divisibility are unique—that is, for given $a$ and $b$ there
+is at most one value of $k$ such that $ka = b$.  We won't need this,
+but it follows easily from the fact that multiplication is
+cancellative.  More interesting is the fact that divisibility is
+*decidable*—that is, for given numbers $a$ and $b$ we can calculate
+either a proof that $a \mid b$, or a proof that $\neg (a \mid b)$.
+This will play a starring role later on—to factor a number we need to
+be able to try potential divisors and find out whether they work—but proving it is not easy!
+It will take us several hundred more lines of Agda to get there.
+
+In any case, using this notion of divisibility, we can now define prime and
+composite numbers.  A number $n$ is defined to be prime if it is at
+least two, and every $2 \leq d < n$ does *not* divide $n$.
 
 ```agda
 Prime : ℕ → Set
@@ -624,32 +662,109 @@ $n$ must be equal to $1$ or $n$; I just decided I liked this
 formulation better, especially because it directly matches up with the
 way we will test a number for primality later.
 
-A composite number is one that has a divisor $2 \leq d < n$.  (XXX We
-could easily prove that prime n -> not composite n and composite n ->
-not prime n, but we won't end up needing these lemmas.)
+A composite number is one that has a nontrivial divisor—that is, a number $d$
+such that $2 \leq d < n$ and $d$ divides $n$.^[Note
+that we could easily prove that if $n$ is prime then $n$ is not
+composite, and likewise if $n$ is composite then it is not prime, but
+we won't end up needing these lemmas.]
 
 ```agda
 Composite : ℕ → Set
 Composite n = Σ ℕ (λ d → 2 ≤ d × d < n × d ∣ n)
 ```
 
+Unlike proofs of divisibility, proofs of `Composite n` are *not*
+unique.  For example, we could prove `Composite 12` by showing that
+$2$ is a nontrivial divisor of $12$, or by showing that $3$ is.
+Although this does not matter from a purely logical point of view, it
+matters computationally; in general, we care which specific proof of
+`Composite n` we have.
+
+### Nontrivial divisors come in pairs
+
+Before moving on to other things, we will prove a lemma about
+composite numbers.  If $n$ is composite, by definition it has a
+nontrivial divisor $a$; but this means it must also have a second
+nontrivial divisor $b$ such that $ab = n$.  This fact seems almost
+trivial to us.  Indeed, it's easy to show that if $n$ has a divisor
+$a$, then it must have another divisor $b$ such that $ab = n$.  The
+tricky part is showing that if $a$ is a *nontrivial* divisor, then $b$
+is *also* nontrivial.  The proof relies on much of the infrastructure
+we have built up about natural numbers, multiplication, and
+inequality.
+
+First, we define a type representing two factors of a number $n$: a
+pair of proofs that $n$ is composite (*i.e.* two nontrivial divisors
+of $n$), along with a proof that the product of those divisors is $n$.
+
 ```agda
 FactorsOf : ℕ → Set
 FactorsOf n = Σ (Composite n × Composite n) (λ {(f₁ , f₂) → fst f₁ * fst f₂ ≡ n})
+```
 
-factors : (n : ℕ) → Composite n → FactorsOf n
-factors n (a , 2≤a , a<n , b , ba≡n) =
+Now, we prove that if $n$ is composite, then it has two nontrivial
+factors.  We begin by pattern-matching on the proof that $n$ is
+composite, which consists of a divisor $a$, evidence that $a$ is
+nontrivial (*i.e.* $2 \leq a$ and $a < n$), and a proof that $a$ is a
+divisor of $n$, which itself consists of a number $b$ paired with a
+proof that $ba = n$.
+
+```agda
+factorsOf : (n : ℕ) → Composite n → FactorsOf n
+factorsOf n (a , 2≤a , a<n , b , ba≡n) =
+```
+
+To construct the proof of `FactorsOf n`, we need two proofs of
+`Composite n` along with a proof that the product of the two divisors
+is $n$.  We already have a proof that $ba = n$, so we use that, with
+$a$ as the second divisor (replicating the corresponding proof of
+`Composite n`), and $b$ as the first. Proving that $b$ is a divisor of
+$n$ is easy: $a$ is the witness, and proving that $ab = n$ is easy
+since we already know $ba = n$ and multiplication is commutative.  The
+only thing left is to prove that $b$ is nontrivial, *i.e.* that $2
+\leq b$ and $b < n$.
+
+```agda
   ((b , 2≤b , b<n , a , trans (*-comm a b) ba≡n) , (a , 2≤a , a<n , b , ba≡n)) , ba≡n
+```
+
+First, we need a lemma that $0 < n$, which follows because $0 < 1 < a
+< n$ (remember that a proof of $1 < a$ is actually defined to be the
+same thing as a proof of $2 \leq a$).
+
+```agda
  where
   0<n : 0 < n
   0<n = <-trans (sle zle) (<-trans 2≤a a<n)
+```
 
-  -- 2≤b because...
+Next, we tackle $2 \leq b$, by showing that $b$ can't possibly be $0$
+or $1$ (using our previous lemma that anything not equal to 0 or 1
+must be greater than or equal to 2).
+
+```agda
   2≤b : 2 ≤ b
   2≤b = ¬01-is-≥2 b
-    -- if b was 0, then ba=n implies n=0, but 2≤a<n
-    (λ b≡0 → <→≢ 0<n (begin 0 ≡[ refl ⟩≡ 0 * a ≡⟨ _*_ $≡ b≡0 ≡$ a ]≡ b * a ≡[ ba≡n ⟩≡ n ∎))
-    -- if b was 1, then a=n, but a<n
+```
+
+If $b$ were $0$, then $ba = n$ would imply $0 = n$, but we know
+$0 < n$, so this is a contradiction.
+
+```agda
+    (λ b≡0 → <→≢ 0<n
+      (begin
+        0                     ≡[ refl ⟩≡
+        0 * a                 ≡⟨ _*_ $≡ b≡0 ≡$ a ]≡
+        b * a                 ≡[ ba≡n ⟩≡
+        n                     ∎
+      )
+    )
+```
+
+If $b$ were $1$, then $ba = n$ would imply $a = n$, but we know
+$a < n$, so this is also a contradiction.
+
+```agda
     (λ b≡1 → <→≢ a<n
       (begin
         a                     ≡⟨ a *1 ]≡
@@ -659,24 +774,125 @@ factors n (a , 2≤a , a<n , b , ba≡n) =
         n                     ∎
       )
     )
+```
 
-  -- b<n because...
+Finally, we prove $b < n$, by showing $b \leq n$ and $b \neq n$.
+
+```agda
   b<n : b < n
   b<n = ≤≢→<
-    -- ba=n implies b≤n
-    (*→≤ (λ a≡0 → <→≢ (<-trans (sle zle) 2≤a) (sym a≡0)) ba≡n)
-    -- if b=n then a=1 but 2≤a.
-    (λ b≡n → <→≢ 2≤a (sym (*-cancelˡ n a 1 (<→≢ 0<n) (begin n * a ≡⟨ _*_ $≡ b≡n ≡$ a ]≡ b * a ≡[ ba≡n ⟩≡ n ≡⟨ n *1 ]≡ n * 1 ∎))))
+```
 
-------------------------------------------------------------
--- Abs diff
-------------------------------------------------------------
+$b \leq n$ since $ba = n$ and $a$ is not zero (if $a$ were zero it
+would contradict the fact that $2 \leq a$).
 
+```agda
+    (*→≤ (λ a≡0 → <→≢ (<-trans (sle zle) 2≤a) (sym a≡0)) (trans (*-comm a b) ba≡n))
+```
+
+$b \neq n$, since $b = n$ together with $ba = n$ would imply $a = 1$
+(since multiplication is cancellative), but $2 \leq a$ so it cannot
+equal 1.
+
+```agda
+    (λ b≡n → <→≢ 2≤a
+      (sym
+        (*-cancelˡ n a 1 (<→≢ 0<n)
+          (begin
+            n * a             ≡⟨ _*_ $≡ b≡n ≡$ a ]≡
+            b * a             ≡[ ba≡n ⟩≡
+            n                 ≡⟨ n *1 ]≡
+            n * 1             ∎
+          )
+        )
+      )
+    )
+```
+
+## Division
+
+Let's start working our way towards proving that divisibility is
+decidable.  To check whether $d \mid n$, the usual idea would be to
+divide $n$ by $d$ and check whether we get a remainder of zero.  So we
+need to formalize this notion of division.
+
+Specifically, when we divide $n$ by $d$, we expect to get a *quotient* $q$
+and a *remainder* $r$, such that $r + qd = n$, and $0 \leq r < d$.
+The first condition, $r + qd = n$, just defines what we mean by division: $n$ is
+$q$ times $d$, plus a remainder of $r$.  The second condition will ensure
+that the result is unique.  We wouldn't want to divide $17$ by $2$ and
+end up with a quotient of $6$ and a remainder of $5$; the remainder should be as small as possible.
+
+The `DivMod` type simply encodes these requirements.
+
+```agda
+data DivMod (n d q r : ℕ) : Set where
+  DM : (r + q * d ≡ n) → (r < d) → DivMod n d q r
+```
+
+We can prove a few lemmas about `DivMod`.  First, whenever we have
+`DivMod n d q r`, then `d` must be positive, since $r < d$ and $r$ is
+a natural number.
+
+```agda
+divMod→0<d : {n d q r : ℕ} → DivMod n d q r → 0 < d
+divMod→0<d (DM _ r<d) = ≤-<-trans zle r<d
+```
+
+We can also show that the remainder is zero if and only if $d
+\mid n$:
+
+```agda
+mod0→divides : (n d : ℕ) {q : ℕ} → DivMod n d q 0 → d ∣ n
+mod0→divides n d {q} (DM eq _) = q , eq
+
+divides→mod0 : (n d : ℕ) → (0 < d) → d ∣ n → Σ ℕ (λ q → DivMod n d q 0)
+divides→mod0 n d 0<d (q , qd≡n) = q , (DM qd≡n 0<d)
+```
+
+We would also like to show that if the remainder when dividing $n$ by
+$d$ is *not* zero, then $d$ does *not* divide $n$.  This is *almost*
+the contrapositive of `divides→mod0`—which would be trivial to
+show—but not quite: I said "the" remainder, but actually we don't yet
+know that the quotient and remainder are unique!  Perhaps we could get
+a remainder of 0 and some other remainder for the same $n$ and $d$, by
+choosing different quotients?
+
+Of course, quotients and remainders *are* unique: that is, if $q_1,
+r_1$ and $q_2, r_2$ both satisfy the properties to be the quotient and
+remainder of $n$ divided by $d$, then in fact $q_1 = q_2$ and $r_1 =
+r_2$.  But how can we prove this?  The usual idea is to look at the
+difference $r_1 - r_2 = dq_1 - dq_2$, which is divisible by $d$; but
+since $r_1 < d$ and $r_2 < d$, the only way for the difference $r_1 -
+r_2$ to be divisible by $d$ is if in fact $r_1 - r_2 = 0$.  From here
+we can also derive $q_1 = q_2$ via algebra.
+
+Subtraction, eh?  In order to formalize this, it seems as though we might
+need to define the integers... but there is a better way!
+
+## Absolute difference
+
+The previous informal argument mentioned the difference $r_1 - r_2$.
+But we could just as easily have talked about $r_2 - r_1$ instead, and
+the same argument would work just as well.  This observation shows
+that we do not actually care about the (signed) *difference* between
+$r_1$ and $r_2$, but only the *distance* between them.  This means we
+can just stick to our well-loved natural numbers, and define a commutative
+*absolute difference* function which computes the nonnegative distance
+between its two arguments, like so:
+
+```agda
 ∥_-_∥ : ℕ → ℕ → ℕ
 ∥ zero - y ∥ = y
 ∥ suc x - zero ∥ = suc x
 ∥ suc x - suc y ∥ = ∥ x - y ∥
+```
 
+Of course, we will need a lot of small lemmas about the properties of
+this operation.  We can start by proving that the distance between two
+numbers is 0 if and only if they are equal:
+
+```agda
 diff0 : (x : ℕ) → 0 ≡ ∥ x - x ∥
 diff0 zero = refl
 diff0 (suc x) = diff0 x
@@ -684,7 +900,11 @@ diff0 (suc x) = diff0 x
 diff0→≡ : {x y : ℕ} → 0 ≡ ∥ x - y ∥ → x ≡ y
 diff0→≡ {zero} {zero} eq = eq
 diff0→≡ {suc x} {suc y} eq = suc $≡ diff0→≡ eq
+```
 
+Next, the distance between any number and 0 is the number itself, and
+the distance function is commutative.
+```agda
 ∥x-0∥≡x : (x : ℕ) → ∥ x - 0 ∥ ≡ x
 ∥x-0∥≡x zero = refl
 ∥x-0∥≡x (suc x) = refl
@@ -694,16 +914,22 @@ diff-comm {zero} {zero} = refl
 diff-comm {zero} {suc y} = refl
 diff-comm {suc x} {zero} = refl
 diff-comm {suc x} {suc y} = diff-comm {x} {y}
+```
 
-∣<→0 : {d x : ℕ} → d ∣ x → x < d → 0 ≡ x
-∣<→0 (zero , ad≡x) x<d = ad≡x
-∣<→0 (suc a , ad≡x) x<d = absurd (<→≰ x<d (+→≤ ad≡x))
+A key lemma supporting the argument outlined in the previous section
+is that if $x$ and $y$ are both less than $d$, so is their absolute difference.
 
+```agda
 diff-< : {x y d : ℕ} → x < d → y < d → ∥ x - y ∥ < d
 diff-< {zero} {y} x<d y<d = y<d
 diff-< {suc x} {zero} x<d y<d = x<d
 diff-< {suc x} {suc y} x<d y<d = diff-< {x} {y} (<-trans (x <suc) x<d) (<-trans (y <suc) y<d)
+```
 
+We can also cancel the same thing being added to both sides, or factor out
+the same thing being multiplied by both sides.
+
+```agda
 diff-cancelˡ : (a b c : ℕ) → ∥ (a + b) - (a + c) ∥ ≡ ∥ b - c ∥
 diff-cancelˡ zero b c = refl
 diff-cancelˡ (suc a) b c = diff-cancelˡ a b c
@@ -712,23 +938,120 @@ diff-distribʳ : (x y d : ℕ) → ∥ x * d - y * d ∥ ≡ ∥ x - y ∥ * d
 diff-distribʳ zero y d = refl
 diff-distribʳ (suc x) zero d = ∥x-0∥≡x (d + x * d)
 diff-distribʳ (suc x) (suc y) d = begin
-  ∥ (d + x * d) - (d + y * d) ∥
-    ≡[ diff-cancelˡ d (x * d) (y * d) ⟩≡
-  ∥ x * d - y * d ∥
-    ≡[ diff-distribʳ x y d ⟩≡
-  ∥ x - y ∥ * d
-  ∎
+  ∥ (d + x * d) - (d + y * d) ∥         ≡[ diff-cancelˡ d (x * d) (y * d) ⟩≡
+  ∥ x * d - y * d ∥                     ≡[ diff-distribʳ x y d ⟩≡
+  ∥ x - y ∥ * d                         ∎
+```
 
-sub : {x y z : ℕ} → x + y ≡ z → x ≡ ∥ z - y ∥
-sub {zero} {y} {z} refl = diff0 y
-sub {suc x} {zero} {suc z} x+y≡z = begin suc x ≡⟨ suc $≡ x +0 ]≡ suc (x + 0) ≡[ x+y≡z ⟩≡ suc z ∎
-sub {suc x} {suc y} {suc z} x+y≡z = sub {suc x} {y} {z} (noConf (trans (suc $≡ sym (x +suc y)) x+y≡z))
+Another key lemma is that if $w + x = y + z$, then $\|w - y\| = \|x -
+z\|$ (`sub₂` below). Personally, I found this quite tricky to prove.
+The best approach I found was to first prove the simpler lemma that
+$x + y = z$ implies $x = \| z - y \|$ (`sub₁`), which can then be used
+in several places in the proof of `sub₂`.
+
+```agda
+sub₁ : {x y z : ℕ} → x + y ≡ z → x ≡ ∥ z - y ∥
+sub₁ {zero} {y} {z} refl = diff0 y
+sub₁ {suc x} {zero} {suc z} x+y≡z =
+  begin
+    suc x                     ≡⟨ suc $≡ x +0 ]≡
+    suc (x + 0)               ≡[ x+y≡z ⟩≡
+    suc z                     ∎
+sub₁ {suc x} {suc y} {suc z} x+y≡z =
+  sub₁ {suc x} {y} {z}
+    (noConf (trans (suc $≡ sym (x +suc y)) x+y≡z))
 
 sub₂ : {w x y z : ℕ} → w + x ≡ y + z → ∥ w - y ∥ ≡ ∥ x - z ∥
-sub₂ {zero} {x} {y} {z} w+x≡y+z = sub (sym w+x≡y+z)
-sub₂ {suc w} {x} {zero} {z} w+x≡y+z = trans (sub w+x≡y+z) (diff-comm {z})
+sub₂ {zero} {x} {y} {z} w+x≡y+z = sub₁ (sym w+x≡y+z)
+sub₂ {suc w} {x} {zero} {z} w+x≡y+z = trans (sub₁ w+x≡y+z) (diff-comm {z})
 sub₂ {suc w} {x} {suc y} {z} w+x≡y+z = sub₂ {w} (noConf w+x≡y+z)
+```
 
+## Quotient and remainder are unique
+
+We can now return to prove that quotient and remainder are unique.
+First, we show that zero is the only multiple of $d$ which is less than $d$.
+
+```agda
+∣<→0 : {d x : ℕ} → d ∣ x → x < d → 0 ≡ x
+∣<→0 (zero , ad≡x) x<d = ad≡x
+∣<→0 (suc a , ad≡x) x<d = absurd (<→≰ x<d (+→≤ ad≡x))
+```
+
+And now for the main event: if we have both `DivMod n d q₁ r₁` and
+`DivMod n d q₂ r₂`, then in fact the `q`s and `r`s must be the same.
+
+```agda
+divModUnique : {n d q₁ r₁ q₂ r₂ : ℕ} → DivMod n d q₁ r₁ → DivMod n d q₂ r₂ → (q₁ ≡ q₂) × (r₁ ≡ r₂)
+divModUnique {n} {d} {q₁} {r₁} {q₂} {r₂} dm@(DM r₁+q₁d≡n r₁<d) (DM r₂+q₂d≡n r₂<d) = q₁≡q₂ , r₁≡r₂
+ where
+```
+
+Since $r_1 + q_1d = n$ and $r_2 + q_2d = n$, by transitivity and
+symmetry we have $r_1 + q_1d = r_2 + q_2d$; then by the `sub₂` lemma,
+$\|r_1 - r_2\| = \|q_1d - q_2d\|$.
+
+```agda
+  rem-diff : ∥ r₁ - r₂ ∥ ≡ ∥ q₁ * d - q₂ * d ∥
+  rem-diff = sub₂ {r₁} (trans r₁+q₁d≡n (sym r₂+q₂d≡n))
+```
+Next, we can show that $d$ divides the absolute difference $\|r_1 -
+  r_2\|$, by factoring it out of $\|q_1 d - q_2 d\|$.
+```agda
+  d∣r₁-r₂ : d ∣ ∥ r₁ - r₂ ∥
+  d∣r₁-r₂ = ∥ q₁ - q₂ ∥ ,
+    (begin
+      ∥ q₁ - q₂ ∥ * d         ≡⟨ diff-distribʳ q₁ q₂ d ]≡
+      ∥ q₁ * d - q₂ * d ∥     ≡⟨ rem-diff ]≡
+      ∥ r₁ - r₂ ∥             ∎
+    )
+```
+
+We can then put three lemmas together to conclude $r_1 = r_2$: first,
+since $r_1$ and $r_2$ are both less than $d$, so is their absolute
+difference; since $d$ also divides the absolute difference, the
+absolute difference must be zero; and finally, an absolute difference
+of zero means $r_1$ and $r_2$ must be equal.
+
+```agda
+  r₁≡r₂ : r₁ ≡ r₂
+  r₁≡r₂ = diff0→≡ (∣<→0 d∣r₁-r₂ (diff-< r₁<d r₂<d))
+```
+
+From here, proving $q_1 = q_2$ just requires some algebra.
+
+```agda
+  dq₁≡dq₂ : d * q₁ ≡ d * q₂
+  dq₁≡dq₂ = +-cancelˡ r₁ (d * q₁) (d * q₂)
+    (begin
+      r₁ + d * q₁             ≡[ r₁ +_ $≡ *-comm d q₁ ⟩≡
+      r₁ + q₁ * d             ≡[ r₁+q₁d≡n ⟩≡
+      n                       ≡⟨ r₂+q₂d≡n ]≡
+      r₂ + q₂ * d             ≡[ _+_ $≡ sym r₁≡r₂ ≡$≡ *-comm q₂ d ⟩≡
+      r₁ + d * q₂             ∎
+    )
+
+  q₁≡q₂ : q₁ ≡ q₂
+  q₁≡q₂ = *-cancelˡ d q₁ q₂ (<→≢ (divMod→0<d dm)) dq₁≡dq₂
+```
+
+Finally, we can use uniqueness of quotients and remainders to show the
+lemma we wanted about divisibility and remainders: if $n$ divided by
+$d$ has some nonzero number as remainder, then $d$ does not divide
+$n$.  If $d$ did divide $n$, then we know we would get a remainder of
+$0$; but since remainders are unique, we can't have both a zero and
+nonzero remainder.
+
+```agda
+modS→¬divides : (n d : ℕ) {q r : ℕ} → DivMod n d q (suc r) → ¬ (d ∣ n)
+modS→¬divides n d dm d∣n with divides→mod0 n d (divMod→0<d dm) d∣n
+... | q₂ , dm₂ with divModUnique dm dm₂
+... | q₁≡q₂ , ()
+```
+
+## Well-founded induction
+
+```agda
 ------------------------------------------------------------
 -- Well-founded induction
 ------------------------------------------------------------
@@ -782,74 +1105,6 @@ acc<→acc<⁺ (a , _) (acc acc<a) = acc (λ { (a′ , 1≤a′) a′<a → acc<
 <⁺-wf : WellFounded _<⁺_
 <⁺-wf a = acc<→acc<⁺ a (<-wf (fst a))
 
-------------------------------------------------------------
--- Division Algorithm
-------------------------------------------------------------
-
---------------------------------------------------
--- DivMod, i.e. results of division algorithm
-
-data DivMod (n d q r : ℕ) : Set where
-  DM : (r + q * d ≡ n) → (r < d) → DivMod n d q r
-
-divMod→0<d : {n d q r : ℕ} → DivMod n d q r → 0 < d
-divMod→0<d (DM _ r<d) = ≤-<-trans zle r<d
-
-----------------------------------------
--- First, relationship of DivMod to ∣
-
-mod0→divides : (n d : ℕ) {q : ℕ} → DivMod n d q 0 → d ∣ n
-mod0→divides n d {q} (DM eq _) = q , eq
-
-divides→mod0 : (n d : ℕ) → (0 < d) → d ∣ n → Σ ℕ (λ q → DivMod n d q 0)
-divides→mod0 n d 0<d (q , qd≡n) = q , (DM qd≡n 0<d)
-
-----------------------------------------
--- DivMod results are unique!
-
-divModUnique : {n d q₁ r₁ q₂ r₂ : ℕ} → DivMod n d q₁ r₁ → DivMod n d q₂ r₂ → (q₁ ≡ q₂) × (r₁ ≡ r₂)
-divModUnique {n} {d} {q₁} {r₁} {q₂} {r₂} dm@(DM r₁+q₁d≡n r₁<d) (DM r₂+q₂d≡n r₂<d) = q₁≡q₂ , r₁≡r₂
- where
-  rem-diff : ∥ r₁ - r₂ ∥ ≡ ∥ q₁ * d - q₂ * d ∥
-  rem-diff = sub₂ {r₁} (trans r₁+q₁d≡n (sym r₂+q₂d≡n))
-
-  d∣r₁-r₂ : d ∣ ∥ r₁ - r₂ ∥
-  d∣r₁-r₂ = ∥ q₁ - q₂ ∥ ,
-    (begin
-      ∥ q₁ - q₂ ∥ * d         ≡⟨ diff-distribʳ q₁ q₂ d ]≡
-      ∥ q₁ * d - q₂ * d ∥     ≡⟨ rem-diff ]≡
-      ∥ r₁ - r₂ ∥             ∎
-    )
-
-  -- Since r₁ < d and r₂ < d, then ∥ r₁ - r₂ ∥ < d;
-  -- but since d ∣ ∥ r₁ - r₂ ∥, therefore ∥ r₁ - r₂ ∥ = 0, which means r₁ ≡ r₂.
-  r₁≡r₂ : r₁ ≡ r₂
-  r₁≡r₂ = diff0→≡ (∣<→0 d∣r₁-r₂ (diff-< r₁<d r₂<d))
-
-  -- q₁ ≡ q₂ then follows.  First we show dq₁ = dq₂.
-  dq₁≡dq₂ : d * q₁ ≡ d * q₂
-  dq₁≡dq₂ = +-cancelˡ r₁ (d * q₁) (d * q₂)
-    (begin
-      r₁ + d * q₁             ≡[ r₁ +_ $≡ *-comm d q₁ ⟩≡
-      r₁ + q₁ * d             ≡[ r₁+q₁d≡n ⟩≡
-      n                       ≡⟨ r₂+q₂d≡n ]≡
-      r₂ + q₂ * d             ≡[ _+_ $≡ sym r₁≡r₂ ≡$≡ *-comm q₂ d ⟩≡
-      r₁ + d * q₂             ∎
-    )
-
-  -- Now we can finally show q₁ = q₂.
-  q₁≡q₂ : q₁ ≡ q₂
-  q₁≡q₂ = *-cancelˡ d q₁ q₂ (<→≢ (divMod→0<d dm)) dq₁≡dq₂
-
-----------------------------------------
--- We can then use uniqueness to prove contrapositive of lemma about ∣
-
--- This is true because if d ∣ n, then we get a mod of 0, but divMod results are unique,
--- which would be a contradiction.
-modS→¬divides : (n d : ℕ) {q r : ℕ} → DivMod n d q (suc r) → ¬ (d ∣ n)
-modS→¬divides n d dm d∣n with divides→mod0 n d (divMod→0<d dm) d∣n
-... | q₂ , dm₂ with divModUnique dm dm₂
-... | q₁≡q₂ , ()
 
 --------------------------------------------------
 -- Division Algorithm proper
@@ -1001,7 +1256,7 @@ fta n = wf-ind {P = FTA} <⁺-wf go n
   go (suc zero , _) _ = [] , (tt , refl)
   go (suc (suc n) , 1≤n) IH with prime? (suc (suc n)) (sle (sle zle))
   ... | inj₁ P = (suc (suc n) ∷ []) , ((P , tt) , (suc $≡ (suc $≡ (n *1))))
-  ... | inj₂ C with factors _ C
+  ... | inj₂ C with factorsOf _ C
   ... | ((a , 2≤a , a<n , _) , (b , 2≤b , b<n , _)) , ab≡n
       with IH (a , ≤-trans (sle zle) 2≤a) a<n
          | IH (b , ≤-trans (sle zle) 2≤b) b<n
