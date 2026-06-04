@@ -61,6 +61,7 @@ to publish it in pieces. XXX?</p>
 <p>This blog post XXX available as literate Agda. XXX There is also an
 alternative version of this blog post with holes. Try filling in the
 proofs as you go along, before reading each section.</p>
+<p>XXX table of contents. Maybe skip some parts depending on your background?</p>
 <section id="the-fundamental-theorem-of-arithmetic" class="level2">
 <h2>The Fundamental Theorem of Arithmetic</h2>
 <p>The fundamental theorem of arithmetic states that any natural number
@@ -836,222 +837,434 @@ nonzero remainder.</p>
 <span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> q₂ , dm₂ <span class="kw">with</span> divModUnique dm dm₂</span>
 <span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> q₁≡q₂ , <span class="ot">()</span></span></code></pre></div>
 </section>
+<section id="the-division-algorithm-take-1" class="level2">
+<h2>The division algorithm, take 1</h2>
+<p>So, given natural numbers <span class="math inline">\(n\)</span> and <span class="math inline">\(d\)</span>, how do we compute the quotient
+and remainder? We can write down a type <code>DivAlg</code> that expresses what
+we want: given some <span class="math inline">\(n\)</span> and <span class="math inline">\(d\)</span>, <code>DivAlg n d</code> represents the result of
+the division algorithm, that is, a pair of numbers <span class="math inline">\((q,r)\)</span> such that
+<code>DivMod n d q r</code> holds.</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>DivAlg <span class="ot">:</span> ℕ <span class="ot">→</span> ℕ <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>DivAlg n d <span class="ot">=</span> Σ <span class="ot">(</span>ℕ × ℕ<span class="ot">)</span> <span class="ot">(λ</span> <span class="ot">{</span> <span class="ot">(</span>q , r<span class="ot">)</span> <span class="ot">→</span> DivMod n d q r <span class="ot">})</span></span></code></pre></div>
+<p>Then we want a function with a type something like <code>(n d : ℕ) → DivAlg n d</code> (actually this type is not quite correct—can you see why?).
+How can we write something with this type?</p>
+<p>One simple idea, expressed imperatively, is to start with <span class="math inline">\(q = 0\)</span>.
+Now, as long as <span class="math inline">\(n \geq d\)</span>, subtract <span class="math inline">\(d\)</span> from <span class="math inline">\(n\)</span> and add one to
+<span class="math inline">\(q\)</span>—if we can find <span class="math inline">\(q\)</span> and <span class="math inline">\(r\)</span> such that <span class="math inline">\(r + qd = n - d\)</span>, then <span class="math inline">\(r +
+(q+1)d = n\)</span>. Eventually, <span class="math inline">\(n\)</span> must land in the range <span class="math inline">\(0 \leq n &lt; d\)</span>,
+in which case it will be the remainder, and the current value of <span class="math inline">\(q\)</span>
+will be the quotient.</p>
+<section id="construct-the-evidence-you-would-like-to-pattern-match-on" class="level3">
+<h3>Construct the evidence you would like to pattern-match on</h3>
+<p>That’s the idea, but turning this into a verified constructive algorithm will take some
+work. First, let’s formalize the idea of testing whether <span class="math inline">\(n\)</span> is less
+than <span class="math inline">\(d\)</span>, and decreasing it by <span class="math inline">\(d\)</span> if not. We’d rather not actually
+deal with subtraction, so the idea is to generate either a proof that
+<span class="math inline">\(n &lt; d\)</span>, or another number <span class="math inline">\(n&#39;\)</span> along with a proof that <span class="math inline">\(n&#39; + d = n\)</span>.
+We encapsulate this in the following type <code>Cmp</code>:</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Cmp <span class="ot">(</span>n d <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>  LT <span class="ot">:</span> n &lt; d <span class="ot">→</span> Cmp n d</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>  GE <span class="ot">:</span> <span class="ot">(</span>n′ <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>n′ + d ≡ n<span class="ot">)</span> <span class="ot">→</span> Cmp n d</span></code></pre></div>
+<p><code>Cmp n d</code> represents the result of comparing <span class="math inline">\(n\)</span> and <span class="math inline">\(d\)</span>, and is
+equivalent to having either <span class="math inline">\(n &lt; d\)</span> or <span class="math inline">\(n \geq d\)</span>, but expressed in a
+form that is more directly useful to us. <strong>Construct the evidence you
+would like to pattern-match on!</strong> That is, in general, evidence for a
+proposition <span class="math inline">\(P\)</span> can take many logically equivalent forms, and you
+should pick the form that will make your life easiest at the <em>use
+site</em>, even if it means you have to work harder to <em>construct</em> it in
+the first place. You can write standalone lemmas for constructing
+your evidence; but pattern-matching it will happen in the middle of
+some bigger proof which ought not to be cluttered by calls to
+conversion lemmas.</p>
+<p>To construct evidence for <code>Cmp n d</code>, we write the function
+<code>decreaseBy?</code> which decides whether we can decrease <code>n</code> by <code>d</code> or not.
+Writing this function is a bit more work than writing something
+of type <code>(n d : ℕ) → (n &lt; d) ⊎ (d ≤ n)</code>, but our work will pay off later!</p>
+<div class="sourceCode" id="cb64"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>decreaseBy?<span class="ot">_</span> <span class="ot">:</span> <span class="ot">(</span>n d <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> Cmp n d</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>zero decreaseBy? zero <span class="ot">=</span> GE <span class="dv">0</span> refl</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>zero decreaseBy? suc d <span class="ot">=</span> LT <span class="ot">(</span>sle zle<span class="ot">)</span></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>suc n decreaseBy? zero <span class="ot">=</span> GE <span class="ot">(</span>suc n<span class="ot">)</span> <span class="ot">((</span>suc n<span class="ot">)</span> +0<span class="ot">)</span></span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>suc n decreaseBy? suc d <span class="kw">with</span> n decreaseBy? d</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> LT n&lt;d <span class="ot">=</span> LT <span class="ot">(</span>sle n&lt;d<span class="ot">)</span></span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> GE n′ n′+d≡n <span class="ot">=</span> GE n′ <span class="ot">(</span>trans <span class="ot">(</span>n′ +suc d<span class="ot">)</span> <span class="ot">(</span>suc $≡ n′+d≡n<span class="ot">))</span></span></code></pre></div>
+<p>We can also write a helper function <code>incDivMod</code> which encodes the
+observation from before, that if <span class="math inline">\(r + qd = n-d\)</span>, then <span class="math inline">\(r + (q+1)d =
+n\)</span>. Of course we don’t actually want to use subtraction, so instead
+of writing <span class="math inline">\(n-d\)</span>, we work in terms of an <span class="math inline">\(n&#39;\)</span> such that <span class="math inline">\(n&#39; + d = n\)</span>.
+Proving this requires only some straightforward algebra.</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>incDivMod <span class="ot">:</span> <span class="ot">{</span>n′ n d q r <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> n′ + d ≡ n <span class="ot">→</span> DivMod n′ d q r <span class="ot">→</span> DivMod n d <span class="ot">(</span>suc q<span class="ot">)</span> r</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>incDivMod <span class="ot">{</span>n′<span class="ot">}</span> <span class="ot">{</span>n<span class="ot">}</span> <span class="ot">{</span>d<span class="ot">}</span> <span class="ot">{</span>q<span class="ot">}</span> <span class="ot">{</span>r<span class="ot">}</span> n′+d≡n <span class="ot">(</span>DM r+qd≡n′ r&lt;d<span class="ot">)</span> <span class="ot">=</span> DM r+d+qd≡n r&lt;d</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>  r+d+qd≡n <span class="ot">:</span> r + <span class="ot">(</span>d + q * d<span class="ot">)</span> ≡ n</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>  r+d+qd≡n <span class="ot">=</span> begin</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>    r + <span class="ot">(</span>d + q * d<span class="ot">)</span>           ≡⟨ +-assoc r <span class="ot">_</span> <span class="ot">_</span> ]≡</span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>    <span class="ot">(</span>r + d<span class="ot">)</span> + q * d           ≡[ <span class="ot">_</span>+<span class="ot">_</span> $≡ +-comm r <span class="ot">_</span> ≡$ q * d ⟩≡</span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>    <span class="ot">(</span>d + r<span class="ot">)</span> + q * d           ≡[ +-assoc d <span class="ot">_</span> <span class="ot">_</span> ⟩≡</span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>    d + <span class="ot">(</span>r + q * d<span class="ot">)</span>           ≡[ d +<span class="ot">_</span> $≡ r+qd≡n′ ⟩≡</span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a>    d + n′                    ≡[ +-comm d <span class="ot">_</span> ⟩≡</span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>    n′ + d                    ≡[ n′+d≡n ⟩≡</span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a>    n                         ∎</span></code></pre></div>
+<p>Now it seems like we have everything we need to write the division
+algorithm as a recursive algorithm: given <span class="math inline">\(n\)</span> and <span class="math inline">\(d\)</span>, check whether
+<span class="math inline">\(n\)</span> can be decreased by <span class="math inline">\(d\)</span> or not. If not, we can return <span class="math inline">\(q = 0\)</span> and
+<span class="math inline">\(r = n\)</span>. Otherwise, recurse on <span class="math inline">\(n - d\)</span>, returning the same remainder
+and an incremented quotient from whatever the recursive call returns, using
+<code>incDivMod</code> to discharge the proof obligation. It’s just a few lines
+of code, right?</p>
+<div class="sourceCode" id="cb66"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> DivModBad <span class="kw">where</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>  <span class="pp">{-# NON_TERMINATING #-}</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>  divMod <span class="ot">:</span> <span class="ot">(</span>n d <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> DivAlg n d</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>  divMod n d <span class="kw">with</span> n decreaseBy? d</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> LT n&lt;d <span class="ot">=</span> <span class="ot">(</span><span class="dv">0</span> , n<span class="ot">)</span> , <span class="ot">(</span>DM <span class="ot">(</span>n +0<span class="ot">)</span> n&lt;d<span class="ot">)</span></span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> GE n′ n′+d≡n <span class="kw">with</span> divMod n′ d</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> <span class="ot">(</span>q , r<span class="ot">)</span> , dm <span class="ot">=</span> <span class="ot">(</span>suc q , r<span class="ot">)</span> , <span class="ot">(</span>incDivMod n′+d≡n dm<span class="ot">)</span></span></code></pre></div>
+<p>Well, as you can see, it <em>is</em> just a few lines of code, but all is not
+well: although this function typechecks, Agda can’t tell that it is
+terminating! (I added the <code>NON_TERMINATING</code> pragma so I could include
+this bad version of <code>divMod</code> in the code without causing an error.)
+The problem is that the recursive call to <code>divMod</code> is on <code>n′</code>,
+which is not a subterm of <code>n</code>, but instead comes from the call to
+<code>decreaseBy?</code>. Agda has no way of knowing whether the result from
+some random function call is going to end up being smaller than the
+original input.</p>
+<p>Now, you and I can both see that this function does indeed terminate,
+but we just need a way to convince Agda of this fact… right?</p>
+<p>…have you spotted the flaw? Remember how I mentioned that the type <code>(n d : ℕ) → DivAlg n d</code> is not quite right? In fact, the above bad
+implementation of <code>divMod</code> is <em>not</em> terminating, and Agda is quite right to
+be worried! In particular, the function recurses infinitely when given an input of <span class="math inline">\(d
+= 0\)</span>, since it will keep subtracting <span class="math inline">\(0\)</span> from <span class="math inline">\(n\)</span> forever. This makes sense, of
+course: everyone knows you can’t divide by zero <em>because it makes the
+universe go into infinite recursion</em>.</p>
+<p>The correct type for <code>divMod</code> is <code>(n d : ℕ) → (0 &lt; d) → DivAlg n d</code>,
+but we’re still going to have trouble convincing Agda that our
+algorithm is terminating. In order to do so, we need to take a detour
+through <em>well-founded induction</em>.</p>
+</section>
+</section>
 <section id="well-founded-induction" class="level2">
 <h2>Well-founded induction</h2>
-<div class="sourceCode" id="cb62"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Well-founded induction</span></span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>Rel <span class="ot">:</span> <span class="dt">Set</span> <span class="ot">→</span> <span class="dt">Set₁</span></span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>Rel A <span class="ot">=</span> A <span class="ot">→</span> A <span class="ot">→</span> <span class="dt">Set</span></span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Acc <span class="ot">(</span>R <span class="ot">:</span> Rel A<span class="ot">)</span> <span class="ot">:</span> <span class="ot">(</span>a <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
-<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- b is accessible if all elements below it are accessible</span></span>
-<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>  acc <span class="ot">:</span> <span class="ot">{</span>b <span class="ot">:</span> A<span class="ot">}</span> <span class="ot">→</span> <span class="ot">((</span>a <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> R a b <span class="ot">→</span> Acc R a<span class="ot">)</span> <span class="ot">→</span> Acc R b</span>
-<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- Relation is well-founded if all elements are accessible</span></span>
-<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a>WellFounded <span class="ot">:</span> Rel A <span class="ot">→</span> <span class="dt">Set</span></span>
-<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a>WellFounded <span class="ot">{</span>A<span class="ot">}</span> R <span class="ot">=</span> <span class="ot">(</span>a <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> Acc R a</span>
-<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a><span class="co">-- Well-founded induction.</span></span>
-<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a>wf-ind <span class="ot">:</span> <span class="ot">{</span>P <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>R <span class="ot">:</span> Rel A<span class="ot">}</span> <span class="ot">→</span> WellFounded R <span class="ot">→</span> <span class="ot">((</span>y <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> <span class="ot">((</span>z <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> R z y <span class="ot">→</span> P z<span class="ot">)</span> <span class="ot">→</span> P y<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>x <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> P x</span>
-<span id="cb62-18"><a href="#cb62-18" aria-hidden="true" tabindex="-1"></a>wf-ind <span class="ot">{</span>A<span class="ot">}</span> <span class="ot">{</span>P<span class="ot">}</span> <span class="ot">{</span>R<span class="ot">}</span> wf ind x <span class="ot">=</span> go x <span class="ot">(</span>wf x<span class="ot">)</span></span>
-<span id="cb62-19"><a href="#cb62-19" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb62-20"><a href="#cb62-20" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">:</span> <span class="ot">(</span>x <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> Acc R x <span class="ot">→</span> P x</span>
-<span id="cb62-21"><a href="#cb62-21" aria-hidden="true" tabindex="-1"></a>  go x <span class="ot">(</span>acc f<span class="ot">)</span> <span class="ot">=</span> ind x <span class="ot">(λ</span> z Rzx <span class="ot">→</span> go z <span class="ot">(</span>f z Rzx<span class="ot">))</span></span>
-<span id="cb62-22"><a href="#cb62-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-23"><a href="#cb62-23" aria-hidden="true" tabindex="-1"></a><span class="co">--------------------------------------------------</span></span>
-<span id="cb62-24"><a href="#cb62-24" aria-hidden="true" tabindex="-1"></a><span class="co">-- _&lt;_ is well-founded</span></span>
-<span id="cb62-25"><a href="#cb62-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-26"><a href="#cb62-26" aria-hidden="true" tabindex="-1"></a><span class="co">-- ↓ P is the downward closure of P, i.e. ↓ P n is the proposition that P holds for all k ≤ n.</span></span>
-<span id="cb62-27"><a href="#cb62-27" aria-hidden="true" tabindex="-1"></a>↓ <span class="ot">:</span> <span class="ot">(</span>ℕ <span class="ot">→</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>ℕ <span class="ot">→</span> <span class="dt">Set</span><span class="ot">)</span></span>
-<span id="cb62-28"><a href="#cb62-28" aria-hidden="true" tabindex="-1"></a>↓ P n <span class="ot">=</span> <span class="ot">(</span>k <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>k ≤ n<span class="ot">)</span> <span class="ot">→</span> P k</span>
-<span id="cb62-29"><a href="#cb62-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-30"><a href="#cb62-30" aria-hidden="true" tabindex="-1"></a><span class="co">-- Prove ↓ (Acc _&lt;_)  for all n  by induction, using transitivity of ≤ .</span></span>
-<span id="cb62-31"><a href="#cb62-31" aria-hidden="true" tabindex="-1"></a>&lt;-acc <span class="ot">:</span> <span class="ot">(</span>m <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> ↓ <span class="ot">(</span>Acc <span class="ot">_</span>&lt;<span class="ot">_)</span> m</span>
-<span id="cb62-32"><a href="#cb62-32" aria-hidden="true" tabindex="-1"></a>&lt;-acc zero b zle <span class="ot">=</span> acc <span class="ot">(λ</span> a <span class="ot">())</span></span>
-<span id="cb62-33"><a href="#cb62-33" aria-hidden="true" tabindex="-1"></a>&lt;-acc <span class="ot">(</span>suc m<span class="ot">)</span> b b≤sm <span class="ot">=</span> acc <span class="ot">(λ</span> a a&lt;b <span class="ot">→</span> &lt;-acc m a <span class="ot">(</span>≤-pred <span class="ot">(</span>≤-trans a&lt;b b≤sm<span class="ot">)))</span></span>
-<span id="cb62-34"><a href="#cb62-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-35"><a href="#cb62-35" aria-hidden="true" tabindex="-1"></a><span class="co">-- To show any n is accessible, use the fact that ↓ (Acc _&lt;_) n is true and just project out accessibility for n.</span></span>
-<span id="cb62-36"><a href="#cb62-36" aria-hidden="true" tabindex="-1"></a>&lt;-wf <span class="ot">:</span> WellFounded <span class="ot">_</span>&lt;<span class="ot">_</span></span>
-<span id="cb62-37"><a href="#cb62-37" aria-hidden="true" tabindex="-1"></a>&lt;-wf n <span class="ot">=</span> &lt;-acc n n ≤-refl</span>
-<span id="cb62-38"><a href="#cb62-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-39"><a href="#cb62-39" aria-hidden="true" tabindex="-1"></a><span class="co">--------------------------------------------------</span></span>
-<span id="cb62-40"><a href="#cb62-40" aria-hidden="true" tabindex="-1"></a><span class="co">-- ℤ⁺, &lt;⁺ is well-founded</span></span>
-<span id="cb62-41"><a href="#cb62-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-42"><a href="#cb62-42" aria-hidden="true" tabindex="-1"></a>ℤ⁺ <span class="ot">:</span> <span class="dt">Set</span></span>
-<span id="cb62-43"><a href="#cb62-43" aria-hidden="true" tabindex="-1"></a>ℤ⁺ <span class="ot">=</span> Σ ℕ <span class="ot">(λ</span> n <span class="ot">→</span> <span class="dv">0</span> &lt; n<span class="ot">)</span></span>
-<span id="cb62-44"><a href="#cb62-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-45"><a href="#cb62-45" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>&lt;⁺<span class="ot">_</span> <span class="ot">:</span> ℤ⁺ <span class="ot">→</span> ℤ⁺ <span class="ot">→</span> <span class="dt">Set</span></span>
-<span id="cb62-46"><a href="#cb62-46" aria-hidden="true" tabindex="-1"></a><span class="ot">(</span>a , <span class="ot">_)</span> &lt;⁺ <span class="ot">(</span>b , <span class="ot">_)</span> <span class="ot">=</span> a &lt; b</span>
-<span id="cb62-47"><a href="#cb62-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-48"><a href="#cb62-48" aria-hidden="true" tabindex="-1"></a>acc&lt;→acc&lt;⁺ <span class="ot">:</span> <span class="ot">(</span>a <span class="ot">:</span> ℤ⁺<span class="ot">)</span> <span class="ot">→</span> Acc <span class="ot">_</span>&lt;<span class="ot">_</span> <span class="ot">(</span>fst a<span class="ot">)</span> <span class="ot">→</span> Acc <span class="ot">_</span>&lt;⁺<span class="ot">_</span> a</span>
-<span id="cb62-49"><a href="#cb62-49" aria-hidden="true" tabindex="-1"></a>acc&lt;→acc&lt;⁺ <span class="ot">(</span>a , <span class="ot">_)</span> <span class="ot">(</span>acc acc&lt;a<span class="ot">)</span> <span class="ot">=</span> acc <span class="ot">(λ</span> <span class="ot">{</span> <span class="ot">(</span>a′ , 1≤a′<span class="ot">)</span> a′&lt;a <span class="ot">→</span> acc&lt;→acc&lt;⁺ <span class="ot">(</span>a′ , 1≤a′<span class="ot">)</span> <span class="ot">(</span>acc&lt;a a′ a′&lt;a<span class="ot">)})</span></span>
-<span id="cb62-50"><a href="#cb62-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-51"><a href="#cb62-51" aria-hidden="true" tabindex="-1"></a>&lt;⁺-wf <span class="ot">:</span> WellFounded <span class="ot">_</span>&lt;⁺<span class="ot">_</span></span>
-<span id="cb62-52"><a href="#cb62-52" aria-hidden="true" tabindex="-1"></a>&lt;⁺-wf a <span class="ot">=</span> acc&lt;→acc&lt;⁺ a <span class="ot">(</span>&lt;-wf <span class="ot">(</span>fst a<span class="ot">))</span></span>
-<span id="cb62-53"><a href="#cb62-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-54"><a href="#cb62-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-55"><a href="#cb62-55" aria-hidden="true" tabindex="-1"></a><span class="co">--------------------------------------------------</span></span>
-<span id="cb62-56"><a href="#cb62-56" aria-hidden="true" tabindex="-1"></a><span class="co">-- Division Algorithm proper</span></span>
-<span id="cb62-57"><a href="#cb62-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-58"><a href="#cb62-58" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Cmp <span class="ot">(</span>a d <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
-<span id="cb62-59"><a href="#cb62-59" aria-hidden="true" tabindex="-1"></a>  LT <span class="ot">:</span> a &lt; d <span class="ot">→</span> Cmp a d</span>
-<span id="cb62-60"><a href="#cb62-60" aria-hidden="true" tabindex="-1"></a>  GE <span class="ot">:</span> <span class="ot">(</span>a′ <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>a′ + d ≡ a<span class="ot">)</span> <span class="ot">→</span> Cmp a d</span>
-<span id="cb62-61"><a href="#cb62-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-62"><a href="#cb62-62" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>decreaseBy?<span class="ot">_</span> <span class="ot">:</span> <span class="ot">(</span>a d <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> Cmp a d</span>
-<span id="cb62-63"><a href="#cb62-63" aria-hidden="true" tabindex="-1"></a>zero decreaseBy? zero <span class="ot">=</span> GE <span class="dv">0</span> refl</span>
-<span id="cb62-64"><a href="#cb62-64" aria-hidden="true" tabindex="-1"></a>zero decreaseBy? suc d <span class="ot">=</span> LT <span class="ot">(</span>sle zle<span class="ot">)</span></span>
-<span id="cb62-65"><a href="#cb62-65" aria-hidden="true" tabindex="-1"></a>suc a decreaseBy? zero <span class="ot">=</span> GE <span class="ot">(</span>suc a<span class="ot">)</span> <span class="ot">((</span>suc a<span class="ot">)</span> +0<span class="ot">)</span></span>
-<span id="cb62-66"><a href="#cb62-66" aria-hidden="true" tabindex="-1"></a>suc a decreaseBy? suc d <span class="kw">with</span> a decreaseBy? d</span>
-<span id="cb62-67"><a href="#cb62-67" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> LT a&lt;d <span class="ot">=</span> LT <span class="ot">(</span>sle a&lt;d<span class="ot">)</span></span>
-<span id="cb62-68"><a href="#cb62-68" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> GE a′ a′+d≡a <span class="ot">=</span> GE a′ <span class="ot">(</span>trans <span class="ot">(</span>a′ +suc d<span class="ot">)</span> <span class="ot">(</span>suc $≡ a′+d≡a<span class="ot">))</span></span>
-<span id="cb62-69"><a href="#cb62-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-70"><a href="#cb62-70" aria-hidden="true" tabindex="-1"></a>incDivMod <span class="ot">:</span> <span class="ot">{</span>n′ n d q r <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> n′ + d ≡ n <span class="ot">→</span> DivMod n′ d q r <span class="ot">→</span> DivMod n d <span class="ot">(</span>suc q<span class="ot">)</span> r</span>
-<span id="cb62-71"><a href="#cb62-71" aria-hidden="true" tabindex="-1"></a>incDivMod <span class="ot">{</span>n′<span class="ot">}</span> <span class="ot">{</span>n<span class="ot">}</span> <span class="ot">{</span>d<span class="ot">}</span> <span class="ot">{</span>q<span class="ot">}</span> <span class="ot">{</span>r<span class="ot">}</span> n′+d≡n <span class="ot">(</span>DM r+qd≡n′ r&lt;d<span class="ot">)</span> <span class="ot">=</span> DM lem r&lt;d</span>
-<span id="cb62-72"><a href="#cb62-72" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb62-73"><a href="#cb62-73" aria-hidden="true" tabindex="-1"></a>  lem <span class="ot">:</span> r + <span class="ot">(</span>d + q * d<span class="ot">)</span> ≡ n</span>
-<span id="cb62-74"><a href="#cb62-74" aria-hidden="true" tabindex="-1"></a>  lem <span class="ot">=</span> begin</span>
-<span id="cb62-75"><a href="#cb62-75" aria-hidden="true" tabindex="-1"></a>    r + <span class="ot">(</span>d + q * d<span class="ot">)</span>           ≡⟨ +-assoc r <span class="ot">_</span> <span class="ot">_</span> ]≡</span>
-<span id="cb62-76"><a href="#cb62-76" aria-hidden="true" tabindex="-1"></a>    <span class="ot">(</span>r + d<span class="ot">)</span> + q * d           ≡[ <span class="ot">_</span>+<span class="ot">_</span> $≡ +-comm r <span class="ot">_</span> ≡$ q * d ⟩≡</span>
-<span id="cb62-77"><a href="#cb62-77" aria-hidden="true" tabindex="-1"></a>    <span class="ot">(</span>d + r<span class="ot">)</span> + q * d           ≡[ +-assoc d <span class="ot">_</span> <span class="ot">_</span> ⟩≡</span>
-<span id="cb62-78"><a href="#cb62-78" aria-hidden="true" tabindex="-1"></a>    d + <span class="ot">(</span>r + q * d<span class="ot">)</span>           ≡[ d +<span class="ot">_</span> $≡ r+qd≡n′ ⟩≡</span>
-<span id="cb62-79"><a href="#cb62-79" aria-hidden="true" tabindex="-1"></a>    d + n′                    ≡[ +-comm d <span class="ot">_</span> ⟩≡</span>
-<span id="cb62-80"><a href="#cb62-80" aria-hidden="true" tabindex="-1"></a>    n′ + d                    ≡[ n′+d≡n ⟩≡</span>
-<span id="cb62-81"><a href="#cb62-81" aria-hidden="true" tabindex="-1"></a>    n                         ∎</span>
-<span id="cb62-82"><a href="#cb62-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-83"><a href="#cb62-83" aria-hidden="true" tabindex="-1"></a>DivAlg <span class="ot">:</span> ℕ <span class="ot">→</span> ℕ <span class="ot">→</span> <span class="dt">Set</span></span>
-<span id="cb62-84"><a href="#cb62-84" aria-hidden="true" tabindex="-1"></a>DivAlg n d <span class="ot">=</span> Σ <span class="ot">(</span>ℕ × ℕ<span class="ot">)</span> <span class="ot">(λ</span> <span class="ot">{</span> <span class="ot">(</span>q , r<span class="ot">)</span> <span class="ot">→</span> DivMod n d q r <span class="ot">})</span></span>
-<span id="cb62-85"><a href="#cb62-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-86"><a href="#cb62-86" aria-hidden="true" tabindex="-1"></a><span class="co">-- Division algorithm, via well-founded induction!</span></span>
-<span id="cb62-87"><a href="#cb62-87" aria-hidden="true" tabindex="-1"></a>divAlg <span class="ot">:</span> <span class="ot">(</span>n d <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">0</span> &lt; d<span class="ot">)</span> <span class="ot">→</span> DivAlg n d</span>
-<span id="cb62-88"><a href="#cb62-88" aria-hidden="true" tabindex="-1"></a>divAlg n d 0&lt;d <span class="ot">=</span> wf-ind <span class="ot">{</span>P <span class="ot">=</span> <span class="ot">λ</span> n <span class="ot">→</span> DivAlg n d<span class="ot">}</span> &lt;-wf go n</span>
-<span id="cb62-89"><a href="#cb62-89" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb62-90"><a href="#cb62-90" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">((</span>n′ <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> n′ &lt; n <span class="ot">→</span> DivAlg n′ d<span class="ot">)</span> <span class="ot">→</span> DivAlg n d</span>
-<span id="cb62-91"><a href="#cb62-91" aria-hidden="true" tabindex="-1"></a>  go n IH <span class="kw">with</span> n decreaseBy? d</span>
-<span id="cb62-92"><a href="#cb62-92" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> LT n&lt;d <span class="ot">=</span> <span class="ot">(</span><span class="dv">0</span> , n<span class="ot">)</span> , DM <span class="ot">(</span>n +0<span class="ot">)</span> n&lt;d</span>
-<span id="cb62-93"><a href="#cb62-93" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> GE n′ n′+d≡n <span class="kw">with</span> IH n′ <span class="ot">(</span>+→&lt; 0&lt;d n′+d≡n<span class="ot">)</span></span>
-<span id="cb62-94"><a href="#cb62-94" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> <span class="ot">(</span>q , r<span class="ot">)</span> , dm <span class="ot">=</span> <span class="ot">(</span>suc q , r<span class="ot">)</span> , incDivMod n′+d≡n dm</span>
-<span id="cb62-95"><a href="#cb62-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-96"><a href="#cb62-96" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>∣?<span class="ot">_</span> <span class="ot">:</span> <span class="ot">(</span>x y <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> Dec <span class="ot">(</span>x ∣ y<span class="ot">)</span></span>
-<span id="cb62-97"><a href="#cb62-97" aria-hidden="true" tabindex="-1"></a>zero ∣? zero <span class="ot">=</span> yes <span class="ot">(</span><span class="dv">0</span> , refl<span class="ot">)</span></span>
-<span id="cb62-98"><a href="#cb62-98" aria-hidden="true" tabindex="-1"></a>zero ∣? <span class="ot">(</span>suc y<span class="ot">)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>a , eq<span class="ot">)</span> <span class="ot">→</span> absurd <span class="ot">(</span>noConf <span class="ot">(</span>trans <span class="ot">(</span>sym <span class="ot">(</span>*-comm a zero<span class="ot">))</span> eq<span class="ot">))}</span></span>
-<span id="cb62-99"><a href="#cb62-99" aria-hidden="true" tabindex="-1"></a><span class="ot">(</span>suc x<span class="ot">)</span> ∣? y <span class="kw">with</span> divAlg y <span class="ot">(</span>suc x<span class="ot">)</span> <span class="ot">(</span>sle zle<span class="ot">)</span></span>
-<span id="cb62-100"><a href="#cb62-100" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> <span class="ot">(</span>q , zero<span class="ot">)</span> , dm <span class="ot">=</span> yes <span class="ot">(</span>mod0→divides y <span class="ot">(</span>suc x<span class="ot">)</span> dm<span class="ot">)</span></span>
-<span id="cb62-101"><a href="#cb62-101" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> <span class="ot">(</span>q , suc r<span class="ot">)</span> , dm <span class="ot">=</span> no <span class="ot">(</span>modS→¬divides y <span class="ot">(</span>suc x<span class="ot">)</span> dm<span class="ot">)</span></span>
-<span id="cb62-102"><a href="#cb62-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-103"><a href="#cb62-103" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-104"><a href="#cb62-104" aria-hidden="true" tabindex="-1"></a><span class="co">-- Loops</span></span>
-<span id="cb62-105"><a href="#cb62-105" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-106"><a href="#cb62-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-107"><a href="#cb62-107" aria-hidden="true" tabindex="-1"></a><span class="co">-- Alternate definition of inequality</span></span>
-<span id="cb62-108"><a href="#cb62-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-109"><a href="#cb62-109" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="ot">_</span>≤′<span class="ot">_</span> <span class="ot">:</span> ℕ <span class="ot">→</span> ℕ <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
-<span id="cb62-110"><a href="#cb62-110" aria-hidden="true" tabindex="-1"></a>  lerefl <span class="ot">:</span> <span class="ot">{</span>n <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> n ≤′ n</span>
-<span id="cb62-111"><a href="#cb62-111" aria-hidden="true" tabindex="-1"></a>  lesuc <span class="ot">:</span> <span class="ot">{</span>m n <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> suc m ≤′ n <span class="ot">→</span> m ≤′ n</span>
-<span id="cb62-112"><a href="#cb62-112" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-113"><a href="#cb62-113" aria-hidden="true" tabindex="-1"></a>≤′-suc <span class="ot">:</span> <span class="ot">{</span>m n <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> m ≤′ n <span class="ot">→</span> suc m ≤′ suc n</span>
-<span id="cb62-114"><a href="#cb62-114" aria-hidden="true" tabindex="-1"></a>≤′-suc lerefl <span class="ot">=</span> lerefl</span>
-<span id="cb62-115"><a href="#cb62-115" aria-hidden="true" tabindex="-1"></a>≤′-suc <span class="ot">(</span>lesuc m≤′n<span class="ot">)</span> <span class="ot">=</span> lesuc <span class="ot">(</span>≤′-suc m≤′n<span class="ot">)</span></span>
-<span id="cb62-116"><a href="#cb62-116" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-117"><a href="#cb62-117" aria-hidden="true" tabindex="-1"></a>0≤′ <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="dv">0</span> ≤′ n</span>
-<span id="cb62-118"><a href="#cb62-118" aria-hidden="true" tabindex="-1"></a>0≤′ zero <span class="ot">=</span> lerefl</span>
-<span id="cb62-119"><a href="#cb62-119" aria-hidden="true" tabindex="-1"></a>0≤′ <span class="ot">(</span>suc n<span class="ot">)</span> <span class="ot">=</span> lesuc <span class="ot">(</span>≤′-suc <span class="ot">(</span>0≤′ n<span class="ot">))</span></span>
-<span id="cb62-120"><a href="#cb62-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-121"><a href="#cb62-121" aria-hidden="true" tabindex="-1"></a>≤→≤′ <span class="ot">:</span> <span class="ot">{</span>m n <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> m ≤ n <span class="ot">→</span> m ≤′ n</span>
-<span id="cb62-122"><a href="#cb62-122" aria-hidden="true" tabindex="-1"></a>≤→≤′ <span class="ot">{</span>n <span class="ot">=</span> n<span class="ot">}</span> zle <span class="ot">=</span> 0≤′ n</span>
-<span id="cb62-123"><a href="#cb62-123" aria-hidden="true" tabindex="-1"></a>≤→≤′ <span class="ot">(</span>sle m≤n<span class="ot">)</span> <span class="ot">=</span> ≤′-suc <span class="ot">(</span>≤→≤′ m≤n<span class="ot">)</span></span>
-<span id="cb62-124"><a href="#cb62-124" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-125"><a href="#cb62-125" aria-hidden="true" tabindex="-1"></a><span class="co">-- Loops</span></span>
-<span id="cb62-126"><a href="#cb62-126" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-127"><a href="#cb62-127" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="ot">_</span>∈[<span class="ot">_</span>⋯<span class="ot">_</span>] <span class="ot">:</span> ℕ <span class="ot">→</span> ℕ <span class="ot">→</span> ℕ <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
-<span id="cb62-128"><a href="#cb62-128" aria-hidden="true" tabindex="-1"></a>  stop <span class="ot">:</span> <span class="ot">{</span>a b <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> a ≤ b <span class="ot">→</span> b ∈[ a ⋯ b ]</span>
-<span id="cb62-129"><a href="#cb62-129" aria-hidden="true" tabindex="-1"></a>  step <span class="ot">:</span> <span class="ot">{</span>a i b <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> a ≤ i <span class="ot">→</span> suc i ∈[ a ⋯ b ] <span class="ot">→</span> i ∈[ a ⋯ b ]</span>
-<span id="cb62-130"><a href="#cb62-130" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-131"><a href="#cb62-131" aria-hidden="true" tabindex="-1"></a>loop <span class="ot">:</span> <span class="ot">(</span>a b <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>a ≤′ b<span class="ot">)</span> <span class="ot">→</span> a ∈[ a ⋯ b ]</span>
-<span id="cb62-132"><a href="#cb62-132" aria-hidden="true" tabindex="-1"></a>loop a b a≤′b <span class="ot">=</span> mid a a b ≤-refl a≤′b</span>
-<span id="cb62-133"><a href="#cb62-133" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb62-134"><a href="#cb62-134" aria-hidden="true" tabindex="-1"></a>  mid <span class="ot">:</span> <span class="ot">(</span>a i b <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>a ≤ i<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>i ≤′ b<span class="ot">)</span> <span class="ot">→</span> i ∈[ a ⋯ b ]</span>
-<span id="cb62-135"><a href="#cb62-135" aria-hidden="true" tabindex="-1"></a>  mid a i b a≤i lerefl <span class="ot">=</span> stop a≤i</span>
-<span id="cb62-136"><a href="#cb62-136" aria-hidden="true" tabindex="-1"></a>  mid a i b a≤i <span class="ot">(</span>lesuc i≤′b<span class="ot">)</span> <span class="ot">=</span> step a≤i <span class="ot">(</span>mid a <span class="ot">(</span>suc i<span class="ot">)</span> b <span class="ot">(</span>≤-sucr a≤i<span class="ot">)</span> i≤′b<span class="ot">)</span></span>
-<span id="cb62-137"><a href="#cb62-137" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-138"><a href="#cb62-138" aria-hidden="true" tabindex="-1"></a>top <span class="ot">:</span> <span class="ot">{</span>i a b <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> i ∈[ a ⋯ b ] <span class="ot">→</span> i ≤ b</span>
-<span id="cb62-139"><a href="#cb62-139" aria-hidden="true" tabindex="-1"></a>top <span class="ot">(</span>stop <span class="ot">_)</span> <span class="ot">=</span> ≤-refl</span>
-<span id="cb62-140"><a href="#cb62-140" aria-hidden="true" tabindex="-1"></a>top <span class="ot">(</span>step <span class="ot">_</span> s<span class="ot">)</span> <span class="ot">=</span> ≤-sucl <span class="ot">(</span>top s<span class="ot">)</span></span>
-<span id="cb62-141"><a href="#cb62-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-142"><a href="#cb62-142" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-143"><a href="#cb62-143" aria-hidden="true" tabindex="-1"></a><span class="co">-- Primality testing</span></span>
-<span id="cb62-144"><a href="#cb62-144" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-145"><a href="#cb62-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-146"><a href="#cb62-146" aria-hidden="true" tabindex="-1"></a>add <span class="ot">:</span> <span class="ot">{</span>P <span class="ot">:</span> ℕ <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>m <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> <span class="ot">((</span>j <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">2</span> ≤ j<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>j &lt; m<span class="ot">)</span> <span class="ot">→</span> P j<span class="ot">)</span> <span class="ot">→</span> P m <span class="ot">→</span> <span class="ot">((</span>j <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">2</span> ≤ j<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>j &lt; suc m<span class="ot">)</span> <span class="ot">→</span> P j<span class="ot">)</span></span>
-<span id="cb62-147"><a href="#cb62-147" aria-hidden="true" tabindex="-1"></a>add <span class="ot">{</span>m <span class="ot">=</span> m<span class="ot">}</span> f Pm j le lt <span class="kw">with</span> <span class="ot">(</span>j ≟ m<span class="ot">)</span></span>
-<span id="cb62-148"><a href="#cb62-148" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">=</span> Pm</span>
-<span id="cb62-149"><a href="#cb62-149" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no j≢m <span class="ot">=</span> f j le <span class="ot">(</span>≤≢→&lt; <span class="ot">(</span>≤-pred lt<span class="ot">)</span> j≢m<span class="ot">)</span></span>
-<span id="cb62-150"><a href="#cb62-150" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-151"><a href="#cb62-151" aria-hidden="true" tabindex="-1"></a>prime? <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">2</span> ≤ n<span class="ot">)</span> <span class="ot">→</span> Prime n ⊎ Composite n</span>
-<span id="cb62-152"><a href="#cb62-152" aria-hidden="true" tabindex="-1"></a>prime? n 2≤n <span class="ot">=</span> try <span class="ot">(</span>loop <span class="dv">2</span> n <span class="ot">(</span>≤→≤′ 2≤n<span class="ot">))</span> <span class="ot">(λ</span> <span class="ot">{</span> <span class="ot">(</span>suc zero<span class="ot">)</span> <span class="ot">(</span>sle <span class="ot">())</span> j&lt;2 <span class="ot">_</span> <span class="ot">;</span> <span class="ot">(</span>suc <span class="ot">(</span>suc j<span class="ot">))</span> 2≤j <span class="ot">(</span>sle <span class="ot">(</span>sle <span class="ot">()))</span> <span class="ot">_})</span></span>
-<span id="cb62-153"><a href="#cb62-153" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb62-154"><a href="#cb62-154" aria-hidden="true" tabindex="-1"></a>  try <span class="ot">:</span> <span class="ot">{</span>m <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> m ∈[ <span class="dv">2</span> ⋯ n ] <span class="ot">→</span> <span class="ot">((</span>j <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">2</span> ≤ j<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>j &lt; m<span class="ot">)</span> <span class="ot">→</span> ¬ <span class="ot">(</span>j ∣ n<span class="ot">))</span> <span class="ot">→</span> Prime n ⊎ Composite n</span>
-<span id="cb62-155"><a href="#cb62-155" aria-hidden="true" tabindex="-1"></a>  try <span class="ot">(</span>stop 2≤n<span class="ot">)</span> soFar <span class="ot">=</span> inj₁ <span class="ot">(</span>2≤n , soFar<span class="ot">)</span></span>
-<span id="cb62-156"><a href="#cb62-156" aria-hidden="true" tabindex="-1"></a>  try <span class="ot">{</span>m<span class="ot">}</span> <span class="ot">(</span>step 2≤m next<span class="ot">)</span> soFar <span class="kw">with</span> m ∣? n</span>
-<span id="cb62-157"><a href="#cb62-157" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> yes m∣n <span class="ot">=</span> inj₂ <span class="ot">(</span>m , 2≤m , top next , m∣n<span class="ot">)</span></span>
-<span id="cb62-158"><a href="#cb62-158" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> no m∤n <span class="ot">=</span> try next <span class="ot">(</span>add soFar m∤n<span class="ot">)</span></span>
-<span id="cb62-159"><a href="#cb62-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-160"><a href="#cb62-160" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-161"><a href="#cb62-161" aria-hidden="true" tabindex="-1"></a><span class="co">-- Lists</span></span>
-<span id="cb62-162"><a href="#cb62-162" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-163"><a href="#cb62-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-164"><a href="#cb62-164" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> List <span class="ot">(</span>A <span class="ot">:</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
-<span id="cb62-165"><a href="#cb62-165" aria-hidden="true" tabindex="-1"></a>  [] <span class="ot">:</span> List A</span>
-<span id="cb62-166"><a href="#cb62-166" aria-hidden="true" tabindex="-1"></a>  <span class="ot">_</span>∷<span class="ot">_</span> <span class="ot">:</span> A <span class="ot">→</span> List A <span class="ot">→</span> List A</span>
-<span id="cb62-167"><a href="#cb62-167" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-168"><a href="#cb62-168" aria-hidden="true" tabindex="-1"></a>All <span class="ot">:</span> <span class="ot">(</span>P <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">→</span> List A <span class="ot">→</span> <span class="dt">Set</span></span>
-<span id="cb62-169"><a href="#cb62-169" aria-hidden="true" tabindex="-1"></a>All P [] <span class="ot">=</span> ⊤</span>
-<span id="cb62-170"><a href="#cb62-170" aria-hidden="true" tabindex="-1"></a>All P <span class="ot">(</span>x ∷ xs<span class="ot">)</span> <span class="ot">=</span> P x × All P xs</span>
-<span id="cb62-171"><a href="#cb62-171" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-172"><a href="#cb62-172" aria-hidden="true" tabindex="-1"></a>foldr <span class="ot">:</span> <span class="ot">(</span>A <span class="ot">→</span> B <span class="ot">→</span> B<span class="ot">)</span> <span class="ot">→</span> B <span class="ot">→</span> List A <span class="ot">→</span> B</span>
-<span id="cb62-173"><a href="#cb62-173" aria-hidden="true" tabindex="-1"></a>foldr <span class="ot">_</span>&amp;<span class="ot">_</span> z [] <span class="ot">=</span> z</span>
-<span id="cb62-174"><a href="#cb62-174" aria-hidden="true" tabindex="-1"></a>foldr <span class="ot">_</span>&amp;<span class="ot">_</span> z <span class="ot">(</span>x ∷ xs<span class="ot">)</span> <span class="ot">=</span> x &amp; foldr <span class="ot">_</span>&amp;<span class="ot">_</span> z xs</span>
-<span id="cb62-175"><a href="#cb62-175" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-176"><a href="#cb62-176" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>++<span class="ot">_</span> <span class="ot">:</span> List A <span class="ot">→</span> List A <span class="ot">→</span> List A</span>
-<span id="cb62-177"><a href="#cb62-177" aria-hidden="true" tabindex="-1"></a>xs ++ ys <span class="ot">=</span> foldr <span class="ot">(_</span>∷<span class="ot">_)</span> ys xs</span>
-<span id="cb62-178"><a href="#cb62-178" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-179"><a href="#cb62-179" aria-hidden="true" tabindex="-1"></a>product <span class="ot">:</span> List ℕ <span class="ot">→</span> ℕ</span>
-<span id="cb62-180"><a href="#cb62-180" aria-hidden="true" tabindex="-1"></a>product <span class="ot">=</span> foldr <span class="ot">_</span>*<span class="ot">_</span> <span class="dv">1</span></span>
-<span id="cb62-181"><a href="#cb62-181" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-182"><a href="#cb62-182" aria-hidden="true" tabindex="-1"></a>All-++ <span class="ot">:</span> <span class="ot">{</span>P <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>xs ys <span class="ot">:</span> List A<span class="ot">}</span> <span class="ot">→</span> All P xs <span class="ot">→</span> All P ys <span class="ot">→</span> All P <span class="ot">(</span>xs ++ ys<span class="ot">)</span></span>
-<span id="cb62-183"><a href="#cb62-183" aria-hidden="true" tabindex="-1"></a>All-++ <span class="ot">{</span>xs <span class="ot">=</span> []<span class="ot">}</span> Pxs Pys <span class="ot">=</span> Pys</span>
-<span id="cb62-184"><a href="#cb62-184" aria-hidden="true" tabindex="-1"></a>All-++ <span class="ot">{</span>xs <span class="ot">=</span> x ∷ xs<span class="ot">}</span> <span class="ot">(</span>Px , Pxs<span class="ot">)</span> Pys <span class="ot">=</span> Px , All-++ Pxs Pys</span>
-<span id="cb62-185"><a href="#cb62-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-186"><a href="#cb62-186" aria-hidden="true" tabindex="-1"></a>product-++ <span class="ot">:</span> <span class="ot">(</span>xs ys <span class="ot">:</span> List ℕ<span class="ot">)</span> <span class="ot">→</span> product <span class="ot">(</span>xs ++ ys<span class="ot">)</span> ≡ product xs * product ys</span>
-<span id="cb62-187"><a href="#cb62-187" aria-hidden="true" tabindex="-1"></a>product-++ [] ys <span class="ot">=</span> sym <span class="ot">(_</span> +0<span class="ot">)</span></span>
-<span id="cb62-188"><a href="#cb62-188" aria-hidden="true" tabindex="-1"></a>product-++ <span class="ot">(</span>x ∷ xs<span class="ot">)</span> ys <span class="ot">=</span> trans <span class="ot">(</span>x *<span class="ot">_</span> $≡ product-++ xs ys<span class="ot">)</span> <span class="ot">(</span>sym <span class="ot">(</span>*-assoc x <span class="ot">(</span>product xs<span class="ot">)</span> <span class="ot">(</span>product ys<span class="ot">)))</span></span>
-<span id="cb62-189"><a href="#cb62-189" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-190"><a href="#cb62-190" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-191"><a href="#cb62-191" aria-hidden="true" tabindex="-1"></a><span class="co">-- FTA</span></span>
-<span id="cb62-192"><a href="#cb62-192" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
-<span id="cb62-193"><a href="#cb62-193" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-194"><a href="#cb62-194" aria-hidden="true" tabindex="-1"></a>FTA <span class="ot">:</span> ℤ⁺ <span class="ot">→</span> <span class="dt">Set</span></span>
-<span id="cb62-195"><a href="#cb62-195" aria-hidden="true" tabindex="-1"></a>FTA <span class="ot">(</span>n , <span class="ot">_)</span> <span class="ot">=</span> Σ <span class="ot">(</span>List ℕ<span class="ot">)</span> <span class="ot">(λ</span> ps <span class="ot">→</span> All Prime ps × product ps ≡ n<span class="ot">)</span></span>
-<span id="cb62-196"><a href="#cb62-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-197"><a href="#cb62-197" aria-hidden="true" tabindex="-1"></a><span class="co">-- FTA, without uniqueness.</span></span>
-<span id="cb62-198"><a href="#cb62-198" aria-hidden="true" tabindex="-1"></a>fta <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℤ⁺<span class="ot">)</span> <span class="ot">→</span> FTA n</span>
-<span id="cb62-199"><a href="#cb62-199" aria-hidden="true" tabindex="-1"></a>fta n <span class="ot">=</span> wf-ind <span class="ot">{</span>P <span class="ot">=</span> FTA<span class="ot">}</span> &lt;⁺-wf go n</span>
-<span id="cb62-200"><a href="#cb62-200" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
-<span id="cb62-201"><a href="#cb62-201" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℤ⁺<span class="ot">)</span> <span class="ot">→</span> <span class="ot">((</span>n′ <span class="ot">:</span> ℤ⁺<span class="ot">)</span> <span class="ot">→</span> n′ &lt;⁺ n <span class="ot">→</span> FTA n′<span class="ot">)</span> <span class="ot">→</span> FTA n</span>
-<span id="cb62-202"><a href="#cb62-202" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">(</span>suc zero , <span class="ot">_)</span> <span class="ot">_</span> <span class="ot">=</span> [] , <span class="ot">(</span>tt , refl<span class="ot">)</span></span>
-<span id="cb62-203"><a href="#cb62-203" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">(</span>suc <span class="ot">(</span>suc n<span class="ot">)</span> , 1≤n<span class="ot">)</span> IH <span class="kw">with</span> prime? <span class="ot">(</span>suc <span class="ot">(</span>suc n<span class="ot">))</span> <span class="ot">(</span>sle <span class="ot">(</span>sle zle<span class="ot">))</span></span>
-<span id="cb62-204"><a href="#cb62-204" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> inj₁ P <span class="ot">=</span> <span class="ot">(</span>suc <span class="ot">(</span>suc n<span class="ot">)</span> ∷ []<span class="ot">)</span> , <span class="ot">((</span>P , tt<span class="ot">)</span> , <span class="ot">(</span>suc $≡ <span class="ot">(</span>suc $≡ <span class="ot">(</span>n *1<span class="ot">))))</span></span>
-<span id="cb62-205"><a href="#cb62-205" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> inj₂ C <span class="kw">with</span> factorsOf <span class="ot">_</span> C</span>
-<span id="cb62-206"><a href="#cb62-206" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> <span class="ot">((</span>a , 2≤a , a&lt;n , <span class="ot">_)</span> , <span class="ot">(</span>b , 2≤b , b&lt;n , <span class="ot">_))</span> , ab≡n</span>
-<span id="cb62-207"><a href="#cb62-207" aria-hidden="true" tabindex="-1"></a>      <span class="kw">with</span> IH <span class="ot">(</span>a , ≤-trans <span class="ot">(</span>sle zle<span class="ot">)</span> 2≤a<span class="ot">)</span> a&lt;n</span>
-<span id="cb62-208"><a href="#cb62-208" aria-hidden="true" tabindex="-1"></a>         <span class="ot">|</span> IH <span class="ot">(</span>b , ≤-trans <span class="ot">(</span>sle zle<span class="ot">)</span> 2≤b<span class="ot">)</span> b&lt;n</span>
-<span id="cb62-209"><a href="#cb62-209" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> ps₁ , Pps₁ , prod₁ <span class="ot">|</span> ps₂ , Pps₂ , prod₂ <span class="ot">=</span> <span class="ot">(</span>ps₁ ++ ps₂<span class="ot">)</span> , <span class="ot">(</span>All-++ Pps₁ Pps₂<span class="ot">)</span> ,</span>
-<span id="cb62-210"><a href="#cb62-210" aria-hidden="true" tabindex="-1"></a>    begin</span>
-<span id="cb62-211"><a href="#cb62-211" aria-hidden="true" tabindex="-1"></a>      product <span class="ot">(</span>ps₁ ++ ps₂<span class="ot">)</span>      ≡[ product-++ ps₁ ps₂ ⟩≡</span>
-<span id="cb62-212"><a href="#cb62-212" aria-hidden="true" tabindex="-1"></a>      product ps₁ * product ps₂ ≡[ <span class="ot">_</span>*<span class="ot">_</span> $≡ prod₁ ≡$≡ prod₂ ⟩≡</span>
-<span id="cb62-213"><a href="#cb62-213" aria-hidden="true" tabindex="-1"></a>      a * b                     ≡[ ab≡n ⟩≡</span>
-<span id="cb62-214"><a href="#cb62-214" aria-hidden="true" tabindex="-1"></a>      suc <span class="ot">(</span>suc n<span class="ot">)</span>               ∎</span></code></pre></div>
+<p>XXX typical “structural” induction — recursive calls on subterms.
+(Agda is a bit more sophisticated than that, but that’s the basic
+idea.) There are more exotic forms of induction, but it turns out we
+already have everything we need: we can bootstrap</p>
+<p>The idea of well-founded induction starts with the general idea of a
+<em>relation</em>. A relation on <code>A</code> is just a function that takes two
+values of type <code>A</code> and produces a type, representing evidence that the
+two values are related (according to whatever kind of relationship we
+have in mind).</p>
+<div class="sourceCode" id="cb67"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>Rel <span class="ot">:</span> <span class="dt">Set</span> <span class="ot">→</span> <span class="dt">Set₁</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>Rel A <span class="ot">=</span> A <span class="ot">→</span> A <span class="ot">→</span> <span class="dt">Set</span></span></code></pre></div>
+<p>We have already seen quite a few relations: equality, less-than,
+less-than-or-equal-to, divisibility.</p>
+<p>XXX I will use recursive function / induction interchangeably.</p>
+<p>Suppose we’re writing a recursive function, with some relation <span class="math inline">\(\prec\)</span>
+in mind, and for a given input <span class="math inline">\(x\)</span> we’re only allowed to make
+recursive calls on values <span class="math inline">\(y\)</span> such that <span class="math inline">\(y \prec x\)</span>. If <span class="math inline">\(\prec\)</span> is the
+“is a structural subterm of” relation, then we get structural
+recursion as usual. But what if <span class="math inline">\(\prec\)</span> is some other relation? What
+needs to be true about <span class="math inline">\(\prec\)</span> for this to make sense? In particular, how
+can we be sure that the function won’t get stuck in infinite recursion?</p>
+<p>One’s first instinct might be to say that <span class="math inline">\(y \prec x\)</span> needs to imply that
+<span class="math inline">\(y\)</span> is “smaller than” <span class="math inline">\(x\)</span> somehow. But what does “smaller than” mean?
+And in fact, “smaller than” doesn’t always work: for example, if we are
+writing a function over the rational numbers, or even just the
+integers, the usual “smaller than” relation does <em>not</em> guarantee our
+function will terminate; it’s possible to continue choosing smaller
+and smaller rational numbers or integers forever.</p>
+<p>The key idea is exactly that this can’t happen: it’s not possible to
+have an infinite chain of values where each is related to the
+previous. That is, there should be no left-infinite chains <span class="math inline">\(\dots
+\prec y_3 \prec y_2 \prec y_1 \prec x\)</span>. Then we are guaranteed that if we keep making
+recursive calls on values that are related by <span class="math inline">\(\prec\)</span> to the previous
+value, we will have to stop eventually: after some finite number of calls
+we will hit a value with nothing else related to it.</p>
+<p>A relation <span class="math inline">\(\prec\)</span> with this “no left-infinite chains” property is
+called <em>well-founded</em>. But how do we encode this idea in Agda?</p>
+<section id="accessibility" class="level3">
+<h3>Accessibility</h3>
+<p>Instead of thinking negatively (<em>no</em> left-infinite
+chains), the key is to think positively: <em>all</em> chains to the left of
+<em>every</em> value are finite. Call a value <em>accessible</em> if all chains
+leading to it are finite. Another way to say this is that a value is
+accessible if every value related to it is also accessible:</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> Acc <span class="ot">(_</span>≺<span class="ot">_</span> <span class="ot">:</span> Rel A<span class="ot">)</span> <span class="ot">:</span> <span class="ot">(</span>x <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>  acc <span class="ot">:</span> <span class="ot">{</span>x <span class="ot">:</span> A<span class="ot">}</span> <span class="ot">→</span> <span class="ot">((</span>y <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> y ≺ x <span class="ot">→</span> Acc <span class="ot">_</span>≺<span class="ot">_</span> y<span class="ot">)</span> <span class="ot">→</span> Acc <span class="ot">_</span>≺<span class="ot">_</span> x</span></code></pre></div>
+<p><code>Acc _≺_ x</code> defines what it means for a particular value <code>x</code> to be
+accessible with respect to a relation <code>R</code>. There is only one
+constructor, <code>acc</code>, which requires <code>(y : A) → y ≺ x → Acc _≺_ y</code>—that
+is, for every value <code>y</code> of type <code>A</code>, if <code>y</code> is related to <code>x</code>, then
+<code>y</code> is accessible. In other words, <code>x</code> is accessible if every <code>y ≺ x</code>
+is accessible.</p>
+<p>XXX This is definitely tricky to wrap your head around. At this point
+you may have two objections:</p>
+<ol type="1">
+<li><p>What about base cases? Shouldn’t we have another constructor which
+says <code>x</code> is accessible if <em>nothing</em> is related to it? Actually,
+the <code>acc</code> constructor already says that! If nothing is related to
+<code>x</code>, then <code>(y : A) → y ≺ x → Acc _≺_ y</code> is trivially true: we can
+easily promise anything we want as the output of a function if we
+know it can never be called. Every number less than zero is a
+purple flying weasel.</p></li>
+<li><p>Doesn’t this just run into the same problem as before with
+left-infinite chains? If we consider the “is one less than”
+relation on the integers, isn’t <span class="math inline">\(2\)</span> accessible because <span class="math inline">\(1\)</span> is
+accessible because <span class="math inline">\(0\)</span> is accessible because <span class="math inline">\(-1\)</span> is accessible
+because … ?</p>
+<p>There is something a bit subtle going on here: recursive data types
+in Agda (unlike, say, Haskell) are interpreted according to a
+<em>least fixed point</em> semantics. Put in plain terms, the only values
+of a data type are those which can be built by applications of a
+<em>finite</em> number of constructors. So in fact, the “no left-infinite
+chain” condition is foundationally built into the way Agda data
+types work!</p>
+<p>XXX a bit exotic since <code>Acc</code> values can be <em>infinitely-branching</em> trees!</p></li>
+</ol>
+<p>XXX turn well-founded induction into structural induction by
+<em>pattern-matching on <code>Acc</code> proofs</em>!</p>
+</section>
+<section id="well-founded-induction-1" class="level3">
+<h3>Well-founded induction</h3>
+<p>Given the definition of accessible elements, we can now give the
+definition of a well-founded relation: a relation on <code>A</code> is well-founded if
+<em>every</em> value of type <code>A</code> is accessible.</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>WellFounded <span class="ot">:</span> Rel A <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>WellFounded <span class="ot">{</span>A<span class="ot">}</span> <span class="ot">_</span>≺<span class="ot">_</span> <span class="ot">=</span> <span class="ot">(</span>a <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> Acc <span class="ot">_</span>≺<span class="ot">_</span> a</span></code></pre></div>
+<p>We can now write down the <em>principle of well-founded induction</em>. XXX
+also tricky to wrap your brain around. Before, we were just talking
+about functions terminating or not. But the reason this is important
+is that a function might be calculating a <em>proof</em>. A function which
+purports to calculate a proof but sometimes goes into infinite
+recursion is a charlatan: XXX not really a proof at all.</p>
+<p>So instead of thinking about termination, let’s switch to thinking
+about proofs. Given a proposition <span class="math inline">\(P(x)\)</span>, we want to prove that
+<span class="math inline">\(P(x)\)</span> holds for all <span class="math inline">\(x\)</span> of type <span class="math inline">\(A\)</span>. The idea is that when trying to
+prove <span class="math inline">\(P(y)\)</span> for a particular <span class="math inline">\(y\)</span>, we get to assume that <span class="math inline">\(P(z)\)</span> holds
+(<em>i.e.</em> we get to make recursive calls <span class="math inline">\(P(z)\)</span>) for all <span class="math inline">\(z \prec y\)</span>.</p>
+<p>XXX</p>
+<ul>
+<li><code>P : A → Set</code> : the proposition.</li>
+<li><code>_≺_ : Rel A</code>: the relation.</li>
+<li><code>WellFounded _≺_</code>: a proof that <code>≺</code> is a well-founded relation.</li>
+<li><code>(y : A) → ((z : A) → z ≺ y → P z) → P y</code>: XXX tricky. “For any
+<code>y</code>, if we know <code>P z</code> holds for all <code>z ≺ y</code>, then we can show <code>P y</code>
+also holds.”</li>
+</ul>
+<p>The principle of well-founded induction says that this is enough to
+show <code>P x</code> holds for <em>all</em> <code>x</code>.</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>wf-ind <span class="ot">:</span> <span class="ot">{</span>P <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{_</span>≺<span class="ot">_</span> <span class="ot">:</span> Rel A<span class="ot">}</span> <span class="ot">→</span> WellFounded <span class="ot">_</span>≺<span class="ot">_</span> <span class="ot">→</span> <span class="ot">((</span>y <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> <span class="ot">((</span>z <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> z ≺ y <span class="ot">→</span> P z<span class="ot">)</span> <span class="ot">→</span> P y<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>x <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> P x</span></code></pre></div>
+<p>XXX now, how to implement this? If we try something
+straightforward—just call <code>ind</code> on <code>x</code>, then call <code>wf-ind</code> recursively
+to fill in the proof for <code>P z</code>—of course it does not work; Agda cannot
+tell that this is terminating. And this makes sense, because we are
+not even using the fact that the relation is well-founded at all!</p>
+<div class="sourceCode" id="cb71"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> WFIndBad <span class="kw">where</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>  <span class="pp">{-# NON_TERMINATING #-}</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>  wf-ind-bad <span class="ot">:</span> <span class="ot">{</span>P <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>R <span class="ot">:</span> Rel A<span class="ot">}</span> <span class="ot">→</span> WellFounded R <span class="ot">→</span> <span class="ot">((</span>y <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> <span class="ot">((</span>z <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> R z y <span class="ot">→</span> P z<span class="ot">)</span> <span class="ot">→</span> P y<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>x <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> P x</span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>  wf-ind-bad <span class="ot">{</span>A<span class="ot">}</span> <span class="ot">{</span>P<span class="ot">}</span> <span class="ot">{</span>R<span class="ot">}</span> wf ind x <span class="ot">=</span> ind x <span class="ot">(λ</span> z Rzx <span class="ot">→</span> wf-ind-bad wf ind z<span class="ot">)</span></span></code></pre></div>
+<p>The idea is to use the fact that <span class="math inline">\(\prec\)</span> is well-founded to generate
+an initial proof of accessibility for the input <span class="math inline">\(x\)</span>, and then <em>pattern
+match on accessibility proofs</em> alongside the values as we recurse.
+Every time we make a recursive call on some <span class="math inline">\(y \prec x\)</span>, we can just
+pattern-match on the accessibility proof for <span class="math inline">\(x\)</span> to get an
+accessibility proof for <span class="math inline">\(y\)</span>, so Agda will be able to see that the
+whole thing is <em>structurally</em> recursive on the accessibility proofs.</p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>wf-ind <span class="ot">{</span>A<span class="ot">}</span> <span class="ot">{</span>P<span class="ot">}</span> <span class="ot">{</span>R<span class="ot">}</span> wf ind x <span class="ot">=</span> go x <span class="ot">(</span>wf x<span class="ot">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb73"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">:</span> <span class="ot">(</span>x <span class="ot">:</span> A<span class="ot">)</span> <span class="ot">→</span> Acc R x <span class="ot">→</span> P x</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>  go x <span class="ot">(</span>acc f<span class="ot">)</span> <span class="ot">=</span> ind x <span class="ot">(λ</span> z Rzx <span class="ot">→</span> go z <span class="ot">(</span>f z Rzx<span class="ot">))</span></span></code></pre></div>
+<p>Now that we have well-founded induction under our belts, let’s show
+that a couple different relations we want to use are well-founded.
+First up is the less-than relation on natural numbers. The fact that
+<span class="math inline">\(&lt;\)</span> on natural numbers is well-founded corresponds to what is often
+called “strong induction”.<span class="sidenote-wrapper"><label for="sn-5" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-5" class="margin-toggle"/><span class="sidenote">Incidentally, we could probably have
+gotten away with directly defining a principle of strong natural
+number induction, without bothering with the full generality of
+well-founded induction, but this way is more fun and interesting!<br />
+<br />
+</span></span> To
+prove that <span class="math inline">\(&lt;\)</span> is well-founded, we of course must show that every
+natural number is accessible under <span class="math inline">\(&lt;\)</span>. However, if we directly try
+to prove <code>(m : ℕ) → (Acc _&lt;_) m</code>, we run into a variant of the exact
+same problem we have been dealing with: to prove that
+<span class="math inline">\(m\)</span> is accessible we need to know that <em>every</em> <span class="math inline">\(k &lt; m\)</span> is also
+accessible, but again, XXX</p>
+<p>What we need is the usual trick for proving strong induction from weak
+induction: instead of proving that <span class="math inline">\(P(x)\)</span> holds for all <span class="math inline">\(x\)</span>, we prove
+that <span class="math inline">\((\downarrow P)(x)\)</span> holds for all <span class="math inline">\(x\)</span>, where <span class="math inline">\(\downarrow P\)</span> is
+the “downward closure” of <span class="math inline">\(P\)</span>: <span class="math inline">\((\downarrow P)(x)\)</span> says that <span class="math inline">\(P(x)\)</span>
+holds for <em>all</em> <span class="math inline">\(y \leq x\)</span>.</p>
+<p>XXX note that this is just the reflexive, transitive closure of the
+successor relation. Advanced exercise: generalize <span class="math inline">\(\downarrow P\)</span> as the
+reflexive, transitive closure of <span class="math inline">\(P\)</span> and then prove that <span class="math inline">\(\downarrow
+P\)</span> is well-founded whenever <span class="math inline">\(P\)</span> is. In fact, it’s an if and only if. (See other blog post on
+well-founded induction: https://boarders.github.io/posts/well_founded_induction.html)</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>↓ <span class="ot">:</span> <span class="ot">(</span>ℕ <span class="ot">→</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>ℕ <span class="ot">→</span> <span class="dt">Set</span><span class="ot">)</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>↓ P n <span class="ot">=</span> <span class="ot">(</span>k <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>k ≤ n<span class="ot">)</span> <span class="ot">→</span> P k</span></code></pre></div>
+<p>Now we can prove, for all natural numbers <span class="math inline">\(m\)</span>, that every natural
+number up to and including <span class="math inline">\(m\)</span> is accessible:</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>&lt;-acc <span class="ot">:</span> <span class="ot">(</span>m <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> ↓ <span class="ot">(</span>Acc <span class="ot">_</span>&lt;<span class="ot">_)</span> m</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>&lt;-acc zero b zle <span class="ot">=</span> acc <span class="ot">(λ</span> a <span class="ot">())</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>&lt;-acc <span class="ot">(</span>suc m<span class="ot">)</span> b b≤sm <span class="ot">=</span> acc <span class="ot">(λ</span> a a&lt;b <span class="ot">→</span> &lt;-acc m a <span class="ot">(</span>≤-pred <span class="ot">(</span>≤-trans a&lt;b b≤sm<span class="ot">)))</span></span></code></pre></div>
+<p>Finally, to show that any natural number <span class="math inline">\(n\)</span> is accessible, <em>i.e.</em> <span class="math inline">\(&lt;\)</span>
+is well-founded, use the fact that all numbers up to and including <span class="math inline">\(n\)</span>
+are accessible, and just project out accessibility for <span class="math inline">\(n\)</span> itself.</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>&lt;-wf <span class="ot">:</span> WellFounded <span class="ot">_</span>&lt;<span class="ot">_</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>&lt;-wf n <span class="ot">=</span> &lt;-acc n n ≤-refl</span></code></pre></div>
+<p>XXX also will need type of positive natural numbers. Define <span class="math inline">\(&lt;\)</span>
+relation on them, and show it is well-founded because the usual <span class="math inline">\(&lt;\)</span> on
+natural numbers is.</p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>ℤ⁺ <span class="ot">:</span> <span class="dt">Set</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>ℤ⁺ <span class="ot">=</span> Σ ℕ <span class="ot">(λ</span> n <span class="ot">→</span> <span class="dv">0</span> &lt; n<span class="ot">)</span></span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>&lt;⁺<span class="ot">_</span> <span class="ot">:</span> ℤ⁺ <span class="ot">→</span> ℤ⁺ <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a><span class="ot">(</span>a , <span class="ot">_)</span> &lt;⁺ <span class="ot">(</span>b , <span class="ot">_)</span> <span class="ot">=</span> a &lt; b</span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a>acc&lt;→acc&lt;⁺ <span class="ot">:</span> <span class="ot">(</span>a <span class="ot">:</span> ℤ⁺<span class="ot">)</span> <span class="ot">→</span> Acc <span class="ot">_</span>&lt;<span class="ot">_</span> <span class="ot">(</span>fst a<span class="ot">)</span> <span class="ot">→</span> Acc <span class="ot">_</span>&lt;⁺<span class="ot">_</span> a</span>
+<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a>acc&lt;→acc&lt;⁺ <span class="ot">(</span>a , <span class="ot">_)</span> <span class="ot">(</span>acc acc&lt;a<span class="ot">)</span> <span class="ot">=</span> acc <span class="ot">(λ</span> <span class="ot">{</span> <span class="ot">(</span>a′ , 1≤a′<span class="ot">)</span> a′&lt;a <span class="ot">→</span> acc&lt;→acc&lt;⁺ <span class="ot">(</span>a′ , 1≤a′<span class="ot">)</span> <span class="ot">(</span>acc&lt;a a′ a′&lt;a<span class="ot">)})</span></span>
+<span id="cb77-9"><a href="#cb77-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-10"><a href="#cb77-10" aria-hidden="true" tabindex="-1"></a>&lt;⁺-wf <span class="ot">:</span> WellFounded <span class="ot">_</span>&lt;⁺<span class="ot">_</span></span>
+<span id="cb77-11"><a href="#cb77-11" aria-hidden="true" tabindex="-1"></a>&lt;⁺-wf a <span class="ot">=</span> acc&lt;→acc&lt;⁺ a <span class="ot">(</span>&lt;-wf <span class="ot">(</span>fst a<span class="ot">))</span></span></code></pre></div>
+</section>
+</section>
+<section id="the-division-algorithm" class="level2">
+<h2>The division algorithm</h2>
+<p>Finally, we can define the division algorithm, via well-founded
+induction! Same as our first attempt, but XXX.</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>divAlg <span class="ot">:</span> <span class="ot">(</span>n d <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">0</span> &lt; d<span class="ot">)</span> <span class="ot">→</span> DivAlg n d</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>divAlg n d 0&lt;d <span class="ot">=</span> wf-ind <span class="ot">{</span>P <span class="ot">=</span> <span class="ot">λ</span> n <span class="ot">→</span> DivAlg n d<span class="ot">}</span> &lt;-wf go n</span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">((</span>n′ <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> n′ &lt; n <span class="ot">→</span> DivAlg n′ d<span class="ot">)</span> <span class="ot">→</span> DivAlg n d</span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>  go n IH <span class="kw">with</span> n decreaseBy? d</span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> LT n&lt;d <span class="ot">=</span> <span class="ot">(</span><span class="dv">0</span> , n<span class="ot">)</span> , DM <span class="ot">(</span>n +0<span class="ot">)</span> n&lt;d</span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> GE n′ n′+d≡n <span class="kw">with</span> IH n′ <span class="ot">(</span>+→&lt; 0&lt;d n′+d≡n<span class="ot">)</span></span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> <span class="ot">(</span>q , r<span class="ot">)</span> , dm <span class="ot">=</span> <span class="ot">(</span>suc q , r<span class="ot">)</span> , incDivMod n′+d≡n dm</span></code></pre></div>
+<p>Using the division algorithm, we can also finally decide whether one
+number divides another: zero divides zero; zero does not divide any
+successor since that would imply there is some <span class="math inline">\(k\)</span> such that <span class="math inline">\(k\)</span> times
+zero is nonzero, which is absurd; and if <span class="math inline">\(x\)</span> is a successor, we can
+apply the division algorithm and check the remainder, applying some
+previous lemmas that tell us what zero and nonzero remainders tells us
+about divisibility.</p>
+<div class="sourceCode" id="cb79"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>∣?<span class="ot">_</span> <span class="ot">:</span> <span class="ot">(</span>x y <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> Dec <span class="ot">(</span>x ∣ y<span class="ot">)</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>zero ∣? zero <span class="ot">=</span> yes <span class="ot">(</span><span class="dv">0</span> , refl<span class="ot">)</span></span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>zero ∣? <span class="ot">(</span>suc y<span class="ot">)</span> <span class="ot">=</span> no <span class="ot">λ</span> <span class="ot">{</span> <span class="ot">(</span>a , eq<span class="ot">)</span> <span class="ot">→</span> absurd <span class="ot">(</span>noConf <span class="ot">(</span>trans <span class="ot">(</span>sym <span class="ot">(</span>*-comm a zero<span class="ot">))</span> eq<span class="ot">))}</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a><span class="ot">(</span>suc x<span class="ot">)</span> ∣? y <span class="kw">with</span> divAlg y <span class="ot">(</span>suc x<span class="ot">)</span> <span class="ot">(</span>sle zle<span class="ot">)</span></span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> <span class="ot">(</span>q , zero<span class="ot">)</span> , dm <span class="ot">=</span> yes <span class="ot">(</span>mod0→divides y <span class="ot">(</span>suc x<span class="ot">)</span> dm<span class="ot">)</span></span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> <span class="ot">(</span>q , suc r<span class="ot">)</span> , dm <span class="ot">=</span> no <span class="ot">(</span>modS→¬divides y <span class="ot">(</span>suc x<span class="ot">)</span> dm<span class="ot">)</span></span></code></pre></div>
+</section>
+<section id="primality-testing" class="level2">
+<h2>Primality testing</h2>
+<p>XXX motivate need for loops?</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode agda"><code class="sourceCode agda"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Alternate definition of inequality</span></span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="ot">_</span>≤′<span class="ot">_</span> <span class="ot">:</span> ℕ <span class="ot">→</span> ℕ <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>  lerefl <span class="ot">:</span> <span class="ot">{</span>n <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> n ≤′ n</span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>  lesuc <span class="ot">:</span> <span class="ot">{</span>m n <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> suc m ≤′ n <span class="ot">→</span> m ≤′ n</span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a>≤′-suc <span class="ot">:</span> <span class="ot">{</span>m n <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> m ≤′ n <span class="ot">→</span> suc m ≤′ suc n</span>
+<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a>≤′-suc lerefl <span class="ot">=</span> lerefl</span>
+<span id="cb80-9"><a href="#cb80-9" aria-hidden="true" tabindex="-1"></a>≤′-suc <span class="ot">(</span>lesuc m≤′n<span class="ot">)</span> <span class="ot">=</span> lesuc <span class="ot">(</span>≤′-suc m≤′n<span class="ot">)</span></span>
+<span id="cb80-10"><a href="#cb80-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-11"><a href="#cb80-11" aria-hidden="true" tabindex="-1"></a>0≤′ <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="dv">0</span> ≤′ n</span>
+<span id="cb80-12"><a href="#cb80-12" aria-hidden="true" tabindex="-1"></a>0≤′ zero <span class="ot">=</span> lerefl</span>
+<span id="cb80-13"><a href="#cb80-13" aria-hidden="true" tabindex="-1"></a>0≤′ <span class="ot">(</span>suc n<span class="ot">)</span> <span class="ot">=</span> lesuc <span class="ot">(</span>≤′-suc <span class="ot">(</span>0≤′ n<span class="ot">))</span></span>
+<span id="cb80-14"><a href="#cb80-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-15"><a href="#cb80-15" aria-hidden="true" tabindex="-1"></a>≤→≤′ <span class="ot">:</span> <span class="ot">{</span>m n <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> m ≤ n <span class="ot">→</span> m ≤′ n</span>
+<span id="cb80-16"><a href="#cb80-16" aria-hidden="true" tabindex="-1"></a>≤→≤′ <span class="ot">{</span>n <span class="ot">=</span> n<span class="ot">}</span> zle <span class="ot">=</span> 0≤′ n</span>
+<span id="cb80-17"><a href="#cb80-17" aria-hidden="true" tabindex="-1"></a>≤→≤′ <span class="ot">(</span>sle m≤n<span class="ot">)</span> <span class="ot">=</span> ≤′-suc <span class="ot">(</span>≤→≤′ m≤n<span class="ot">)</span></span>
+<span id="cb80-18"><a href="#cb80-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-19"><a href="#cb80-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- Loops</span></span>
+<span id="cb80-20"><a href="#cb80-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-21"><a href="#cb80-21" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="ot">_</span>∈[<span class="ot">_</span>⋯<span class="ot">_</span>] <span class="ot">:</span> ℕ <span class="ot">→</span> ℕ <span class="ot">→</span> ℕ <span class="ot">→</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb80-22"><a href="#cb80-22" aria-hidden="true" tabindex="-1"></a>  stop <span class="ot">:</span> <span class="ot">{</span>a b <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> a ≤ b <span class="ot">→</span> b ∈[ a ⋯ b ]</span>
+<span id="cb80-23"><a href="#cb80-23" aria-hidden="true" tabindex="-1"></a>  step <span class="ot">:</span> <span class="ot">{</span>a i b <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> a ≤ i <span class="ot">→</span> suc i ∈[ a ⋯ b ] <span class="ot">→</span> i ∈[ a ⋯ b ]</span>
+<span id="cb80-24"><a href="#cb80-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-25"><a href="#cb80-25" aria-hidden="true" tabindex="-1"></a>loop <span class="ot">:</span> <span class="ot">(</span>a b <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>a ≤′ b<span class="ot">)</span> <span class="ot">→</span> a ∈[ a ⋯ b ]</span>
+<span id="cb80-26"><a href="#cb80-26" aria-hidden="true" tabindex="-1"></a>loop a b a≤′b <span class="ot">=</span> mid a a b ≤-refl a≤′b</span>
+<span id="cb80-27"><a href="#cb80-27" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb80-28"><a href="#cb80-28" aria-hidden="true" tabindex="-1"></a>  mid <span class="ot">:</span> <span class="ot">(</span>a i b <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>a ≤ i<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>i ≤′ b<span class="ot">)</span> <span class="ot">→</span> i ∈[ a ⋯ b ]</span>
+<span id="cb80-29"><a href="#cb80-29" aria-hidden="true" tabindex="-1"></a>  mid a i b a≤i lerefl <span class="ot">=</span> stop a≤i</span>
+<span id="cb80-30"><a href="#cb80-30" aria-hidden="true" tabindex="-1"></a>  mid a i b a≤i <span class="ot">(</span>lesuc i≤′b<span class="ot">)</span> <span class="ot">=</span> step a≤i <span class="ot">(</span>mid a <span class="ot">(</span>suc i<span class="ot">)</span> b <span class="ot">(</span>≤-sucr a≤i<span class="ot">)</span> i≤′b<span class="ot">)</span></span>
+<span id="cb80-31"><a href="#cb80-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-32"><a href="#cb80-32" aria-hidden="true" tabindex="-1"></a>top <span class="ot">:</span> <span class="ot">{</span>i a b <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> i ∈[ a ⋯ b ] <span class="ot">→</span> i ≤ b</span>
+<span id="cb80-33"><a href="#cb80-33" aria-hidden="true" tabindex="-1"></a>top <span class="ot">(</span>stop <span class="ot">_)</span> <span class="ot">=</span> ≤-refl</span>
+<span id="cb80-34"><a href="#cb80-34" aria-hidden="true" tabindex="-1"></a>top <span class="ot">(</span>step <span class="ot">_</span> s<span class="ot">)</span> <span class="ot">=</span> ≤-sucl <span class="ot">(</span>top s<span class="ot">)</span></span>
+<span id="cb80-35"><a href="#cb80-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-36"><a href="#cb80-36" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
+<span id="cb80-37"><a href="#cb80-37" aria-hidden="true" tabindex="-1"></a><span class="co">-- Primality testing</span></span>
+<span id="cb80-38"><a href="#cb80-38" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
+<span id="cb80-39"><a href="#cb80-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-40"><a href="#cb80-40" aria-hidden="true" tabindex="-1"></a>add <span class="ot">:</span> <span class="ot">{</span>P <span class="ot">:</span> ℕ <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>m <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> <span class="ot">((</span>j <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">2</span> ≤ j<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>j &lt; m<span class="ot">)</span> <span class="ot">→</span> P j<span class="ot">)</span> <span class="ot">→</span> P m <span class="ot">→</span> <span class="ot">((</span>j <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">2</span> ≤ j<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>j &lt; suc m<span class="ot">)</span> <span class="ot">→</span> P j<span class="ot">)</span></span>
+<span id="cb80-41"><a href="#cb80-41" aria-hidden="true" tabindex="-1"></a>add <span class="ot">{</span>m <span class="ot">=</span> m<span class="ot">}</span> f Pm j le lt <span class="kw">with</span> <span class="ot">(</span>j ≟ m<span class="ot">)</span></span>
+<span id="cb80-42"><a href="#cb80-42" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> yes refl <span class="ot">=</span> Pm</span>
+<span id="cb80-43"><a href="#cb80-43" aria-hidden="true" tabindex="-1"></a><span class="ot">...</span> <span class="ot">|</span> no j≢m <span class="ot">=</span> f j le <span class="ot">(</span>≤≢→&lt; <span class="ot">(</span>≤-pred lt<span class="ot">)</span> j≢m<span class="ot">)</span></span>
+<span id="cb80-44"><a href="#cb80-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-45"><a href="#cb80-45" aria-hidden="true" tabindex="-1"></a>prime? <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">2</span> ≤ n<span class="ot">)</span> <span class="ot">→</span> Prime n ⊎ Composite n</span>
+<span id="cb80-46"><a href="#cb80-46" aria-hidden="true" tabindex="-1"></a>prime? n 2≤n <span class="ot">=</span> try <span class="ot">(</span>loop <span class="dv">2</span> n <span class="ot">(</span>≤→≤′ 2≤n<span class="ot">))</span> <span class="ot">(λ</span> <span class="ot">{</span> <span class="ot">(</span>suc zero<span class="ot">)</span> <span class="ot">(</span>sle <span class="ot">())</span> j&lt;2 <span class="ot">_</span> <span class="ot">;</span> <span class="ot">(</span>suc <span class="ot">(</span>suc j<span class="ot">))</span> 2≤j <span class="ot">(</span>sle <span class="ot">(</span>sle <span class="ot">()))</span> <span class="ot">_})</span></span>
+<span id="cb80-47"><a href="#cb80-47" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb80-48"><a href="#cb80-48" aria-hidden="true" tabindex="-1"></a>  try <span class="ot">:</span> <span class="ot">{</span>m <span class="ot">:</span> ℕ<span class="ot">}</span> <span class="ot">→</span> m ∈[ <span class="dv">2</span> ⋯ n ] <span class="ot">→</span> <span class="ot">((</span>j <span class="ot">:</span> ℕ<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span><span class="dv">2</span> ≤ j<span class="ot">)</span> <span class="ot">→</span> <span class="ot">(</span>j &lt; m<span class="ot">)</span> <span class="ot">→</span> ¬ <span class="ot">(</span>j ∣ n<span class="ot">))</span> <span class="ot">→</span> Prime n ⊎ Composite n</span>
+<span id="cb80-49"><a href="#cb80-49" aria-hidden="true" tabindex="-1"></a>  try <span class="ot">(</span>stop 2≤n<span class="ot">)</span> soFar <span class="ot">=</span> inj₁ <span class="ot">(</span>2≤n , soFar<span class="ot">)</span></span>
+<span id="cb80-50"><a href="#cb80-50" aria-hidden="true" tabindex="-1"></a>  try <span class="ot">{</span>m<span class="ot">}</span> <span class="ot">(</span>step 2≤m next<span class="ot">)</span> soFar <span class="kw">with</span> m ∣? n</span>
+<span id="cb80-51"><a href="#cb80-51" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> yes m∣n <span class="ot">=</span> inj₂ <span class="ot">(</span>m , 2≤m , top next , m∣n<span class="ot">)</span></span>
+<span id="cb80-52"><a href="#cb80-52" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> no m∤n <span class="ot">=</span> try next <span class="ot">(</span>add soFar m∤n<span class="ot">)</span></span>
+<span id="cb80-53"><a href="#cb80-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-54"><a href="#cb80-54" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
+<span id="cb80-55"><a href="#cb80-55" aria-hidden="true" tabindex="-1"></a><span class="co">-- Lists</span></span>
+<span id="cb80-56"><a href="#cb80-56" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
+<span id="cb80-57"><a href="#cb80-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-58"><a href="#cb80-58" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> List <span class="ot">(</span>A <span class="ot">:</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">:</span> <span class="dt">Set</span> <span class="kw">where</span></span>
+<span id="cb80-59"><a href="#cb80-59" aria-hidden="true" tabindex="-1"></a>  [] <span class="ot">:</span> List A</span>
+<span id="cb80-60"><a href="#cb80-60" aria-hidden="true" tabindex="-1"></a>  <span class="ot">_</span>∷<span class="ot">_</span> <span class="ot">:</span> A <span class="ot">→</span> List A <span class="ot">→</span> List A</span>
+<span id="cb80-61"><a href="#cb80-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-62"><a href="#cb80-62" aria-hidden="true" tabindex="-1"></a>All <span class="ot">:</span> <span class="ot">(</span>P <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">)</span> <span class="ot">→</span> List A <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb80-63"><a href="#cb80-63" aria-hidden="true" tabindex="-1"></a>All P [] <span class="ot">=</span> ⊤</span>
+<span id="cb80-64"><a href="#cb80-64" aria-hidden="true" tabindex="-1"></a>All P <span class="ot">(</span>x ∷ xs<span class="ot">)</span> <span class="ot">=</span> P x × All P xs</span>
+<span id="cb80-65"><a href="#cb80-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-66"><a href="#cb80-66" aria-hidden="true" tabindex="-1"></a>foldr <span class="ot">:</span> <span class="ot">(</span>A <span class="ot">→</span> B <span class="ot">→</span> B<span class="ot">)</span> <span class="ot">→</span> B <span class="ot">→</span> List A <span class="ot">→</span> B</span>
+<span id="cb80-67"><a href="#cb80-67" aria-hidden="true" tabindex="-1"></a>foldr <span class="ot">_</span>&amp;<span class="ot">_</span> z [] <span class="ot">=</span> z</span>
+<span id="cb80-68"><a href="#cb80-68" aria-hidden="true" tabindex="-1"></a>foldr <span class="ot">_</span>&amp;<span class="ot">_</span> z <span class="ot">(</span>x ∷ xs<span class="ot">)</span> <span class="ot">=</span> x &amp; foldr <span class="ot">_</span>&amp;<span class="ot">_</span> z xs</span>
+<span id="cb80-69"><a href="#cb80-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-70"><a href="#cb80-70" aria-hidden="true" tabindex="-1"></a><span class="ot">_</span>++<span class="ot">_</span> <span class="ot">:</span> List A <span class="ot">→</span> List A <span class="ot">→</span> List A</span>
+<span id="cb80-71"><a href="#cb80-71" aria-hidden="true" tabindex="-1"></a>xs ++ ys <span class="ot">=</span> foldr <span class="ot">(_</span>∷<span class="ot">_)</span> ys xs</span>
+<span id="cb80-72"><a href="#cb80-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-73"><a href="#cb80-73" aria-hidden="true" tabindex="-1"></a>product <span class="ot">:</span> List ℕ <span class="ot">→</span> ℕ</span>
+<span id="cb80-74"><a href="#cb80-74" aria-hidden="true" tabindex="-1"></a>product <span class="ot">=</span> foldr <span class="ot">_</span>*<span class="ot">_</span> <span class="dv">1</span></span>
+<span id="cb80-75"><a href="#cb80-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-76"><a href="#cb80-76" aria-hidden="true" tabindex="-1"></a>All-++ <span class="ot">:</span> <span class="ot">{</span>P <span class="ot">:</span> A <span class="ot">→</span> <span class="dt">Set</span><span class="ot">}</span> <span class="ot">{</span>xs ys <span class="ot">:</span> List A<span class="ot">}</span> <span class="ot">→</span> All P xs <span class="ot">→</span> All P ys <span class="ot">→</span> All P <span class="ot">(</span>xs ++ ys<span class="ot">)</span></span>
+<span id="cb80-77"><a href="#cb80-77" aria-hidden="true" tabindex="-1"></a>All-++ <span class="ot">{</span>xs <span class="ot">=</span> []<span class="ot">}</span> Pxs Pys <span class="ot">=</span> Pys</span>
+<span id="cb80-78"><a href="#cb80-78" aria-hidden="true" tabindex="-1"></a>All-++ <span class="ot">{</span>xs <span class="ot">=</span> x ∷ xs<span class="ot">}</span> <span class="ot">(</span>Px , Pxs<span class="ot">)</span> Pys <span class="ot">=</span> Px , All-++ Pxs Pys</span>
+<span id="cb80-79"><a href="#cb80-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-80"><a href="#cb80-80" aria-hidden="true" tabindex="-1"></a>product-++ <span class="ot">:</span> <span class="ot">(</span>xs ys <span class="ot">:</span> List ℕ<span class="ot">)</span> <span class="ot">→</span> product <span class="ot">(</span>xs ++ ys<span class="ot">)</span> ≡ product xs * product ys</span>
+<span id="cb80-81"><a href="#cb80-81" aria-hidden="true" tabindex="-1"></a>product-++ [] ys <span class="ot">=</span> sym <span class="ot">(_</span> +0<span class="ot">)</span></span>
+<span id="cb80-82"><a href="#cb80-82" aria-hidden="true" tabindex="-1"></a>product-++ <span class="ot">(</span>x ∷ xs<span class="ot">)</span> ys <span class="ot">=</span> trans <span class="ot">(</span>x *<span class="ot">_</span> $≡ product-++ xs ys<span class="ot">)</span> <span class="ot">(</span>sym <span class="ot">(</span>*-assoc x <span class="ot">(</span>product xs<span class="ot">)</span> <span class="ot">(</span>product ys<span class="ot">)))</span></span>
+<span id="cb80-83"><a href="#cb80-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-84"><a href="#cb80-84" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
+<span id="cb80-85"><a href="#cb80-85" aria-hidden="true" tabindex="-1"></a><span class="co">-- FTA</span></span>
+<span id="cb80-86"><a href="#cb80-86" aria-hidden="true" tabindex="-1"></a><span class="co">------------------------------------------------------------</span></span>
+<span id="cb80-87"><a href="#cb80-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-88"><a href="#cb80-88" aria-hidden="true" tabindex="-1"></a>FTA <span class="ot">:</span> ℤ⁺ <span class="ot">→</span> <span class="dt">Set</span></span>
+<span id="cb80-89"><a href="#cb80-89" aria-hidden="true" tabindex="-1"></a>FTA <span class="ot">(</span>n , <span class="ot">_)</span> <span class="ot">=</span> Σ <span class="ot">(</span>List ℕ<span class="ot">)</span> <span class="ot">(λ</span> ps <span class="ot">→</span> All Prime ps × product ps ≡ n<span class="ot">)</span></span>
+<span id="cb80-90"><a href="#cb80-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-91"><a href="#cb80-91" aria-hidden="true" tabindex="-1"></a><span class="co">-- FTA, without uniqueness.</span></span>
+<span id="cb80-92"><a href="#cb80-92" aria-hidden="true" tabindex="-1"></a>fta <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℤ⁺<span class="ot">)</span> <span class="ot">→</span> FTA n</span>
+<span id="cb80-93"><a href="#cb80-93" aria-hidden="true" tabindex="-1"></a>fta n <span class="ot">=</span> wf-ind <span class="ot">{</span>P <span class="ot">=</span> FTA<span class="ot">}</span> &lt;⁺-wf go n</span>
+<span id="cb80-94"><a href="#cb80-94" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span></span>
+<span id="cb80-95"><a href="#cb80-95" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">:</span> <span class="ot">(</span>n <span class="ot">:</span> ℤ⁺<span class="ot">)</span> <span class="ot">→</span> <span class="ot">((</span>n′ <span class="ot">:</span> ℤ⁺<span class="ot">)</span> <span class="ot">→</span> n′ &lt;⁺ n <span class="ot">→</span> FTA n′<span class="ot">)</span> <span class="ot">→</span> FTA n</span>
+<span id="cb80-96"><a href="#cb80-96" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">(</span>suc zero , <span class="ot">_)</span> <span class="ot">_</span> <span class="ot">=</span> [] , <span class="ot">(</span>tt , refl<span class="ot">)</span></span>
+<span id="cb80-97"><a href="#cb80-97" aria-hidden="true" tabindex="-1"></a>  go <span class="ot">(</span>suc <span class="ot">(</span>suc n<span class="ot">)</span> , 1≤n<span class="ot">)</span> IH <span class="kw">with</span> prime? <span class="ot">(</span>suc <span class="ot">(</span>suc n<span class="ot">))</span> <span class="ot">(</span>sle <span class="ot">(</span>sle zle<span class="ot">))</span></span>
+<span id="cb80-98"><a href="#cb80-98" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> inj₁ P <span class="ot">=</span> <span class="ot">(</span>suc <span class="ot">(</span>suc n<span class="ot">)</span> ∷ []<span class="ot">)</span> , <span class="ot">((</span>P , tt<span class="ot">)</span> , <span class="ot">(</span>suc $≡ <span class="ot">(</span>suc $≡ <span class="ot">(</span>n *1<span class="ot">))))</span></span>
+<span id="cb80-99"><a href="#cb80-99" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> inj₂ C <span class="kw">with</span> factorsOf <span class="ot">_</span> C</span>
+<span id="cb80-100"><a href="#cb80-100" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> <span class="ot">((</span>a , 2≤a , a&lt;n , <span class="ot">_)</span> , <span class="ot">(</span>b , 2≤b , b&lt;n , <span class="ot">_))</span> , ab≡n</span>
+<span id="cb80-101"><a href="#cb80-101" aria-hidden="true" tabindex="-1"></a>      <span class="kw">with</span> IH <span class="ot">(</span>a , ≤-trans <span class="ot">(</span>sle zle<span class="ot">)</span> 2≤a<span class="ot">)</span> a&lt;n</span>
+<span id="cb80-102"><a href="#cb80-102" aria-hidden="true" tabindex="-1"></a>         <span class="ot">|</span> IH <span class="ot">(</span>b , ≤-trans <span class="ot">(</span>sle zle<span class="ot">)</span> 2≤b<span class="ot">)</span> b&lt;n</span>
+<span id="cb80-103"><a href="#cb80-103" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span> <span class="ot">|</span> ps₁ , Pps₁ , prod₁ <span class="ot">|</span> ps₂ , Pps₂ , prod₂ <span class="ot">=</span> <span class="ot">(</span>ps₁ ++ ps₂<span class="ot">)</span> , <span class="ot">(</span>All-++ Pps₁ Pps₂<span class="ot">)</span> ,</span>
+<span id="cb80-104"><a href="#cb80-104" aria-hidden="true" tabindex="-1"></a>    begin</span>
+<span id="cb80-105"><a href="#cb80-105" aria-hidden="true" tabindex="-1"></a>      product <span class="ot">(</span>ps₁ ++ ps₂<span class="ot">)</span>      ≡[ product-++ ps₁ ps₂ ⟩≡</span>
+<span id="cb80-106"><a href="#cb80-106" aria-hidden="true" tabindex="-1"></a>      product ps₁ * product ps₂ ≡[ <span class="ot">_</span>*<span class="ot">_</span> $≡ prod₁ ≡$≡ prod₂ ⟩≡</span>
+<span id="cb80-107"><a href="#cb80-107" aria-hidden="true" tabindex="-1"></a>      a * b                     ≡[ ab≡n ⟩≡</span>
+<span id="cb80-108"><a href="#cb80-108" aria-hidden="true" tabindex="-1"></a>      suc <span class="ot">(</span>suc n<span class="ot">)</span>               ∎</span></code></pre></div>
 </section>
 
 </section>

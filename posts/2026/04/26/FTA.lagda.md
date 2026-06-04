@@ -45,6 +45,8 @@ This blog post XXX available as literate Agda.  XXX There is also an
 alternative version of this blog post with holes.  Try filling in the
 proofs as you go along, before reading each section.
 
+XXX table of contents.  Maybe skip some parts depending on your background?
+
 ## The Fundamental Theorem of Arithmetic
 
 The fundamental theorem of arithmetic states that any natural number
@@ -1049,50 +1051,365 @@ modS→¬divides n d dm d∣n with divides→mod0 n d (divMod→0<d dm) d∣n
 ... | q₁≡q₂ , ()
 ```
 
-## Well-founded induction
+## The division algorithm, take 1
+
+So, given natural numbers $n$ and $d$, how do we compute the quotient
+and remainder?  We can write down a type `DivAlg` that expresses what
+we want: given some $n$ and $d$, `DivAlg n d` represents the result of
+the division algorithm, that is, a pair of numbers $(q,r)$ such that
+`DivMod n d q r` holds.
 
 ```agda
-------------------------------------------------------------
--- Well-founded induction
-------------------------------------------------------------
+DivAlg : ℕ → ℕ → Set
+DivAlg n d = Σ (ℕ × ℕ) (λ { (q , r) → DivMod n d q r })
+```
 
+Then we want a function with a type something like `(n d : ℕ) → DivAlg
+n d` (actually this type is not quite correct—can you see why?).
+How can we write something with this type?
+
+One simple idea, expressed imperatively, is to start with $q = 0$.
+Now, as long as $n \geq d$, subtract $d$ from $n$ and add one to
+$q$—if we can find $q$ and $r$ such that $r + qd = n - d$, then $r +
+(q+1)d = n$.  Eventually, $n$ must land in the range $0 \leq n < d$,
+in which case it will be the remainder, and the current value of $q$
+will be the quotient.
+
+### Construct the evidence you would like to pattern-match on
+
+That's the idea, but turning this into a verified constructive algorithm will take some
+work.  First, let's formalize the idea of testing whether $n$ is less
+than $d$, and decreasing it by $d$ if not.  We'd rather not actually
+deal with subtraction, so the idea is to generate either a proof that
+$n < d$, or another number $n'$ along with a proof that $n' + d = n$.
+We encapsulate this in the following type `Cmp`:
+
+```agda
+data Cmp (n d : ℕ) : Set where
+  LT : n < d → Cmp n d
+  GE : (n′ : ℕ) → (n′ + d ≡ n) → Cmp n d
+```
+
+`Cmp n d` represents the result of comparing $n$ and $d$, and is
+equivalent to having either $n < d$ or $n \geq d$, but expressed in a
+form that is more directly useful to us. **Construct the evidence you
+would like to pattern-match on!**  That is, in general, evidence for a
+proposition $P$ can take many logically equivalent forms, and you
+should pick the form that will make your life easiest at the *use
+site*, even if it means you have to work harder to *construct* it in
+the first place.  You can write standalone lemmas for constructing
+your evidence; but pattern-matching it will happen in the middle of
+some bigger proof which ought not to be cluttered by calls to
+conversion lemmas.
+
+To construct evidence for `Cmp n d`, we write the function
+`decreaseBy?` which decides whether we can decrease `n` by `d` or not.
+Writing this function is a bit more work than writing something
+of type `(n d : ℕ) → (n < d) ⊎ (d ≤ n)`, but our work will pay off later!
+
+```agda
+_decreaseBy?_ : (n d : ℕ) → Cmp n d
+zero decreaseBy? zero = GE 0 refl
+zero decreaseBy? suc d = LT (sle zle)
+suc n decreaseBy? zero = GE (suc n) ((suc n) +0)
+suc n decreaseBy? suc d with n decreaseBy? d
+... | LT n<d = LT (sle n<d)
+... | GE n′ n′+d≡n = GE n′ (trans (n′ +suc d) (suc $≡ n′+d≡n))
+```
+
+We can also write a helper function `incDivMod` which encodes the
+observation from before, that if $r + qd = n-d$, then $r + (q+1)d =
+n$.  Of course we don't actually want to use subtraction, so instead
+of writing $n-d$, we work in terms of an $n'$ such that $n' + d = n$.
+Proving this requires only some straightforward algebra.
+
+```agda
+incDivMod : {n′ n d q r : ℕ} → n′ + d ≡ n → DivMod n′ d q r → DivMod n d (suc q) r
+incDivMod {n′} {n} {d} {q} {r} n′+d≡n (DM r+qd≡n′ r<d) = DM r+d+qd≡n r<d
+ where
+  r+d+qd≡n : r + (d + q * d) ≡ n
+  r+d+qd≡n = begin
+    r + (d + q * d)           ≡⟨ +-assoc r _ _ ]≡
+    (r + d) + q * d           ≡[ _+_ $≡ +-comm r _ ≡$ q * d ⟩≡
+    (d + r) + q * d           ≡[ +-assoc d _ _ ⟩≡
+    d + (r + q * d)           ≡[ d +_ $≡ r+qd≡n′ ⟩≡
+    d + n′                    ≡[ +-comm d _ ⟩≡
+    n′ + d                    ≡[ n′+d≡n ⟩≡
+    n                         ∎
+```
+
+Now it seems like we have everything we need to write the division
+algorithm as a recursive algorithm: given $n$ and $d$, check whether
+$n$ can be decreased by $d$ or not.  If not, we can return $q = 0$ and
+$r = n$.  Otherwise, recurse on $n - d$, returning the same remainder
+and an incremented quotient from whatever the recursive call returns, using
+`incDivMod` to discharge the proof obligation.  It's just a few lines
+of code, right?
+
+```agda
+module DivModBad where
+
+  {-# NON_TERMINATING #-}
+  divMod : (n d : ℕ) → DivAlg n d
+  divMod n d with n decreaseBy? d
+  ... | LT n<d = (0 , n) , (DM (n +0) n<d)
+  ... | GE n′ n′+d≡n with divMod n′ d
+  ... | (q , r) , dm = (suc q , r) , (incDivMod n′+d≡n dm)
+```
+
+Well, as you can see, it *is* just a few lines of code, but all is not
+well: although this function typechecks, Agda can't tell that it is
+terminating! (I added the `NON_TERMINATING` pragma so I could include
+this bad version of `divMod` in the code without causing an error.)
+The problem is that the recursive call to `divMod` is on `n′`,
+which is not a subterm of `n`, but instead comes from the call to
+`decreaseBy?`.  Agda has no way of knowing whether the result from
+some random function call is going to end up being smaller than the
+original input.
+
+Now, you and I can both see that this function does indeed terminate,
+but we just need a way to convince Agda of this fact... right?
+
+...have you spotted the flaw?  Remember how I mentioned that the type `(n
+d : ℕ) → DivAlg n d` is not quite right?  In fact, the above bad
+implementation of `divMod` is *not* terminating, and Agda is quite right to
+be worried!  In particular, the function recurses infinitely when given an input of $d
+= 0$, since it will keep subtracting $0$ from $n$ forever.  This makes sense, of
+course: everyone knows you can't divide by zero *because it makes the
+universe go into infinite recursion*.
+
+The correct type for `divMod` is `(n d : ℕ) → (0 < d) → DivAlg n d`,
+but we're still going to have trouble convincing Agda that our
+algorithm is terminating.  In order to do so, we need to take a detour
+through *well-founded induction*.
+
+## Well-founded induction
+
+XXX typical "structural" induction --- recursive calls on subterms.
+(Agda is a bit more sophisticated than that, but that's the basic
+idea.)  There are more exotic forms of induction, but it turns out we
+already have everything we need: we can bootstrap
+
+The idea of well-founded induction starts with the general idea of a
+*relation*.  A relation on `A` is just a function that takes two
+values of type `A` and produces a type, representing evidence that the
+two values are related (according to whatever kind of relationship we
+have in mind).
+
+```agda
 Rel : Set → Set₁
 Rel A = A → A → Set
+```
 
-data Acc (R : Rel A) : (a : A) → Set where
-  -- b is accessible if all elements below it are accessible
-  acc : {b : A} → ((a : A) → R a b → Acc R a) → Acc R b
+We have already seen quite a few relations: equality, less-than,
+less-than-or-equal-to, divisibility.
 
--- Relation is well-founded if all elements are accessible
+XXX I will use recursive function / induction interchangeably.
+
+Suppose we're writing a recursive function, with some relation $\prec$
+in mind, and for a given input $x$ we're only allowed to make
+recursive calls on values $y$ such that $y \prec x$.  If $\prec$ is the
+"is a structural subterm of" relation, then we get structural
+recursion as usual.  But what if $\prec$ is some other relation?  What
+needs to be true about $\prec$ for this to make sense?  In particular, how
+can we be sure that the function won't get stuck in infinite recursion?
+
+One's first instinct might be to say that $y \prec x$ needs to imply that
+$y$ is "smaller than" $x$ somehow.  But what does "smaller than" mean?
+And in fact, "smaller than" doesn't always work: for example, if we are
+writing a function over the rational numbers, or even just the
+integers, the usual "smaller than" relation does *not* guarantee our
+function will terminate; it's possible to continue choosing smaller
+and smaller rational numbers or integers forever.
+
+The key idea is exactly that this can't happen: it's not possible to
+have an infinite chain of values where each is related to the
+previous.  That is, there should be no left-infinite chains $\dots
+\prec y_3 \prec y_2 \prec y_1 \prec x$.  Then we are guaranteed that if we keep making
+recursive calls on values that are related by $\prec$ to the previous
+value, we will have to stop eventually: after some finite number of calls
+we will hit a value with nothing else related to it.
+
+A relation $\prec$ with this "no left-infinite chains" property is
+called *well-founded*. But how do we encode this idea in Agda?
+
+### Accessibility
+
+Instead of thinking negatively (*no* left-infinite
+chains), the key is to think positively: *all* chains to the left of
+*every* value are finite.  Call a value *accessible* if all chains
+leading to it are finite.  Another way to say this is that a value is
+accessible if every value related to it is also accessible:
+
+```agda
+data Acc (_≺_ : Rel A) : (x : A) → Set where
+  acc : {x : A} → ((y : A) → y ≺ x → Acc _≺_ y) → Acc _≺_ x
+```
+
+`Acc _≺_ x` defines what it means for a particular value `x` to be
+accessible with respect to a relation `R`.  There is only one
+constructor, `acc`, which requires `(y : A) → y ≺ x → Acc _≺_ y`—that
+is, for every value `y` of type `A`, if `y` is related to `x`, then
+`y` is accessible.  In other words, `x` is accessible if every `y ≺ x`
+is accessible.
+
+XXX This is definitely tricky to wrap your head around.  At this point
+you may have two objections:
+
+1. What about base cases?  Shouldn't we have another constructor which
+   says `x` is accessible if *nothing* is related to it?  Actually,
+   the `acc` constructor already says that!  If nothing is related to
+   `x`, then `(y : A) → y ≺ x → Acc _≺_ y` is trivially true: we can
+   easily promise anything we want as the output of a function if we
+   know it can never be called.  Every number less than zero is a
+   purple flying weasel.
+
+2. Doesn't this just run into the same problem as before with
+   left-infinite chains?  If we consider the "is one less than"
+   relation on the integers, isn't $2$ accessible because $1$ is
+   accessible because $0$ is accessible because $-1$ is accessible
+   because ... ?
+
+   There is something a bit subtle going on here: recursive data types
+   in Agda (unlike, say, Haskell) are interpreted according to a
+   *least fixed point* semantics.  Put in plain terms, the only values
+   of a data type are those which can be built by applications of a
+   *finite* number of constructors.  So in fact, the "no left-infinite
+   chain" condition is foundationally built into the way Agda data
+   types work!
+
+   XXX a bit exotic since `Acc` values can be *infinitely-branching* trees!
+
+XXX turn well-founded induction into structural induction by
+*pattern-matching on `Acc` proofs*!
+
+### Well-founded induction
+
+Given the definition of accessible elements, we can now give the
+definition of a well-founded relation: a relation on `A` is well-founded if
+*every* value of type `A` is accessible.
+
+```agda
 WellFounded : Rel A → Set
-WellFounded {A} R = (a : A) → Acc R a
+WellFounded {A} _≺_ = (a : A) → Acc _≺_ a
+```
 
--- Well-founded induction.
-wf-ind : {P : A → Set} {R : Rel A} → WellFounded R → ((y : A) → ((z : A) → R z y → P z) → P y) → (x : A) → P x
+We can now write down the *principle of well-founded induction*.  XXX
+also tricky to wrap your brain around.  Before, we were just talking
+about functions terminating or not.  But the reason this is important
+is that a function might be calculating a *proof*.  A function which
+purports to calculate a proof but sometimes goes into infinite
+recursion is a charlatan: XXX not really a proof at all.
+
+So instead of thinking about termination, let's switch to thinking
+about proofs.  Given a proposition $P(x)$, we want to prove that
+$P(x)$ holds for all $x$ of type $A$.  The idea is that when trying to
+prove $P(y)$ for a particular $y$, we get to assume that $P(z)$ holds
+(*i.e.* we get to make recursive calls $P(z)$) for all $z \prec y$.
+
+XXX
+
+* `P : A → Set`  : the proposition.
+* `_≺_ : Rel A`: the relation.
+* `WellFounded _≺_`: a proof that `≺` is a well-founded relation.
+* `(y : A) → ((z : A) → z ≺ y → P z) → P y`: XXX tricky.  "For any
+  `y`, if we know `P z` holds for all `z ≺ y`, then we can show `P y`
+  also holds."
+
+The principle of well-founded induction says that this is enough to
+show `P x` holds for *all* `x`.
+
+```agda
+wf-ind : {P : A → Set} {_≺_ : Rel A} → WellFounded _≺_ → ((y : A) → ((z : A) → z ≺ y → P z) → P y) → (x : A) → P x
+```
+
+XXX now, how to implement this?  If we try something
+straightforward—just call `ind` on `x`, then call `wf-ind` recursively
+to fill in the proof for `P z`—of course it does not work; Agda cannot
+tell that this is terminating.  And this makes sense, because we are
+not even using the fact that the relation is well-founded at all!
+
+```agda
+module WFIndBad where
+
+  {-# NON_TERMINATING #-}
+  wf-ind-bad : {P : A → Set} {R : Rel A} → WellFounded R → ((y : A) → ((z : A) → R z y → P z) → P y) → (x : A) → P x
+  wf-ind-bad {A} {P} {R} wf ind x = ind x (λ z Rzx → wf-ind-bad wf ind z)
+```
+
+The idea is to use the fact that $\prec$ is well-founded to generate
+an initial proof of accessibility for the input $x$, and then *pattern
+match on accessibility proofs* alongside the values as we recurse.
+Every time we make a recursive call on some $y \prec x$, we can just
+pattern-match on the accessibility proof for $x$ to get an
+accessibility proof for $y$, so Agda will be able to see that the
+whole thing is *structurally* recursive on the accessibility proofs.
+
+```agda
 wf-ind {A} {P} {R} wf ind x = go x (wf x)
+```
+
+```agda
  where
   go : (x : A) → Acc R x → P x
   go x (acc f) = ind x (λ z Rzx → go z (f z Rzx))
+```
 
---------------------------------------------------
--- _<_ is well-founded
+Now that we have well-founded induction under our belts, let's show
+that a couple different relations we want to use are well-founded.
+First up is the less-than relation on natural numbers.  The fact that
+$<$ on natural numbers is well-founded corresponds to what is often
+called "strong induction".^[Incidentally, we could probably have
+gotten away with directly defining a principle of strong natural
+number induction, without bothering with the full generality of
+well-founded induction, but this way is more fun and interesting!] To
+prove that $<$ is well-founded, we of course must show that every
+natural number is accessible under $<$.  However, if we directly try
+to prove `(m : ℕ) → (Acc _<_) m`, we run into a variant of the exact
+same problem we have been dealing with: to prove that
+$m$ is accessible we need to know that *every* $k < m$ is also
+accessible, but again, XXX
 
--- ↓ P is the downward closure of P, i.e. ↓ P n is the proposition that P holds for all k ≤ n.
+What we need is the usual trick for proving strong induction from weak
+induction: instead of proving that $P(x)$ holds for all $x$, we prove
+that $(\downarrow P)(x)$ holds for all $x$, where $\downarrow P$ is
+the "downward closure" of $P$: $(\downarrow P)(x)$ says that $P(x)$
+holds for *all* $y \leq x$.
+
+XXX note that this is just the reflexive, transitive closure of the
+successor relation.  Advanced exercise: generalize $\downarrow P$ as the
+reflexive, transitive closure of $P$ and then prove that $\downarrow
+P$ is well-founded whenever $P$ is. In fact, it's an if and only if. (See other blog post on
+well-founded induction: https://boarders.github.io/posts/well_founded_induction.html)
+
+```agda
 ↓ : (ℕ → Set) → (ℕ → Set)
 ↓ P n = (k : ℕ) → (k ≤ n) → P k
+```
 
--- Prove ↓ (Acc _<_)  for all n  by induction, using transitivity of ≤ .
+Now we can prove, for all natural numbers $m$, that every natural
+number up to and including $m$ is accessible:
+
+```agda
 <-acc : (m : ℕ) → ↓ (Acc _<_) m
 <-acc zero b zle = acc (λ a ())
 <-acc (suc m) b b≤sm = acc (λ a a<b → <-acc m a (≤-pred (≤-trans a<b b≤sm)))
+```
 
--- To show any n is accessible, use the fact that ↓ (Acc _<_) n is true and just project out accessibility for n.
+Finally, to show that any natural number $n$ is accessible, *i.e.* $<$
+is well-founded, use the fact that all numbers up to and including $n$
+are accessible, and just project out accessibility for $n$ itself.
+
+```agda
 <-wf : WellFounded _<_
 <-wf n = <-acc n n ≤-refl
+```
 
---------------------------------------------------
--- ℤ⁺, <⁺ is well-founded
+XXX also will need type of positive natural numbers.  Define $<$
+relation on them, and show it is well-founded because the usual $<$ on
+natural numbers is.
 
+```agda
 ℤ⁺ : Set
 ℤ⁺ = Σ ℕ (λ n → 0 < n)
 
@@ -1104,40 +1421,14 @@ acc<→acc<⁺ (a , _) (acc acc<a) = acc (λ { (a′ , 1≤a′) a′<a → acc<
 
 <⁺-wf : WellFounded _<⁺_
 <⁺-wf a = acc<→acc<⁺ a (<-wf (fst a))
+```
 
+## The division algorithm
 
---------------------------------------------------
--- Division Algorithm proper
+Finally, we can define the division algorithm, via well-founded
+induction!  Same as our first attempt, but XXX.
 
-data Cmp (a d : ℕ) : Set where
-  LT : a < d → Cmp a d
-  GE : (a′ : ℕ) → (a′ + d ≡ a) → Cmp a d
-
-_decreaseBy?_ : (a d : ℕ) → Cmp a d
-zero decreaseBy? zero = GE 0 refl
-zero decreaseBy? suc d = LT (sle zle)
-suc a decreaseBy? zero = GE (suc a) ((suc a) +0)
-suc a decreaseBy? suc d with a decreaseBy? d
-... | LT a<d = LT (sle a<d)
-... | GE a′ a′+d≡a = GE a′ (trans (a′ +suc d) (suc $≡ a′+d≡a))
-
-incDivMod : {n′ n d q r : ℕ} → n′ + d ≡ n → DivMod n′ d q r → DivMod n d (suc q) r
-incDivMod {n′} {n} {d} {q} {r} n′+d≡n (DM r+qd≡n′ r<d) = DM lem r<d
- where
-  lem : r + (d + q * d) ≡ n
-  lem = begin
-    r + (d + q * d)           ≡⟨ +-assoc r _ _ ]≡
-    (r + d) + q * d           ≡[ _+_ $≡ +-comm r _ ≡$ q * d ⟩≡
-    (d + r) + q * d           ≡[ +-assoc d _ _ ⟩≡
-    d + (r + q * d)           ≡[ d +_ $≡ r+qd≡n′ ⟩≡
-    d + n′                    ≡[ +-comm d _ ⟩≡
-    n′ + d                    ≡[ n′+d≡n ⟩≡
-    n                         ∎
-
-DivAlg : ℕ → ℕ → Set
-DivAlg n d = Σ (ℕ × ℕ) (λ { (q , r) → DivMod n d q r })
-
--- Division algorithm, via well-founded induction!
+```agda
 divAlg : (n d : ℕ) → (0 < d) → DivAlg n d
 divAlg n d 0<d = wf-ind {P = λ n → DivAlg n d} <-wf go n
  where
@@ -1146,18 +1437,30 @@ divAlg n d 0<d = wf-ind {P = λ n → DivAlg n d} <-wf go n
   ... | LT n<d = (0 , n) , DM (n +0) n<d
   ... | GE n′ n′+d≡n with IH n′ (+→< 0<d n′+d≡n)
   ... | (q , r) , dm = (suc q , r) , incDivMod n′+d≡n dm
+```
 
+Using the division algorithm, we can also finally decide whether one
+number divides another: zero divides zero; zero does not divide any
+successor since that would imply there is some $k$ such that $k$ times
+zero is nonzero, which is absurd; and if $x$ is a successor, we can
+apply the division algorithm and check the remainder, applying some
+previous lemmas that tell us what zero and nonzero remainders tells us
+about divisibility.
+
+```agda
 _∣?_ : (x y : ℕ) → Dec (x ∣ y)
 zero ∣? zero = yes (0 , refl)
 zero ∣? (suc y) = no λ { (a , eq) → absurd (noConf (trans (sym (*-comm a zero)) eq))}
 (suc x) ∣? y with divAlg y (suc x) (sle zle)
 ... | (q , zero) , dm = yes (mod0→divides y (suc x) dm)
 ... | (q , suc r) , dm = no (modS→¬divides y (suc x) dm)
+```
 
-------------------------------------------------------------
--- Loops
-------------------------------------------------------------
+## Primality testing
 
+XXX motivate need for loops?
+
+```agda
 -- Alternate definition of inequality
 
 data _≤′_ : ℕ → ℕ → Set where
