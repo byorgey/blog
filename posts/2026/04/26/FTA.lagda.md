@@ -1150,10 +1150,10 @@ of code, right?
 module DivModBad where
 
   {-# NON_TERMINATING #-}
-  divMod : (n d : ℕ) → DivAlg n d
-  divMod n d with n decreaseBy? d
+  divAlg : (n d : ℕ) → DivAlg n d
+  divAlg n d with n decreaseBy? d
   ... | LT n<d = (0 , n) , (DM (n +0) n<d)
-  ... | GE n′ n′+d≡n with divMod n′ d
+  ... | GE n′ n′+d≡n with divAlg n′ d
   ... | (q , r) , dm = (suc q , r) , (incDivMod n′+d≡n dm)
 ```
 
@@ -1178,7 +1178,7 @@ be worried!  In particular, the function recurses infinitely when given an input
 course: everyone knows you can't divide by zero *because it makes the
 universe go into infinite recursion*.
 
-The correct type for `divMod` is `(n d : ℕ) → (0 < d) → DivAlg n d`,
+The correct type for `divAlg is `(n d : ℕ) → (0 < d) → DivAlg n d`,
 but we're still going to have trouble convincing Agda that our
 algorithm is terminating.  In order to do so, we need to take a detour
 through *well-founded induction*.
@@ -1332,6 +1332,7 @@ not even using the fact that the relation is well-founded at all!
 ```agda
 module WFIndBad where
 
+  -- XXX not sure why this still yields a nontermination error even with the pragma
   {-# NON_TERMINATING #-}
   wf-ind-bad : {P : A → Set} {R : Rel A} → WellFounded R → ((y : A) → ((z : A) → R z y → P z) → P y) → (x : A) → P x
   wf-ind-bad {A} {P} {R} wf ind x = ind x (λ z Rzx → wf-ind-bad wf ind z)
@@ -1388,7 +1389,8 @@ well-founded induction: https://boarders.github.io/posts/well_founded_induction.
 ```
 
 Now we can prove, for all natural numbers $m$, that every natural
-number up to and including $m$ is accessible:
+number up to and including $m$ is accessible under the $<$ relation.  Zero is accessible
+because nothing is less than it; everything up to the successor of $m$ is accessible because by induction we know everything up to $m$ is, and anything less than the successor of $m$ must in fact be $\leq m$.
 
 ```agda
 <-acc : (m : ℕ) → ↓ (Acc _<_) m
@@ -1396,8 +1398,8 @@ number up to and including $m$ is accessible:
 <-acc (suc m) b b≤sm = acc (λ a a<b → <-acc m a (≤-pred (≤-trans a<b b≤sm)))
 ```
 
-Finally, to show that any natural number $n$ is accessible, *i.e.* $<$
-is well-founded, use the fact that all numbers up to and including $n$
+Finally, to show that any natural number $n$ is accessible—*i.e.* that $<$
+is well-founded—we can use the fact that all numbers up to and including $n$
 are accessible, and just project out accessibility for $n$ itself.
 
 ```agda
@@ -1405,28 +1407,10 @@ are accessible, and just project out accessibility for $n$ itself.
 <-wf n = <-acc n n ≤-refl
 ```
 
-XXX also will need type of positive natural numbers.  Define $<$
-relation on them, and show it is well-founded because the usual $<$ on
-natural numbers is.
-
-```agda
-ℤ⁺ : Set
-ℤ⁺ = Σ ℕ (λ n → 0 < n)
-
-_<⁺_ : ℤ⁺ → ℤ⁺ → Set
-(a , _) <⁺ (b , _) = a < b
-
-acc<→acc<⁺ : (a : ℤ⁺) → Acc _<_ (fst a) → Acc _<⁺_ a
-acc<→acc<⁺ (a , _) (acc acc<a) = acc (λ { (a′ , 1≤a′) a′<a → acc<→acc<⁺ (a′ , 1≤a′) (acc<a a′ a′<a)})
-
-<⁺-wf : WellFounded _<⁺_
-<⁺-wf a = acc<→acc<⁺ a (<-wf (fst a))
-```
-
 ## The division algorithm
 
 Finally, we can define the division algorithm, via well-founded
-induction!  Same as our first attempt, but XXX.
+induction!  The definition is very similar to our first attempt, but we use the principle of well-founded induction with $<$.  Note that neither `divAlg` nor its helper function `go` is directly recursive. Instead, `go` takes an induction hypothesis as an argument, which we call instead, providing an extra proof that the subject of the induction hypothesis is in fact less than the original input.  `wf-ind` takes care of the actual recursion.
 
 ```agda
 divAlg : (n d : ℕ) → (0 < d) → DivAlg n d
@@ -1513,29 +1497,43 @@ prime? n 2≤n = try (loop 2 n (≤→≤′ 2≤n)) (λ { (suc zero) (sle ()) j
   try {m} (step 2≤m next) soFar with m ∣? n
   ... | yes m∣n = inj₂ (m , 2≤m , top next , m∣n)
   ... | no m∤n = try next (add soFar m∤n)
+```
 
-------------------------------------------------------------
--- Lists
-------------------------------------------------------------
+## Lists
 
+Before we are able to state the Fundamental Theorem of Arithmetic, we need to build up a data type for lists, along with some standard list manipulation functions.  First, we define the type of lists and the standard `foldr` function.
+
+```agda
 data List (A : Set) : Set where
   [] : List A
   _∷_ : A → List A → List A
 
-All : (P : A → Set) → List A → Set
-All P [] = ⊤
-All P (x ∷ xs) = P x × All P xs
-
 foldr : (A → B → B) → B → List A → B
 foldr _&_ z [] = z
 foldr _&_ z (x ∷ xs) = x & foldr _&_ z xs
+```
 
+Now we can define concatenation and product via `foldr`.
+
+```agda
 _++_ : List A → List A → List A
 xs ++ ys = foldr (_∷_) ys xs
 
 product : List ℕ → ℕ
 product = foldr _*_ 1
+```
 
+We will need `All`, which expresses that some predicate holds of all the elements of a list.  In fact, `All` is manifestly an instance of `foldr`, but we would need a universe-polymorphic version of `foldr` for that, so we just write it manually.
+
+```agda
+All : (P : A → Set) → List A → Set
+All P [] = ⊤
+All P (x ∷ xs) = P x × All P xs
+```
+
+Now, we just need a couple lemmas about concatenation: first, that if `P` holds for all the elements in `xs` and all the elements in `ys`, then it holds for all the elements in `xs ++ ys`; and second, that `product` distributes over concatenation (*i.e.* it is a homomorphism from the monoid of lists under concatenation to the monoid of natural numbers under multiplication).
+
+```agda
 All-++ : {P : A → Set} {xs ys : List A} → All P xs → All P ys → All P (xs ++ ys)
 All-++ {xs = []} Pxs Pys = Pys
 All-++ {xs = x ∷ xs} (Px , Pxs) Pys = Px , All-++ Pxs Pys
@@ -1543,26 +1541,40 @@ All-++ {xs = x ∷ xs} (Px , Pxs) Pys = Px , All-++ Pxs Pys
 product-++ : (xs ys : List ℕ) → product (xs ++ ys) ≡ product xs * product ys
 product-++ [] ys = sym (_ +0)
 product-++ (x ∷ xs) ys = trans (x *_ $≡ product-++ xs ys) (sym (*-assoc x (product xs) (product ys)))
+```
 
-------------------------------------------------------------
--- FTA
-------------------------------------------------------------
+## The Fundamental Theorem of Arithmetic
 
-FTA : ℤ⁺ → Set
-FTA (n , _) = Σ (List ℕ) (λ ps → All Prime ps × product ps ≡ n)
+Finally, we can put all the pieces together to state and prove (one
+half of) the Fundamental Theorem of Arithmetic!  `FTA n` says that for
+some positive integer `n`, we can find a list of natural numbers which
+are all prime, and whose product is `n`.
 
--- FTA, without uniqueness.
-fta : (n : ℤ⁺) → FTA n
-fta n = wf-ind {P = FTA} <⁺-wf go n
+```agda
+FTA : ℕ → Set
+FTA n = Σ (List ℕ) (λ ps → All Prime ps × product ps ≡ n)
+```
+
+To prove that this holds for all positive integers, we can again use
+well-founded induction: in the base case, if $n = 1$, the empty list
+suffices.  Otherwise, we can decide whether $n$ is prime. If so, the
+singleton list containing $n$ fits the bill. Otherwise, $n = ab$ where
+$a$ and $b$ are both nontrivial divisors of $n$; by the induction
+hypothesis, both can be factored into primes, and the list we want for
+$n$ is simply the concatenation of the factorizations for $a$ and $b$.
+
+```agda
+fta : (n : ℕ) → (0 < n) → FTA n
+fta n = wf-ind {P = (λ n → (0 < n) → FTA n)} <-wf go n
  where
-  go : (n : ℤ⁺) → ((n′ : ℤ⁺) → n′ <⁺ n → FTA n′) → FTA n
-  go (suc zero , _) _ = [] , (tt , refl)
-  go (suc (suc n) , 1≤n) IH with prime? (suc (suc n)) (sle (sle zle))
+  go : (n : ℕ) → ((n′ : ℕ) → n′ < n → 0 < n′ → FTA n′) → 0 < n → FTA n
+  go (suc zero) IH 0<n = [] , (tt , refl)
+  go (suc (suc n)) IH 0<n with prime? (suc (suc n)) (sle (sle zle))
   ... | inj₁ P = (suc (suc n) ∷ []) , ((P , tt) , (suc $≡ (suc $≡ (n *1))))
   ... | inj₂ C with factorsOf _ C
-  ... | ((a , 2≤a , a<n , _) , (b , 2≤b , b<n , _)) , ab≡n
-      with IH (a , ≤-trans (sle zle) 2≤a) a<n
-         | IH (b , ≤-trans (sle zle) 2≤b) b<n
+  ... | ((a , sle _ , a<n , _) , (b , sle _ , b<n , _)) , ab≡n
+      with IH a a<n (sle zle)
+         | IH b b<n (sle zle)
   ... | ps₁ , Pps₁ , prod₁ | ps₂ , Pps₂ , prod₂ = (ps₁ ++ ps₂) , (All-++ Pps₁ Pps₂) ,
     begin
       product (ps₁ ++ ps₂)      ≡[ product-++ ps₁ ps₂ ⟩≡
@@ -1570,3 +1582,5 @@ fta n = wf-ind {P = FTA} <⁺-wf go n
       a * b                     ≡[ ab≡n ⟩≡
       suc (suc n)               ∎
 ```
+
+XXX conclusion?
