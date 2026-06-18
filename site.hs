@@ -91,8 +91,9 @@ myRenderPandocWithTransformM ::
   (Item Pandoc -> Compiler (Item Pandoc)) -> -- this changed!
   Item String ->
   Compiler (Item String)
-myRenderPandocWithTransformM ropt wopt f i =
-  writePandocWith wopt <$> (f =<< readPandocWith ropt i)
+myRenderPandocWithTransformM ropt wopt f i = do
+  toc <- getMetadataField (itemIdentifier i) "include-toc"
+  writePandocWith (wopt { writerTableOfContents = (toc == Just "true") }) <$> (f =<< readPandocWith ropt i)
 
 myPandocCompilerWithTransformM ::
   ReaderOptions ->

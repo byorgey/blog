@@ -5,6 +5,18 @@ katex: true
 tags: agda,arithmetic,theorem,proof
 ---
 
+**tl;dr**: This is a fully commentated, from-scratch proof of the
+Fundamental Theorem of Arithmetic in
+[Agda](https://wiki.portal.chalmers.se/agda/pmwiki.php?n=Main.HomePage),
+intended for those who already know a bit of Agda but might benefit
+from reading and working through a larger example.  See the
+Introduction and the [Table of Contents](#table-of-contents) below for more details.
+
+**This version of the file has most of the proofs replaced by Agda
+holes, so you can try to fill in the proofs for yourself.**
+
+## Introduction
+
 Earlier this spring, I was idly brainstorming potential final projects
 for my [Functional Programming](https://hendrix-cs.github.io/csci365/)
 students.  Having just [taught my Discrete Math students the
@@ -17,41 +29,85 @@ aka Taneb](https://github.com/Taneb).] it in
 [Agda](https://wiki.portal.chalmers.se/agda/pmwiki.php?n=Main.HomePage)
 could make a nice project.
 
-XXX link to
-https://agda.readthedocs.io/en/latest/getting-started/a-taste-of-agda.html
-, other Agda documentation?
-
-So I decided to spend about an hour trying to prove the FTA in Agda,
+So I decided to spend about an hour trying to prove it in Agda,
 to gauge the level of the project.  At the end of an hour, I had
-learned two things: (1) this was in no way an appropriate project for
-my students (who have only had a few weeks' practice with Agda); (2) I
-was not going to be able to stop until I finished the proof myself.
+learned two things: (1) proving the Fundamental Theorem of Arithmetic is *not* an appropriate project for
+my students (who had only had a few weeks' practice with Agda); (2) I
+was not going to be able to stop until I finished the proof myself!
 
 Over the next week or so, I finished the proof completely from
 scratch—without using anything from the standard library, and without
 looking up any reference material.  I based it only on my experience
-in Agda, knowledge of the relevant proofs on an informal level, and Agda
-tricks I've picked up along the way XXX from Conor and elsewhere.
+in Agda, knowledge of the relevant proofs on an informal level, and
+Agda tricks I've picked up along the way (from *e.g.* Conor McBride, Jacques
+Carette, colleagues at Penn, and elsewhere).
 
 I decided to publish the proof, with extra commentary, in the hopes
 that it can be useful as an intermediate-level reference.  That is,
-perhaps you've learned some basic Agda and have some basic familiarity
+perhaps you've learned some basic Agda (if not, I suggest [this
+tutorial to
+start](https://agda.readthedocs.io/en/latest/getting-started/a-taste-of-agda.html))
+and have some basic familiarity
 with the Curry-Howard correspondence, but would benefit from seeing an
-example of a fully worked out, medium-sized proof.  The resulting blog
-post ended up being extremely long, but I didn't think it made sense
-to publish it in pieces. XXX?
+example of a fully worked out, medium-sized proof.^[Another good
+source of information along these lines is [this post by Jesper
+Cockx](https://jesper.sikanda.be/posts/formalize-all-the-things.html).] The resulting blog
+post is extremely long, but I make no apologies for that—if you want
+an entertaining 5-minute read, you should look elsewhere!
 
-This blog post XXX available as literate Agda.  XXX There is also an
-alternative version of this blog post with holes.  Try filling in the
-proofs as you go along, before reading each section.
+The entire blog post and proof is [available as a literate Agda
+document](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA.lagda.md).  Even better, I have also published [another version of this
+blog post with holes in place of almost all the proofs](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA-holes.lagda.md).  For a
+maximal learning experience, I suggest downloading it and trying to
+fill in the holes yourself as you go along.
 
-XXX table of contents.  Maybe skip some parts depending on your background?
+Below is a table of contents.  Depending on your background, you may
+of course choose to skip some sections.  For example, if you have
+already had a good deal of practice dealing with basic natural number
+arithmetic, equality, and inequality in Agda, you might wish to skip
+over those sections.
 
-## The Fundamental Theorem of Arithmetic
+## Table of Contents
 
-The fundamental theorem of arithmetic states that any natural number
-$n \geq 1$ can be written as a product of zero or more primes, and
-moreover that this product is unique up to permutation.
+* [Introduction](#introduction)
+* [(Half of) The Fundamental Theorem of Arithmetic (Constructively)](#half-of-the-fundamental-theorem-of-arithmetic-constructively)
+* [Preliminaries](#preliminaries)
+* [Basic logic](#basic-logic)
+* [Equality](#equality)
+* [Natural numbers](#natural-numbers)
+    * [No confusion](#no-confusion)
+    * [Decidable equality](#decidable-equality)
+* [Addition](#addition)
+* [Multiplication](#multiplication)
+* [Inequality](#inequality)
+    * [Relationships among equality and inequality](#relationships-among-equality-and-inequality)
+    * [Arithmetic and inequality](#arithmetic-and-inequality)
+* [Divisibility, primes, and composites](#divisibility-primes-and-composites)
+    * [Nontrivial divisors come in pairs](#nontrivial-divisors-come-in-pairs)
+* [Division](#division)
+* [Absolute difference](#absolute-difference)
+* [Quotient and remainder are unique](#quotient-and-remainder-are-unique)
+* [The division algorithm, take 1](#the-division-algorithm-take-1)
+    * [Construct the evidence you would like to pattern-match on](#construct-the-evidence-you-would-like-to-pattern-match-on)
+* [Well-founded induction](#well-founded-induction)
+    * [Accessibility](#accessibility)
+    * [Well-founded induction, defined](#well-founded-induction-defined)
+    * [Less-than is well-founded](#less-than-is-well-founded)
+* [The division algorithm](#the-division-algorithm)
+* [Primality testing](#primality-testing)
+    * [Counting up](#counting-up)
+    * [Primality testing by trial division](#primality-testing-by-trial-division)
+* [Lists](#lists)
+* [The Fundamental Theorem of Arithmetic](#the-fundamental-theorem-of-arithmetic)
+* [Further Directions](#further-directions)
+
+## (Half of) The Fundamental Theorem of Arithmetic (Constructively)
+
+The [Fundamental Theorem of
+Arithmetic](https://en.wikipedia.org/wiki/Fundamental_theorem_of_arithmetic)
+(*FTA* for short) states that any natural number $n \geq 1$ can be
+written as a product of zero or more primes, and moreover that this
+product is unique up to permutation.
 
 For now, we are only going to prove the *existence* part (I may write
 another blog post with the uniqueness proof later).  Since a *constructive*
@@ -87,7 +143,7 @@ data ⊤ : Set where
 `tt` is declared to be the one and only value of type `⊤`.
 
 Note that some things we define here—such as `⊤`—will have the same
-names as they do in the [Agda standard library](XXX).  However, many things
+names as they do in the [Agda standard library](https://agda.github.io/agda-stdlib/v2.3/).  However, many things
 won't, since I either didn't know the standard name and made up my
 own, or (in a few cases) did know the standard name but didn't like
 it, and made up my own anyway.
@@ -111,7 +167,7 @@ We can now define negation as an implication to `⊥`.
 
 ```agda
 ¬ : Set → Set
-¬ P = P → ⊥
+¬ P = {!!}
 ```
 
 Dependent pairs are next: a pair of values where the *type* of the
@@ -135,11 +191,11 @@ to logical conjunction (and).
 
 ```agda
 fst : ∀ {A B} → Σ A B → A
-fst (a , _) = a
+fst = {!!}
 
 infixr 3 _×_
 _×_ : (A B : Set) → Set
-A × B = Σ A (λ _ → B)
+A × B = {!!}
 ```
 
 Finally, we define a disjoint (tagged) union type corresponding to
@@ -176,13 +232,13 @@ function to both sides of an equation).
 
 ```agda
 sym : {x y : A} → x ≡ y → y ≡ x
-sym refl = refl
+sym = {!!}
 
 trans : {x y z : A} → x ≡ y → y ≡ z → x ≡ z
-trans refl y≡z = y≡z
+trans = {!!}
 
 cong : (f : A → B) → {x y : A} → x ≡ y → f x ≡ f y
-cong _ refl = refl
+cong = {!!}
 ```
 
 Since we will spend a good amount of time reasoning about equality, it
@@ -200,8 +256,11 @@ begin
   y      ≡[ s ⟩≡
   z      ∎
 ```
-This notation is one of my favorite applications of Agda's [mixfix
-operator syntax](https://agda.readthedocs.io/en/latest/language/mixfix-operators.html), and has several benefits:
+The intention is that this proof shows `v ≡ z`, by first using `p` to
+show that `v ≡ w`, then `q` to show `w ≡ x`, and so on.  This notation
+is one of my favorite applications of Agda's [mixfix operator
+syntax](https://agda.readthedocs.io/en/latest/language/mixfix-operators.html),
+and has several benefits:
 
 - We can avoid nested parentheses when chaining uses of transitivity.
 - We can automatically apply symmetry by using a left-pointing
@@ -218,22 +277,22 @@ McBride](https://personal.cis.strath.ac.uk/conor.mcbride/PolyTest.pdf).  I just 
 ```agda
 infix 1 begin_
 begin_ : {x y : A} → x ≡ y → x ≡ y
-begin x≡y = x≡y
+begin_ = {!!}
 
 infixr 2 _≡[_⟩≡_
 _≡[_⟩≡_ : (x : A) → {y z : A} → (x ≡ y) → (y ≡ z) → (x ≡ z)
-_ ≡[ x≡y ⟩≡ y≡z = trans x≡y y≡z
+_≡[_⟩≡_ = {!!}
 
 infixr 2 _≡⟨_]≡_
 _≡⟨_]≡_ : (x : A) → {y z : A} → (y ≡ x) → (y ≡ z) → (x ≡ z)
-_ ≡⟨ y≡x ]≡ y≡z = trans (sym y≡x) y≡z
+_≡⟨_]≡_ = {!!}
 
 infixr 5 _∎
 _∎ : (x : A) → x ≡ x
-_ ∎ = refl
+_∎ = {!!}
 ```
 
-Finally, a few [Applicative](XXX)-like operators for more conveniently
+Finally, a few [Applicative](https://hackage-content.haskell.org/package/base-4.22.0.0/docs/Prelude.html#t:Applicative)-like operators for more conveniently
 writing common forms of congruence.  For example, instead of writing
 `cong f x≡y`, we can write `f $≡ x≡y`; or to use congruence on both
 arguments of a two-place function at once, we can write `f $≡ x≡y ≡$≡
@@ -242,15 +301,15 @@ z≡w`.  (These operators were also inspired by Conor.)
 ```agda
 infixl 4 _$≡_
 _$≡_ : (f : A → B) → {x y : A} → x ≡ y → f x ≡ f y
-f $≡ x≡y = cong f x≡y
+_$≡_ = {!!}
 
 infixl 4 _≡$_
 _≡$_ : {f g : A → B} → f ≡ g → (x : A) → f x ≡ g x
-f≡g ≡$ x = cong (λ h → h x) f≡g
+_≡$_ = {!!}
 
 infixl 4 _≡$≡_
 _≡$≡_ : {f g : A → B} → f ≡ g → {x y : A} → x ≡ y → f x ≡ g y
-f≡g ≡$≡ x≡y = trans (f≡g ≡$ _) (_ $≡ x≡y)
+_≡$≡_ = {!!}
 ```
 
 ## Natural numbers
@@ -280,9 +339,10 @@ with the same constructor, we can decompose it into equalities between
 the components.
 
 We can prove both of these simultaneously using a property called "no
-confusion".  This is XXX Well-known in the literature.
-http://strictlypositive.org/concon.ps.gz
-https://link.springer.com/chapter/10.1007/3-540-61780-9_64  Cornes + Terrasse
+confusion".  This property and its name is well-known in the
+literature; for example, see
+[McBridge](http://strictlypositive.org/concon.ps.gz) or [Cornes +
+Terrasse](https://link.springer.com/chapter/10.1007/3-540-61780-9_64).
 
 For natural numbers `m` and `n`, the type `NoConf m n` should be
 thought of as the type of evidence that `m ≡ n`, based on looking at
@@ -295,10 +355,7 @@ between their predecessors.
 
 ```agda
 NoConf : ℕ → ℕ → Set
-NoConf zero zero = ⊤
-NoConf zero (suc n) = ⊥
-NoConf (suc m) zero = ⊥
-NoConf (suc m) (suc n) = m ≡ n
+NoConf = {!!}
 ```
 
 Now we can prove the no confusion lemma for our natural number type,
@@ -312,8 +369,7 @@ non-matching constructors.
 
 ```agda
 noConf : {m n : ℕ} → m ≡ n → NoConf m n
-noConf {zero} refl = tt
-noConf {suc m} refl = refl
+noConf = {!!}
 ```
 
 As an aside, this definition of the no confusion property uses a
@@ -330,8 +386,8 @@ nontrivial computation.
 We can now show how to decide equality of natural numbers.  We first
 define a simple type representing decidability in general: `Dec P` represents
 either a proof of `P`, or a proof of `¬ P`.^[You may be aware that the
-[law of excluded middle](XXX), which
-says that $P \lor \neg P$ for all propositions $P$, does not hold in constructive logic.  However, even
+[law of excluded middle](https://en.wikipedia.org/wiki/Law_of_excluded_middle), which
+says that $P \lor \neg P$ for all propositions $P$, is rejected in constructive logic.  However, even
 though $P \lor \neg P$ does not hold for *all* $P$, it can still hold
 for certain specific propositions.  Propositions $P$ for which $P \lor
 \neg P$ holds constructively are called *decidable*.]  (The [standard library
@@ -351,12 +407,7 @@ confusion lemma: two to handle impossible situations, and one to strip
 
 ```agda
 _≟_ : (x y : ℕ) → Dec (x ≡ y)
-zero ≟ zero = yes refl
-zero ≟ suc y = no noConf
-suc x ≟ zero = no noConf
-suc x ≟ suc y with x ≟ y
-... | yes x≡y = yes (suc $≡ x≡y)
-... | no x≢y = no (λ sx≡sy → x≢y (noConf sx≡sy))
+_≟_ = {!!}
 ```
 
 ## Addition
@@ -370,98 +421,65 @@ commutative, associative, and left-cancellable.
 ```agda
 infixl 6 _+_
 _+_ : ℕ → ℕ → ℕ
-zero + y = y
-suc x + y = suc (x + y)
+_+_ = {!!}
 
 _+0 : (n : ℕ) → (n + 0 ≡ n)
-zero +0 = refl
-(suc n) +0 = suc $≡ (n +0)
+_+0 = {!!}
 
 _+suc_ : (x y : ℕ) → (x + suc y) ≡ suc (x + y)
-zero +suc y = refl
-(suc x) +suc y = suc $≡ (x +suc y)
+_+suc_ = {!!}
 
 +-comm : (x y : ℕ) → x + y ≡ y + x
-+-comm zero y = sym (y +0)
-+-comm (suc x) y = trans (suc $≡ (+-comm x y)) (sym (y +suc x))
++-comm = {!!}
 
 +-assoc : (x y z : ℕ) → (x + y) + z ≡ x + (y + z)
-+-assoc zero y z = refl
-+-assoc (suc x) y z = suc $≡ (+-assoc x y z)
++-assoc = {!!}
 
 +-cancelˡ : (x y z : ℕ) → x + y ≡ x + z → y ≡ z
-+-cancelˡ zero y z x+y≡x+z = x+y≡x+z
-+-cancelˡ (suc x) y z x+y≡x+z = +-cancelˡ x y z (noConf x+y≡x+z)
++-cancelˡ = {!!}
 ```
 
 ## Multiplication
 
 Multiplication is next: we start by defining the multiplication
 operation (by pattern-matching on the left-hand argument) and proving
-a few lemmas about multiplying by known arguments on the right.
+a few lemmas about multiplying by known arguments on the right. The
+proof of `*suc` is the most involved proof we have seen yet, but it
+ultimately just comes down to algebra, and we can make good use of our
+notation for writing chained equality proofs.
 
 ```agda
 infixl 7 _*_
 _*_ : ℕ → ℕ → ℕ
-zero * y = zero
-suc x * y = y + x * y
+_*_ = {!!}
 
 _*0 : (n : ℕ) → (n * 0 ≡ 0)
-zero *0 = refl
-(suc n) *0 = n *0
+_*0 = {!!}
 
 _*1 : (n : ℕ) → (n * 1 ≡ n)
-0 *1 = refl
-(suc n) *1 = suc $≡ (n *1)
+_*1 = {!!}
 
 _*suc_ : (x y : ℕ) → (x * suc y ≡ x + x * y)
-zero *suc y = refl
-(suc x) *suc y = suc $≡ (
-  begin
-  y + x * suc y               ≡[ (y +_) $≡ (x *suc y) ⟩≡
-  y + (x + x * y)             ≡⟨ +-assoc y x (x * y) ]≡
-  (y + x) + x * y             ≡[ _+_ $≡ +-comm y x ≡$ x * y ⟩≡
-  (x + y) + x * y             ≡[ +-assoc x _ _ ⟩≡
-  x + (y + x * y)             ∎)
+_*suc_ = {!!}
 ```
 
 We prove some standard properties of multiplication: commutativity,
-distributivity over addition, associativity.  The proofs mostly
+distributivity over addition, associativity.  Again, the proofs mostly
 consist of a whole bunch of algebra, using the special notation for
 building chained equality proofs.
 
 ```agda
 *-comm : (x y : ℕ) → x * y ≡ y * x
-*-comm zero y = sym (y *0)
-*-comm (suc x) y = begin
-  y + x * y                   ≡[ y +_ $≡ *-comm x y ⟩≡
-  y + y * x                   ≡⟨ y *suc x ]≡
-  y * suc x                   ∎
+*-comm = {!!}
 
 *-distribˡ : (x y z : ℕ) → x * (y + z) ≡ x * y + x * z
-*-distribˡ zero y z = refl
-*-distribˡ (suc x) y z = begin
-  y + z + x * (y + z)         ≡[ (y + z) +_ $≡ *-distribˡ x y z ⟩≡
-  y + z + (x * y + x * z)     ≡[ +-assoc y _ _ ⟩≡
-  y + (z + (x * y + x * z))   ≡⟨ y +_ $≡ +-assoc z _ _ ]≡
-  y + ((z + x * y) + x * z)   ≡[ y +_ $≡ (_+_ $≡ +-comm z _ ≡$ x * z) ⟩≡
-  y + ((x * y + z) + x * z)   ≡[ y +_ $≡ +-assoc (x * y) _ _ ⟩≡
-  y + (x * y + (z + x * z))   ≡⟨ +-assoc y _ _ ]≡
-  y + x * y + (z + x * z)     ∎
+*-distribˡ = {!!}
 
 *-distribʳ : (x y z : ℕ) → (x + y) * z ≡ x * z + y * z
-*-distribʳ x y z = begin
-  (x + y) * z                 ≡[ *-comm (x + y) _ ⟩≡
-  z * (x + y)                 ≡[ *-distribˡ z _ _ ⟩≡
-  z * x + z * y               ≡[ _+_ $≡ *-comm z _ ≡$≡ *-comm z _ ⟩≡
-  x * z + y * z               ∎
+*-distribʳ = {!!}
 
 *-assoc : (x y z : ℕ) → (x * y) * z ≡ x * (y * z)
-*-assoc zero y z = refl
-*-assoc (suc x) y z = begin
-  (y + x * y) * z             ≡[ *-distribʳ y _ _ ⟩≡
-  y * z + (x * y) * z         ≡[ y * z +_ $≡ *-assoc x _ _ ⟩≡
-  y * z + x * (y * z)         ∎
+*-assoc = {!!}
 ```
 
 Finally, we prove that multiplication is left-cancellative.  This
@@ -473,21 +491,7 @@ left-cancellative to construct the required input equality.
 
 ```agda
 *-cancelˡ : (x y z : ℕ) → (0 ≢ x) → x * y ≡ x * z → y ≡ z
-*-cancelˡ zero y z x≢0 xy≡xz = absurd (x≢0 refl)
-*-cancelˡ (suc x) zero zero x≢0 xy≡xz = refl
-*-cancelˡ (suc x) zero (suc z) x≢0 xy≡xz = absurd (noConf (trans (sym (x *0)) xy≡xz))
-*-cancelˡ (suc x) (suc y) zero x≢0 xy≡xz = absurd (noConf (trans xy≡xz (x *0)))
-*-cancelˡ (suc x) (suc y) (suc z) x≢0 xy≡xz = suc $≡
-  ( *-cancelˡ (suc x) y z x≢0
-    ( +-cancelˡ (suc x) (suc x * y) (suc x * z)
-      ( begin
-          suc x + suc x * y   ≡⟨ (suc x) *suc y ]≡
-          suc x * suc y       ≡[ xy≡xz ⟩≡
-          suc x * suc z       ≡[ (suc x) *suc z ⟩≡
-          suc x + suc x * z   ∎
-      )
-    )
-  )
+*-cancelˡ = {!!}
 ```
 
 ## Inequality
@@ -507,23 +511,19 @@ transitive, and is related to `suc` in various ways.
 
 ```agda
 ≤-refl : {m : ℕ} → m ≤ m
-≤-refl {zero} = zle
-≤-refl {suc m} = sle ≤-refl
+≤-refl = {!!}
 
 ≤-trans : {x y z : ℕ} → x ≤ y → y ≤ z → x ≤ z
-≤-trans zle y≤z = zle
-≤-trans (sle x≤y) (sle y≤z) = sle (≤-trans x≤y y≤z)
+≤-trans = {!!}
 
 ≤-sucr : {m n : ℕ} → m ≤ n → m ≤ suc n
-≤-sucr zle = zle
-≤-sucr (sle m≤n) = sle (≤-sucr m≤n)
+≤-sucr = {!!}
 
 ≤-sucl : {m n : ℕ} → suc m ≤ n → m ≤ n
-≤-sucl (sle sm≤n) = ≤-sucr sm≤n
+≤-sucl = {!!}
 
 ≤-pred : {x y : ℕ} → suc x ≤ suc y → x ≤ y
-≤-pred (sle sx≤sy) = sx≤sy
-
+≤-pred = {!!}
 ```
 
 For convenience, we define $<$ in terms of $\leq$, and prove a few
@@ -535,15 +535,13 @@ _<_ : ℕ → ℕ → Set
 x < y = suc x ≤ y
 
 _<suc : (x : ℕ) → x < suc x
-_<suc zero = sle zle
-_<suc (suc x) = sle (x <suc)
+_<suc = {!!}
 
 <-trans : {x y z : ℕ} → x < y → y < z → x < z
-<-trans (sle x<y) (sle y<z) = ≤-trans (sle x<y) (≤-sucr y<z)
+<-trans = {!!}
 
 x≮x : {x : ℕ} → ¬ (x < x)
-x≮x {zero} = λ ()
-x≮x {suc x} = λ { (sle x<x) → x≮x x<x}
+x≮x = {!!}
 ```
 
 ### Relationships among equality and inequality
@@ -553,11 +551,11 @@ will need.  First, equality implies $\leq$.
 
 ```agda
 ≡→≤ : {x y : ℕ} → x ≡ y → x ≤ y
-≡→≤ refl = ≤-refl
+≡→≤ = {!!}
 ```
 
 Next, $x < y$ implies that $x$ and $y$ are *not* related by $\equiv$ or
-$\leq$.  The first lemma in particular—that $<$ implies $\not\equiv$—gets used quite a bit.  Note that it can be read in two equivalent
+$\geq$.  The first lemma in particular—that $<$ implies $\not\equiv$—gets used quite a bit.  Note that it can be read in two equivalent
 ways: on the surface, it is a way to turn a proof of $x < y$ into a
 proof of $x \not\equiv y$; but
 since $x \not\equiv y$ is really an abbreviation for $(x \equiv y) \to \bot$, it can be
@@ -566,27 +564,28 @@ also $x \equiv y$.
 
 ```agda
 <→≢ : {x y : ℕ} → x < y → x ≢ y
-<→≢ x<y refl = x≮x x<y
+<→≢ = {!!}
 
-<→≰ : {x y : ℕ} → x < y → ¬ (y ≤ x)
-<→≰ (sle x<y) (sle y≤x) = <→≰ x<y y≤x
+<→≱ : {x y : ℕ} → x < y → ¬ (y ≤ x)
+<→≱ = {!!}
 ```
 
 If $x \leq y$ but they are not equal, then $x < y$.
 
 ```agda
 ≤≢→< : {x y : ℕ} → x ≤ y → x ≢ y → x < y
-≤≢→< {y = zero} zle x≢y = absurd (x≢y refl)
-≤≢→< {y = suc y} zle x≢y = sle zle
-≤≢→< (sle x≤y) x≢y = sle (≤≢→< x≤y (λ m≡n → x≢y (suc $≡ m≡n)))
+≤≢→< = {!!}
 ```
 
 We will need a form of transitivity that says if $x \leq y$ and $y <
-z$, then $x < z$.
+z$, then $x < z$, as well as the other way around.
 
 ```agda
 ≤-<-trans : {x y z : ℕ} → x ≤ y → y < z → x < z
-≤-<-trans x≤y (sle y<z) = ≤-trans (sle x≤y) (sle y<z)
+≤-<-trans = {!!}
+
+<-≤-trans : {x y z : ℕ} → x < y → y ≤ z → x < z
+<-≤-trans = {!!}
 ```
 
 Finally, a very specific lemma we will need: if a number is not
@@ -594,9 +593,7 @@ equal to either 0 or 1, then it must be greater than or equal to 2.
 
 ```agda
 ¬01-is-≥2 : (a : ℕ) → (a ≢ 0) → (a ≢ 1) → (2 ≤ a)
-¬01-is-≥2 zero a≢0 a≢1 = absurd (a≢0 refl)
-¬01-is-≥2 (suc zero) a≢0 a≢1 = absurd (a≢1 refl)
-¬01-is-≥2 (suc (suc a)) a≢0 a≢1 = sle (sle zle)
+¬01-is-≥2 = {!!}
 ```
 
 ### Arithmetic and inequality
@@ -607,12 +604,10 @@ multiply by zero, of course).
 
 ```agda
 ≤+ : {x y : ℕ} → x ≤ (x + y)
-≤+ {zero} = zle
-≤+ {suc x} = sle ≤+
+≤+ = {!!}
 
 ≤* : {x y : ℕ} → (x ≢ 0) → y ≤ (x * y)
-≤* {zero} x≢0 = absurd (x≢0 refl)
-≤* {suc x} x≢0 = ≤+
+≤* = {!!}
 ```
 
 As a result, if we know that one thing is equal to a sum or product of
@@ -620,13 +615,13 @@ other things, we can conclude something about their relative sizes.
 
 ```agda
 +→≤ : {x y z : ℕ} → x + y ≡ z → x ≤ z
-+→≤ refl = ≤+
++→≤ = {!!}
 
 +→< : {x y z : ℕ} → 0 < y → x + y ≡ z → x < z
-+→< {x} {suc y} _ x+y≡z = +→≤ (trans (sym (x +suc y)) x+y≡z)
++→< = {!!}
 
 *→≤ : {x y z : ℕ} → (y ≢ 0) → y * x ≡ z → x ≤ z
-*→≤ {x} {y} y≢0 refl = ≤* y≢0
+*→≤ = {!!}
 ```
 
 ## Divisibility, primes, and composites
@@ -656,7 +651,7 @@ least two, and every $2 \leq d < n$ does *not* divide $n$.
 
 ```agda
 Prime : ℕ → Set
-Prime n = (2 ≤ n) × (∀ (d : ℕ) → (2 ≤ d) → (d < n) → ¬ (d ∣ n))
+Prime n = (2 ≤ n) × (∀ (d : ℕ) → (d < n) → (2 ≤ d) → ¬ (d ∣ n))
 ```
 
 One could equivalently define primality by saying that any divisor of
@@ -727,7 +722,7 @@ only thing left is to prove that $b$ is nontrivial, *i.e.* that $2
 \leq b$ and $b < n$.
 
 ```agda
-  ((b , 2≤b , b<n , a , trans (*-comm a b) ba≡n) , (a , 2≤a , a<n , b , ba≡n)) , ba≡n
+  {!!}
 ```
 
 First, we need a lemma that $0 < n$, which follows because $0 < 1 < a
@@ -737,7 +732,7 @@ same thing as a proof of $2 \leq a$).
 ```agda
  where
   0<n : 0 < n
-  0<n = <-trans (sle zle) (<-trans 2≤a a<n)
+  0<n = {!!}
 ```
 
 Next, we tackle $2 \leq b$, by showing that $b$ can't possibly be $0$
@@ -753,29 +748,14 @@ If $b$ were $0$, then $ba = n$ would imply $0 = n$, but we know
 $0 < n$, so this is a contradiction.
 
 ```agda
-    (λ b≡0 → <→≢ 0<n
-      (begin
-        0                     ≡[ refl ⟩≡
-        0 * a                 ≡⟨ _*_ $≡ b≡0 ≡$ a ]≡
-        b * a                 ≡[ ba≡n ⟩≡
-        n                     ∎
-      )
-    )
+    {!!}
 ```
 
 If $b$ were $1$, then $ba = n$ would imply $a = n$, but we know
 $a < n$, so this is also a contradiction.
 
 ```agda
-    (λ b≡1 → <→≢ a<n
-      (begin
-        a                     ≡⟨ a *1 ]≡
-        a * 1                 ≡[ *-comm a 1 ⟩≡
-        1 * a                 ≡⟨ _*_ $≡ b≡1 ≡$ a ]≡
-        b * a                 ≡[ ba≡n ⟩≡
-        n                     ∎
-      )
-    )
+    {!!}
 ```
 
 Finally, we prove $b < n$, by showing $b \leq n$ and $b \neq n$.
@@ -789,7 +769,7 @@ $b \leq n$ since $ba = n$ and $a$ is not zero (if $a$ were zero it
 would contradict the fact that $2 \leq a$).
 
 ```agda
-    (*→≤ (λ a≡0 → <→≢ (<-trans (sle zle) 2≤a) (sym a≡0)) (trans (*-comm a b) ba≡n))
+    {!!}
 ```
 
 $b \neq n$, since $b = n$ together with $ba = n$ would imply $a = 1$
@@ -797,18 +777,7 @@ $b \neq n$, since $b = n$ together with $ba = n$ would imply $a = 1$
 equal 1.
 
 ```agda
-    (λ b≡n → <→≢ 2≤a
-      (sym
-        (*-cancelˡ n a 1 (<→≢ 0<n)
-          (begin
-            n * a             ≡⟨ _*_ $≡ b≡n ≡$ a ]≡
-            b * a             ≡[ ba≡n ⟩≡
-            n                 ≡⟨ n *1 ]≡
-            n * 1             ∎
-          )
-        )
-      )
-    )
+    {!!}
 ```
 
 ## Division
@@ -816,7 +785,7 @@ equal 1.
 Let's start working our way towards proving that divisibility is
 decidable.  To check whether $d \mid n$, the usual idea would be to
 divide $n$ by $d$ and check whether we get a remainder of zero.  So we
-need to formalize this notion of division.
+need to formalize this notion of division with remainder.
 
 Specifically, when we divide $n$ by $d$, we expect to get a *quotient* $q$
 and a *remainder* $r$, such that $r + qd = n$, and $0 \leq r < d$.
@@ -838,18 +807,18 @@ a natural number.
 
 ```agda
 divMod→0<d : {n d q r : ℕ} → DivMod n d q r → 0 < d
-divMod→0<d (DM _ r<d) = ≤-<-trans zle r<d
+divMod→0<d = {!!}
 ```
 
-We can also show that the remainder is zero if and only if $d
+We can also show that for nonzero $d$, the remainder is zero if and only if $d
 \mid n$:
 
 ```agda
 mod0→divides : (n d : ℕ) {q : ℕ} → DivMod n d q 0 → d ∣ n
-mod0→divides n d {q} (DM eq _) = q , eq
+mod0→divides = {!!}
 
 divides→mod0 : (n d : ℕ) → (0 < d) → d ∣ n → Σ ℕ (λ q → DivMod n d q 0)
-divides→mod0 n d 0<d (q , qd≡n) = q , (DM qd≡n 0<d)
+divides→mod0 = {!!}
 ```
 
 We would also like to show that if the remainder when dividing $n$ by
@@ -885,9 +854,7 @@ between its two arguments, like so:
 
 ```agda
 ∥_-_∥ : ℕ → ℕ → ℕ
-∥ zero - y ∥ = y
-∥ suc x - zero ∥ = suc x
-∥ suc x - suc y ∥ = ∥ x - y ∥
+∥_-_∥ = {!!}
 ```
 
 Of course, we will need a lot of small lemmas about the properties of
@@ -896,26 +863,20 @@ numbers is 0 if and only if they are equal:
 
 ```agda
 diff0 : (x : ℕ) → 0 ≡ ∥ x - x ∥
-diff0 zero = refl
-diff0 (suc x) = diff0 x
+diff0 = {!!}
 
 diff0→≡ : {x y : ℕ} → 0 ≡ ∥ x - y ∥ → x ≡ y
-diff0→≡ {zero} {zero} eq = eq
-diff0→≡ {suc x} {suc y} eq = suc $≡ diff0→≡ eq
+diff0→≡ = {!!}
 ```
 
 Next, the distance between any number and 0 is the number itself, and
 the distance function is commutative.
 ```agda
 ∥x-0∥≡x : (x : ℕ) → ∥ x - 0 ∥ ≡ x
-∥x-0∥≡x zero = refl
-∥x-0∥≡x (suc x) = refl
+∥x-0∥≡x = {!!}
 
 diff-comm : {x y : ℕ} → ∥ x - y ∥ ≡ ∥ y - x ∥
-diff-comm {zero} {zero} = refl
-diff-comm {zero} {suc y} = refl
-diff-comm {suc x} {zero} = refl
-diff-comm {suc x} {suc y} = diff-comm {x} {y}
+diff-comm = {!!}
 ```
 
 A key lemma supporting the argument outlined in the previous section
@@ -923,26 +884,18 @@ is that if $x$ and $y$ are both less than $d$, so is their absolute difference.
 
 ```agda
 diff-< : {x y d : ℕ} → x < d → y < d → ∥ x - y ∥ < d
-diff-< {zero} {y} x<d y<d = y<d
-diff-< {suc x} {zero} x<d y<d = x<d
-diff-< {suc x} {suc y} x<d y<d = diff-< {x} {y} (<-trans (x <suc) x<d) (<-trans (y <suc) y<d)
+diff-< = {!!}
 ```
 
 We can also cancel the same thing being added to both sides, or factor out
-the same thing being multiplied by both sides.
+the same thing being multiplied on both sides.
 
 ```agda
 diff-cancelˡ : (a b c : ℕ) → ∥ (a + b) - (a + c) ∥ ≡ ∥ b - c ∥
-diff-cancelˡ zero b c = refl
-diff-cancelˡ (suc a) b c = diff-cancelˡ a b c
+diff-cancelˡ = {!!}
 
 diff-distribʳ : (x y d : ℕ) → ∥ x * d - y * d ∥ ≡ ∥ x - y ∥ * d
-diff-distribʳ zero y d = refl
-diff-distribʳ (suc x) zero d = ∥x-0∥≡x (d + x * d)
-diff-distribʳ (suc x) (suc y) d = begin
-  ∥ (d + x * d) - (d + y * d) ∥         ≡[ diff-cancelˡ d (x * d) (y * d) ⟩≡
-  ∥ x * d - y * d ∥                     ≡[ diff-distribʳ x y d ⟩≡
-  ∥ x - y ∥ * d                         ∎
+diff-distribʳ = {!!}
 ```
 
 Another key lemma is that if $w + x = y + z$, then $\|w - y\| = \|x -
@@ -953,20 +906,10 @@ in several places in the proof of `sub₂`.
 
 ```agda
 sub₁ : {x y z : ℕ} → x + y ≡ z → x ≡ ∥ z - y ∥
-sub₁ {zero} {y} {z} refl = diff0 y
-sub₁ {suc x} {zero} {suc z} x+y≡z =
-  begin
-    suc x                     ≡⟨ suc $≡ x +0 ]≡
-    suc (x + 0)               ≡[ x+y≡z ⟩≡
-    suc z                     ∎
-sub₁ {suc x} {suc y} {suc z} x+y≡z =
-  sub₁ {suc x} {y} {z}
-    (noConf (trans (suc $≡ sym (x +suc y)) x+y≡z))
+sub₁ = {!!}
 
 sub₂ : {w x y z : ℕ} → w + x ≡ y + z → ∥ w - y ∥ ≡ ∥ x - z ∥
-sub₂ {zero} {x} {y} {z} w+x≡y+z = sub₁ (sym w+x≡y+z)
-sub₂ {suc w} {x} {zero} {z} w+x≡y+z = trans (sub₁ w+x≡y+z) (diff-comm {z})
-sub₂ {suc w} {x} {suc y} {z} w+x≡y+z = sub₂ {w} (noConf w+x≡y+z)
+sub₂ = {!!}
 ```
 
 ## Quotient and remainder are unique
@@ -976,8 +919,7 @@ First, we show that zero is the only multiple of $d$ which is less than $d$.
 
 ```agda
 ∣<→0 : {d x : ℕ} → d ∣ x → x < d → 0 ≡ x
-∣<→0 (zero , ad≡x) x<d = ad≡x
-∣<→0 (suc a , ad≡x) x<d = absurd (<→≰ x<d (+→≤ ad≡x))
+∣<→0 = {!!}
 ```
 
 And now for the main event: if we have both `DivMod n d q₁ r₁` and
@@ -995,18 +937,13 @@ $\|r_1 - r_2\| = \|q_1d - q_2d\|$.
 
 ```agda
   rem-diff : ∥ r₁ - r₂ ∥ ≡ ∥ q₁ * d - q₂ * d ∥
-  rem-diff = sub₂ {r₁} (trans r₁+q₁d≡n (sym r₂+q₂d≡n))
+  rem-diff = {!!}
 ```
 Next, we can show that $d$ divides the absolute difference $\|r_1 -
   r_2\|$, by factoring it out of $\|q_1 d - q_2 d\|$.
 ```agda
   d∣r₁-r₂ : d ∣ ∥ r₁ - r₂ ∥
-  d∣r₁-r₂ = ∥ q₁ - q₂ ∥ ,
-    (begin
-      ∥ q₁ - q₂ ∥ * d         ≡⟨ diff-distribʳ q₁ q₂ d ]≡
-      ∥ q₁ * d - q₂ * d ∥     ≡⟨ rem-diff ]≡
-      ∥ r₁ - r₂ ∥             ∎
-    )
+  d∣r₁-r₂ = {!!}
 ```
 
 We can then put three lemmas together to conclude $r_1 = r_2$: first,
@@ -1017,24 +954,17 @@ of zero means $r_1$ and $r_2$ must be equal.
 
 ```agda
   r₁≡r₂ : r₁ ≡ r₂
-  r₁≡r₂ = diff0→≡ (∣<→0 d∣r₁-r₂ (diff-< r₁<d r₂<d))
+  r₁≡r₂ = {!!}
 ```
 
 From here, proving $q_1 = q_2$ just requires some algebra.
 
 ```agda
   dq₁≡dq₂ : d * q₁ ≡ d * q₂
-  dq₁≡dq₂ = +-cancelˡ r₁ (d * q₁) (d * q₂)
-    (begin
-      r₁ + d * q₁             ≡[ r₁ +_ $≡ *-comm d q₁ ⟩≡
-      r₁ + q₁ * d             ≡[ r₁+q₁d≡n ⟩≡
-      n                       ≡⟨ r₂+q₂d≡n ]≡
-      r₂ + q₂ * d             ≡[ _+_ $≡ sym r₁≡r₂ ≡$≡ *-comm q₂ d ⟩≡
-      r₁ + d * q₂             ∎
-    )
+  dq₁≡dq₂ = {!!}
 
   q₁≡q₂ : q₁ ≡ q₂
-  q₁≡q₂ = *-cancelˡ d q₁ q₂ (<→≢ (divMod→0<d dm)) dq₁≡dq₂
+  q₁≡q₂ = {!!}
 ```
 
 Finally, we can use uniqueness of quotients and remainders to show the
@@ -1046,9 +976,7 @@ nonzero remainder.
 
 ```agda
 modS→¬divides : (n d : ℕ) {q r : ℕ} → DivMod n d q (suc r) → ¬ (d ∣ n)
-modS→¬divides n d dm d∣n with divides→mod0 n d (divMod→0<d dm) d∣n
-... | q₂ , dm₂ with divModUnique dm dm₂
-... | q₁≡q₂ , ()
+modS→¬divides = {!!}
 ```
 
 ## The division algorithm, take 1
@@ -1109,12 +1037,7 @@ of type `(n d : ℕ) → (n < d) ⊎ (d ≤ n)`, but our work will pay off later
 
 ```agda
 _decreaseBy?_ : (n d : ℕ) → Cmp n d
-zero decreaseBy? zero = GE 0 refl
-zero decreaseBy? suc d = LT (sle zle)
-suc n decreaseBy? zero = GE (suc n) ((suc n) +0)
-suc n decreaseBy? suc d with n decreaseBy? d
-... | LT n<d = LT (sle n<d)
-... | GE n′ n′+d≡n = GE n′ (trans (n′ +suc d) (suc $≡ n′+d≡n))
+_decreaseBy?_ = {!!}
 ```
 
 We can also write a helper function `incDivMod` which encodes the
@@ -1125,17 +1048,7 @@ Proving this requires only some straightforward algebra.
 
 ```agda
 incDivMod : {n′ n d q r : ℕ} → n′ + d ≡ n → DivMod n′ d q r → DivMod n d (suc q) r
-incDivMod {n′} {n} {d} {q} {r} n′+d≡n (DM r+qd≡n′ r<d) = DM r+d+qd≡n r<d
- where
-  r+d+qd≡n : r + (d + q * d) ≡ n
-  r+d+qd≡n = begin
-    r + (d + q * d)           ≡⟨ +-assoc r _ _ ]≡
-    (r + d) + q * d           ≡[ _+_ $≡ +-comm r _ ≡$ q * d ⟩≡
-    (d + r) + q * d           ≡[ +-assoc d _ _ ⟩≡
-    d + (r + q * d)           ≡[ d +_ $≡ r+qd≡n′ ⟩≡
-    d + n′                    ≡[ +-comm d _ ⟩≡
-    n′ + d                    ≡[ n′+d≡n ⟩≡
-    n                         ∎
+incDivMod = {!!}
 ```
 
 Now it seems like we have everything we need to write the division
@@ -1160,8 +1073,8 @@ module DivModBad where
 Well, as you can see, it *is* just a few lines of code, but all is not
 well: although this function typechecks, Agda can't tell that it is
 terminating! (I added the `NON_TERMINATING` pragma so I could include
-this bad version of `divMod` in the code without causing an error.)
-The problem is that the recursive call to `divMod` is on `n′`,
+this bad version of `divAlg` in the code without causing an error.)
+The problem is that the recursive call to `divAlg` is on `n′`,
 which is not a subterm of `n`, but instead comes from the call to
 `decreaseBy?`.  Agda has no way of knowing whether the result from
 some random function call is going to end up being smaller than the
@@ -1178,38 +1091,44 @@ be worried!  In particular, the function recurses infinitely when given an input
 course: everyone knows you can't divide by zero *because it makes the
 universe go into infinite recursion*.
 
-The correct type for `divAlg is `(n d : ℕ) → (0 < d) → DivAlg n d`,
+The correct type for `divAlg` is `(n d : ℕ) → (0 < d) → DivAlg n d`,
 but we're still going to have trouble convincing Agda that our
 algorithm is terminating.  In order to do so, we need to take a detour
 through *well-founded induction*.
 
 ## Well-founded induction
 
-XXX typical "structural" induction --- recursive calls on subterms.
-(Agda is a bit more sophisticated than that, but that's the basic
-idea.)  There are more exotic forms of induction, but it turns out we
-already have everything we need: we can bootstrap
+Normally, Agda only allows functions that are *structurally
+recursive*—that is, functions which make recursive calls on syntactic
+subterms of their inputs.  (Agda's termination checking is a bit more
+sophisticated than that, but that's the basic idea.)  However, we can
+use basic structural induction to bootstrap our way into more exotic
+forms.  In particular, we are going to define something called
+*well-founded induction*.^[Note that I will use the terms "recursion"
+and "induction" more or less interchangeably.  In some contexts, people
+make a distinction between the terms (typically a *recursion
+principle* is a less-dependently-typed version of an *induction
+principle*), but in this context, *inductive proofs* correspond, via
+Curry-Howard, to (suitably restricted) *recursive functions*, so
+"induction" and "recursion" describe the same thing from a logical and
+computational viewpoint, respectively.]
 
 The idea of well-founded induction starts with the general idea of a
 *relation*.  A relation on `A` is just a function that takes two
 values of type `A` and produces a type, representing evidence that the
 two values are related (according to whatever kind of relationship we
 have in mind).
-
 ```agda
 Rel : Set → Set₁
 Rel A = A → A → Set
 ```
-
-We have already seen quite a few relations: equality, less-than,
-less-than-or-equal-to, divisibility.
-
-XXX I will use recursive function / induction interchangeably.
+We have already seen quite a few relations, such as  equality, $<$,
+$\leq$, and divisibility.
 
 Suppose we're writing a recursive function, with some relation $\prec$
 in mind, and for a given input $x$ we're only allowed to make
 recursive calls on values $y$ such that $y \prec x$.  If $\prec$ is the
-"is a structural subterm of" relation, then we get structural
+"is a syntactic subterm of" relation, then we get structural
 recursion as usual.  But what if $\prec$ is some other relation?  What
 needs to be true about $\prec$ for this to make sense?  In particular, how
 can we be sure that the function won't get stuck in infinite recursion?
@@ -1242,18 +1161,18 @@ leading to it are finite.  Another way to say this is that a value is
 accessible if every value related to it is also accessible:
 
 ```agda
-data Acc (_≺_ : Rel A) : (x : A) → Set where
+data Acc (_≺_ : Rel A) : A → Set where
   acc : {x : A} → ((y : A) → y ≺ x → Acc _≺_ y) → Acc _≺_ x
 ```
 
 `Acc _≺_ x` defines what it means for a particular value `x` to be
-accessible with respect to a relation `R`.  There is only one
+accessible with respect to a relation $\prec$.  There is only one
 constructor, `acc`, which requires `(y : A) → y ≺ x → Acc _≺_ y`—that
 is, for every value `y` of type `A`, if `y` is related to `x`, then
-`y` is accessible.  In other words, `x` is accessible if every `y ≺ x`
+`y` is accessible.  In other words, `x` is accessible if and only if every `y ≺ x`
 is accessible.
 
-XXX This is definitely tricky to wrap your head around.  At this point
+This is definitely tricky to wrap your head around!  At this point
 you may have two objections:
 
 1. What about base cases?  Shouldn't we have another constructor which
@@ -1261,7 +1180,7 @@ you may have two objections:
    the `acc` constructor already says that!  If nothing is related to
    `x`, then `(y : A) → y ≺ x → Acc _≺_ y` is trivially true: we can
    easily promise anything we want as the output of a function if we
-   know it can never be called.  Every number less than zero is a
+   know it can never be called.  Every natural number less than zero is a
    purple flying weasel.
 
 2. Doesn't this just run into the same problem as before with
@@ -1271,19 +1190,30 @@ you may have two objections:
    because ... ?
 
    There is something a bit subtle going on here: recursive data types
-   in Agda (unlike, say, Haskell) are interpreted according to a
+   in Agda (unlike Haskell) are interpreted according to a
    *least fixed point* semantics.  Put in plain terms, the only values
    of a data type are those which can be built by applications of a
    *finite* number of constructors.  So in fact, the "no left-infinite
    chain" condition is foundationally built into the way Agda data
    types work!
 
-   XXX a bit exotic since `Acc` values can be *infinitely-branching* trees!
+The idea is that we can turn well-founded induction into structural
+induction by *pattern-matching on `Acc` proofs*!  Starting with some
+$x$, any $y \prec x$ has an accessibility proof which is a subterm of
+the accessibility proof for $x$.  This is a bit exotic though: if we
+pattern-match on the `acc` for $x$ we get a *function* that yields an
+accessibility proof for each $y \prec x$; calling that function
+produces another accessibility proof, which *counts as a structural
+subterm of the original*.  This seems a bit strange until you think of
+a value of type `Acc` like an big, arbitrarily-branching tree of
+finite depth; each node contains a function which really just stores
+all the subtrees.  In other words, a function of type `(y : A) → y ≺ x
+→ Acc _≺_ y` can be thought of as a giant tuple of `Acc` values, one
+for each `y \prec x`.^[I am not sure exactly how Agda handles this
+internally, but I assume this is well-trodden ground for designers of
+proof assistants.]
 
-XXX turn well-founded induction into structural induction by
-*pattern-matching on `Acc` proofs*!
-
-### Well-founded induction
+### Well-founded induction, defined
 
 Given the definition of accessible elements, we can now give the
 definition of a well-founded relation: a relation on `A` is well-founded if
@@ -1294,98 +1224,112 @@ WellFounded : Rel A → Set
 WellFounded {A} _≺_ = (a : A) → Acc _≺_ a
 ```
 
-We can now write down the *principle of well-founded induction*.  XXX
-also tricky to wrap your brain around.  Before, we were just talking
-about functions terminating or not.  But the reason this is important
-is that a function might be calculating a *proof*.  A function which
-purports to calculate a proof but sometimes goes into infinite
-recursion is a charlatan: XXX not really a proof at all.
+We can now write down the *principle of well-founded induction*.  This
+is also quite tricky to wrap your brain around, so we'll go through it
+slowly.  Previously, we were just talking about whether functions terminated or
+not; but the reason this is important is that a function might be
+calculating a *proof*.  A function which purports to calculate a proof
+but sometimes goes into infinite recursion is a charlatan, and not
+really a proof at all.
 
 So instead of thinking about termination, let's switch to thinking
-about proofs.  Given a proposition $P(x)$, we want to prove that
-$P(x)$ holds for all $x$ of type $A$.  The idea is that when trying to
+about proofs.  Given a proposition $P$, we want to prove that
+$P$ holds for every value of type $A$.  The idea is that when trying to
 prove $P(y)$ for a particular $y$, we get to assume that $P(z)$ holds
-(*i.e.* we get to make recursive calls $P(z)$) for all $z \prec y$.
+(*i.e.* we get to make recursive calls) for all $z \prec y$.
 
-XXX
-
-* `P : A → Set`  : the proposition.
-* `_≺_ : Rel A`: the relation.
-* `WellFounded _≺_`: a proof that `≺` is a well-founded relation.
-* `(y : A) → ((z : A) → z ≺ y → P z) → P y`: XXX tricky.  "For any
+Here, then, is the statement of the principle of well-founded induction, with
+each argument broken out on a separate line so we can explain them as
+we go.
+```agda
+wf-ind :
+  {P : A → Set}
+```
+* `P` represents an arbitrary proposition on `A`; our goal is to show `P` holds for
+  every value of type `A`.
+```agda
+  {_≺_ : Rel A} →
+```
+* An arbitrary relation.
+```agda
+  WellFounded _≺_ →
+```
+* A proof that `≺` is a well-founded relation.
+```agda
+  ((y : A) → ((z : A) → z ≺ y → P z) → P y) →
+```
+* This is the trickiest
+  argument to understand.  Intuitively, it says "For any
   `y`, if we know `P z` holds for all `z ≺ y`, then we can show `P y`
   also holds."
-
-The principle of well-founded induction says that this is enough to
-show `P x` holds for *all* `x`.
-
 ```agda
-wf-ind : {P : A → Set} {_≺_ : Rel A} → WellFounded _≺_ → ((y : A) → ((z : A) → z ≺ y → P z) → P y) → (x : A) → P x
+  (x : A) → P x
 ```
+* The principle of well-founded induction says that all of this is
+  enough to show that `P x` holds for *all* `x : A`.
 
-XXX now, how to implement this?  If we try something
-straightforward—just call `ind` on `x`, then call `wf-ind` recursively
-to fill in the proof for `P z`—of course it does not work; Agda cannot
-tell that this is terminating.  And this makes sense, because we are
+So, how do we implement this?  If we try something
+straightforward, as in `wf-ind-bad` below—just call `ind` on `x`, then call `wf-ind` recursively
+to fill in the proofs for `P z`—of course it does not work; Agda cannot
+tell that this is terminating.^[As an aside, Agda complains that this definition of `wf-ind-bad`
+is not terminating—which makes sense—but it continues to complain even
+when I include the `NON_TERMINATING` pragma, which I don't
+understand.  Perhaps this has been fixed in a more recent version of Agda.]  And this makes sense, because we are
 not even using the fact that the relation is well-founded at all!
 
-```agda
+```plain
 module WFIndBad where
 
-  -- XXX not sure why this still yields a nontermination error even with the pragma
   {-# NON_TERMINATING #-}
-  wf-ind-bad : {P : A → Set} {R : Rel A} → WellFounded R → ((y : A) → ((z : A) → R z y → P z) → P y) → (x : A) → P x
-  wf-ind-bad {A} {P} {R} wf ind x = ind x (λ z Rzx → wf-ind-bad wf ind z)
+  wf-ind-bad : {P : A → Set} {_≺_ : Rel A} → WellFounded _≺_ → ((y : A) → ((z : A) → z ≺ y → P z) → P y) → (x : A) → P x
+  wf-ind-bad wf ind x = ind x (λ z Rzx → wf-ind-bad wf ind z)
 ```
 
-The idea is to use the fact that $\prec$ is well-founded to generate
-an initial proof of accessibility for the input $x$, and then *pattern
-match on accessibility proofs* alongside the values as we recurse.
-Every time we make a recursive call on some $y \prec x$, we can just
-pattern-match on the accessibility proof for $x$ to get an
-accessibility proof for $y$, so Agda will be able to see that the
-whole thing is *structurally* recursive on the accessibility proofs.
-
-```agda
-wf-ind {A} {P} {R} wf ind x = go x (wf x)
-```
+Instead, the right idea is to use the fact that $\prec$ is
+well-founded to generate an initial proof of accessibility for the
+input $x$, and then *pattern match on accessibility proofs* alongside
+the values as we recurse.  Every time we make a recursive call on some
+$y \prec x$, we can just pattern-match on the accessibility proof for
+$x$ to get an accessibility proof for $y$, so Agda will be able to see
+that the whole thing is *structurally* recursive on the accessibility
+proofs.
 
 ```agda
- where
-  go : (x : A) → Acc R x → P x
-  go x (acc f) = ind x (λ z Rzx → go z (f z Rzx))
+wf-ind = {!!}
 ```
+
+### Less-than is well-founded
 
 Now that we have well-founded induction under our belts, let's show
-that a couple different relations we want to use are well-founded.
-First up is the less-than relation on natural numbers.  The fact that
-$<$ on natural numbers is well-founded corresponds to what is often
-called "strong induction".^[Incidentally, we could probably have
-gotten away with directly defining a principle of strong natural
-number induction, without bothering with the full generality of
-well-founded induction, but this way is more fun and interesting!] To
-prove that $<$ is well-founded, we of course must show that every
-natural number is accessible under $<$.  However, if we directly try
-to prove `(m : ℕ) → (Acc _<_) m`, we run into a variant of the exact
-same problem we have been dealing with: to prove that
-$m$ is accessible we need to know that *every* $k < m$ is also
-accessible, but again, XXX
+that the less-than relation on natural numbers is well-founded. This
+corresponds to what is often called "strong induction".^[Incidentally,
+we could probably have gotten away with directly defining a principle
+of strong natural number induction, without bothering with the full
+generality of well-founded induction, but this way is more fun and
+interesting!] To prove that $<$ is well-founded, we of course must
+show that every natural number is accessible under $<$.  However, if
+we directly try to prove `(m : ℕ) → (Acc _<_) m`, we run into a
+variant of the exact same problem we have been dealing with: to prove
+that $m$ is accessible we need to know that *every* $k < m$ is also
+accessible, but again, we cannot show this directly by
+recursion/induction, since $k$ may not be a structural subterm of $m$.
 
 What we need is the usual trick for proving strong induction from weak
 induction: instead of proving that $P(x)$ holds for all $x$, we prove
 that $(\downarrow P)(x)$ holds for all $x$, where $\downarrow P$ is
-the "downward closure" of $P$: $(\downarrow P)(x)$ says that $P(x)$
-holds for *all* $y \leq x$.
-
-XXX note that this is just the reflexive, transitive closure of the
-successor relation.  Advanced exercise: generalize $\downarrow P$ as the
-reflexive, transitive closure of $P$ and then prove that $\downarrow
-P$ is well-founded whenever $P$ is. In fact, it's an if and only if. (See other blog post on
-well-founded induction: https://boarders.github.io/posts/well_founded_induction.html)
+the "downward closure" of $P$.  That is, $(\downarrow P)(x)$ says that
+$P(x)$ holds for *all* $y < x$.^[Note that another way to define
+$(\downarrow P)(x)$ is that $P(y)$ holds for all $y \sim x$, where $\sim$
+is the *transitive closure* of the predecessor relation.  As an
+advanced exercise, generalize $\downarrow_\prec P$ to be defined relative to
+the transitive closure of any relation $\prec$, and then prove that $\prec$ is well-founded
+if and only if its transitive closure is. For more along
+these lines, see this [very cool (but much more abstract) post on
+well-founded induction by Callan McGill](https://boarders.github.io/posts/well_founded_induction.html).]
 
 ```agda
 ↓ : (ℕ → Set) → (ℕ → Set)
-↓ P n = (k : ℕ) → (k ≤ n) → P k
+↓ P n = (k : ℕ) → (k < n) → P k
 ```
 
 Now we can prove, for all natural numbers $m$, that every natural
@@ -1394,17 +1338,16 @@ because nothing is less than it; everything up to the successor of $m$ is access
 
 ```agda
 <-acc : (m : ℕ) → ↓ (Acc _<_) m
-<-acc zero b zle = acc (λ a ())
-<-acc (suc m) b b≤sm = acc (λ a a<b → <-acc m a (≤-pred (≤-trans a<b b≤sm)))
+<-acc = {!!}
 ```
 
 Finally, to show that any natural number $n$ is accessible—*i.e.* that $<$
-is well-founded—we can use the fact that all numbers up to and including $n$
+is well-founded—we can use the fact that all numbers less than the successor of $n$
 are accessible, and just project out accessibility for $n$ itself.
 
 ```agda
 <-wf : WellFounded _<_
-<-wf n = <-acc n n ≤-refl
+<-wf = {!!}
 ```
 
 ## The division algorithm
@@ -1414,13 +1357,7 @@ induction!  The definition is very similar to our first attempt, but we use the 
 
 ```agda
 divAlg : (n d : ℕ) → (0 < d) → DivAlg n d
-divAlg n d 0<d = wf-ind {P = λ n → DivAlg n d} <-wf go n
- where
-  go : (n : ℕ) → ((n′ : ℕ) → n′ < n → DivAlg n′ d) → DivAlg n d
-  go n IH with n decreaseBy? d
-  ... | LT n<d = (0 , n) , DM (n +0) n<d
-  ... | GE n′ n′+d≡n with IH n′ (+→< 0<d n′+d≡n)
-  ... | (q , r) , dm = (suc q , r) , incDivMod n′+d≡n dm
+divAlg = {!!}
 ```
 
 Using the division algorithm, we can also finally decide whether one
@@ -1428,75 +1365,143 @@ number divides another: zero divides zero; zero does not divide any
 successor since that would imply there is some $k$ such that $k$ times
 zero is nonzero, which is absurd; and if $x$ is a successor, we can
 apply the division algorithm and check the remainder, applying some
-previous lemmas that tell us what zero and nonzero remainders tells us
+previous lemmas that say what zero and nonzero remainders tells us
 about divisibility.
 
 ```agda
 _∣?_ : (x y : ℕ) → Dec (x ∣ y)
-zero ∣? zero = yes (0 , refl)
-zero ∣? (suc y) = no λ { (a , eq) → absurd (noConf (trans (sym (*-comm a zero)) eq))}
-(suc x) ∣? y with divAlg y (suc x) (sle zle)
-... | (q , zero) , dm = yes (mod0→divides y (suc x) dm)
-... | (q , suc r) , dm = no (modS→¬divides y (suc x) dm)
+_∣?_ = {!!}
 ```
 
 ## Primality testing
 
-XXX motivate need for loops?
+To test a number for primality, we are just going to use
+straightforward, naive trial division.  The straightforward way of
+doing this is by starting at $2$ and counting *up*—but this is a
+problem, because when pattern-matching on natural numbers we most
+naturally count *down*.
+
+Well, remember—build the evidence you want to pattern-match on!  Let's
+develop some machinery for counting up instead of down.
+
+### Counting up
+
+The problem starts with $\leq$: a proof of $m \leq n$ starts with a
+base case representing evidence that $0 \leq k$, then every
+constructor application of `sle` increments both sides by one.
+Pattern-matching on a proof of $m \leq n$ thus either reveals that $m
+= 0$, or that $m' \leq n'$ where $m'$ and $n'$ are the predecessors of
+$m$ and $n$: in other words, it facilitates counting *down*, just
+like matching directly on $m$ would.
+
+However, there is an alternative way to define the $\leq$ relation,
+which we will call $\leq'$.
+We can choose *reflexivity* of $\leq'$ as a base case, that is, $n \leq'
+n$ for any $n$.  We can then *decrement* the left-hand side every time
+we apply another constructor.  Like so:
 
 ```agda
--- Alternate definition of inequality
-
 data _≤′_ : ℕ → ℕ → Set where
   lerefl : {n : ℕ} → n ≤′ n
   lesuc : {m n : ℕ} → suc m ≤′ n → m ≤′ n
+```
 
+Pattern-matching on a proof of $m \leq' n$ thus facilitates counting
+*up* from $m$ to $n$, just like we wanted!
+
+We can also prove a few lemmas about properties of $\leq'$.  For
+example, the two axioms that define the usual $\leq$ can be proved as
+lemmas.
+
+
+```agda
 ≤′-suc : {m n : ℕ} → m ≤′ n → suc m ≤′ suc n
-≤′-suc lerefl = lerefl
-≤′-suc (lesuc m≤′n) = lesuc (≤′-suc m≤′n)
+≤′-suc = {!!}
 
 0≤′ : (n : ℕ) → 0 ≤′ n
-0≤′ zero = lerefl
-0≤′ (suc n) = lesuc (≤′-suc (0≤′ n))
+0≤′ = {!!}
+```
 
+We can also prove that $m \leq n$ implies $m \leq' n$.  (The converse
+is true as well, and can be proved as an easy exercise, but we won't need it.)
+
+```agda
 ≤→≤′ : {m n : ℕ} → m ≤ n → m ≤′ n
-≤→≤′ {n = n} zle = 0≤′ n
-≤→≤′ (sle m≤n) = ≤′-suc (≤→≤′ m≤n)
+≤→≤′ = {!!}
+```
 
--- Loops
+So, we can pattern-match on a proof of $m \leq' n$ to count up from $m$ to
+$n$, but this isn't quite good enough: while counting, we won't remember the relationship of the
+intermediate values to the original $m$.  We would like to be able to
+count up through some interval, from some starting $a$ to ending $b$,
+knowing all along the way that the values we count are contained in
+the interval.
 
+To this end, we can create a data
+type `i ∈[ a ⋯ b ]` which represents a stage in counting from $a$ to
+$b$.  The base case is when $i = b$; otherwise `i ∈[ a ⋯ b ]` when $a
+\leq i$ and also `suc i ∈[ a ⋯ b ]`.
+
+```agda
 data _∈[_⋯_] : ℕ → ℕ → ℕ → Set where
   stop : {a b : ℕ} → a ≤ b → b ∈[ a ⋯ b ]
   step : {a i b : ℕ} → a ≤ i → suc i ∈[ a ⋯ b ] → i ∈[ a ⋯ b ]
+```
 
+We can then write a function which "constructs a loop"—that is,
+starting from a proof of $a \leq' b$, it builds
+a value of type `a ∈[ a ⋯ b ]` which represents a reified loop from
+$a$ to $b$.  By pattern-matching on this value we can successively
+increment from $a$ up to $b$, with the appropriate guarantees along
+the way.
+
+```agda
 loop : (a b : ℕ) → (a ≤′ b) → a ∈[ a ⋯ b ]
-loop a b a≤′b = mid a a b ≤-refl a≤′b
- where
-  mid : (a i b : ℕ) → (a ≤ i) → (i ≤′ b) → i ∈[ a ⋯ b ]
-  mid a i b a≤i lerefl = stop a≤i
-  mid a i b a≤i (lesuc i≤′b) = step a≤i (mid a (suc i) b (≤-sucr a≤i) i≤′b)
+loop = {!!}
+```
 
+Finally, we need as a simple lemma the fact that if `i ∈[ a ⋯ b ]`
+then in fact $i \leq b$.
+
+```agda
 top : {i a b : ℕ} → i ∈[ a ⋯ b ] → i ≤ b
-top (stop _) = ≤-refl
-top (step _ s) = ≤-sucl (top s)
+top = {!!}
+```
 
-------------------------------------------------------------
--- Primality testing
-------------------------------------------------------------
+### Primality testing by trial division
 
-add : {P : ℕ → Set} {m : ℕ} → ((j : ℕ) → (2 ≤ j) → (j < m) → P j) → P m → ((j : ℕ) → (2 ≤ j) → (j < suc m) → P j)
-add {m = m} f Pm j le lt with (j ≟ m)
-... | yes refl = Pm
-... | no j≢m = f j le (≤≢→< (≤-pred lt) j≢m)
+First, a lemma about downward closure: if we know $(\downarrow P)(m)$,
+and we know $P(m)$, then we know $(\downarrow P)(1 + m)$.  In other
+words, if $P$ holds for everything less than $m$, we can extend it by
+one by providing a proof that $P$ also holds for $m$.
 
+```agda
+extend : {P : ℕ → Set} {m : ℕ} → (↓ P) m → P m → (↓ P) (suc m)
+extend = {!!}
+```
+
+Now we can define primality testing itself, via trial division.  We
+`loop` from $2$ up to $n$, testing each number to see if it divides
+$n$, keeping track along the way of the fact that all the numbers less
+than our current trial divisor do not divide $n$.  If the next divisor
+does divide $n$, we return it as proof that $n$ is composite.  If it
+does not, we `extend` our accumulating proof of all the numbers that do
+not divide $n$, and proceed to the next.  If we reach $n$, our
+accumulated proof tells us that none of the numbers less than $n$
+divide it, which is proof that $n$ is prime.
+
+```agda
 prime? : (n : ℕ) → (2 ≤ n) → Prime n ⊎ Composite n
-prime? n 2≤n = try (loop 2 n (≤→≤′ 2≤n)) (λ { (suc zero) (sle ()) j<2 _ ; (suc (suc j)) 2≤j (sle (sle ())) _})
+prime? n 2≤n = trialDiv {!!} noDivisorsUpTo2
  where
-  try : {m : ℕ} → m ∈[ 2 ⋯ n ] → ((j : ℕ) → (2 ≤ j) → (j < m) → ¬ (j ∣ n)) → Prime n ⊎ Composite n
-  try (stop 2≤n) soFar = inj₁ (2≤n , soFar)
-  try {m} (step 2≤m next) soFar with m ∣? n
-  ... | yes m∣n = inj₂ (m , 2≤m , top next , m∣n)
-  ... | no m∤n = try next (add soFar m∤n)
+  NoDivisorsUpTo : ℕ → Set
+  NoDivisorsUpTo = ↓ (λ # → (2 ≤ #) → ¬ (# ∣ n))
+
+  noDivisorsUpTo2 : NoDivisorsUpTo 2
+  noDivisorsUpTo2 = {!!}
+
+  trialDiv : {m : ℕ} → m ∈[ 2 ⋯ n ] → NoDivisorsUpTo m → Prime n ⊎ Composite n
+  trialDiv = {!!}
 ```
 
 ## Lists
@@ -1509,38 +1514,36 @@ data List (A : Set) : Set where
   _∷_ : A → List A → List A
 
 foldr : (A → B → B) → B → List A → B
-foldr _&_ z [] = z
-foldr _&_ z (x ∷ xs) = x & foldr _&_ z xs
+foldr = {!!}
 ```
 
 Now we can define concatenation and product via `foldr`.
 
 ```agda
 _++_ : List A → List A → List A
-xs ++ ys = foldr (_∷_) ys xs
+_++_ = {!!}
 
 product : List ℕ → ℕ
-product = foldr _*_ 1
+product = {!!}
 ```
 
-We will need `All`, which expresses that some predicate holds of all the elements of a list.  In fact, `All` is manifestly an instance of `foldr`, but we would need a universe-polymorphic version of `foldr` for that, so we just write it manually.
+We will need `All`, which expresses that some predicate holds of all
+the elements of a list.  In fact, `All` is manifestly an instance of
+`foldr` as well, but we would need a universe-polymorphic version of `foldr` for that, so we just write it manually.
 
 ```agda
 All : (P : A → Set) → List A → Set
-All P [] = ⊤
-All P (x ∷ xs) = P x × All P xs
+All = {!!}
 ```
 
 Now, we just need a couple lemmas about concatenation: first, that if `P` holds for all the elements in `xs` and all the elements in `ys`, then it holds for all the elements in `xs ++ ys`; and second, that `product` distributes over concatenation (*i.e.* it is a homomorphism from the monoid of lists under concatenation to the monoid of natural numbers under multiplication).
 
 ```agda
 All-++ : {P : A → Set} {xs ys : List A} → All P xs → All P ys → All P (xs ++ ys)
-All-++ {xs = []} Pxs Pys = Pys
-All-++ {xs = x ∷ xs} (Px , Pxs) Pys = Px , All-++ Pxs Pys
+All-++ = {!!}
 
 product-++ : (xs ys : List ℕ) → product (xs ++ ys) ≡ product xs * product ys
-product-++ [] ys = sym (_ +0)
-product-++ (x ∷ xs) ys = trans (x *_ $≡ product-++ xs ys) (sym (*-assoc x (product xs) (product ys)))
+product-++ = {!!}
 ```
 
 ## The Fundamental Theorem of Arithmetic
@@ -1565,22 +1568,31 @@ $n$ is simply the concatenation of the factorizations for $a$ and $b$.
 
 ```agda
 fta : (n : ℕ) → (0 < n) → FTA n
-fta n = wf-ind {P = (λ n → (0 < n) → FTA n)} <-wf go n
+fta n = wf-ind {P = {!!}} {!!} go n
  where
   go : (n : ℕ) → ((n′ : ℕ) → n′ < n → 0 < n′ → FTA n′) → 0 < n → FTA n
-  go (suc zero) IH 0<n = [] , (tt , refl)
-  go (suc (suc n)) IH 0<n with prime? (suc (suc n)) (sle (sle zle))
-  ... | inj₁ P = (suc (suc n) ∷ []) , ((P , tt) , (suc $≡ (suc $≡ (n *1))))
-  ... | inj₂ C with factorsOf _ C
-  ... | ((a , sle _ , a<n , _) , (b , sle _ , b<n , _)) , ab≡n
-      with IH a a<n (sle zle)
-         | IH b b<n (sle zle)
-  ... | ps₁ , Pps₁ , prod₁ | ps₂ , Pps₂ , prod₂ = (ps₁ ++ ps₂) , (All-++ Pps₁ Pps₂) ,
-    begin
-      product (ps₁ ++ ps₂)      ≡[ product-++ ps₁ ps₂ ⟩≡
-      product ps₁ * product ps₂ ≡[ _*_ $≡ prod₁ ≡$≡ prod₂ ⟩≡
-      a * b                     ≡[ ab≡n ⟩≡
-      suc (suc n)               ∎
+  go = {!!}
 ```
 
-XXX conclusion?
+## Further Directions
+
+That concludes our tour of the Fundamental Theorem of Arithmetic in Agda! If you've worked through the whole thing and
+completed the proofs mostly on your own, congratulations! If you want
+more practice, there are a lot of directions you could take this:
+
+* Doing trial division all the way up to $n$ is silly; we can stop
+  when we get to $\sqrt n$.  I think this would make for a nice
+  exercise (in fact, Taneb's version in the Agda stdlib does this).
+* Define "$d$ is a proper divisor of $n$" to mean that that $d \mid n$
+  and $2 \leq d < n$, then show that the "is a proper divisor of" relation
+  is well-founded, and prove `fta` via well-founded induction on that
+  relation instead.   This might streamline some parts of the proof;
+  I'm not sure.
+* The other half of the FTA says that the prime factorization is
+  *unique up to permutation*.  To prove this, one has to define
+  what it means for one list to be a permutation of another, and show that
+  if there are two different prime factorizations then one must be a
+  permutation of the other (if $p$ is a prime from the first
+  factorization, then it divides the other factorization as well,
+  which means it must be equal to one of the primes in the other
+  factorization).  I may write up this proof in a follow-up post.
