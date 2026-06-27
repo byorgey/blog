@@ -36,7 +36,7 @@ Over the next week or so, I finished the proof completely from
 scratch—without using anything from the standard library, and without
 looking up any reference material.  I based it only on my experience
 in Agda, knowledge of the relevant proofs on an informal level, and
-Agda tricks I've picked up along the way (from *e.g.* Conor McBride, Jacques
+Agda techniques I've picked up along the way (from *e.g.* Conor McBride, Jacques
 Carette, colleagues at Penn, and elsewhere).
 
 I decided to publish the proof, with extra commentary, in the hopes
@@ -53,8 +53,8 @@ post is extremely long, but I make no apologies for that—if you want
 an entertaining 5-minute read, you should look elsewhere!
 
 The entire blog post and proof is [available as a literate Agda
-document](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA.lagda.md).  Even better, I have also published [another version of this
-blog post with holes in place of almost all the proofs](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA-holes.lagda.md).  For a
+document](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA.lagda.md).  **Even better, I have also published [another version of this
+blog post with holes in place of almost all the proofs](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA-holes.lagda.md).**  For a
 maximal learning experience, I suggest downloading it and trying to
 fill in the holes yourself as you go along.
 
@@ -113,6 +113,11 @@ is claimed to exist, this can also be seen as a *formally verified
 factorization program*: put any number in, get a prime factorization
 out.  Writing a prime factorization program is not hard, of course;
 it's the formal verification part that is interesting!
+
+**Stop!**  Before reading on, if you want to get the most out of this tutorial, I
+**strongly recommend [downloading the version with
+holes](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA-holes.lagda.md)**
+and trying to complete as many of the proofs as you can before reading mine!
 
 ## Preliminaries
 

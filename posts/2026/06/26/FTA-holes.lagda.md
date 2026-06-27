@@ -39,7 +39,7 @@ Over the next week or so, I finished the proof completely from
 scratch—without using anything from the standard library, and without
 looking up any reference material.  I based it only on my experience
 in Agda, knowledge of the relevant proofs on an informal level, and
-Agda tricks I've picked up along the way (from *e.g.* Conor McBride, Jacques
+Agda techniques I've picked up along the way (from *e.g.* Conor McBride, Jacques
 Carette, colleagues at Penn, and elsewhere).
 
 I decided to publish the proof, with extra commentary, in the hopes
