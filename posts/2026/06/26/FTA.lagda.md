@@ -54,7 +54,7 @@ an entertaining 5-minute read, you should look elsewhere!
 
 The entire blog post and proof is [available as a literate Agda
 document](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA.lagda.md).  **Even better, I have also published [another version of this
-blog post with holes in place of almost all the proofs](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA-holes.lagda.md).**  For a
+blog post with holes in place of almost all the proofs](http://ozark.hendrix.edu/~yorgey/pub/FTA-holes.lagda.md).**  For a
 maximal learning experience, I suggest downloading it and trying to
 fill in the holes yourself as you go along.
 
@@ -116,7 +116,7 @@ it's the formal verification part that is interesting!
 
 **Stop!**  Before reading on, if you want to get the most out of this tutorial, I
 **strongly recommend [downloading the version with
-holes](https://github.com/byorgey/blog/blob/main/posts/2026/06/26/FTA-holes.lagda.md)**
+holes](http://ozark.hendrix.edu/~yorgey/pub/FTA-holes.lagda.md)**
 and trying to complete as many of the proofs as you can before reading mine!
 
 ## Preliminaries
